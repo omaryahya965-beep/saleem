@@ -2,7 +2,7 @@
 
 > Every screen, flow, and user action verified after migrating to Local Supabase.  
 > Branch: `cleanup-structure`  
-> Verification Result: **30 / 30 Tests PASSED (100%)**
+> Verification Result: **33 / 33 Tests PASSED (100%)**
 
 ---
 
@@ -121,3 +121,14 @@
 | SEC-01 | **Signed Media URLs**      | Inspect video `<source src>` URL     | Media is fetched via private, short-lived signed URLs from Supabase Storage; direct unsigned URLs are blocked                                                 |  [x]   |
 | SEC-02 | **RLS User Isolation**     | Query another user's submission ID   | Returns 404 / 0 rows; users cannot view other creators' private submissions                                                                                   |  [x]   |
 | SEC-03 | **24-Hour Media Deletion** | Run media cleanup job after 24 hours | Original media file is deleted from `media` storage bucket; submission `media_deleted_at` is set; findings, transcripts, and SHA-256 hash remain fully intact |  [x]   |
+
+---
+
+## 11. Localization & Language Toggle (`ar` / `en`)
+
+| ID     | Test Item                       | Steps                                                | Expected Result                                                                               | Status |
+| :----- | :------------------------------ | :--------------------------------------------------- | :-------------------------------------------------------------------------------------------- | :----: |
+| LOC-01 | **Language Switcher Control**   | Click language button "English" / "عربي" in top bar | Successfully toggles active locale between Arabic and English across the entire application    |  [x]   |
+| LOC-02 | **Layout Direction Adaptation** | Toggle language to English                           | HTML direction updates to `dir="ltr"` and text alignment shifts from right-to-left to left-to-right |  [x]   |
+| LOC-03 | **Arabic Primary Preservation** | Refresh or open application in initial state         | Application defaults to Arabic (`ar`) with RTL orientation and proper Saudi regulatory copy  |  [x]   |
+
