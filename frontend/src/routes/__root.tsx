@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { Compass } from "lucide-react";
 import { I18nProvider, useI18n } from "@/i18n";
+import { AuthProvider } from "@/lib/api/auth";
 import { Button, EmptyState, ErrorState, Toaster } from "@/components/ui";
 
 function NotFoundComponent() {
@@ -60,8 +61,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <Outlet />
-        <Toaster />
+        <AuthProvider>
+          <Outlet />
+          <Toaster />
+        </AuthProvider>
       </I18nProvider>
     </QueryClientProvider>
   );

@@ -1,14 +1,16 @@
 // Screenshots routes at desktop 1440×900 and mobile 390×844, in Arabic and English.
-// Usage: node scripts/shoot.mjs <outDir> <name=/path>... [--base=http://localhost:3000] [--auth=email:password]
+// Usage (add --mock=user for signed-in screens): node scripts/shoot.mjs <outDir> <name=/path>... [--base=http://localhost:3000] [--auth=email:password]
 // Console errors / failed requests are written to <outDir>/console-log.txt and printed.
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
+import { installMockAuth } from "./mock-auth.mjs";
 
 const args = process.argv.slice(2);
 const opt = (k) => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const base = opt("base") ?? "http://localhost:3000";
 const auth = opt("auth");
-const only = opt("only"); // e.g. --only=desktop-ar
+const only = opt("only");
+const mock = opt("mock"); // "user" | "empty" — fake signed-in session (see mock-auth.mjs) // e.g. --only=desktop-ar
 const [outDir, ...targets] = args.filter((a) => !a.startsWith("--"));
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -21,6 +23,7 @@ for (const [vp, viewport] of Object.entries(viewports)) {
     if (only && only !== `${vp}-${lang}`) continue;
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
     await context.addInitScript((l) => localStorage.setItem("saleem-lang", l), lang);
+    if (mock) await installMockAuth(context, { empty: mock === "empty" });
     if (auth) {
       const page = await context.newPage();
       await page.goto(`${base}/login`);

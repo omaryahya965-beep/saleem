@@ -97,7 +97,7 @@ export function SegmentedControl<T extends string>({
           key={o.value}
           value={o.value}
           className={cn(
-            "inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 font-medium text-fg-muted",
+            "relative inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 font-medium text-fg-muted",
             "transition-colors duration-150 hover:text-fg [&_svg]:size-4",
             "data-[state=checked]:bg-surface data-[state=checked]:text-fg data-[state=checked]:shadow-[0_1px_2px_rgb(14_38_32/0.12)]",
             size === "md" ? "h-10 text-sm" : "h-8 text-xs",

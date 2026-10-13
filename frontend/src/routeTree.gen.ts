@@ -9,12 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as StyleguideRouteImport } from './routes/styleguide'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppForgotPasswordRouteImport } from './routes/_app/forgot-password'
+import { Route as AppLoginRouteImport } from './routes/_app/login'
+import { Route as AppNewRouteImport } from './routes/_app/new'
+import { Route as AppResetPasswordRouteImport } from './routes/_app/reset-password'
+import { Route as AppRulesRouteImport } from './routes/_app/rules'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppSignupRouteImport } from './routes/_app/signup'
+import { Route as AppChecksIdRouteImport } from './routes/_app/checks.$id'
+import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StyleguideRoute = StyleguideRouteImport.update({
@@ -22,40 +32,164 @@ const StyleguideRoute = StyleguideRouteImport.update({
   path: '/styleguide',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppForgotPasswordRoute = AppForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLoginRoute = AppLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewRoute = AppNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppResetPasswordRoute = AppResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRulesRoute = AppRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSignupRoute = AppSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChecksIdRoute = AppChecksIdRouteImport.update({
+  id: '/checks/$id',
+  path: '/checks/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChecksIdLogRoute = AppChecksIdLogRouteImport.update({
+  id: '/checks_/$id/log',
+  path: '/checks/$id/log',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
   '/styleguide': typeof StyleguideRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/forgot-password': typeof AppForgotPasswordRoute
+  '/login': typeof AppLoginRoute
+  '/new': typeof AppNewRoute
+  '/reset-password': typeof AppResetPasswordRoute
+  '/rules': typeof AppRulesRoute
+  '/settings': typeof AppSettingsRoute
+  '/signup': typeof AppSignupRoute
+  '/checks/$id': typeof AppChecksIdRoute
+  '/checks/$id/log': typeof AppChecksIdLogRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/styleguide': typeof StyleguideRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/forgot-password': typeof AppForgotPasswordRoute
+  '/login': typeof AppLoginRoute
+  '/new': typeof AppNewRoute
+  '/reset-password': typeof AppResetPasswordRoute
+  '/rules': typeof AppRulesRoute
+  '/settings': typeof AppSettingsRoute
+  '/signup': typeof AppSignupRoute
+  '/': typeof AppIndexRoute
+  '/checks/$id': typeof AppChecksIdRoute
+  '/checks/$id/log': typeof AppChecksIdLogRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/styleguide': typeof StyleguideRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/forgot-password': typeof AppForgotPasswordRoute
+  '/_app/login': typeof AppLoginRoute
+  '/_app/new': typeof AppNewRoute
+  '/_app/reset-password': typeof AppResetPasswordRoute
+  '/_app/rules': typeof AppRulesRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/signup': typeof AppSignupRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/checks/$id': typeof AppChecksIdRoute
+  '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/styleguide'
+  fullPaths:
+    | '/'
+    | '/styleguide'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/new'
+    | '/reset-password'
+    | '/rules'
+    | '/settings'
+    | '/signup'
+    | '/checks/$id'
+    | '/checks/$id/log'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/styleguide'
-  id: '__root__' | '/' | '/styleguide'
+  to:
+    | '/styleguide'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/new'
+    | '/reset-password'
+    | '/rules'
+    | '/settings'
+    | '/signup'
+    | '/'
+    | '/checks/$id'
+    | '/checks/$id/log'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/styleguide'
+    | '/_app/dashboard'
+    | '/_app/forgot-password'
+    | '/_app/login'
+    | '/_app/new'
+    | '/_app/reset-password'
+    | '/_app/rules'
+    | '/_app/settings'
+    | '/_app/signup'
+    | '/_app/'
+    | '/_app/checks/$id'
+    | '/_app/checks_/$id/log'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   StyleguideRoute: typeof StyleguideRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/styleguide': {
@@ -65,11 +199,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StyleguideRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/forgot-password': {
+      id: '/_app/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AppForgotPasswordRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/login': {
+      id: '/_app/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AppLoginRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/new': {
+      id: '/_app/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof AppNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reset-password': {
+      id: '/_app/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AppResetPasswordRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rules': {
+      id: '/_app/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof AppRulesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/signup': {
+      id: '/_app/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AppSignupRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/checks/$id': {
+      id: '/_app/checks/$id'
+      path: '/checks/$id'
+      fullPath: '/checks/$id'
+      preLoaderRoute: typeof AppChecksIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/checks_/$id/log': {
+      id: '/_app/checks_/$id/log'
+      path: '/checks/$id/log'
+      fullPath: '/checks/$id/log'
+      preLoaderRoute: typeof AppChecksIdLogRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppForgotPasswordRoute: typeof AppForgotPasswordRoute
+  AppLoginRoute: typeof AppLoginRoute
+  AppNewRoute: typeof AppNewRoute
+  AppResetPasswordRoute: typeof AppResetPasswordRoute
+  AppRulesRoute: typeof AppRulesRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppSignupRoute: typeof AppSignupRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppChecksIdRoute: typeof AppChecksIdRoute
+  AppChecksIdLogRoute: typeof AppChecksIdLogRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppForgotPasswordRoute: AppForgotPasswordRoute,
+  AppLoginRoute: AppLoginRoute,
+  AppNewRoute: AppNewRoute,
+  AppResetPasswordRoute: AppResetPasswordRoute,
+  AppRulesRoute: AppRulesRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppSignupRoute: AppSignupRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppChecksIdRoute: AppChecksIdRoute,
+  AppChecksIdLogRoute: AppChecksIdLogRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   StyleguideRoute: StyleguideRoute,
 }
 export const routeTree = rootRouteImport

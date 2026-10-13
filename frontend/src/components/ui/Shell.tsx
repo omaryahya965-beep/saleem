@@ -56,6 +56,8 @@ export interface NavItem {
   label: string;
   icon: ReactNode;
   active: boolean;
+  /** Only in the mobile bottom bar (e.g. sign-in, shown as a button in the desktop top bar). */
+  mobileOnly?: boolean;
   /** Rendered link element — keeps the shell router-agnostic. */
   render: (props: { className: string; children: ReactNode; "aria-current"?: "page" }) => ReactNode;
 }
@@ -97,19 +99,21 @@ export function AppShell({
         <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-6 px-4 sm:px-8">
           {brand}
           <nav aria-label={t("nav.mainNav")} className="hidden h-full items-stretch gap-1 md:flex">
-            {nav.map((item) => (
-              <span key={item.key} className="flex">
-                {item.render({
-                  className: cn(
-                    "relative inline-flex items-center px-3 text-[15px] font-medium transition-colors duration-150",
-                    "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full",
-                    item.active ? "text-fg after:bg-green" : "text-fg-muted hover:text-fg",
-                  ),
-                  children: item.label,
-                  ...(item.active ? { "aria-current": "page" as const } : {}),
-                })}
-              </span>
-            ))}
+            {nav
+              .filter((i) => !i.mobileOnly)
+              .map((item) => (
+                <span key={item.key} className="flex">
+                  {item.render({
+                    className: cn(
+                      "relative inline-flex items-center px-3 text-[15px] font-medium transition-colors duration-150",
+                      "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full",
+                      item.active ? "text-fg after:bg-green" : "text-fg-muted hover:text-fg",
+                    ),
+                    children: item.label,
+                    ...(item.active ? { "aria-current": "page" as const } : {}),
+                  })}
+                </span>
+              ))}
           </nav>
           <div className="ms-auto flex items-center gap-1">{actions}</div>
         </div>
@@ -126,7 +130,7 @@ export function AppShell({
       {!hideMobileNav && (
         <div className="no-print fixed inset-x-0 bottom-0 z-40 md:hidden">
           {mobileActionBar && (
-            <div className="border-t border-border bg-surface/95 px-4 py-3 backdrop-blur">
+            <div className="border-t border-border bg-surface/95 px-4 py-3 backdrop-blur [&:has(>[data-slot]:empty)]:hidden">
               {mobileActionBar}
             </div>
           )}
