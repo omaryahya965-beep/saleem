@@ -76,8 +76,9 @@ export async function runLlmChecks(
   frames: FrameData[] = [],
   llmModel: string = "claude-3-5-sonnet-20241022"
 ): Promise<Finding[]> {
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
-  const openAiKey = Deno.env.get("OPENAI_API_KEY");
+  const getEnv = (k: string) => (typeof Deno !== "undefined" ? Deno.env.get(k) : process.env[k]);
+  const anthropicKey = getEnv("ANTHROPIC_API_KEY");
+  const openAiKey = getEnv("OPENAI_API_KEY");
 
   // Fallback to mock findings if no API key is available
   if (!anthropicKey && !openAiKey) {

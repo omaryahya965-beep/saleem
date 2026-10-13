@@ -13,7 +13,8 @@ export async function transcribeAudio(
   fileName: string = "audio.wav",
   asrModel: string = "whisper-1"
 ): Promise<TranscriptionResult> {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  const getEnv = (k: string) => (typeof Deno !== "undefined" ? Deno.env.get(k) : process.env[k]);
+  const apiKey = getEnv("OPENAI_API_KEY");
 
   // If no OpenAI key is configured or no audio buffer is provided, provide deterministic fallback
   if (!apiKey || !audioBuffer || audioBuffer.byteLength === 0) {
