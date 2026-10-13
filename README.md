@@ -8,7 +8,8 @@
 
 ```text
 saleem/
-├── frontend/                  # React 19 + TypeScript Client (Vite, TanStack Router)
+├── frontend/                  # React 19 + TypeScript SPA (Vite, TanStack Router — no SSR)
+│   ├── index.html             # SPA entry point (served by Vite dev server and production build)
 │   ├── src/
 │   │   ├── app/               # Router and Root application shell
 │   │   ├── features/          # Feature screens (auth, submissions, reports, etc.)
@@ -18,15 +19,16 @@ saleem/
 │   │   ├── styles/            # Tailwind CSS styling and theme tokens
 │   │   └── types/             # Frontend application and Supabase DB types
 │   ├── package.json           # Frontend dependencies and scripts
-│   ├── vite.config.ts         # Standard Vite build configuration
-│   └── .env.example           # Frontend environment template
+│   └── vite.config.ts         # Vite build configuration (envDir: "../backend")
 │
-├── backend/                   # Supabase Local Backend Workspace
+├── backend/                   # Backend Workspace & Environment Center
+│   ├── .env.example           # Shared app & client environment template
 │   ├── supabase/
-│   │   ├── config.toml        # Local Supabase service definitions
+│   │   ├── config.toml        # Supabase project definitions
 │   │   ├── migrations/        # PostgreSQL DDL migrations and RLS policies
 │   │   ├── seed.sql           # Regulatory rules catalog & demo seed data
 │   │   └── functions/         # Edge Functions (analyze pipeline, media cleanup)
+│   │       └── .env.example   # Functions environment template
 │   ├── scripts/               # Seed demo user credentials
 │   ├── tests/                 # Pipeline calibration and verification tests
 │   └── package.json           # Backend test runners and provisioning scripts
@@ -39,7 +41,7 @@ saleem/
 │
 ├── package.json               # Root monorepo workspace configuration
 ├── .editorconfig              # Code formatting rules
-└── .gitignore                 # Version control exclusions
+└── .gitignore                 # Version control exclusions (all .env files ignored)
 ```
 
 ---
@@ -48,22 +50,84 @@ saleem/
 
 - **Node.js**: v20.x or higher
 - **npm**: v10.x or higher
-- **Docker Desktop**: Required to run local Supabase containers (PostgreSQL, Storage, Auth)
-- **Supabase CLI**: Install via `npm install -g supabase` or use `npx supabase`
+- **Supabase CLI**: Runs automatically via `npx supabase`
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Backend Setup (Local Supabase)
+### Path A: Hosted Supabase (Recommended — No Docker Required)
 
-> 💡 **Prerequisite**: Make sure **Docker Desktop** (or Podman) is running before starting Supabase containers.  
-> You can use `npx supabase` without installing Supabase CLI globally, or install globally via `npm install -g supabase`.
+If using a free-tier hosted project on [supabase.com](https://supabase.com):
 
-Open a terminal and navigate to the backend directory:
+#### 1. Configure Backend Environment
+Navigate to `backend/` and copy the environment template:
+```bash
+cd backend
+cp .env.example .env
+```
+Fill in your project details in `backend/.env`:
+```ini
+VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-or-publishable-key>
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_DEMO_MODE=false
+```
+
+#### 2. Link Project & Push Schema
+```bash
+# Authenticate CLI
+npx supabase login
+
+# Link your remote project (from backend/)
+npx supabase link --project-ref <your-project-ref>
+
+# Push migrations to the hosted database
+npx supabase db push
+```
+
+#### 3. Seed Rulebook Catalog
+Apply the 12 regulatory rules and demo reports in your remote database via the Supabase Dashboard SQL Editor or:
+```bash
+npx supabase db execute --file supabase/seed.sql
+```
+
+#### 4. Configure Edge Functions & Secrets
+Create `backend/supabase/functions/.env` from its template:
+```bash
+cp supabase/functions/.env.example supabase/functions/.env
+```
+Set secrets on your hosted project:
+```bash
+# Run from backend/
+npx supabase secrets set --env-file supabase/functions/.env
+```
+Deploy the functions server-side via API (no Docker needed):
+```bash
+npx supabase functions deploy --use-api analyze
+npx supabase functions deploy --use-api cleanup-media
+```
+
+#### 5. Launch the Frontend
+In a new terminal window:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000). Vite automatically loads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from `backend/.env`.
+
+---
+
+### Path B: Local Supabase (Requires Docker Desktop)
+
+If you have Docker Desktop running locally:
 
 ```bash
 cd backend
+
+# Copy environment template
+cp .env.example .env
 
 # Start local Supabase containers (Postgres, Auth, Storage, Studio)
 npx supabase start
@@ -78,44 +142,51 @@ npm run seed
 npx supabase functions serve --env-file supabase/functions/.env
 ```
 
-> **Studio Dashboard**: View the database UI locally at [http://localhost:54323](http://localhost:54323).  
-> **API URL**: `http://127.0.0.1:54321`
+- **Studio Dashboard**: [http://localhost:54323](http://localhost:54323)
+- **API URL**: `http://127.0.0.1:54321`
 
----
-
-### 2. Frontend Setup (React Application)
-
-Open a second terminal and navigate to the frontend directory:
-
+In a second terminal:
 ```bash
 cd frontend
-
-# Copy local environment template
-cp .env.example .env
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) to start using SALEEM.
+---
+
+## 🔑 Environment Variables Structure
+
+**All environment files reside strictly inside `backend/`:**
+
+1. **`backend/.env`** (Shared for both frontend client and backend scripts):
+   - `VITE_SUPABASE_URL`: Your Supabase API URL.
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`: Your Supabase anon or publishable key.
+   - `SUPABASE_URL`: Server-side API URL.
+   - `SUPABASE_SERVICE_ROLE_KEY`: *(Optional)* Service role key for admin scripts.
+   - `VITE_DEMO_MODE`: `false` (default) for live Supabase, `true` for offline fixtures.
+
+2. **`backend/supabase/functions/.env`** (Edge Functions secrets):
+   - `OPENAI_API_KEY`: Key for Whisper ASR and GPT-4o analysis.
+   - `TRANSCRIPTION_PROVIDER`: `openai`
+   - `LLM_PROVIDER`: `openai`
+   - `VIDEO_PROVIDER`: `frames`
+
+> ⚠️ **Security**: All `.env` and `.env.*` files are strictly ignored by `.gitignore`. Never commit real secrets.
 
 ---
 
-### 3. Root Monorepo Commands
+## 🛠️ Root Monorepo Commands
 
-You can also run commands for both workspaces directly from the repository root:
+Run commands across workspaces from the repository root:
 
 ```bash
-# Run dev server
+# Launch frontend dev server
 npm run dev
 
-# Run full production build
+# Run production build
 npm run build
 
-# Run both frontend and backend tests
+# Run test suites (frontend & backend)
 npm test
 
 # Run frontend tests only
@@ -123,84 +194,15 @@ npm run test:frontend
 
 # Run backend pipeline tests only
 npm run test:backend
-
-# Run automated end-to-end flow verification
-npm run verify:backend
-```
-
----
-
-## 🔑 Environment Variables
-
-### Frontend (`frontend/.env`)
-
-```ini
-VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_URL=http://127.0.0.1:54321
-```
-
-### Backend (`backend/supabase/functions/.env`)
-
-```ini
-# External AI Providers (Optional — demo mode runs automatically if omitted)
-ANTHROPIC_API_KEY=your-anthropic-api-key
-OPENAI_API_KEY=your-openai-api-key
-
-# Pipeline defaults
-LLM_MODEL=claude-3-5-sonnet-20241022
-ASR_MODEL=whisper-1
-DEMO_MODE=true
 ```
 
 ---
 
 ## 🔄 Regenerating TypeScript Types
 
-Whenever you modify database tables or migrations in `backend/supabase/migrations/`:
+Whenever database tables or migrations change:
 
 ```bash
-# From repository root or backend/
-npx supabase gen types typescript --local > frontend/src/types/supabase.ts
-```
-
----
-
-## 🧪 Testing & Verification
-
-1. **Unit & Pipeline Tests**:
-   ```bash
-   npm test
-   ```
-2. **End-to-End Verification**:
-   ```bash
-   npm run verify:backend
-   ```
-3. **Parity Checklist**:
-   Check [docs/PARITY_CHECKLIST.md](docs/PARITY_CHECKLIST.md) for detailed verification across all 11 user journeys.
-
----
-
-## 🚢 Production Deployment (Hosted Supabase)
-
-When deploying to a live Supabase project:
-
-```bash
-# 1. Link to hosted project
-npx supabase link --project-ref <your-project-id>
-
-# 2. Push database schema migrations
-npx supabase db push
-
-# 3. Set remote secrets
-npx supabase secrets set ANTHROPIC_API_KEY=... OPENAI_API_KEY=...
-
-# 4. Deploy Edge Functions
-npx supabase functions deploy analyze
-npx supabase functions deploy cleanup-media
-
-# 5. Build and deploy frontend
-cd frontend
-npm run build
-# Deploy dist/ to Vercel, Cloudflare Pages, or Netlify
+# Run from repository root or backend/
+npx supabase gen types typescript --project-id <your-ref> > frontend/src/types/supabase.ts
 ```

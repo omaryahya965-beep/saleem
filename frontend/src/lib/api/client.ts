@@ -12,6 +12,8 @@ import type {
   IssueItem,
 } from "./types";
 
+const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
 // ============================================================================
 // 1. Browser-Side Utilities: Hashing & Frame Extraction
 // ============================================================================
@@ -100,11 +102,14 @@ export async function signInDemo() {
   try {
     return await signIn("demo@saleem.app", "demo123456");
   } catch (err) {
-    console.warn(
-      "[Auth] Demo login via API failed (Supabase offline?), using local demo session:",
-      err,
-    );
-    return { session: { user: { email: "demo@saleem.app" } } };
+    if (IS_DEMO_MODE) {
+      console.warn(
+        "[Auth] Demo login via API failed in DEMO_MODE, using local demo session:",
+        err,
+      );
+      return { session: { user: { email: "demo@saleem.app" } } };
+    }
+    throw err;
   }
 }
 
@@ -241,13 +246,24 @@ export async function fetchSubmissions(): Promise<DbSubmission[]> {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      throw error || new Error("No submissions returned");
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      if (IS_DEMO_MODE) {
+        return DEMO_SUBMISSIONS_FALLBACK;
+      }
+      return [];
     }
     return data;
   } catch (err) {
-    console.warn("[Submissions] Supabase query failed, returning demo list:", err);
-    return [
+    if (IS_DEMO_MODE) {
+      console.warn("[Submissions] Supabase query failed, returning demo list (DEMO_MODE):", err);
+      return DEMO_SUBMISSIONS_FALLBACK;
+    }
+    throw err;
+  }
+}
+
+const DEMO_SUBMISSIONS_FALLBACK: DbSubmission[] = [
       {
         id: "d0000000-0000-0000-0000-000000000001",
         is_demo: true,
@@ -307,8 +323,6 @@ export async function fetchSubmissions(): Promise<DbSubmission[]> {
         media_deleted_at: null,
       },
     ];
-  }
-}
 
 export async function fetchReportData(submissionId?: string): Promise<ReportData> {
   const targetId = submissionId || "d0000000-0000-0000-0000-000000000001";
@@ -356,6 +370,10 @@ export async function fetchReportData(submissionId?: string): Promise<ReportData
       previousSubmission,
     };
   } catch (err) {
+    const isDemoTarget = targetId.startsWith("d0000000-");
+    if (!IS_DEMO_MODE && !isDemoTarget) {
+      throw err;
+    }
     console.warn(
       `[Report] Error fetching report ${targetId}, falling back to static fixtures:`,
       err,
@@ -524,34 +542,37 @@ export async function createNewSubmission(params: {
 
     return submissionId;
   } catch (err) {
-    console.warn("[Submission] Insert failed, returning local generated ID:", err);
-    return `local-${Date.now()}`;
+    if (IS_DEMO_MODE) {
+      console.warn("[Submission] Insert failed in DEMO_MODE, returning local generated ID:", err);
+      return `local-${Date.now()}`;
+    }
+    throw err;
   }
 }
 
 export async function triggerAnalysis(submissionId: string) {
-  const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"] || "http://127.0.0.1:54321";
-  const anonKey = import.meta.env["VITE_SUPABASE_ANON_KEY"] || "";
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "http://127.0.0.1:54321";
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
   return fetch(`${supabaseUrl}/functions/v1/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${publishableKey}`,
     },
     body: JSON.stringify({ submission_id: submissionId }),
   });
 }
 
 export async function deleteSubmissionMedia(submissionId: string) {
-  const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"] || "http://127.0.0.1:54321";
-  const anonKey = import.meta.env["VITE_SUPABASE_ANON_KEY"] || "";
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "http://127.0.0.1:54321";
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
   return fetch(`${supabaseUrl}/functions/v1/cleanup-media`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${publishableKey}`,
     },
     body: JSON.stringify({ submission_id: submissionId }),
   });

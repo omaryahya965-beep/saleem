@@ -51,22 +51,19 @@ function createSupabaseFetch(supabaseUrl: string, supabaseKey: string): typeof f
 }
 
 const DEFAULT_LOCAL_URL = "http://127.0.0.1:54321";
-const DEFAULT_LOCAL_ANON_KEY =
+const DEFAULT_LOCAL_PUBLISHABLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4Nzk2MDB9.local-anon-key-placeholder";
 
 function createSupabaseClient() {
-  const SUPABASE_URL =
-    import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"] || DEFAULT_LOCAL_URL;
+  const supabaseUrl =
+    import.meta.env.VITE_SUPABASE_URL || DEFAULT_LOCAL_URL;
 
-  const SUPABASE_ANON_KEY =
-    import.meta.env["VITE_SUPABASE_ANON_KEY"] ||
-    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-    DEFAULT_LOCAL_ANON_KEY;
+  const supabasePublishableKey =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || DEFAULT_LOCAL_PUBLISHABLE_KEY;
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient<Database>(supabaseUrl, supabasePublishableKey, {
     global: {
-      fetch: createSupabaseFetch(SUPABASE_URL, SUPABASE_ANON_KEY),
+      fetch: createSupabaseFetch(supabaseUrl, supabasePublishableKey),
     },
     auth: {
       persistSession: true,
