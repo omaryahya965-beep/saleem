@@ -26,6 +26,7 @@ declare global {
 
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
+  console.error("[SALEEM Error]", error, context);
   window.__lovableEvents?.captureException?.(
     error,
     {
