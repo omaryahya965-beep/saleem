@@ -1,0 +1,135 @@
+{
+  "brand": {
+    "name": "سَليم",
+    "promise": "افحص قبل أن تنشر",
+    "tagline": "تنظيم لا تقييد",
+    "disclaimer": "تنبيهات استرشادية وليست موافقة رسمية. القرار النهائي لك."
+  },
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "search": "بحث",
+    "all": "الكل",
+    "optional": "اختياري",
+    "required": "مطلوب",
+    "seeAll": "عرض الكل",
+    "open": "فتح",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "previous": "السابق",
+    "next": "التالي",
+    "pageOf": "صفحة {page} من {total}",
+    "demo": "عرض توضيحي",
+    "general": "عام",
+    "skipToContent": "تخطَّ إلى المحتوى"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "dashboard": "فحوصاتي",
+    "newCheck": "فحص جديد",
+    "rulebook": "دليل القواعد",
+    "settings": "الإعدادات",
+    "account": "حسابي",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "mainNav": "التنقل الرئيسي",
+    "language": "اللغة",
+    "switchTo": "English"
+  },
+  "status": {
+    "ready": "جاهز للنشر",
+    "review": "يحتاج مراجعة",
+    "needs_fixes": "يحتاج تعديلات",
+    "processing": "قيد الفحص",
+    "failed": "تعذّر الفحص",
+    "queued": "في الانتظار"
+  },
+  "severity": {
+    "violation": "مخالفة",
+    "warning": "تنبيه",
+    "fixed": "تم الإصلاح"
+  },
+  "platforms": {
+    "snapchat": "سناب شات",
+    "tiktok": "تيك توك",
+    "instagram": "إنستقرام",
+    "x": "إكس",
+    "youtube": "يوتيوب"
+  },
+  "categories": {
+    "food": "أغذية",
+    "health": "مكملات وصحة",
+    "beauty": "تجميل",
+    "finance": "مالية",
+    "real_estate": "عقار",
+    "other": "أخرى"
+  },
+  "ruleCategories": {
+    "mawthooq": "موثوق والإعلانات",
+    "content": "ضوابط المحتوى",
+    "ai": "الذكاء الاصطناعي",
+    "commerce": "حماية المستهلك"
+  },
+  "kinds": {
+    "video": "فيديو",
+    "image": "صورة",
+    "text": "نص فقط"
+  },
+  "units": {
+    "mb": "م.ب",
+    "kb": "ك.ب",
+    "seconds": "ث"
+  },
+  "errors": {
+    "generic": "حدث خطأ غير متوقع. حاول مرة أخرى.",
+    "network": "تعذّر الاتصال بالخادم. تحقّق من الإنترنت وحاول مجدداً.",
+    "notFoundTitle": "الصفحة غير موجودة",
+    "notFoundBody": "ربما نُقلت الصفحة أو أن الرابط غير صحيح.",
+    "goHome": "العودة إلى الرئيسية",
+    "pageFailedTitle": "تعذّر تحميل الصفحة",
+    "pageFailedBody": "حدث خطأ أثناء التحميل. يمكنك المحاولة مرة أخرى."
+  },
+  "timeline": {
+    "label": "خط زمني للملاحظات",
+    "markerLabel": "{severity} عند {time}: {title}",
+    "start": "البداية",
+    "end": "النهاية"
+  },
+  "issue": {
+    "rule": "القاعدة",
+    "source": "المصدر الرسمي",
+    "evidence": "الدليل",
+    "fix": "التعديل المقترح",
+    "noTime": "على المقطع كاملاً",
+    "seek": "انتقل إلى {time}",
+    "evidenceFrame": "لقطة من الثانية {time}",
+    "evidenceMetadata": "من بيانات النشر",
+    "evidenceCaption": "من الوصف"
+  },
+  "dropzone": {
+    "title": "اسحب الملف هنا أو اختره",
+    "choose": "اختيار ملف",
+    "replace": "تغيير الملف",
+    "remove": "إزالة الملف",
+    "hintVideo": "MP4 أو MOV أو WebM · حتى 90 ثانية · حتى 25 م.ب",
+    "hintImage": "JPG أو PNG أو WebP · حتى 25 م.ب",
+    "errorType": "صيغة الملف غير مدعومة.",
+    "errorSize": "حجم الملف {size} يتجاوز الحد المسموح (25 م.ب).",
+    "errorDuration": "مدة المقطع {duration} تتجاوز الحد المسموح (90 ثانية).",
+    "errorRead": "تعذّرت قراءة الملف. جرّب ملفاً آخر.",
+    "duration": "المدة",
+    "size": "الحجم"
+  },
+  "styleguide": {
+    "title": "دليل التصميم",
+    "subtitle": "كل العناصر الأساسية وحالاتها، بالعربية والإنجليزية.",
+    "devOnly": "صفحة للمطورين فقط"
+  }
+}

@@ -55,8 +55,7 @@ const DEFAULT_LOCAL_PUBLISHABLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4Nzk2MDB9.local-anon-key-placeholder";
 
 function createSupabaseClient() {
-  const supabaseUrl =
-    import.meta.env.VITE_SUPABASE_URL || DEFAULT_LOCAL_URL;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_LOCAL_URL;
 
   const supabasePublishableKey =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || DEFAULT_LOCAL_PUBLISHABLE_KEY;

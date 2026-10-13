@@ -8,7 +8,11 @@ export default defineConfig({
   envDir: "../backend",
   plugins: [
     // TanStack Router plugin must come before any JSX transform
-    TanStackRouterVite({ routesDirectory: "./src/routes", generatedRouteTree: "./src/routeTree.gen.ts" }),
+    TanStackRouterVite({
+      routesDirectory: "./src/routes",
+      autoCodeSplitting: true,
+      generatedRouteTree: "./src/routeTree.gen.ts",
+    }),
     react(),
     tailwindcss(),
   ],

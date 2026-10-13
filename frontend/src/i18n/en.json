@@ -1,0 +1,135 @@
+{
+  "brand": {
+    "name": "SALEEM",
+    "promise": "Check before you publish",
+    "tagline": "Guidance, not policing",
+    "disclaimer": "Advisory alerts, not an official approval. The final decision is yours."
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "back": "Back",
+    "continue": "Continue",
+    "search": "Search",
+    "all": "All",
+    "optional": "Optional",
+    "required": "Required",
+    "seeAll": "See all",
+    "open": "Open",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "copy": "Copy",
+    "copied": "Copied",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {total}",
+    "demo": "Demo",
+    "general": "General",
+    "skipToContent": "Skip to content"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "My checks",
+    "newCheck": "New check",
+    "rulebook": "Rulebook",
+    "settings": "Settings",
+    "account": "My account",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "mainNav": "Main navigation",
+    "language": "Language",
+    "switchTo": "العربية"
+  },
+  "status": {
+    "ready": "Ready to publish",
+    "review": "Needs review",
+    "needs_fixes": "Needs fixes",
+    "processing": "Checking",
+    "failed": "Check failed",
+    "queued": "Queued"
+  },
+  "severity": {
+    "violation": "Violation",
+    "warning": "Warning",
+    "fixed": "Fixed"
+  },
+  "platforms": {
+    "snapchat": "Snapchat",
+    "tiktok": "TikTok",
+    "instagram": "Instagram",
+    "x": "X",
+    "youtube": "YouTube"
+  },
+  "categories": {
+    "food": "Food",
+    "health": "Supplements & health",
+    "beauty": "Beauty",
+    "finance": "Finance",
+    "real_estate": "Real estate",
+    "other": "Other"
+  },
+  "ruleCategories": {
+    "mawthooq": "Mawthooq & ads",
+    "content": "Content rules",
+    "ai": "Artificial intelligence",
+    "commerce": "Consumer protection"
+  },
+  "kinds": {
+    "video": "Video",
+    "image": "Image",
+    "text": "Text only"
+  },
+  "units": {
+    "mb": "MB",
+    "kb": "KB",
+    "seconds": "s"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Couldn't reach the server. Check your connection and try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page may have moved, or the link is incorrect.",
+    "goHome": "Back to home",
+    "pageFailedTitle": "This page didn't load",
+    "pageFailedBody": "Something went wrong while loading. You can try again."
+  },
+  "timeline": {
+    "label": "Issue timeline",
+    "markerLabel": "{severity} at {time}: {title}",
+    "start": "Start",
+    "end": "End"
+  },
+  "issue": {
+    "rule": "Rule",
+    "source": "Official source",
+    "evidence": "Evidence",
+    "fix": "Suggested fix",
+    "noTime": "Whole clip",
+    "seek": "Jump to {time}",
+    "evidenceFrame": "Frame at {time}",
+    "evidenceMetadata": "From post details",
+    "evidenceCaption": "From caption"
+  },
+  "dropzone": {
+    "title": "Drag a file here or choose one",
+    "choose": "Choose file",
+    "replace": "Replace file",
+    "remove": "Remove file",
+    "hintVideo": "MP4, MOV or WebM · up to 90 s · up to 25 MB",
+    "hintImage": "JPG, PNG or WebP · up to 25 MB",
+    "errorType": "This file format isn't supported.",
+    "errorSize": "File size {size} exceeds the 25 MB limit.",
+    "errorDuration": "Clip length {duration} exceeds the 90-second limit.",
+    "errorRead": "We couldn't read this file. Try another one.",
+    "duration": "Duration",
+    "size": "Size"
+  },
+  "styleguide": {
+    "title": "Style guide",
+    "subtitle": "Every primitive and state, in Arabic and English.",
+    "devOnly": "Developer-only page"
+  }
+}
