@@ -53,3 +53,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Eval build artifacts
+backend/eval/results/*.js
+deno.lock

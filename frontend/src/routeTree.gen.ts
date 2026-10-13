@@ -20,6 +20,7 @@ import { Route as AppResetPasswordRouteImport } from './routes/_app/reset-passwo
 import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
+import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
 import { Route as AppChecksIdRouteImport } from './routes/_app/checks.$id'
 import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
 
@@ -77,6 +78,11 @@ const AppSignupRoute = AppSignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminEvalRoute = AppAdminEvalRouteImport.update({
+  id: '/admin/eval',
+  path: '/admin/eval',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChecksIdRoute = AppChecksIdRouteImport.update({
   id: '/checks/$id',
   path: '/checks/$id',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof AppRulesRoute
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
+  '/admin/eval': typeof AppAdminEvalRoute
   '/checks/$id': typeof AppChecksIdRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
 }
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/': typeof AppIndexRoute
+  '/admin/eval': typeof AppAdminEvalRoute
   '/checks/$id': typeof AppChecksIdRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signup': typeof AppSignupRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/eval': typeof AppAdminEvalRoute
   '/_app/checks/$id': typeof AppChecksIdRoute
   '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
 }
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/settings'
     | '/signup'
+    | '/admin/eval'
     | '/checks/$id'
     | '/checks/$id/log'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/'
+    | '/admin/eval'
     | '/checks/$id'
     | '/checks/$id/log'
   id:
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/signup'
     | '/_app/'
+    | '/_app/admin/eval'
     | '/_app/checks/$id'
     | '/_app/checks_/$id/log'
   fileRoutesById: FileRoutesById
@@ -262,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSignupRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/eval': {
+      id: '/_app/admin/eval'
+      path: '/admin/eval'
+      fullPath: '/admin/eval'
+      preLoaderRoute: typeof AppAdminEvalRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/checks/$id': {
       id: '/_app/checks/$id'
       path: '/checks/$id'
@@ -289,6 +308,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignupRoute: typeof AppSignupRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminEvalRoute: typeof AppAdminEvalRoute
   AppChecksIdRoute: typeof AppChecksIdRoute
   AppChecksIdLogRoute: typeof AppChecksIdLogRoute
 }
@@ -303,6 +323,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSignupRoute: AppSignupRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminEvalRoute: AppAdminEvalRoute,
   AppChecksIdRoute: AppChecksIdRoute,
   AppChecksIdLogRoute: AppChecksIdLogRoute,
 }

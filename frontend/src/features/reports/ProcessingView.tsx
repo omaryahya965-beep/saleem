@@ -14,9 +14,8 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
-import { triggerAnalysis, type Submission } from "@/lib/api/data";
+import { cancelSubmission, retrySubmission, type Submission } from "@/lib/api/data";
 import { qk } from "@/lib/api/hooks";
-import { supabase } from "@/lib/supabase";
 
 const STEPS: { key: string; label: TKey }[] = [
   { key: "upload", label: "processing.stepUpload" },
@@ -62,13 +61,7 @@ export function ProcessingView({ submission: sub }: { submission: Submission }) 
   const refresh = () => qc.invalidateQueries({ queryKey: qk.submission(sub.id) });
 
   const cancel = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("submissions")
-        .update({ status: "failed", error_message: CANCELLED })
-        .eq("id", sub.id);
-      if (error) throw error;
-    },
+    mutationFn: () => cancelSubmission(sub.id),
     onSuccess: () => {
       setConfirmCancel(false);
       toast.message(t("processing.cancelled"));
@@ -78,14 +71,7 @@ export function ProcessingView({ submission: sub }: { submission: Submission }) 
   });
 
   const retry = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("submissions")
-        .update({ status: "queued", error_message: null, progress: 0 })
-        .eq("id", sub.id);
-      if (error) throw error;
-      void triggerAnalysis(sub.id);
-    },
+    mutationFn: () => retrySubmission(sub.id),
     onSuccess: () => {
       toast.message(t("processing.retrying"));
       void refresh();

@@ -1,0 +1,148 @@
+{
+  "at": "2026-10-13T22:22:38.550Z",
+  "llm_model": "gpt-6.1-sol",
+  "prompt_version": "v3-2026-10",
+  "summary": {
+    "cases": 1,
+    "mode": "deterministic+llm",
+    "recall": 1,
+    "precision": 1,
+    "hits": 6,
+    "misses": 0,
+    "false_alarms": 0,
+    "avg_ms_per_case": 20191,
+    "avg_cost_usd_per_case": 0.014386,
+    "total_cost_usd": 0.014386
+  },
+  "per_rule": [
+    {
+      "rule": "AI-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "COM-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "MAW-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "MAW-02",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "MAW-03",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "MAW-04",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    }
+  ],
+  "cases": [
+    {
+      "id": "slimming-tea",
+      "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
+      "ms": 20191,
+      "cost_usd": 0.014386,
+      "outcome": {
+        "MAW-01": "hit",
+        "COM-01": "hit",
+        "MAW-02": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit",
+        "AI-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "استخدموا كود SALEEM20 والرابط في البايو"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 12,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 19,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "ومضمون بدون أعراض جانبية"
+        },
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        },
+        {
+          "rule": "AI-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
+        },
+        {
+          "rule": "MAW-02",
+          "severity": "warning",
+          "t": null,
+          "source": "llm",
+          "confidence": 0.98,
+          "evidence": "جربت شاي التنحيف الجديد 🔥 كود الخصم SALEEM20 الرابط في البايو"
+        }
+      ]
+    }
+  ]
+}

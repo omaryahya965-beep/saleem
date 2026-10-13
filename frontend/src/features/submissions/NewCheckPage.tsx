@@ -34,7 +34,7 @@ import {
 import { useProfile } from "@/lib/api/hooks";
 import type { InspectedMedia } from "@/lib/media";
 
-type Stage = "hashing" | "uploading" | "saving";
+type Stage = "hashing" | "extracting" | "uploading" | "saving";
 type Errors = Partial<Record<"file" | "text" | "consent", string>>;
 
 const SIDE_ITEMS: TKey[] = [
@@ -72,6 +72,7 @@ export function NewCheckPage() {
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [stage, setStage] = useState<Stage | null>(null);
+  const [stageDetail, setStageDetail] = useState<{ done: number; total: number } | null>(null);
 
   // Prefill from the profile, and from the previous version when re-checking.
   useEffect(() => {
@@ -126,7 +127,10 @@ export function NewCheckPage() {
           licenseNo: license,
           parentId: parentId ?? null,
         },
-        setStage,
+        (st, detail) => {
+          setStage(st);
+          setStageDetail(detail ?? null);
+        },
       );
     },
     onSuccess: (id) => {
@@ -160,7 +164,7 @@ export function NewCheckPage() {
 
   const busy = submit.isPending;
   const stageLabel = stage
-    ? t(`newCheck.stage${stage[0]!.toUpperCase()}${stage.slice(1)}` as TKey)
+    ? `${t(`newCheck.stage${stage[0]!.toUpperCase()}${stage.slice(1)}` as TKey)}${stage === "extracting" && stageDetail ? ` ${Math.round((stageDetail.done / stageDetail.total) * 100)}٪` : ""}`
     : t("newCheck.submit");
   const submitButton = (
     <Button type="submit" form="new-check" size="lg" block loading={busy}>

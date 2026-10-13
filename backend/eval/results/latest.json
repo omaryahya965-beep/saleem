@@ -1,0 +1,442 @@
+{
+  "at": "2026-10-13T22:24:52.495Z",
+  "llm_model": "gpt-6.1-sol",
+  "prompt_version": "v3-2026-10",
+  "summary": {
+    "cases": 12,
+    "mode": "deterministic+llm",
+    "recall": 1,
+    "precision": 0.9444444444444444,
+    "hits": 17,
+    "misses": 0,
+    "false_alarms": 1,
+    "avg_ms_per_case": 7495,
+    "avg_cost_usd_per_case": 0.005674666666666667,
+    "total_cost_usd": 0.068096
+  },
+  "per_rule": [
+    {
+      "rule": "AI-01",
+      "hits": 2,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "CNT-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "CNT-02",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "CNT-03",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "CNT-04",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "CNT-05",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "COM-01",
+      "hits": 3,
+      "misses": 0,
+      "false_alarms": 1,
+      "recall": 1,
+      "precision": 0.75,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "MAW-01",
+      "hits": 2,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    },
+    {
+      "rule": "MAW-02",
+      "hits": 3,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "MAW-03",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "MAW-04",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    }
+  ],
+  "cases": [
+    {
+      "id": "slimming-tea",
+      "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
+      "ms": 15208,
+      "cost_usd": 0.0095455,
+      "outcome": {
+        "MAW-01": "hit",
+        "COM-01": "hit",
+        "MAW-02": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit",
+        "AI-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "استخدموا كود SALEEM20 والرابط في البايو"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 12,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 19,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "ومضمون بدون أعراض جانبية"
+        },
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        },
+        {
+          "rule": "AI-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
+        },
+        {
+          "rule": "MAW-02",
+          "severity": "warning",
+          "t": null,
+          "source": "llm",
+          "confidence": 0.98,
+          "evidence": "جربت شاي التنحيف الجديد 🔥 كود الخصم SALEEM20 الرابط في البايو"
+        }
+      ]
+    },
+    {
+      "id": "herbal-tea-fixed",
+      "title": "النسخة المعدّلة: إفصاح وتجربة شخصية",
+      "ms": 3047,
+      "cost_usd": 0.00347,
+      "outcome": {},
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "crypto-daily-return",
+      "title": "منصة استثمار بعائد يومي مضمون",
+      "ms": 8370,
+      "cost_usd": 0.0068,
+      "outcome": {
+        "COM-01": "hit",
+        "MAW-02": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-02",
+          "severity": "warning",
+          "t": 0,
+          "source": "llm",
+          "confidence": 0.99,
+          "evidence": "إعلان، يا شباب لقيت لكم منصة استثمار رهيبة"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 5,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "حطيت فيها ألف ريال وصار لي عائد يومي ثابت"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 12,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "ربح مضمون مية بالمية ولا فيه أي مخاطرة"
+        }
+      ]
+    },
+    {
+      "id": "kid-daily-vlog",
+      "title": "يوميات مع طفل",
+      "ms": 7132,
+      "cost_usd": 0.0033012,
+      "outcome": {
+        "CNT-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-01",
+          "severity": "violation",
+          "t": 6,
+          "source": "llm",
+          "confidence": 0.97,
+          "evidence": "عمره خمس سنين وكذا يحب المراجيح"
+        }
+      ]
+    },
+    {
+      "id": "domestic-worker",
+      "title": "تصوير العاملة المنزلية",
+      "ms": 5642,
+      "cost_usd": 0.004982,
+      "outcome": {
+        "CNT-02": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-02",
+          "severity": "violation",
+          "t": 5,
+          "source": "llm",
+          "confidence": 0.95,
+          "evidence": "تعالي يا الشغالة سلمي على المتابعين"
+        }
+      ]
+    },
+    {
+      "id": "insult",
+      "title": "ألفاظ مسيئة",
+      "ms": 7010,
+      "cost_usd": 0.00667,
+      "outcome": {
+        "CNT-05": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-05",
+          "severity": "violation",
+          "t": 0,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "اللي يقول هالمطعم زين واحد غبي ما يفهم"
+        },
+        {
+          "rule": "CNT-05",
+          "severity": "violation",
+          "t": 6,
+          "source": "llm",
+          "confidence": 1,
+          "evidence": "يا حمار روح جرب قبل لا تتكلم"
+        }
+      ]
+    },
+    {
+      "id": "organic-review",
+      "title": "مراجعة مطعم غير مدفوعة",
+      "ms": 3102,
+      "cost_usd": 0.003042,
+      "outcome": {},
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "ai-undisclosed",
+      "title": "صوت مولّد بالذكاء الاصطناعي دون إفصاح",
+      "ms": 11061,
+      "cost_usd": 0.0053973,
+      "outcome": {
+        "AI-01": "hit",
+        "COM-01": "false_alarm"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "warning",
+          "t": 0,
+          "source": "llm",
+          "confidence": 0.8,
+          "evidence": "ريحته تثبت طول اليوم"
+        },
+        {
+          "rule": "AI-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
+        }
+      ]
+    },
+    {
+      "id": "wealth-flaunt",
+      "title": "استعراض الثراء",
+      "ms": 4985,
+      "cost_usd": 0.005032,
+      "outcome": {
+        "CNT-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-04",
+          "severity": "warning",
+          "t": 0,
+          "source": "llm",
+          "confidence": 0.6,
+          "evidence": "شوفوا الفلوس هذي كلها، كاش على الطاولة\nوالساعة هذي بنص مليون، عادي عندي"
+        }
+      ]
+    },
+    {
+      "id": "code-no-paid-flag",
+      "title": "كود خصم دون تحديد إعلان",
+      "ms": 5668,
+      "cost_usd": 0.005094,
+      "outcome": {
+        "MAW-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "جربت كريم الترطيب من متجر لمسة، استخدموا كوبون: LAMSA15 والرابط في البايو"
+        }
+      ]
+    },
+    {
+      "id": "cure-claim-text",
+      "title": "ادعاء علاجي في منشور نصي",
+      "ms": 11398,
+      "cost_usd": 0.00811,
+      "outcome": {
+        "COM-01": "hit",
+        "MAW-02": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": null,
+          "source": "llm",
+          "confidence": 0.99,
+          "evidence": "زيت الأعشاب الطبيعي يعالج تساقط الشعر نهائياً ويشفي القشرة من أول استخدام"
+        },
+        {
+          "rule": "MAW-02",
+          "severity": "warning",
+          "t": null,
+          "source": "llm",
+          "confidence": 0.96,
+          "evidence": "#إعلان زيت الأعشاب الطبيعي يعالج تساقط الشعر نهائياً ويشفي القشرة من أول استخدام"
+        }
+      ]
+    },
+    {
+      "id": "family-privacy",
+      "title": "تفاصيل خاصة عن الأسرة",
+      "ms": 7321,
+      "cost_usd": 0.006652,
+      "outcome": {
+        "CNT-03": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-03",
+          "severity": "warning",
+          "t": 0,
+          "source": "llm",
+          "confidence": 0.6,
+          "evidence": "هذي غرفة نوم أمي وأبوي، وهنا يحطون أغراضهم الخاصة"
+        },
+        {
+          "rule": "CNT-03",
+          "severity": "warning",
+          "t": 7,
+          "source": "llm",
+          "confidence": 0.6,
+          "evidence": "وأختي الحين تتهاوش مع زوجها، خلونا نصورهم"
+        }
+      ]
+    }
+  ]
+}

@@ -142,6 +142,8 @@ export interface ReportBundle {
   parentFindings: Finding[];
   log: ComplianceLog | null;
   mediaUrl: string | null;
+  /** Signed URLs of evidence frames, by frame id. */
+  frameUrls: Map<string, string>;
 }
 
 async function latestRunWithFindings(submissionId: string) {
@@ -192,6 +194,29 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     mediaUrl = data?.signedUrl ?? null;
   }
 
+  const frameUrls = new Map<string, string>();
+  const frameIds = [
+    ...new Set(findings.map((f) => f.evidence_frame_id).filter((x): x is string => Boolean(x))),
+  ];
+  if (frameIds.length && !submission.media_deleted_at) {
+    const { data: frames } = await supabase
+      .from("frames")
+      .select("id, image_path")
+      .in("id", frameIds);
+    const withPath = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
+      Boolean(f.image_path),
+    );
+    if (withPath.length) {
+      const { data: signed } = await supabase.storage.from("media").createSignedUrls(
+        withPath.map((f) => f.image_path),
+        3600,
+      );
+      withPath.forEach(
+        (f, i) => signed?.[i]?.signedUrl && frameUrls.set(f.id, signed[i]!.signedUrl),
+      );
+    }
+  }
+
   const segments = Array.isArray(transcriptRes.data?.segments)
     ? (transcriptRes.data.segments as unknown as TranscriptSegment[])
     : [];
@@ -207,6 +232,7 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     parentFindings,
     log: logRes.data ?? null,
     mediaUrl,
+    frameUrls,
   };
 }
 
@@ -238,19 +264,49 @@ export async function sha256Hex(data: Blob | string): Promise<string> {
   return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+export type CreateStage = "hashing" | "extracting" | "uploading" | "saving";
+
+async function uploadAll(items: { path: string; blob: Blob; type: string }[], concurrency = 6) {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const it = items[next++]!;
+      const { error } = await supabase.storage
+        .from("media")
+        .upload(it.path, it.blob, { contentType: it.type, upsert: true });
+      if (error) throw new ApiError(error.message, "upload");
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+}
+
 export async function createSubmission(
   input: NewSubmissionInput,
-  onStage?: (stage: "hashing" | "uploading" | "saving") => void,
+  onStage?: (stage: CreateStage, detail?: { done: number; total: number }) => void,
 ): Promise<string> {
   const id = crypto.randomUUID();
   const folder = `${input.userId}/${id}`;
   let filePath: string | null = null;
   let thumbPath: string | null = null;
+  let audioPath: string | null = null;
 
   onStage?.("hashing");
-  const sha256 = await sha256Hex(input.file ?? `${input.caption}\n${input.textContent}`);
+  const sha256 = await sha256Hex(
+    input.file ??
+      `${input.caption}
+${input.textContent}`,
+  );
 
   if (input.file) {
+    // Prepare model inputs in the browser: frames (≤ 768 px) and a 16 kHz mono audio track.
+    onStage?.("extracting");
+    const { extractAudio, extractFrames, imageToFrame } = await import("@/lib/extract");
+    const frames =
+      input.kind === "video"
+        ? await extractFrames(input.file, (done, total) => onStage?.("extracting", { done, total }))
+        : [await imageToFrame(input.file)].filter((f): f is NonNullable<typeof f> => f !== null);
+    const audio = input.kind === "video" ? await extractAudio(input.file) : null;
+
     onStage?.("uploading");
     const ext = (
       input.file.name.split(".").pop() || (input.kind === "video" ? "mp4" : "jpg")
@@ -260,15 +316,23 @@ export async function createSubmission(
       .from("media")
       .upload(filePath, input.file, { contentType: input.file.type || undefined, upsert: false });
     if (error) throw new ApiError(error.message, "upload");
+
+    const assets = frames.map((f) => ({
+      path: `${folder}/frames/${String(Math.round(f.t * 1000)).padStart(7, "0")}.jpg`,
+      blob: f.blob,
+      type: "image/jpeg",
+    }));
+    if (audio) {
+      audioPath = `${folder}/audio.wav`;
+      assets.push({ path: audioPath, blob: audio, type: "audio/wav" });
+    }
     if (input.poster) {
       thumbPath = `${folder}/thumb.jpg`;
-      const { error: tErr } = await supabase.storage
-        .from("media")
-        .upload(thumbPath, input.poster, { contentType: "image/jpeg" });
-      if (tErr) thumbPath = null; // thumbnail is cosmetic; never block the check on it
+      assets.push({ path: thumbPath, blob: input.poster, type: "image/jpeg" });
     } else if (input.kind === "image") {
-      thumbPath = filePath;
+      thumbPath = assets[0]?.path ?? filePath;
     }
+    await uploadAll(assets);
   }
 
   onStage?.("saving");
@@ -289,14 +353,24 @@ export async function createSubmission(
     sha256,
     duration_seconds: input.durationSeconds,
     file_path: filePath,
+    audio_path: audioPath,
     thumbnail_path: thumbPath,
-    status: "queued",
-    progress: 0,
   });
   if (error) fail(error);
 
   void triggerAnalysis(id);
   return id;
+}
+
+export async function cancelSubmission(id: string): Promise<void> {
+  const { error } = await supabase.rpc("cancel_submission", { _sid: id });
+  if (error) fail(error);
+}
+
+export async function retrySubmission(id: string): Promise<void> {
+  const { error } = await supabase.rpc("retry_submission", { _sid: id });
+  if (error) fail(error);
+  await triggerAnalysis(id);
 }
 
 /** Starts (or resumes) the analysis pipeline. Uses the signed-in user's JWT. */

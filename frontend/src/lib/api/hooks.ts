@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import {
   TERMINAL,
   fetchReport,
@@ -55,5 +56,37 @@ export function useProfile(userId: string | undefined) {
     queryKey: ["profile", userId],
     queryFn: () => fetchProfile(userId!),
     enabled: Boolean(userId),
+  });
+}
+
+export function useIsAdmin(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["is-admin", userId],
+    enabled: Boolean(userId),
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!)
+        .eq("role", "admin");
+      if (error) throw error;
+      return (data ?? []).length > 0;
+    },
+  });
+}
+
+export function useEvalRuns() {
+  return useQuery({
+    queryKey: ["eval-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("eval_runs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 }

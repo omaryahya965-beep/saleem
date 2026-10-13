@@ -46,3 +46,40 @@ Format: decision — why — alternatives considered.
   created on the hosted project; public data still comes from the real backend.
 - **D24. Rule source names are Arabic-only in the DB** — shown as-is in English UI until `source_name_en`
   is added (Phase 5.9).
+
+## Phase 4
+- **D25. Models (checked on developers.openai.com, 2026-10-14):** LLM `gpt-6.1-sol` (vision + reasoning,
+  strict Structured Outputs, $2/$10 per 1M tok); alt `gpt-6-luna` ($0.10/$0.50) for cost; `gpt-6-astra` too costly.
+  ASR `whisper-1` ($0.006/min). **Measured** cost: ≈$0.006 per text case, $0.027 for a 22 s clip with 23 frames
+  (≈$0.06 projected for 60 s / 62 frames).
+- **D26. `whisper-1` over `gpt-4o-transcribe-diarize`** — tested live: diarize returned 1 segment for 21 s of a
+  single speaker (segments = speaker turns), pinning every claim to 00:00; whisper gave sentence segments
+  (claim at 8.2 s ✓). The diarize/whisper switch is env-only (`TRANSCRIPTION_MODEL`); the provider
+  auto-falls back to whisper on configuration errors. `gpt-transcribe` documents no segment timestamps.
+- **D27. Gemini/Anthropic providers wired but disabled** (`LLM_PROVIDER=gemini|anthropic` → clear error).
+- **D28. Responses API + `text.format: json_schema strict`** and server-side validation (`validateAnalysis`),
+  one extra attempt on invalid JSON, exponential backoff on 408/409/429/5xx, 120–140 s timeouts. Unsupported
+  `reasoning` param (non-reasoning models) is dropped automatically.
+- **D29. Frames 1/s (≤60) + first/last at ≤768 px and mono 16 kHz WAV are produced in the browser**
+  (`frontend/src/lib/extract.ts`), uploaded to `{user}/{sid}/frames/<ms>.jpg` + `audio.wav`; the function
+  never decodes video (CPU limits). Images use one resized frame; text posts skip ASR/frames.
+  Handles WebM with `duration=Infinity` (MediaRecorder) — found while testing.
+- **D30. Pipeline order transcribe → model (findings + on-screen text) → deterministic (transcript + OCR +
+  caption) → merge**, so regex checks also cover on-screen text. Steps persist in `analysis_runs.step_outputs`
+  and resume on retry; 202 + `EdgeRuntime.waitUntil`; heartbeat prevents double workers; cancellation checked
+  between steps.
+- **D31. Report integrity hardening (migration `20261014000000`)**: removed owner write policies on findings,
+  runs, transcripts, frames, compliance logs; owners can only update `title`; insert trigger forces `queued`;
+  cancel/retry via SECURITY DEFINER RPCs. Without this a user could forge a "ready" compliance log.
+- **D32. No auto-admin on first sign-up** (old trigger made the first user admin).
+- **D33. Whole-post rules (MAW-01..04, AI-01) keep one finding**, preferring the deterministic one; other
+  rules dedupe within 3 s; confidence < 0.7 violation → warning.
+- **D34. Hourly media cleanup via pg_cron + pg_net**; shared secret generated inside Vault and verified by
+  `verify_cron_secret()` — the secret never leaves the database or enters git. `cleanup-media` deployed with
+  `verify_jwt=false` and verifies JWT (owner path) or the cron secret itself; also removes orphan uploads.
+- **D35. Rulebook**: exactly the 12 rules active, all `legal_status=illustrative_pending_review`,
+  `source_verified=false`; added `source_name_en`. CNT-01 instructions now accept speech evidence (eval miss).
+- **D36. Eval harness**: `backend/eval/cases.json` (12 Saudi-dialect cases), `npm run eval`, results JSON +
+  optional upload to `eval_runs` (needs service key); admin page `/admin/eval`. `npm run clips` runs real
+  clips via headless Chromium using the app's own extraction module. Test users can't be created
+  (Supabase rejects example.com; no real mailboxes) → live isolation tests skip until creds are provided.

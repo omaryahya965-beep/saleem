@@ -7,6 +7,7 @@ export function toIssueViews(
   findings: Finding[],
   rules: Map<string, Rule>,
   lang: Lang,
+  frameUrls: Map<string, string> = new Map(),
 ): IssueView[] {
   return findings.map((f) => {
     const rule = rules.get(f.rule_code);
@@ -20,10 +21,11 @@ export function toIssueViews(
       title: explanation || ruleTitle,
       ruleCode: f.rule_code,
       ruleTitle,
-      sourceName: rule?.source_name ?? "",
+      sourceName: (lang === "en" ? rule?.source_name_en : null) || rule?.source_name || "",
       sourceUrl: rule?.source_url || null,
       evidenceType: f.evidence_type,
       evidence: f.evidence_text,
+      frameUrl: f.evidence_frame_id ? (frameUrls.get(f.evidence_frame_id) ?? null) : null,
       fix: ((lang === "en" ? f.fix_en : f.fix_ar) || f.fix_ar || f.fix_en) ?? "",
     };
   });

@@ -60,7 +60,27 @@ function loadVideo(url: string): Promise<HTMLVideoElement> {
   });
 }
 
-function seek(v: HTMLVideoElement, t: number): Promise<void> {
+/**
+ * Some files (notably WebM from MediaRecorder) report duration = Infinity until the browser
+ * has scanned to the end. Seeking far ahead forces the real duration to be computed.
+ */
+export async function resolveDuration(v: HTMLVideoElement): Promise<number> {
+  if (Number.isFinite(v.duration)) return v.duration;
+  await new Promise<void>((resolve) => {
+    const done = () => {
+      if (!Number.isFinite(v.duration)) return;
+      v.removeEventListener("durationchange", done);
+      resolve();
+    };
+    v.addEventListener("durationchange", done);
+    v.currentTime = 1e101;
+    setTimeout(resolve, 5000);
+  });
+  v.currentTime = 0;
+  return Number.isFinite(v.duration) ? v.duration : NaN;
+}
+
+export function seek(v: HTMLVideoElement, t: number): Promise<void> {
   return new Promise((resolve) => {
     const done = () => {
       v.removeEventListener("seeked", done);
@@ -122,12 +142,17 @@ export async function inspectMedia(
       };
     }
     const v = await loadVideo(url);
-    const durationError = validateDuration(v.duration);
+    const duration = await resolveDuration(v);
+    if (!Number.isFinite(duration)) {
+      URL.revokeObjectURL(url);
+      return { ok: false, error: { code: "read" } };
+    }
+    const durationError = validateDuration(duration);
     if (durationError) {
       URL.revokeObjectURL(url);
       return { ok: false, error: durationError };
     }
-    await seek(v, Math.min(0.5, v.duration / 2));
+    await seek(v, Math.min(0.5, duration / 2));
     const poster = await grabFrame(v, 480, 0.75);
     URL.revokeObjectURL(url);
     return {
@@ -136,7 +161,7 @@ export async function inspectMedia(
         file,
         kind,
         bytes: file.size,
-        duration: v.duration,
+        duration,
         width: v.videoWidth,
         height: v.videoHeight,
         previewUrl: poster ? URL.createObjectURL(poster) : null,

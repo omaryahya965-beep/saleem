@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-13T22:22:14.031Z",
+  "llm_model": "gpt-6.1-sol",
+  "prompt_version": "v3-2026-10",
+  "summary": {
+    "cases": 1,
+    "mode": "deterministic+llm",
+    "recall": 1,
+    "precision": 1,
+    "hits": 1,
+    "misses": 0,
+    "false_alarms": 0,
+    "avg_ms_per_case": 7261,
+    "avg_cost_usd_per_case": 0.00606,
+    "total_cost_usd": 0.00606
+  },
+  "per_rule": [
+    {
+      "rule": "CNT-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "kid-daily-vlog",
+      "title": "يوميات مع طفل",
+      "ms": 7261,
+      "cost_usd": 0.00606,
+      "outcome": {
+        "CNT-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "CNT-01",
+          "severity": "violation",
+          "t": 6,
+          "source": "llm",
+          "confidence": 0.97,
+          "evidence": "سلّم على المتابعين، عمره خمس سنين وكذا يحب المراجيح"
+        }
+      ]
+    }
+  ]
+}

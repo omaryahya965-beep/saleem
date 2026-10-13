@@ -1,0 +1,155 @@
+{
+  "at": "2026-10-13T22:17:14.909Z",
+  "models": {
+    "asr": "whisper-1",
+    "llm": "gpt-6.1-sol"
+  },
+  "asrMs": 2674,
+  "llmMs": 20036,
+  "usage": {
+    "input_tokens": 1644,
+    "output_tokens": 986,
+    "cached_input_tokens": 0
+  },
+  "cost": 0.015297999999999999,
+  "segments": [
+    {
+      "start": 0,
+      "end": 7.679999828338623,
+      "text": "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد، صراحة طعمه حلو وريخته تجنن."
+    },
+    {
+      "start": 8.239999771118164,
+      "end": 14.960000038146973,
+      "text": "هذا الشاي ينحف وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية."
+    },
+    {
+      "start": 15.520000457763672,
+      "end": 19,
+      "text": "استخدموا كود سليم 20 والرابط في البيو."
+    },
+    {
+      "start": 19.479999542236328,
+      "end": 21.440000534057617,
+      "text": "أطلبوا الحين قبل لا يخلص."
+    }
+  ],
+  "on_screen_text": [
+    {
+      "t": 12,
+      "text": "شاي التنحيف السحري"
+    },
+    {
+      "t": 12,
+      "text": "ينحف ٥ كيلو في أسبوع — مضمون!"
+    },
+    {
+      "t": 12,
+      "text": "كود الخصم: SLIM50"
+    }
+  ],
+  "findings": [
+    {
+      "rule_code": "MAW-01",
+      "severity": "violation",
+      "t_start": 0,
+      "t_end": 5,
+      "evidence_type": "frame",
+      "evidence_text": "كود الخصم: SLIM50",
+      "explanation_ar": "المحتوى ترويجي (تم تحديد «إعلان مدفوع») دون إفصاح صريح عن الإعلان في الوصف أو في أول 5 ثوانٍ.",
+      "explanation_en": "Promotional content without a clear ad disclosure in the caption or the first 5 seconds.",
+      "fix_ar": "ابدأ المقطع بعبارة «إعلان مدفوع» واكتب #إعلان في بداية الوصف.",
+      "fix_en": "Open with \"paid ad\" and put #ad at the start of the caption.",
+      "confidence": 0.95,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "COM-01",
+      "severity": "violation",
+      "t_start": 8.2,
+      "t_end": 15,
+      "evidence_type": "transcript",
+      "evidence_text": "هذا الشاي ينحف وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
+      "evidence_frame_t": null,
+      "explanation_ar": "يتضمن الإعلان وعدًا قطعيًا بخسارة الوزن وضمانًا مطلقًا لعدم وجود أعراض جانبية.",
+      "explanation_en": "The ad makes a definite weight-loss promise and an absolute guarantee of no side effects.",
+      "fix_ar": "احذف وعود خسارة الوزن المضمونة وانعدام الأعراض الجانبية من الصوت والنص الظاهر، واستخدم فقط معلومات موثقة ومسموحًا بها للمنتج.",
+      "fix_en": "Remove guaranteed weight-loss and no-side-effect claims from the audio and on-screen text, and use only substantiated information permitted for the product.",
+      "confidence": 0.99,
+      "source": "llm"
+    },
+    {
+      "rule_code": "MAW-02",
+      "severity": "warning",
+      "t_start": 8.2,
+      "t_end": 15,
+      "evidence_type": "transcript",
+      "evidence_text": "هذا الشاي ينحف وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
+      "evidence_frame_t": null,
+      "explanation_ar": "يُسوَّق الشاي بصفته منتجًا للتنحيف، مما يستدعي التأكد من ترخيصه قبل الإعلان.",
+      "explanation_en": "The tea is marketed as a weight-loss product, so its licensing should be confirmed before advertising.",
+      "fix_ar": "اطلب من المعلن وثيقة ترخيص المنتج وتحقق من صلاحيتها قبل النشر.",
+      "fix_en": "Ask the advertiser for the product’s licensing documentation and verify its validity before publishing.",
+      "confidence": 0.95,
+      "source": "llm"
+    },
+    {
+      "rule_code": "COM-01",
+      "severity": "violation",
+      "t_start": 12,
+      "t_end": 13,
+      "evidence_type": "frame",
+      "evidence_text": "ينحف ٥ كيلو في أسبوع — مضمون!",
+      "explanation_ar": "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي.",
+      "explanation_en": "Absolute or guaranteed health claim in promotional content.",
+      "fix_ar": "احذف وعود النتائج والضمان، واكتفِ بوصف تجربتك الشخصية مع توضيح أن النتائج تختلف.",
+      "fix_en": "Remove result and guarantee promises; describe your personal experience and note results vary.",
+      "confidence": 0.9,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "MAW-03",
+      "severity": "warning",
+      "t_start": null,
+      "t_end": null,
+      "evidence_type": "metadata",
+      "evidence_text": "لا يوجد عقد مكتوب مع العلامة",
+      "explanation_ar": "محتوى ترويجي دون عقد أو اتفاق مكتوب مع الجهة المعلنة.",
+      "explanation_en": "Promotional content without a written agreement with the advertiser.",
+      "fix_ar": "وثّق الاتفاق مع العلامة كتابياً قبل النشر.",
+      "fix_en": "Put the brand agreement in writing before publishing.",
+      "confidence": 0.9,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "MAW-04",
+      "severity": "warning",
+      "t_start": null,
+      "t_end": null,
+      "evidence_type": "metadata",
+      "evidence_text": "لم يُدخل رقم رخصة موثوق",
+      "explanation_ar": "لم يُدخل رقم رخصة موثوق لحساب ينشر محتوى ترويجياً.",
+      "explanation_en": "No Mawthooq license number provided for promotional content.",
+      "fix_ar": "تحقق من ربط حسابك برخصة موثوق وأدخل رقمها.",
+      "fix_en": "Make sure your account is linked to a Mawthooq license and enter its number.",
+      "confidence": 0.8,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "MAW-01",
+      "severity": "violation",
+      "t_start": null,
+      "t_end": null,
+      "evidence_type": "caption",
+      "evidence_text": "جربت شاي التنحيف الجديد 🔥",
+      "evidence_frame_t": null,
+      "explanation_ar": "المحتوى ترويجي، ولا يظهر إفصاح إعلاني في الوصف أو الكلام خلال أول خمس ثوانٍ، ولا تتوفر صورة من البداية للتحقق بصريًا.",
+      "explanation_en": "The content is promotional, with no ad disclosure in the caption or speech during the first five seconds, and no opening frame is available for visual verification.",
+      "fix_ar": "أضف «إعلان مدفوع» إلى بداية الوصف وعلى الشاشة منذ أول ثانية، قبل تقديم المنتج.",
+      "fix_en": "Add “Paid advertisement” at the start of the caption and on screen from the first second, before presenting the product.",
+      "confidence": 0.9,
+      "source": "llm"
+    }
+  ],
+  "status": "needs_fixes"
+}
