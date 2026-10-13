@@ -4,7 +4,11 @@
 import { describe, expect, it } from "vitest";
 import { runDeterministicChecks } from "../../supabase/functions/_shared/rules/deterministic.ts";
 import { mergeAndFilterFindings } from "../../supabase/functions/_shared/pipeline/merge.ts";
-import type { Finding, SubmissionData, TranscriptSegment } from "../../supabase/functions/_shared/types.ts";
+import type {
+  Finding,
+  SubmissionData,
+  TranscriptSegment,
+} from "../../supabase/functions/_shared/types.ts";
 
 describe("Deterministic Compliance Engine (Arabic Fixtures)", () => {
   it("detects MAW-01 violation when paid ad has no disclosure in caption or first 5s", () => {
@@ -164,7 +168,7 @@ describe("Pipeline Merge & Calibration", () => {
 
     const { mergedFindings } = mergeAndFilterFindings(mockFindings, validRules);
     expect(mergedFindings.length).toBe(1);
-    expect(mergedFindings[0].rule_code).toBe("MAW-01");
+    expect(mergedFindings[0]?.rule_code).toBe("MAW-01");
   });
 
   it("downgrades weak evidence (< 0.7 confidence) to warning", () => {
@@ -184,7 +188,7 @@ describe("Pipeline Merge & Calibration", () => {
     ];
 
     const { mergedFindings, overallStatus } = mergeAndFilterFindings(mockFindings, validRules);
-    expect(mergedFindings[0].severity).toBe("warning");
+    expect(mergedFindings[0]?.severity).toBe("warning");
     expect(overallStatus).toBe("review");
   });
 
@@ -218,6 +222,6 @@ describe("Pipeline Merge & Calibration", () => {
 
     const { mergedFindings } = mergeAndFilterFindings(mockFindings, validRules);
     expect(mergedFindings.length).toBe(1);
-    expect(mergedFindings[0].confidence).toBe(0.95);
+    expect(mergedFindings[0]?.confidence).toBe(0.95);
   });
 });

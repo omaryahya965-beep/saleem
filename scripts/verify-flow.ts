@@ -5,16 +5,112 @@
 import { runDeterministicChecks } from "../supabase/functions/_shared/rules/deterministic.ts";
 import { mergeAndFilterFindings } from "../supabase/functions/_shared/pipeline/merge.ts";
 import { runLlmChecks } from "../supabase/functions/_shared/providers/llm.ts";
-import type { Finding, RuleRecord, SubmissionData, TranscriptSegment } from "../supabase/functions/_shared/types.ts";
+import type {
+  Finding,
+  RuleRecord,
+  SubmissionData,
+  TranscriptSegment,
+} from "../supabase/functions/_shared/types.ts";
 
 const ACTIVE_RULES: RuleRecord[] = [
-  { code: "MAW-01", category: "mawthooq", title_ar: "الإفصاح الواضح عن الإعلان", title_en: "Ad disclosure", description_ar: "", description_en: "", source_name: "موثوق", source_url: "https://mawthooq.gcam.gov.sa", check_type: "hybrid", default_severity: "violation", llm_instructions: "Check disclosure in caption or first 5s", applies_to_categories: [] },
-  { code: "MAW-02", category: "mawthooq", title_ar: "ترخيص المنتج", title_en: "Product license", description_ar: "", description_en: "", source_name: "موثوق", source_url: "https://mawthooq.gcam.gov.sa", check_type: "hybrid", default_severity: "warning", llm_instructions: "Check license for regulated categories", applies_to_categories: [] },
-  { code: "MAW-03", category: "mawthooq", title_ar: "عقد مكتوب", title_en: "Written contract", description_ar: "", description_en: "", source_name: "موثوق", source_url: "https://mawthooq.gcam.gov.sa", check_type: "metadata", default_severity: "warning", llm_instructions: "Check written contract", applies_to_categories: [] },
-  { code: "MAW-04", category: "mawthooq", title_ar: "رخصة موثوق", title_en: "Mawthooq license", description_ar: "", description_en: "", source_name: "موثوق", source_url: "https://mawthooq.gcam.gov.sa", check_type: "metadata", default_severity: "warning", llm_instructions: "Check license number", applies_to_categories: [] },
-  { code: "CNT-01", category: "content", title_ar: "عدم تصوير الأطفال", title_en: "No children", description_ar: "", description_en: "", source_name: "الهيئة", source_url: "https://gcam.gov.sa", check_type: "visual", default_severity: "violation", llm_instructions: "Check minors in content", applies_to_categories: [] },
-  { code: "AI-01", category: "ai", title_ar: "الإفصاح عن الذكاء الاصطناعي", title_en: "Disclose AI", description_ar: "", description_en: "", source_name: "سدايا", source_url: "https://sdaia.gov.sa", check_type: "hybrid", default_severity: "violation", llm_instructions: "Check AI disclosure", applies_to_categories: [] },
-  { code: "COM-01", category: "commerce", title_ar: "عدم الادعاءات المطلقة", title_en: "No absolute claims", description_ar: "", description_en: "", source_name: "التجارة", source_url: "https://mc.gov.sa", check_type: "hybrid", default_severity: "warning", llm_instructions: "Check absolute health claims", applies_to_categories: [] },
+  {
+    code: "MAW-01",
+    category: "mawthooq",
+    title_ar: "الإفصاح الواضح عن الإعلان",
+    title_en: "Ad disclosure",
+    description_ar: "",
+    description_en: "",
+    source_name: "موثوق",
+    source_url: "https://mawthooq.gcam.gov.sa",
+    check_type: "hybrid",
+    default_severity: "violation",
+    llm_instructions: "Check disclosure in caption or first 5s",
+    applies_to_categories: [],
+  },
+  {
+    code: "MAW-02",
+    category: "mawthooq",
+    title_ar: "ترخيص المنتج",
+    title_en: "Product license",
+    description_ar: "",
+    description_en: "",
+    source_name: "موثوق",
+    source_url: "https://mawthooq.gcam.gov.sa",
+    check_type: "hybrid",
+    default_severity: "warning",
+    llm_instructions: "Check license for regulated categories",
+    applies_to_categories: [],
+  },
+  {
+    code: "MAW-03",
+    category: "mawthooq",
+    title_ar: "عقد مكتوب",
+    title_en: "Written contract",
+    description_ar: "",
+    description_en: "",
+    source_name: "موثوق",
+    source_url: "https://mawthooq.gcam.gov.sa",
+    check_type: "metadata",
+    default_severity: "warning",
+    llm_instructions: "Check written contract",
+    applies_to_categories: [],
+  },
+  {
+    code: "MAW-04",
+    category: "mawthooq",
+    title_ar: "رخصة موثوق",
+    title_en: "Mawthooq license",
+    description_ar: "",
+    description_en: "",
+    source_name: "موثوق",
+    source_url: "https://mawthooq.gcam.gov.sa",
+    check_type: "metadata",
+    default_severity: "warning",
+    llm_instructions: "Check license number",
+    applies_to_categories: [],
+  },
+  {
+    code: "CNT-01",
+    category: "content",
+    title_ar: "عدم تصوير الأطفال",
+    title_en: "No children",
+    description_ar: "",
+    description_en: "",
+    source_name: "الهيئة",
+    source_url: "https://gcam.gov.sa",
+    check_type: "visual",
+    default_severity: "violation",
+    llm_instructions: "Check minors in content",
+    applies_to_categories: [],
+  },
+  {
+    code: "AI-01",
+    category: "ai",
+    title_ar: "الإفصاح عن الذكاء الاصطناعي",
+    title_en: "Disclose AI",
+    description_ar: "",
+    description_en: "",
+    source_name: "سدايا",
+    source_url: "https://sdaia.gov.sa",
+    check_type: "hybrid",
+    default_severity: "violation",
+    llm_instructions: "Check AI disclosure",
+    applies_to_categories: [],
+  },
+  {
+    code: "COM-01",
+    category: "commerce",
+    title_ar: "عدم الادعاءات المطلقة",
+    title_en: "No absolute claims",
+    description_ar: "",
+    description_en: "",
+    source_name: "التجارة",
+    source_url: "https://mc.gov.sa",
+    check_type: "hybrid",
+    default_severity: "warning",
+    llm_instructions: "Check absolute health claims",
+    applies_to_categories: [],
+  },
 ];
 
 const VALID_RULE_CODES = new Set(ACTIVE_RULES.map((r) => r.code));
@@ -75,24 +171,42 @@ async function runEndToEndVerification() {
     { start: 19, end: 24, text: "ومضمون بدون أعراض جانبية" },
   ];
 
-  assert("Submission metadata is populated", !!sampleSubmission1.caption && sampleSubmission1.is_paid_ad);
+  assert(
+    "Submission metadata is populated",
+    !!sampleSubmission1.caption && sampleSubmission1.is_paid_ad,
+  );
   assert("SHA-256 file fingerprint is calculated", sampleSubmission1.sha256?.length === 64);
 
   // --------------------------------------------------------------------------
   // STEP 3: Executing Analysis Pipeline (Stage by Stage)
   // --------------------------------------------------------------------------
   console.log("\nStep 3: Running Pipeline (Deterministic -> LLM -> Merge)");
-  
+
   // 3a: Deterministic
   const deterministicFindings = runDeterministicChecks(sampleSubmission1, sampleSegments);
-  assert("Deterministic engine detected MAW-01 (Missing Ad Disclosure)", deterministicFindings.some((f) => f.rule_code === "MAW-01"));
-  assert("Deterministic engine detected MAW-03 (Missing Written Contract)", deterministicFindings.some((f) => f.rule_code === "MAW-03"));
-  assert("Deterministic engine detected MAW-04 (Missing Mawthooq License)", deterministicFindings.some((f) => f.rule_code === "MAW-04"));
-  assert("Deterministic engine detected AI-01 (Missing AI Disclosure)", deterministicFindings.some((f) => f.rule_code === "AI-01"));
+  assert(
+    "Deterministic engine detected MAW-01 (Missing Ad Disclosure)",
+    deterministicFindings.some((f) => f.rule_code === "MAW-01"),
+  );
+  assert(
+    "Deterministic engine detected MAW-03 (Missing Written Contract)",
+    deterministicFindings.some((f) => f.rule_code === "MAW-03"),
+  );
+  assert(
+    "Deterministic engine detected MAW-04 (Missing Mawthooq License)",
+    deterministicFindings.some((f) => f.rule_code === "MAW-04"),
+  );
+  assert(
+    "Deterministic engine detected AI-01 (Missing AI Disclosure)",
+    deterministicFindings.some((f) => f.rule_code === "AI-01"),
+  );
 
   // 3b: LLM checks
   const llmFindings = await runLlmChecks(sampleSubmission1, sampleSegments, ACTIVE_RULES, []);
-  assert("LLM inspection returned findings for health claims", llmFindings.some((f) => f.rule_code === "COM-01"));
+  assert(
+    "LLM inspection returned findings for health claims",
+    llmFindings.some((f) => f.rule_code === "COM-01"),
+  );
 
   // 3c: Merge
   const allFindings = [...deterministicFindings, ...llmFindings];
@@ -107,7 +221,10 @@ async function runEndToEndVerification() {
   console.log("\nStep 4: Verifying Timeline Markers & Video Seeking");
   const com01Finding = mergedFindings.find((f) => f.rule_code === "COM-01");
   const seekTarget = com01Finding?.t_start;
-  assert("Finding has associated timestamp for video seeking", seekTarget !== null && seekTarget !== undefined);
+  assert(
+    "Finding has associated timestamp for video seeking",
+    seekTarget !== null && seekTarget !== undefined,
+  );
   assert("Seek timestamp corresponds to spoken claim (12s)", seekTarget === 12);
 
   // --------------------------------------------------------------------------
@@ -138,12 +255,27 @@ async function runEndToEndVerification() {
   ];
 
   const correctedDeterministic = runDeterministicChecks(sampleSubmission2, correctedSegments);
-  assert("Corrected submission eliminates MAW-01 violation", !correctedDeterministic.some((f) => f.rule_code === "MAW-01"));
-  assert("Corrected submission eliminates MAW-03 warning", !correctedDeterministic.some((f) => f.rule_code === "MAW-03"));
-  assert("Corrected submission eliminates MAW-04 warning", !correctedDeterministic.some((f) => f.rule_code === "MAW-04"));
-  assert("Corrected submission eliminates AI-01 violation", !correctedDeterministic.some((f) => f.rule_code === "AI-01"));
+  assert(
+    "Corrected submission eliminates MAW-01 violation",
+    !correctedDeterministic.some((f) => f.rule_code === "MAW-01"),
+  );
+  assert(
+    "Corrected submission eliminates MAW-03 warning",
+    !correctedDeterministic.some((f) => f.rule_code === "MAW-03"),
+  );
+  assert(
+    "Corrected submission eliminates MAW-04 warning",
+    !correctedDeterministic.some((f) => f.rule_code === "MAW-04"),
+  );
+  assert(
+    "Corrected submission eliminates AI-01 violation",
+    !correctedDeterministic.some((f) => f.rule_code === "AI-01"),
+  );
 
-  const { overallStatus: correctedStatus } = mergeAndFilterFindings(correctedDeterministic, VALID_RULE_CODES);
+  const { overallStatus: correctedStatus } = mergeAndFilterFindings(
+    correctedDeterministic,
+    VALID_RULE_CODES,
+  );
   assert("Corrected submission evaluates as 'ready' for publication", correctedStatus === "ready");
 
   // --------------------------------------------------------------------------

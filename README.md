@@ -54,6 +54,7 @@ Open [http://localhost:3000](http://localhost:3000) (or the port displayed in te
 ## Local URLs & Services
 
 Once `npx supabase start` is running:
+
 - **Application Web UI**: [http://localhost:3000](http://localhost:3000)
 - **Supabase Studio Dashboard**: [http://localhost:54323](http://localhost:54323)
 - **API URL**: `http://localhost:54321`
@@ -73,6 +74,7 @@ Once `npx supabase start` is running:
 ## Verification & Testing
 
 To run the end-to-end automated verification flow testing demo reports, video timestamp seeking, new check submission, pipeline calibration, re-check flow, and printable compliance certificates:
+
 ```bash
 npx tsx scripts/verify-flow.ts
 ```

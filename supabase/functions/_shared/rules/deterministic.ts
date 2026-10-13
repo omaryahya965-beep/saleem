@@ -14,17 +14,11 @@ const DISCLOSURE_PATTERNS = [
   /sponsored/i,
 ];
 
-const AI_DISCLOSURE_PATTERNS = [
-  /ذكاء\s*اصطناعي/i,
-  /مولّد/i,
-  /معدّل/i,
-  /\bai\b/i,
-  /#ai\b/i,
-];
+const AI_DISCLOSURE_PATTERNS = [/ذكاء\s*اصطناعي/i, /مولّد/i, /معدّل/i, /\bai\b/i, /#ai\b/i];
 
 export function runDeterministicChecks(
   submission: SubmissionData,
-  segments: TranscriptSegment[] = []
+  segments: TranscriptSegment[] = [],
 ): Finding[] {
   const findings: Finding[] = [];
 
@@ -52,7 +46,7 @@ export function runDeterministicChecks(
         explanation_ar: "المحتوى ترويجي (إعلان مدفوع) دون إفصاح صريح عن الإعلان قبل بدايته.",
         explanation_en: "Promotional content without an ad disclosure before it starts.",
         fix_ar: "ابدأ المقطع بعبارة «إعلان مدفوع» وأضف #إعلان في بداية الوصف.",
-        fix_en: "Open with \"paid ad\" and add #إعلان at the start of the caption.",
+        fix_en: 'Open with "paid ad" and add #إعلان at the start of the caption.',
         confidence: 0.95,
         source: "deterministic",
       });
@@ -72,13 +66,16 @@ export function runDeterministicChecks(
       explanation_en: "Paid ad without a written contract with the brand.",
       fix_ar: "وثّق الاتفاق مع الماركة كتابياً قبل النشر.",
       fix_en: "Put the brand agreement in writing before publishing.",
-      confidence: 0.90,
+      confidence: 0.9,
       source: "deterministic",
     });
   }
 
   // 3. MAW-04: Mawthooq license check
-  if (submission.is_paid_ad && (!submission.mawthooq_license_no || submission.mawthooq_license_no.trim() === "")) {
+  if (
+    submission.is_paid_ad &&
+    (!submission.mawthooq_license_no || submission.mawthooq_license_no.trim() === "")
+  ) {
     findings.push({
       rule_code: "MAW-04",
       severity: "warning",
@@ -90,7 +87,7 @@ export function runDeterministicChecks(
       explanation_en: "No Mawthooq license number provided for a promotional post.",
       fix_ar: "تحقق من ربط حسابك برخصة موثوق وأدخل رقمها.",
       fix_en: "Verify your account is linked to a Mawthooq license and enter it.",
-      confidence: 0.80,
+      confidence: 0.8,
       source: "deterministic",
     });
   }
@@ -111,7 +108,7 @@ export function runDeterministicChecks(
         explanation_ar: "استُخدم الذكاء الاصطناعي في إنشاء المحتوى أو تعديله دون إفصاح واضح.",
         explanation_en: "AI was used without disclosure.",
         fix_ar: "أضف «المحتوى معدّل بالذكاء الاصطناعي» في الوصف.",
-        fix_en: "Add \"AI-edited content\" to the caption.",
+        fix_en: 'Add "AI-edited content" to the caption.',
         confidence: 0.95,
         source: "deterministic",
       });

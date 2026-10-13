@@ -32,10 +32,10 @@ serve(async (req: Request) => {
     const submissionId = body.submission_id;
 
     if (!submissionId) {
-      return new Response(
-        JSON.stringify({ error: "Missing required parameter: submission_id" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Missing required parameter: submission_id" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`[Analyze] Starting analysis for submission: ${submissionId}`);
@@ -50,7 +50,7 @@ serve(async (req: Request) => {
     if (subError || !submission) {
       return new Response(
         JSON.stringify({ error: `Submission not found: ${subError?.message || ""}` }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -58,7 +58,7 @@ serve(async (req: Request) => {
     if (submission.is_demo) {
       return new Response(
         JSON.stringify({ status: "done", message: "Demo submission already analyzed" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -69,7 +69,8 @@ serve(async (req: Request) => {
       .eq("id", 1)
       .single();
 
-    const llmModel = Deno.env.get("LLM_MODEL") || aiSettings?.llm_model || "claude-3-5-sonnet-20241022";
+    const llmModel =
+      Deno.env.get("LLM_MODEL") || aiSettings?.llm_model || "claude-3-5-sonnet-20241022";
     const asrModel = Deno.env.get("ASR_MODEL") || aiSettings?.asr_model || "whisper-1";
 
     // 3. Create or fetch analysis run
@@ -162,10 +163,7 @@ serve(async (req: Request) => {
     // =========================================================================
     // STEP 3: LLM Content & Visual Checks
     // =========================================================================
-    const { data: rules } = await supabase
-      .from("rules")
-      .select("*")
-      .eq("is_active", true);
+    const { data: rules } = await supabase.from("rules").select("*").eq("is_active", true);
 
     const activeRules = (rules || []) as RuleRecord[];
     const validRuleCodes = new Set(activeRules.map((r) => r.code));
@@ -187,7 +185,7 @@ serve(async (req: Request) => {
       segments,
       activeRules,
       frames,
-      llmModel
+      llmModel,
     );
 
     await supabase
@@ -227,7 +225,8 @@ serve(async (req: Request) => {
         .from("findings")
         .insert(findingsToInsert);
 
-      if (insertFindingsError) console.error("[Analyze] Error inserting findings:", insertFindingsError);
+      if (insertFindingsError)
+        console.error("[Analyze] Error inserting findings:", insertFindingsError);
     }
 
     // Create or update compliance log
@@ -271,15 +270,15 @@ serve(async (req: Request) => {
         overall_status: overallStatus,
         findings_count: mergedFindings.length,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[Analyze] Fatal error in analysis pipeline:", message);
 
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

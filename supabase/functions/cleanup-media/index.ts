@@ -52,7 +52,9 @@ serve(async (req: Request) => {
       targetSubmissions = data || [];
     }
 
-    console.log(`[CleanupMedia] Processing ${targetSubmissions.length} submissions for media deletion.`);
+    console.log(
+      `[CleanupMedia] Processing ${targetSubmissions.length} submissions for media deletion.`,
+    );
 
     let filesRemovedCount = 0;
 
@@ -79,10 +81,7 @@ serve(async (req: Request) => {
         })
         .eq("id", sub.id);
 
-      await supabase
-        .from("frames")
-        .update({ image_path: null })
-        .eq("submission_id", sub.id);
+      await supabase.from("frames").update({ image_path: null }).eq("submission_id", sub.id);
     }
 
     return new Response(
@@ -90,14 +89,14 @@ serve(async (req: Request) => {
         cleaned_submissions_count: targetSubmissions.length,
         files_removed_count: filesRemovedCount,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[CleanupMedia] Error:", message);
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

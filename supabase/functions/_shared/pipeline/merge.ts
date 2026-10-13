@@ -4,7 +4,7 @@ import type { Finding, OverallStatus } from "../types.ts";
 
 export function mergeAndFilterFindings(
   findings: Finding[],
-  validRuleCodes: Set<string>
+  validRuleCodes: Set<string>,
 ): { mergedFindings: Finding[]; overallStatus: OverallStatus } {
   // 1. Drop findings with unknown rule codes
   const filtered = findings.filter((f) => {
@@ -44,7 +44,8 @@ export function mergeAndFilterFindings(
 
     if (existingIndex >= 0) {
       // Overwrite if candidate has higher confidence
-      if (candidate.confidence > mergedFindings[existingIndex].confidence) {
+      const existing = mergedFindings[existingIndex];
+      if (existing && candidate.confidence > existing.confidence) {
         mergedFindings[existingIndex] = candidate;
       }
     } else {

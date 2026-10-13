@@ -2,7 +2,15 @@
 // Supabase Data Layer & Browser-Side Processing Utilities
 
 import { supabase } from "@/integrations/supabase/client";
-import type { DbSubmission, DbRule, DbFinding, DbTranscript, DbComplianceLog, ReportData, IssueItem } from "./types";
+import type {
+  DbSubmission,
+  DbRule,
+  DbFinding,
+  DbTranscript,
+  DbComplianceLog,
+  ReportData,
+  IssueItem,
+} from "./types";
 
 // ============================================================================
 // 1. Browser-Side Utilities: Hashing & Frame Extraction
@@ -17,7 +25,7 @@ export async function computeSha256(file: File): Promise<string> {
 
 export async function extractVideoFrames(
   videoFile: File,
-  maxFrames: number = 24
+  maxFrames: number = 24,
 ): Promise<{ timestamp: number; blob: Blob }[]> {
   return new Promise((resolve) => {
     const video = document.createElement("video");
@@ -51,13 +59,17 @@ export async function extractVideoFrames(
       video.onseeked = () => {
         if (ctx) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              frames.push({ timestamp: video.currentTime, blob });
-            }
-            currentTime += interval;
-            captureNext();
-          }, "image/jpeg", 0.7);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                frames.push({ timestamp: video.currentTime, blob });
+              }
+              currentTime += interval;
+              captureNext();
+            },
+            "image/jpeg",
+            0.7,
+          );
         } else {
           currentTime += interval;
           captureNext();
@@ -88,7 +100,10 @@ export async function signInDemo() {
   try {
     return await signIn("demo@saleem.app", "demo123456");
   } catch (err) {
-    console.warn("[Auth] Demo login via API failed (Supabase offline?), using local demo session:", err);
+    console.warn(
+      "[Auth] Demo login via API failed (Supabase offline?), using local demo session:",
+      err,
+    );
     return { session: { user: { email: "demo@saleem.app" } } };
   }
 }
@@ -121,11 +136,96 @@ export async function fetchRules(): Promise<DbRule[]> {
   } catch (err) {
     console.warn("[Rules] Failed to fetch rules from Supabase, using baseline seed rules:", err);
     return [
-      { id: "1", code: "MAW-01", category: "mawthooq", title_ar: "الإفصاح الواضح عن الإعلان قبل بدايته", title_en: "Clear ad disclosure", description_ar: "يجب الإفصاح كتابةً أو صوتاً أن المحتوى إعلان قبل عرضه.", description_en: "", source_name: "شروط منصة موثوق", source_url: "https://mawthooq.gcam.gov.sa", source_date: "2024", check_type: "hybrid", default_severity: "violation", llm_instructions: "", applies_to_categories: [], is_active: true, rulebook_version_id: "1" },
-      { id: "2", code: "MAW-02", category: "mawthooq", title_ar: "المنتج أو الخدمة المعلن عنها يجب أن تكون مرخّصة", title_en: "Licensed product/service", description_ar: "على المعلن التأكد من ترخيص المنتج أو الخدمة.", description_en: "", source_name: "شروط منصة موثوق", source_url: "https://mawthooq.gcam.gov.sa", source_date: "2024", check_type: "hybrid", default_severity: "warning", llm_instructions: "", applies_to_categories: [], is_active: true, rulebook_version_id: "1" },
-      { id: "3", code: "CNT-01", category: "content", title_ar: "عدم تصوير الأطفال في المحتوى اليومي", title_en: "No filming children", description_ar: "يُمنع إظهار الأطفال في المحتوى اليومي.", description_en: "", source_name: "ضوابط المحتوى", source_url: "https://gcam.gov.sa", source_date: "2025", check_type: "visual", default_severity: "violation", llm_instructions: "", applies_to_categories: [], is_active: true, rulebook_version_id: "1" },
-      { id: "4", code: "AI-01", category: "ai", title_ar: "الإفصاح عن المحتوى المولّد أو المعدّل بالذكاء الاصطناعي", title_en: "Disclose AI content", description_ar: "يجب الإفصاح عن استخدام الذكاء الاصطناعي في إنشاء المحتوى أو تعديله.", description_en: "", source_name: "مبادئ الذكاء الاصطناعي", source_url: "https://sdaia.gov.sa", source_date: "2026", check_type: "hybrid", default_severity: "violation", llm_instructions: "", applies_to_categories: [], is_active: true, rulebook_version_id: "1" },
-      { id: "5", code: "COM-01", category: "commerce", title_ar: "عدم الادعاءات الكاذبة أو المضللة في الإعلانات", title_en: "No false claims", description_ar: "يُمنع الادعاء الصحي أو المالي المطلق أو المضلل.", description_en: "", source_name: "ضوابط الإعلان", source_url: "https://mc.gov.sa", source_date: "2024", check_type: "hybrid", default_severity: "warning", llm_instructions: "", applies_to_categories: [], is_active: true, rulebook_version_id: "1" },
+      {
+        id: "1",
+        code: "MAW-01",
+        category: "mawthooq",
+        title_ar: "الإفصاح الواضح عن الإعلان قبل بدايته",
+        title_en: "Clear ad disclosure",
+        description_ar: "يجب الإفصاح كتابةً أو صوتاً أن المحتوى إعلان قبل عرضه.",
+        description_en: "",
+        source_name: "شروط منصة موثوق",
+        source_url: "https://mawthooq.gcam.gov.sa",
+        source_date: "2024",
+        check_type: "hybrid",
+        default_severity: "violation",
+        llm_instructions: "",
+        applies_to_categories: [],
+        is_active: true,
+        rulebook_version_id: "1",
+      },
+      {
+        id: "2",
+        code: "MAW-02",
+        category: "mawthooq",
+        title_ar: "المنتج أو الخدمة المعلن عنها يجب أن تكون مرخّصة",
+        title_en: "Licensed product/service",
+        description_ar: "على المعلن التأكد من ترخيص المنتج أو الخدمة.",
+        description_en: "",
+        source_name: "شروط منصة موثوق",
+        source_url: "https://mawthooq.gcam.gov.sa",
+        source_date: "2024",
+        check_type: "hybrid",
+        default_severity: "warning",
+        llm_instructions: "",
+        applies_to_categories: [],
+        is_active: true,
+        rulebook_version_id: "1",
+      },
+      {
+        id: "3",
+        code: "CNT-01",
+        category: "content",
+        title_ar: "عدم تصوير الأطفال في المحتوى اليومي",
+        title_en: "No filming children",
+        description_ar: "يُمنع إظهار الأطفال في المحتوى اليومي.",
+        description_en: "",
+        source_name: "ضوابط المحتوى",
+        source_url: "https://gcam.gov.sa",
+        source_date: "2025",
+        check_type: "visual",
+        default_severity: "violation",
+        llm_instructions: "",
+        applies_to_categories: [],
+        is_active: true,
+        rulebook_version_id: "1",
+      },
+      {
+        id: "4",
+        code: "AI-01",
+        category: "ai",
+        title_ar: "الإفصاح عن المحتوى المولّد أو المعدّل بالذكاء الاصطناعي",
+        title_en: "Disclose AI content",
+        description_ar: "يجب الإفصاح عن استخدام الذكاء الاصطناعي في إنشاء المحتوى أو تعديله.",
+        description_en: "",
+        source_name: "مبادئ الذكاء الاصطناعي",
+        source_url: "https://sdaia.gov.sa",
+        source_date: "2026",
+        check_type: "hybrid",
+        default_severity: "violation",
+        llm_instructions: "",
+        applies_to_categories: [],
+        is_active: true,
+        rulebook_version_id: "1",
+      },
+      {
+        id: "5",
+        code: "COM-01",
+        category: "commerce",
+        title_ar: "عدم الادعاءات الكاذبة أو المضللة في الإعلانات",
+        title_en: "No false claims",
+        description_ar: "يُمنع الادعاء الصحي أو المالي المطلق أو المضلل.",
+        description_en: "",
+        source_name: "ضوابط الإعلان",
+        source_url: "https://mc.gov.sa",
+        source_date: "2024",
+        check_type: "hybrid",
+        default_severity: "warning",
+        llm_instructions: "",
+        applies_to_categories: [],
+        is_active: true,
+        rulebook_version_id: "1",
+      },
     ];
   }
 }
@@ -229,7 +329,11 @@ export async function fetchReportData(submissionId?: string): Promise<ReportData
 
     let previousSubmission: DbSubmission | null = null;
     if (sub.parent_id) {
-      const { data: parent } = await supabase.from("submissions").select("*").eq("id", sub.parent_id).single();
+      const { data: parent } = await supabase
+        .from("submissions")
+        .select("*")
+        .eq("id", sub.parent_id)
+        .single();
       previousSubmission = parent || null;
     }
 
@@ -252,7 +356,10 @@ export async function fetchReportData(submissionId?: string): Promise<ReportData
       previousSubmission,
     };
   } catch (err) {
-    console.warn(`[Report] Error fetching report ${targetId}, falling back to static fixtures:`, err);
+    console.warn(
+      `[Report] Error fetching report ${targetId}, falling back to static fixtures:`,
+      err,
+    );
     const isReady = targetId.endsWith("0002");
     return {
       submission: {
@@ -286,15 +393,61 @@ export async function fetchReportData(submissionId?: string): Promise<ReportData
       },
       findings: [],
       issues: [
-        { id: "MAW-01", time: 0, type: "v", title: "ادعاء صحي يحتاج دليلاً", rule: "الادعاءات الطبية", source: "دليل القواعد 2026.10", evidence: "«يساعد على حرق الدهون بسرعة»", fix: "احذف الادعاء أو أضف مصدراً موثقاً." },
-        { id: "CNT-01", time: 12, type: "v", title: "ظهور شخص يبدو قاصراً", rule: "حماية القاصرين", source: "دليل القواعد 2026.10", evidence: "لقطة من الثانية 00:12", fix: "استخدم لقطة بديلة لا يظهر فيها القاصر." },
-        { id: "COM-01", time: 21, type: "w", title: "وعد بنتيجة غير واقعية", rule: "الشفافية في الإعلانات", source: "دليل القواعد 2026.10", evidence: "«تنزلين خمسة كيلو بأسبوع بدون أي رجيم»", fix: "أضف عبارة توضح أن النتائج تختلف من شخص لآخر." },
-        { id: "AI-01", time: 30, type: "w", title: "محتوى مولّد بالذكاء الاصطناعي", rule: "الإفصاح عن المحتوى", source: "دليل القواعد 2026.10", evidence: "لقطة من الثانية 00:30", fix: "أضف إفصاحاً واضحاً عن استخدام الذكاء الاصطناعي." },
-        { id: "MAW-02", time: null, type: "w", title: "إعلان مدفوع غير معلن", rule: "الإفصاح التجاري", source: "دليل القواعد 2026.10", evidence: "لم نحدد لحظة بعينها", fix: "أضف وسم إعلان مدفوع في الوصف." },
+        {
+          id: "MAW-01",
+          time: 0,
+          type: "v",
+          title: "ادعاء صحي يحتاج دليلاً",
+          rule: "الادعاءات الطبية",
+          source: "دليل القواعد 2026.10",
+          evidence: "«يساعد على حرق الدهون بسرعة»",
+          fix: "احذف الادعاء أو أضف مصدراً موثقاً.",
+        },
+        {
+          id: "CNT-01",
+          time: 12,
+          type: "v",
+          title: "ظهور شخص يبدو قاصراً",
+          rule: "حماية القاصرين",
+          source: "دليل القواعد 2026.10",
+          evidence: "لقطة من الثانية 00:12",
+          fix: "استخدم لقطة بديلة لا يظهر فيها القاصر.",
+        },
+        {
+          id: "COM-01",
+          time: 21,
+          type: "w",
+          title: "وعد بنتيجة غير واقعية",
+          rule: "الشفافية في الإعلانات",
+          source: "دليل القواعد 2026.10",
+          evidence: "«تنزلين خمسة كيلو بأسبوع بدون أي رجيم»",
+          fix: "أضف عبارة توضح أن النتائج تختلف من شخص لآخر.",
+        },
+        {
+          id: "AI-01",
+          time: 30,
+          type: "w",
+          title: "محتوى مولّد بالذكاء الاصطناعي",
+          rule: "الإفصاح عن المحتوى",
+          source: "دليل القواعد 2026.10",
+          evidence: "لقطة من الثانية 00:30",
+          fix: "أضف إفصاحاً واضحاً عن استخدام الذكاء الاصطناعي.",
+        },
+        {
+          id: "MAW-02",
+          time: null,
+          type: "w",
+          title: "إعلان مدفوع غير معلن",
+          rule: "الإفصاح التجاري",
+          source: "دليل القواعد 2026.10",
+          evidence: "لم نحدد لحظة بعينها",
+          fix: "أضف وسم إعلان مدفوع في الوصف.",
+        },
       ],
       transcript: {
         submission_id: targetId,
-        full_text: "هذا المنتج يساعدك على الوصول إلى أهدافك الصحية. تنزلين خمسة كيلو بأسبوع بدون أي رجيم.",
+        full_text:
+          "هذا المنتج يساعدك على الوصول إلى أهدافك الصحية. تنزلين خمسة كيلو بأسبوع بدون أي رجيم.",
         segments: [
           { start: 0, end: 5, text: "هذا المنتج يساعدك على الوصول إلى أهدافك الصحية." },
           { start: 21, end: 28, text: "تنزلين خمسة كيلو بأسبوع بدون أي رجيم." },
@@ -366,7 +519,7 @@ export async function createNewSubmission(params: {
 
     // Trigger Edge Function analysis in background
     triggerAnalysis(submissionId).catch((err) =>
-      console.warn("[Pipeline] Edge function trigger note:", err)
+      console.warn("[Pipeline] Edge function trigger note:", err),
     );
 
     return submissionId;

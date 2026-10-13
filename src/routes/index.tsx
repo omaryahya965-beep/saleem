@@ -1,6 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronLeft, FileCheck2, FileText, Info, Link2, Play, Search, ShieldCheck, TriangleAlert, Upload, Video, X } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  FileCheck2,
+  FileText,
+  Info,
+  Link2,
+  Play,
+  Search,
+  ShieldCheck,
+  TriangleAlert,
+  Upload,
+  Video,
+  X,
+} from "lucide-react";
 import {
   fetchRules,
   fetchSubmissions,
@@ -13,31 +27,150 @@ import type { DbSubmission, DbRule, IssueItem, ReportData } from "@/lib/api/type
 
 export const Route = createFileRoute("/")({ component: SaleemApp });
 
-type Screen = "report" | "ready" | "new" | "processing" | "dashboard" | "log" | "rules" | "landing" | "login";
+type Screen =
+  "report" | "ready" | "new" | "processing" | "dashboard" | "log" | "rules" | "landing" | "login";
 
 const defaultIssues: IssueItem[] = [
-  { id: "MAW-01", time: 0, type: "v", title: "ادعاء صحي يحتاج دليلاً", rule: "الادعاءات الطبية", source: "دليل القواعد 2026.10", evidence: "«يساعد على حرق الدهون بسرعة»", fix: "احذف الادعاء أو أضف مصدراً موثقاً." },
-  { id: "CNT-01", time: 12, type: "v", title: "ظهور شخص يبدو قاصراً", rule: "حماية القاصرين", source: "دليل القواعد 2026.10", evidence: "لقطة من الثانية 00:12", fix: "استخدم لقطة بديلة لا يظهر فيها القاصر." },
-  { id: "COM-01", time: 21, type: "w", title: "وعد بنتيجة غير واقعية", rule: "الشفافية في الإعلانات", source: "دليل القواعد 2026.10", evidence: "«تنزلين خمسة كيلو بأسبوع بدون أي رجيم»", fix: "أضف عبارة توضح أن النتائج تختلف من شخص لآخر." },
-  { id: "AI-01", time: 30, type: "w", title: "محتوى مولّد بالذكاء الاصطناعي", rule: "الإفصاح عن المحتوى", source: "دليل القواعد 2026.10", evidence: "لقطة من الثانية 00:30", fix: "أضف إفصاحاً واضحاً عن استخدام الذكاء الاصطناعي." },
-  { id: "MAW-02", time: null, type: "w", title: "إعلان مدفوع غير معلن", rule: "الإفصاح التجاري", source: "دليل القواعد 2026.10", evidence: "لم نحدد لحظة بعينها", fix: "أضف وسم إعلان مدفوع في الوصف." },
+  {
+    id: "MAW-01",
+    time: 0,
+    type: "v",
+    title: "ادعاء صحي يحتاج دليلاً",
+    rule: "الادعاءات الطبية",
+    source: "دليل القواعد 2026.10",
+    evidence: "«يساعد على حرق الدهون بسرعة»",
+    fix: "احذف الادعاء أو أضف مصدراً موثقاً.",
+  },
+  {
+    id: "CNT-01",
+    time: 12,
+    type: "v",
+    title: "ظهور شخص يبدو قاصراً",
+    rule: "حماية القاصرين",
+    source: "دليل القواعد 2026.10",
+    evidence: "لقطة من الثانية 00:12",
+    fix: "استخدم لقطة بديلة لا يظهر فيها القاصر.",
+  },
+  {
+    id: "COM-01",
+    time: 21,
+    type: "w",
+    title: "وعد بنتيجة غير واقعية",
+    rule: "الشفافية في الإعلانات",
+    source: "دليل القواعد 2026.10",
+    evidence: "«تنزلين خمسة كيلو بأسبوع بدون أي رجيم»",
+    fix: "أضف عبارة توضح أن النتائج تختلف من شخص لآخر.",
+  },
+  {
+    id: "AI-01",
+    time: 30,
+    type: "w",
+    title: "محتوى مولّد بالذكاء الاصطناعي",
+    rule: "الإفصاح عن المحتوى",
+    source: "دليل القواعد 2026.10",
+    evidence: "لقطة من الثانية 00:30",
+    fix: "أضف إفصاحاً واضحاً عن استخدام الذكاء الاصطناعي.",
+  },
+  {
+    id: "MAW-02",
+    time: null,
+    type: "w",
+    title: "إعلان مدفوع غير معلن",
+    rule: "الإفصاح التجاري",
+    source: "دليل القواعد 2026.10",
+    evidence: "لم نحدد لحظة بعينها",
+    fix: "أضف وسم إعلان مدفوع في الوصف.",
+  },
 ];
 
 function Header({ screen, go }: { screen: Screen; go: (s: Screen) => void }) {
-  return <header className="topbar"><div className="container topbar-inner"><button className="brand" onClick={() => go("landing")}><span className="brand-mark">س</span><span>سَليم</span></button><nav><button className={screen === "dashboard" ? "active" : ""} onClick={() => go("dashboard")}>فحوصاتي</button><button className={screen === "new" ? "active" : ""} onClick={() => go("new")}>فحص جديد</button><button className={screen === "rules" ? "active" : ""} onClick={() => go("rules")}>دليل القواعد</button></nav><div className="top-actions"><button className="lang">EN</button><button className="avatar" aria-label="حسابي" onClick={() => go("login")}>م</button></div></div></header>;
+  return (
+    <header className="topbar">
+      <div className="container topbar-inner">
+        <button className="brand" onClick={() => go("landing")}>
+          <span className="brand-mark">س</span>
+          <span>سَليم</span>
+        </button>
+        <nav>
+          <button
+            className={screen === "dashboard" ? "active" : ""}
+            onClick={() => go("dashboard")}
+          >
+            فحوصاتي
+          </button>
+          <button className={screen === "new" ? "active" : ""} onClick={() => go("new")}>
+            فحص جديد
+          </button>
+          <button className={screen === "rules" ? "active" : ""} onClick={() => go("rules")}>
+            دليل القواعد
+          </button>
+        </nav>
+        <div className="top-actions">
+          <button className="lang">EN</button>
+          <button className="avatar" aria-label="حسابي" onClick={() => go("login")}>
+            م
+          </button>
+        </div>
+      </div>
+    </header>
+  );
 }
 
-function StatusChip({ type, children }: { type: "v" | "w" | "ok"; children: React.ReactNode }) { return <span className={`chip ${type}`}>{type === "v" ? <X /> : type === "w" ? <TriangleAlert /> : <Check />}{children}</span>; }
-function Button({ children, onClick, secondary = false, ghost = false }: { children: React.ReactNode; onClick?: () => void; secondary?: boolean; ghost?: boolean }) { return <button onClick={onClick} className={`btn ${secondary ? "secondary" : ghost ? "ghost" : "primary"}`}>{children}</button>; }
-function Disclaimer() { return <div className="disclaimer"><Info /> <span>تنبيهات استرشادية وليست موافقة رسمية. القرار النهائي لك.</span></div>; }
+function StatusChip({ type, children }: { type: "v" | "w" | "ok"; children: React.ReactNode }) {
+  return (
+    <span className={`chip ${type}`}>
+      {type === "v" ? <X /> : type === "w" ? <TriangleAlert /> : <Check />}
+      {children}
+    </span>
+  );
+}
+function Button({
+  children,
+  onClick,
+  secondary = false,
+  ghost = false,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  secondary?: boolean;
+  ghost?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`btn ${secondary ? "secondary" : ghost ? "ghost" : "primary"}`}
+    >
+      {children}
+    </button>
+  );
+}
+function Disclaimer() {
+  return (
+    <div className="disclaimer">
+      <Info /> <span>تنبيهات استرشادية وليست موافقة رسمية. القرار النهائي لك.</span>
+    </div>
+  );
+}
 
-function Report({ ready, go, submissionId, setSubmissionId }: { ready: boolean; go: (s: Screen) => void; submissionId?: string; setSubmissionId: (id: string) => void }) {
+function Report({
+  ready,
+  go,
+  submissionId,
+  setSubmissionId,
+}: {
+  ready: boolean;
+  go: (s: Screen) => void;
+  submissionId?: string;
+  setSubmissionId: (id: string) => void;
+}) {
   const [selected, setSelected] = useState(1);
   const [time, setTime] = useState(12);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const video = useRef<HTMLVideoElement>(null);
 
-  const targetId = ready ? "d0000000-0000-0000-0000-000000000002" : (submissionId || "d0000000-0000-0000-0000-000000000001");
+  const targetId = ready
+    ? "d0000000-0000-0000-0000-000000000002"
+    : submissionId || "d0000000-0000-0000-0000-000000000001";
 
   useEffect(() => {
     fetchReportData(targetId).then((data) => {
@@ -45,7 +178,8 @@ function Report({ ready, go, submissionId, setSubmissionId }: { ready: boolean; 
     });
   }, [targetId]);
 
-  const activeIssues = (reportData?.issues && reportData.issues.length > 0) ? reportData.issues : defaultIssues;
+  const activeIssues =
+    reportData?.issues && reportData.issues.length > 0 ? reportData.issues : defaultIssues;
 
   const select = (i: number) => {
     setSelected(i);
@@ -82,41 +216,74 @@ function Report({ ready, go, submissionId, setSubmissionId }: { ready: boolean; 
         <div className="actions">
           {ready ? (
             <>
-              <Button onClick={() => go("log")}><FileCheck2 /> تنزيل سجل الامتثال</Button>
-              <Button secondary onClick={() => go("new")}>فحص جديد</Button>
+              <Button onClick={() => go("log")}>
+                <FileCheck2 /> تنزيل سجل الامتثال
+              </Button>
+              <Button secondary onClick={() => go("new")}>
+                فحص جديد
+              </Button>
             </>
           ) : (
             <>
-              <Button onClick={() => go("processing")}><Upload /> رفع النسخة المعدّلة</Button>
-              <Button secondary onClick={() => go("log")}>سجل الامتثال</Button>
+              <Button onClick={() => go("processing")}>
+                <Upload /> رفع النسخة المعدّلة
+              </Button>
+              <Button secondary onClick={() => go("log")}>
+                سجل الامتثال
+              </Button>
             </>
           )}
         </div>
       </section>
       {ready ? (
-        <ReadyReport go={go} issues={activeIssues} onPrevious={() => { setSubmissionId("d0000000-0000-0000-0000-000000000001"); go("report"); }} />
+        <ReadyReport
+          go={go}
+          issues={activeIssues}
+          onPrevious={() => {
+            setSubmissionId("d0000000-0000-0000-0000-000000000001");
+            go("report");
+          }}
+        />
       ) : (
         <div className="report-grid">
           <div className="player-column">
-            <VideoPlayer video={video} time={time} setTime={setTime} selected={selected} select={select} issues={activeIssues} />
+            <VideoPlayer
+              video={video}
+              time={time}
+              setTime={setTime}
+              selected={selected}
+              select={select}
+              issues={activeIssues}
+            />
             <details className="transcript">
               <summary>النص المستخرج من الكلام</summary>
-              {reportData?.transcript?.segments && Array.isArray(reportData.transcript.segments) && reportData.transcript.segments.length > 0 ? (
-                reportData.transcript.segments.map((seg: { start?: number; text?: string }, idx: number) => (
-                  <p key={idx}>
-                    <time>00:{String(Math.round(seg.start || 0)).padStart(2, "0")}</time> {seg.text}
-                  </p>
-                ))
+              {reportData?.transcript?.segments &&
+              Array.isArray(reportData.transcript.segments) &&
+              reportData.transcript.segments.length > 0 ? (
+                (reportData.transcript.segments as Array<{ start?: number; text?: string }>).map(
+                  (seg, idx) => (
+                    <p key={idx}>
+                      <time>00:{String(Math.round(seg?.start || 0)).padStart(2, "0")}</time>{" "}
+                      {seg?.text}
+                    </p>
+                  ),
+                )
               ) : (
                 <>
-                  <p><time>00:00</time> هذا المنتج يساعدك على الوصول إلى أهدافك الصحية.</p>
-                  <p><time>00:21</time> تنزلين خمسة كيلو بأسبوع بدون أي رجيم.</p>
+                  <p>
+                    <time>00:00</time> هذا المنتج يساعدك على الوصول إلى أهدافك الصحية.
+                  </p>
+                  <p>
+                    <time>00:21</time> تنزلين خمسة كيلو بأسبوع بدون أي رجيم.
+                  </p>
                 </>
               )}
             </details>
           </div>
           <section className="issues" aria-live="polite">
-            <h2>الملاحظات <span>({activeIssues.length})</span></h2>
+            <h2>
+              الملاحظات <span>({activeIssues.length})</span>
+            </h2>
             {activeIssues.map((issue, i) => (
               <button
                 className={`issue ${selected === i ? "selected" : ""}`}
@@ -126,16 +293,33 @@ function Report({ ready, go, submissionId, setSubmissionId }: { ready: boolean; 
               >
                 <div className="when">
                   <b>{issue.time === null ? "—" : `00:${String(issue.time).padStart(2, "0")}`}</b>
-                  <StatusChip type={issue.type}>{issue.type === "v" ? "مخالفة" : "تنبيه"}</StatusChip>
+                  <StatusChip type={issue.type}>
+                    {issue.type === "v" ? "مخالفة" : "تنبيه"}
+                  </StatusChip>
                 </div>
                 <div>
                   <h3>{issue.title}</h3>
                   <p className="rule">
-                    <code>{issue.id}</code>{issue.rule}<Link2 />{" "}
-                    <a href="#rule" onClick={(e) => { e.preventDefault(); go("rules"); }}>{issue.source}</a>
+                    <code>{issue.id}</code>
+                    {issue.rule}
+                    <Link2 />{" "}
+                    <a
+                      href="#rule"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        go("rules");
+                      }}
+                    >
+                      {issue.source}
+                    </a>
                   </p>
-                  <p className="evidence"><span className="thumb" />{issue.evidence}</p>
-                  <p className="fix"><strong>التعديل المقترح:</strong> {issue.fix}</p>
+                  <p className="evidence">
+                    <span className="thumb" />
+                    {issue.evidence}
+                  </p>
+                  <p className="fix">
+                    <strong>التعديل المقترح:</strong> {issue.fix}
+                  </p>
                 </div>
               </button>
             ))}
@@ -147,38 +331,72 @@ function Report({ ready, go, submissionId, setSubmissionId }: { ready: boolean; 
   );
 }
 
-function VideoPlayer({ video, time, setTime, selected, select, issues }: { video: React.RefObject<HTMLVideoElement | null>; time: number; setTime: (n: number) => void; selected: number; select: (n: number) => void; issues: IssueItem[] }) {
+function VideoPlayer({
+  video,
+  time,
+  setTime,
+  selected,
+  select,
+  issues,
+}: {
+  video: React.RefObject<HTMLVideoElement | null>;
+  time: number;
+  setTime: (n: number) => void;
+  selected: number;
+  select: (n: number) => void;
+  issues: IssueItem[];
+}) {
   return (
     <div className="player">
       <div className="video-frame">
         <video ref={video} controls aria-label="فيديو إعلان مكمّل غذائي">
           <source src="" />
         </video>
-        <div className="video-placeholder"><Play /></div>
+        <div className="video-placeholder">
+          <Play />
+        </div>
         <span className="now">00:{String(time).padStart(2, "0")}</span>
       </div>
       <div className="timeline">
         <div className="fill" style={{ width: `${(time / 40) * 100}%` }} />
-        {issues.map((issue, i) => issue.time !== null && (
-          <button
-            key={`${issue.id}-${i}`}
-            className={`marker ${issue.type} ${selected === i ? "selected" : ""}`}
-            style={{ insetInlineStart: `${(issue.time / 40) * 100}%` }}
-            aria-label={`${issue.type === "v" ? "مخالفة" : "تنبيه"} عند 00:${String(issue.time).padStart(2, "0")}`}
-            onClick={() => select(i)}
-          />
-        ))}
+        {issues.map(
+          (issue, i) =>
+            issue.time !== null && (
+              <button
+                key={`${issue.id}-${i}`}
+                className={`marker ${issue.type} ${selected === i ? "selected" : ""}`}
+                style={{ insetInlineStart: `${(issue.time / 40) * 100}%` }}
+                aria-label={`${issue.type === "v" ? "مخالفة" : "تنبيه"} عند 00:${String(issue.time).padStart(2, "0")}`}
+                onClick={() => select(i)}
+              />
+            ),
+        )}
       </div>
-      <div className="times"><span>00:00</span><span>00:40</span></div>
+      <div className="times">
+        <span>00:00</span>
+        <span>00:40</span>
+      </div>
       <div className="legend">
-        <span><i className="red-dot" /> مخالفة</span>
-        <span><i className="amber-dot" /> تنبيه</span>
+        <span>
+          <i className="red-dot" /> مخالفة
+        </span>
+        <span>
+          <i className="amber-dot" /> تنبيه
+        </span>
       </div>
     </div>
   );
 }
 
-function ReadyReport({ go, issues, onPrevious }: { go: (s: Screen) => void; issues: IssueItem[]; onPrevious: () => void }) {
+function ReadyReport({
+  go,
+  issues,
+  onPrevious,
+}: {
+  go: (s: Screen) => void;
+  issues: IssueItem[];
+  onPrevious: () => void;
+}) {
   return (
     <section className="ready-content">
       <h2>ما تم إصلاحه مقارنة بالنسخة السابقة</h2>
@@ -245,10 +463,16 @@ function NewCheck({ go, onCreated }: { go: (s: Screen) => void; onCreated: (id: 
             <h2>نوع المحتوى</h2>
             <div className="segmented">
               {(["فيديو", "صورة", "نص فقط"] as const).map((x) => (
-                <button className={kind === x ? "selected" : ""} onClick={() => setKind(x)} key={x}>{x}</button>
+                <button className={kind === x ? "selected" : ""} onClick={() => setKind(x)} key={x}>
+                  {x}
+                </button>
               ))}
             </div>
-            <div className="dropzone" onClick={() => fileInputRef.current?.click()} style={{ cursor: "pointer" }}>
+            <div
+              className="dropzone"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ cursor: "pointer" }}
+            >
               <input
                 type="file"
                 ref={fileInputRef}
@@ -260,11 +484,15 @@ function NewCheck({ go, onCreated }: { go: (s: Screen) => void; onCreated: (id: 
                   }
                 }}
               />
-              <span className="file-icon"><Video /></span>
+              <span className="file-icon">
+                <Video />
+              </span>
               <div>
                 <strong>{selectedFile ? selectedFile.name : "اسحب الملف هنا أو اختره"}</strong>
                 <p>فيديو حتى 90 ثانية و25 ميغابايت، أو صورة JPG وPNG</p>
-                <Button secondary onClick={() => fileInputRef.current?.click()}>{selectedFile ? "تغيير الملف" : "اختيار ملف"}</Button>
+                <Button secondary onClick={() => fileInputRef.current?.click()}>
+                  {selectedFile ? "تغيير الملف" : "اختيار ملف"}
+                </Button>
               </div>
             </div>
             <label>
@@ -281,22 +509,55 @@ function NewCheck({ go, onCreated }: { go: (s: Screen) => void; onCreated: (id: 
             <label>
               المنصة
               <div className="segmented">
-                <button className={platform === "snapchat" ? "selected" : ""} onClick={() => setPlatform("snapchat")}>Snapchat</button>
-                <button className={platform === "instagram" ? "selected" : ""} onClick={() => setPlatform("instagram")}>Instagram</button>
-                <button className={platform === "tiktok" ? "selected" : ""} onClick={() => setPlatform("tiktok")}>TikTok</button>
+                <button
+                  className={platform === "snapchat" ? "selected" : ""}
+                  onClick={() => setPlatform("snapchat")}
+                >
+                  Snapchat
+                </button>
+                <button
+                  className={platform === "instagram" ? "selected" : ""}
+                  onClick={() => setPlatform("instagram")}
+                >
+                  Instagram
+                </button>
+                <button
+                  className={platform === "tiktok" ? "selected" : ""}
+                  onClick={() => setPlatform("tiktok")}
+                >
+                  TikTok
+                </button>
               </div>
             </label>
             <label>
               التصنيف
-              <select value={category} onChange={(e) => setCategory(e.target.value as "health" | "beauty")}>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as "health" | "beauty")}
+              >
                 <option value="health">الصحة واللياقة</option>
                 <option value="beauty">الجمال والعناية</option>
               </select>
             </label>
             {[
-              { label: "هذا إعلان مدفوع أو ترويج لعلامة", desc: "يساعدنا على تطبيق القواعد المناسبة.", val: isPaidAd, set: setIsPaidAd },
-              { label: "لدي عقد مكتوب مع الماركة", desc: "يمكنك تغيير هذا الخيار لاحقاً.", val: hasWrittenContract, set: setHasWrittenContract },
-              { label: "استخدمت الذكاء الاصطناعي في المحتوى", desc: "يمكنك تغيير هذا الخيار لاحقاً.", val: aiUsed, set: setAiUsed },
+              {
+                label: "هذا إعلان مدفوع أو ترويج لعلامة",
+                desc: "يساعدنا على تطبيق القواعد المناسبة.",
+                val: isPaidAd,
+                set: setIsPaidAd,
+              },
+              {
+                label: "لدي عقد مكتوب مع الماركة",
+                desc: "يمكنك تغيير هذا الخيار لاحقاً.",
+                val: hasWrittenContract,
+                set: setHasWrittenContract,
+              },
+              {
+                label: "استخدمت الذكاء الاصطناعي في المحتوى",
+                desc: "يمكنك تغيير هذا الخيار لاحقاً.",
+                val: aiUsed,
+                set: setAiUsed,
+              },
             ].map((sw, i) => (
               <div className="switch-row" key={sw.label}>
                 <div>
@@ -323,9 +584,15 @@ function NewCheck({ go, onCreated }: { go: (s: Screen) => void; onCreated: (id: 
           <ShieldCheck />
           <h2>فحص آمن وموثوق</h2>
           <ul>
-            <li><Check /> نراجع المحتوى وفق دليل قواعد واضح</li>
-            <li><Check /> نخبرك بالثانية والمشكلة والحل</li>
-            <li><Check /> لا نحتفظ بالفيديو بعد 24 ساعة</li>
+            <li>
+              <Check /> نراجع المحتوى وفق دليل قواعد واضح
+            </li>
+            <li>
+              <Check /> نخبرك بالثانية والمشكلة والحل
+            </li>
+            <li>
+              <Check /> لا نحتفظ بالفيديو بعد 24 ساعة
+            </li>
           </ul>
           <p>نحذف الفيديو واللقطات بعد 24 ساعة من الفحص، ونحتفظ بالملاحظات فقط.</p>
         </aside>
@@ -356,7 +623,9 @@ function Processing({ go }: { go: (s: Screen) => void }) {
   return (
     <main className="container page-pad processing">
       <div className="process-card">
-        <span className="processing-icon"><FileCheck2 /></span>
+        <span className="processing-icon">
+          <FileCheck2 />
+        </span>
         <h1>نفحص المحتوى الآن</h1>
         <p>نراجع الفيديو لقطة بلقطة ونطابقه مع دليل القواعد.</p>
         <div className="progress-label">
@@ -367,12 +636,17 @@ function Processing({ go }: { go: (s: Screen) => void }) {
           <span style={{ width: `${progress}%` }} />
         </div>
         <ol>
-          {["رفع الملف", "استخراج اللقطات", "تفريغ الكلام", "مطابقة القواعد", "إعداد التقرير"].map((x, i) => (
-            <li className={i < currentStepIdx ? "done" : i === currentStepIdx ? "current" : ""} key={x}>
-              <span>{i < currentStepIdx ? <Check /> : i + 1}</span>
-              {x}
-            </li>
-          ))}
+          {["رفع الملف", "استخراج اللقطات", "تفريغ الكلام", "مطابقة القواعد", "إعداد التقرير"].map(
+            (x, i) => (
+              <li
+                className={i < currentStepIdx ? "done" : i === currentStepIdx ? "current" : ""}
+                key={x}
+              >
+                <span>{i < currentStepIdx ? <Check /> : i + 1}</span>
+                {x}
+              </li>
+            ),
+          )}
         </ol>
         <Button ghost onClick={() => (ready ? go("report") : setProgress(100))}>
           {ready ? "عرض التقرير" : "محاكاة اكتمال الفحص"}
@@ -382,7 +656,13 @@ function Processing({ go }: { go: (s: Screen) => void }) {
   );
 }
 
-function Dashboard({ go, onSelect }: { go: (s: Screen) => void; onSelect: (id: string, status: string) => void }) {
+function Dashboard({
+  go,
+  onSelect,
+}: {
+  go: (s: Screen) => void;
+  onSelect: (id: string, status: string) => void;
+}) {
   const [submissions, setSubmissions] = useState<DbSubmission[]>([]);
   const [filter, setFilter] = useState("all");
 
@@ -407,10 +687,21 @@ function Dashboard({ go, onSelect }: { go: (s: Screen) => void; onSelect: (id: s
         <Button onClick={() => go("new")}>فحص جديد</Button>
       </div>
       <div className="tabs">
-        <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>الكل</button>
-        <button className={filter === "needs_fixes" ? "active" : ""} onClick={() => setFilter("needs_fixes")}>يحتاج تعديلات</button>
-        <button className={filter === "review" ? "active" : ""} onClick={() => setFilter("review")}>يحتاج مراجعة</button>
-        <button className={filter === "ready" ? "active" : ""} onClick={() => setFilter("ready")}>جاهز للنشر</button>
+        <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>
+          الكل
+        </button>
+        <button
+          className={filter === "needs_fixes" ? "active" : ""}
+          onClick={() => setFilter("needs_fixes")}
+        >
+          يحتاج تعديلات
+        </button>
+        <button className={filter === "review" ? "active" : ""} onClick={() => setFilter("review")}>
+          يحتاج مراجعة
+        </button>
+        <button className={filter === "ready" ? "active" : ""} onClick={() => setFilter("ready")}>
+          جاهز للنشر
+        </button>
       </div>
       <div className="check-list">
         {filtered.map((item, i) => {
@@ -424,7 +715,9 @@ function Dashboard({ go, onSelect }: { go: (s: Screen) => void; onSelect: (id: s
                 go(item.overall_status === "ready" ? "ready" : "report");
               }}
             >
-              <span className="list-thumb"><Play /></span>
+              <span className="list-thumb">
+                <Play />
+              </span>
               <span>
                 <b>{item.title || "فحص محتوى"}</b>
                 <small>{item.platform} · 13 أكتوبر 2026</small>
@@ -468,8 +761,14 @@ function Rulebook() {
   });
 
   const categories = [
-    { title: "الإعلانات والادعاءات", items: filteredRules.filter((r) => r.category === "mawthooq") },
-    { title: "المحتوى والحماية", items: filteredRules.filter((r) => r.category === "content" || r.category === "ai") },
+    {
+      title: "الإعلانات والادعاءات",
+      items: filteredRules.filter((r) => r.category === "mawthooq"),
+    },
+    {
+      title: "المحتوى والحماية",
+      items: filteredRules.filter((r) => r.category === "content" || r.category === "ai"),
+    },
     { title: "الشفافية", items: filteredRules.filter((r) => r.category === "commerce") },
   ].filter((group) => group.items.length > 0);
 
@@ -491,10 +790,24 @@ function Rulebook() {
         />
       </div>
       <div className="rule-tabs">
-        <button className={activeTab === "all" ? "active" : ""} onClick={() => setActiveTab("all")}>الكل</button>
-        <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")}>الإعلانات</button>
-        <button className={activeTab === "content" ? "active" : ""} onClick={() => setActiveTab("content")}>المحتوى</button>
-        <button className={activeTab === "transparency" ? "active" : ""} onClick={() => setActiveTab("transparency")}>الشفافية</button>
+        <button className={activeTab === "all" ? "active" : ""} onClick={() => setActiveTab("all")}>
+          الكل
+        </button>
+        <button className={activeTab === "ads" ? "active" : ""} onClick={() => setActiveTab("ads")}>
+          الإعلانات
+        </button>
+        <button
+          className={activeTab === "content" ? "active" : ""}
+          onClick={() => setActiveTab("content")}
+        >
+          المحتوى
+        </button>
+        <button
+          className={activeTab === "transparency" ? "active" : ""}
+          onClick={() => setActiveTab("transparency")}
+        >
+          الشفافية
+        </button>
       </div>
       {categories.map((group) => (
         <section className="rule-group" key={group.title}>
@@ -530,7 +843,9 @@ function Log({ go, submissionId }: { go: (s: Screen) => void; submissionId?: str
         </header>
         <dl className="kv">
           <dt>رقم الفحص</dt>
-          <dd>{submissionId ? `SLM-${submissionId.slice(0, 8).toUpperCase()}` : "SLM-2026-00124"}</dd>
+          <dd>
+            {submissionId ? `SLM-${submissionId.slice(0, 8).toUpperCase()}` : "SLM-2026-00124"}
+          </dd>
           <dt>المحتوى</dt>
           <dd>إعلان مكمّل غذائي</dd>
           <dt>المنصة</dt>
@@ -558,7 +873,11 @@ function Log({ go, submissionId }: { go: (s: Screen) => void; submissionId?: str
           <tbody>
             {defaultIssues.map((x) => (
               <tr key={x.id}>
-                <td><code>{x.id}</code><br />{x.rule}</td>
+                <td>
+                  <code>{x.id}</code>
+                  <br />
+                  {x.rule}
+                </td>
                 <td>{x.title}</td>
                 <td>تمت المعالجة</td>
               </tr>
@@ -566,13 +885,16 @@ function Log({ go, submissionId }: { go: (s: Screen) => void; submissionId?: str
           </tbody>
         </table>
         <footer>
-          تنبيهات استرشادية وليست موافقة رسمية. القرار النهائي لك.<br />
+          تنبيهات استرشادية وليست موافقة رسمية. القرار النهائي لك.
+          <br />
           تم إنشاء السجل في 13 أكتوبر 2026، 14:32
         </footer>
       </div>
       <div className="log-actions">
         <Button onClick={() => window.print()}>حفظ PDF</Button>
-        <button className="back-link" onClick={() => go("ready")}>العودة إلى التقرير</button>
+        <button className="back-link" onClick={() => go("ready")}>
+          العودة إلى التقرير
+        </button>
       </div>
     </main>
   );
@@ -587,7 +909,9 @@ function Landing({ go }: { go: (s: Screen) => void }) {
           <p>سَليم يفحص إعلانك أو منشورك قبل نشره، ويقول لك أين المشكلة بالثانية وكيف تصلحها.</p>
           <div className="hero-actions">
             <Button onClick={() => go("new")}>ابدأ فحصاً مجانياً</Button>
-            <Button secondary onClick={() => go("report")}>شاهد تقريراً جاهزاً</Button>
+            <Button secondary onClick={() => go("report")}>
+              شاهد تقريراً جاهزاً
+            </Button>
           </div>
         </div>
         <div className="hero-demo">
@@ -595,8 +919,12 @@ function Landing({ go }: { go: (s: Screen) => void }) {
             <span>تقرير سَليم</span>
             <StatusChip type="v">يحتاج تعديلات</StatusChip>
           </div>
-          <div className="demo-video"><Play /></div>
-          <div className="demo-line"><span className="demo-fill" /></div>
+          <div className="demo-video">
+            <Play />
+          </div>
+          <div className="demo-line">
+            <span className="demo-fill" />
+          </div>
           <div className="demo-issue">
             <StatusChip type="v">مخالفة · 00:12</StatusChip>
             <h3>ظهور شخص يبدو قاصراً</h3>
@@ -659,12 +987,27 @@ function Login({ go }: { go: (s: Screen) => void }) {
         </label>
         <label>
           كلمة المرور
-          <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            dir="ltr"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
         <Button onClick={handleLogin}>تسجيل الدخول</Button>
         <div className="or">أو</div>
-        <Button secondary onClick={handleDemo}>جرّب الحساب التجريبي</Button>
-        <a href="#signup" onClick={(e) => { e.preventDefault(); handleDemo(); }}>إنشاء حساب جديد</a>
+        <Button secondary onClick={handleDemo}>
+          جرّب الحساب التجريبي
+        </Button>
+        <a
+          href="#signup"
+          onClick={(e) => {
+            e.preventDefault();
+            handleDemo();
+          }}
+        >
+          إنشاء حساب جديد
+        </a>
       </section>
     </main>
   );
@@ -672,27 +1015,34 @@ function Login({ go }: { go: (s: Screen) => void }) {
 
 function SaleemApp() {
   const [screen, setScreen] = useState<Screen>("report");
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>("d0000000-0000-0000-0000-000000000001");
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>(
+    "d0000000-0000-0000-0000-000000000001",
+  );
   const go = (s: Screen) => setScreen(s);
 
   return (
     <div dir="rtl">
       <Header screen={screen} go={go} />
       {screen === "report" && (
-        <Report ready={false} go={go} submissionId={selectedSubmissionId} setSubmissionId={setSelectedSubmissionId} />
+        <Report
+          ready={false}
+          go={go}
+          submissionId={selectedSubmissionId}
+          setSubmissionId={setSelectedSubmissionId}
+        />
       )}
       {screen === "ready" && (
-        <Report ready go={go} submissionId={selectedSubmissionId} setSubmissionId={setSelectedSubmissionId} />
+        <Report
+          ready
+          go={go}
+          submissionId={selectedSubmissionId}
+          setSubmissionId={setSelectedSubmissionId}
+        />
       )}
-      {screen === "new" && (
-        <NewCheck go={go} onCreated={(id) => setSelectedSubmissionId(id)} />
-      )}
+      {screen === "new" && <NewCheck go={go} onCreated={(id) => setSelectedSubmissionId(id)} />}
       {screen === "processing" && <Processing go={go} />}
       {screen === "dashboard" && (
-        <Dashboard
-          go={go}
-          onSelect={(id, _status) => setSelectedSubmissionId(id)}
-        />
+        <Dashboard go={go} onSelect={(id, _status) => setSelectedSubmissionId(id)} />
       )}
       {screen === "rules" && <Rulebook />}
       {screen === "log" && <Log go={go} submissionId={selectedSubmissionId} />}

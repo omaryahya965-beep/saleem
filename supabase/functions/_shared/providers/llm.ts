@@ -32,12 +32,12 @@ const SYSTEM_PROMPT = `أنت خبير قانوني ومراجع امتثال م
 function buildUserPrompt(
   submission: SubmissionData,
   segments: TranscriptSegment[],
-  rules: RuleRecord[]
+  rules: RuleRecord[],
 ): string {
   const rulesList = rules
     .map(
       (r) =>
-        `- [${r.code}] ${r.title_ar} (${r.category}):\n  التعليمات: ${r.llm_instructions}\n  الخطورة الافتراضية: ${r.default_severity}`
+        `- [${r.code}] ${r.title_ar} (${r.category}):\n  التعليمات: ${r.llm_instructions}\n  الخطورة الافتراضية: ${r.default_severity}`,
     )
     .join("\n\n");
 
@@ -74,7 +74,7 @@ export async function runLlmChecks(
   segments: TranscriptSegment[],
   rules: RuleRecord[],
   frames: FrameData[] = [],
-  llmModel: string = "claude-3-5-sonnet-20241022"
+  llmModel: string = "claude-3-5-sonnet-20241022",
 ): Promise<Finding[]> {
   const getEnv = (k: string) => (typeof Deno !== "undefined" ? Deno.env.get(k) : process.env[k]);
   const anthropicKey = getEnv("ANTHROPIC_API_KEY");
@@ -95,7 +95,7 @@ export async function runLlmChecks(
         explanation_en: "Absolute, guaranteed health claim in a health-product ad.",
         fix_ar: "احذف وعود الوزن والضمان، واكتفِ بوصف تجربتك الشخصية دون نتائج مطلقة.",
         fix_en: "Remove weight and guarantee claims; describe your personal experience only.",
-        confidence: 0.90,
+        confidence: 0.9,
         source: "llm",
       },
       {
@@ -109,7 +109,7 @@ export async function runLlmChecks(
         explanation_en: "A health product requires confirmation of licensing by SFDA.",
         fix_ar: "تأكد من ترخيص المنتج من هيئة الغذاء والدواء قبل الترويج.",
         fix_en: "Confirm the product is licensed by the SFDA.",
-        confidence: 0.60,
+        confidence: 0.6,
         source: "llm",
       },
     ];
@@ -122,7 +122,7 @@ export async function runLlmChecks(
   if (anthropicKey) {
     // Anthropic Claude
     const contentPayload: unknown[] = [];
-    
+
     // Append frames if available (first 4 frames)
     for (const f of frames.slice(0, 4)) {
       if (f.base64) {
@@ -200,7 +200,10 @@ export async function runLlmChecks(
 
   // Parse JSON response
   try {
-    const cleaned = rawJson.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const cleaned = rawJson
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
     const parsed = JSON.parse(cleaned);
     const rawFindings = Array.isArray(parsed.findings) ? parsed.findings : [];
 
@@ -209,7 +212,9 @@ export async function runLlmChecks(
       severity: f.severity === "violation" ? "violation" : "warning",
       t_start: typeof f.t_start === "number" ? f.t_start : null,
       t_end: typeof f.t_end === "number" ? f.t_end : null,
-      evidence_type: (["transcript", "frame", "caption", "metadata"].includes(String(f.evidence_type))
+      evidence_type: (["transcript", "frame", "caption", "metadata"].includes(
+        String(f.evidence_type),
+      )
         ? f.evidence_type
         : "transcript") as Finding["evidence_type"],
       evidence_text: f.evidence_text ? String(f.evidence_text) : null,
