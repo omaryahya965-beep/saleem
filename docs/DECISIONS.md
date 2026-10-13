@@ -25,3 +25,24 @@ Format: decision — why — alternatives considered.
 - **D12. Removed 25 unused shadcn files and 18 unused deps** (Radix accordion/alert-dialog/…, react-hook-form).
 - **D13. Legacy CSS kept in a low-priority `@layer legacy`** until each screen is rebuilt in Phase 3.
 - **D14. Router `autoCodeSplitting`** — main chunk 790 kB → 476 kB.
+
+## Phase 3
+- **D15. Real URL routes** (`/`, `/dashboard`, `/new?parent=`, `/checks/$id`, `/checks/$id/log`, `/rules`,
+  `/settings`, `/login`, `/signup`, `/forgot-password`, `/reset-password`) under a pathless `_app`
+  layout; guards via `beforeLoad`. `/checks/$id` is public — RLS decides (own rows or `is_demo`).
+- **D16. One route for processing + report** — `/checks/$id` polls the row (1.5 s) and swaps to the report
+  when `status=done`; progress/steps are the backend's `progress`/`current_step` (no simulation).
+- **D17. Cancel = owner sets `status=failed, error_message=cancelled_by_user`** (allowed by existing RLS);
+  the pipeline must check for it between steps (Phase 4).
+- **D18. Storage layout `{user}/{submission}/original.ext` + `thumb.jpg`** with client-generated UUIDs, so
+  `cleanup-media` (which lists `user/submission/`) actually finds the files (audit F11). Upload errors
+  now abort the submission (F13).
+- **D19. Analyze/cleanup are invoked with the user's JWT** via `supabase.functions.invoke` (fixes F1).
+- **D20. Added `qrcode@1.5.4` (MIT)** for the compliance-log QR (SVG, no canvas).
+- **D21. `exactOptionalPropertyTypes` disabled** — conflicts with TanStack Router search reducers;
+  `strict` and `noUncheckedIndexedAccess` remain on.
+- **D22. Arabic plurals via `Intl.PluralRules` + `tn()`** — "3 مخالفات", "مخالفتان", never "3 مخالفة".
+- **D23. Signed-in screenshots use Playwright network mocks** (`scripts/mock-auth.mjs`) — no test users are
+  created on the hosted project; public data still comes from the real backend.
+- **D24. Rule source names are Arabic-only in the DB** — shown as-is in English UI until `source_name_en`
+  is added (Phase 5.9).

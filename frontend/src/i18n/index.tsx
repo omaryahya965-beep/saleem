@@ -56,6 +56,11 @@ export interface I18n {
   dir: Dir;
   setLang: (l: Lang) => void;
   t: (key: TKey, params?: TParams) => string;
+  /**
+   * Plural-aware translation: looks up `<base>.<category>` where category comes from
+   * Intl.PluralRules (Arabic: zero/one/two/few/many/other; English: one/other). `{n}` is the count.
+   */
+  tn: (base: string, n: number, params?: TParams) => string;
   formatDate: (value: string | Date | null | undefined, withTime?: boolean) => string;
   formatNumber: (n: number, opts?: Intl.NumberFormatOptions) => string;
   formatBytes: (bytes: number) => string;
@@ -104,6 +109,13 @@ export function I18nProvider({
       dir,
       setLang,
       t: (key, params) => translate(lang, key, params),
+      tn: (base, n, params) => {
+        const cat = new Intl.PluralRules(lang).select(n);
+        const dict = dictionaries[lang];
+        const key =
+          lookup(dict, `${base}.${cat}`) !== undefined ? `${base}.${cat}` : `${base}.other`;
+        return translate(lang, key as TKey, { n, ...params });
+      },
       formatDate: (value, withTime = false) => {
         if (!value) return "—";
         const d = typeof value === "string" ? new Date(value) : value;

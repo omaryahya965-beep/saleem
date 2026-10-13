@@ -1,8 +1,7 @@
 /* SALEEM design system — tokens, base styles and Tailwind theme mapping.
    Palette and contrast ratios are documented in docs/DESIGN_SYSTEM.md. */
-@layer theme, base, legacy, components, utilities;
+@layer theme, base, components, utilities;
 @import "tailwindcss" source(none);
-@import "./styles/legacy.css" layer(legacy);
 @source "../src";
 
 /* ---------------------------------------------------------------------------
@@ -162,6 +161,15 @@
     font-size: 16px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
+  }
+  /* Radix renders hidden form "bubble" inputs with translateX(-100%), which spills
+     off-screen in RTL and causes horizontal scroll on mobile. */
+  :is([role="switch"], [role="radio"], [role="checkbox"]) + input[aria-hidden="true"] {
+    transform: none !important;
+  }
+  html,
+  body {
+    overflow-x: clip;
   }
   /* Arabic must never be letter-spaced */
   :lang(ar),
