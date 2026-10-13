@@ -49,6 +49,14 @@ export async function installMockAuth(context, { empty = false } = {}) {
   await context.route(`${url}/rest/v1/profiles**`, (route) =>
     json(route, route.request().headers()["accept"]?.includes("vnd.pgrst.object") ? { id: MOCK_USER_ID, display_name: "نورة", mawthooq_license_no: "MW-2026-48213", platforms: ["snapchat", "tiktok"], created_at: iso(10000) } : [{ id: MOCK_USER_ID, display_name: "نورة", mawthooq_license_no: "MW-2026-48213", platforms: ["snapchat", "tiktok"], created_at: iso(10000) }]),
   );
+  await context.route(`${url}/rest/v1/user_roles**`, (route) => json(route, [{ role: "admin" }]));
+  // Admin evaluation page: serve the real harness output (backend/eval/results/latest.json) as an eval_runs row.
+  await context.route(`${url}/rest/v1/eval_runs**`, (route) => {
+    const file = new URL("../backend/eval/results/latest.json", import.meta.url);
+    if (!fs.existsSync(file)) return json(route, []);
+    const r = JSON.parse(fs.readFileSync(file, "utf8"));
+    return json(route, [{ id: "eval-latest", created_at: r.at, label: "latest", llm_model: r.llm_model, prompt_version: r.prompt_version, mode: "text", summary: r.summary, per_rule: r.per_rule, cases: r.cases }]);
+  });
   await context.route(`${url}/rest/v1/submissions**`, async (route) => {
     const u = new URL(route.request().url());
     const idEq = u.searchParams.get("id")?.replace(/^eq\./, "");

@@ -1,0 +1,68 @@
+{
+  "at": "2026-10-13T22:23:00.271Z",
+  "llm_model": "gpt-6.1-sol",
+  "prompt_version": "v3-2026-10",
+  "summary": {
+    "cases": 1,
+    "mode": "deterministic+llm",
+    "recall": 1,
+    "precision": 0.5,
+    "hits": 1,
+    "misses": 0,
+    "false_alarms": 1,
+    "avg_ms_per_case": 15509,
+    "avg_cost_usd_per_case": 0.009802,
+    "total_cost_usd": 0.009802
+  },
+  "per_rule": [
+    {
+      "rule": "AI-01",
+      "hits": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "recall": 1,
+      "precision": 1,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "COM-01",
+      "hits": 0,
+      "misses": 0,
+      "false_alarms": 1,
+      "recall": null,
+      "precision": 0,
+      "mean_t_error_s": null
+    }
+  ],
+  "cases": [
+    {
+      "id": "ai-undisclosed",
+      "title": "صوت مولّد بالذكاء الاصطناعي دون إفصاح",
+      "ms": 15509,
+      "cost_usd": 0.009802,
+      "outcome": {
+        "AI-01": "hit",
+        "COM-01": "false_alarm"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "warning",
+          "t": 0,
+          "source": "llm",
+          "confidence": 0.85,
+          "evidence": "ريحته تثبت طول اليوم"
+        },
+        {
+          "rule": "AI-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
+        }
+      ]
+    }
+  ]
+}

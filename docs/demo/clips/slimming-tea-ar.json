@@ -1,0 +1,249 @@
+{
+  "clip": "backend/tests/fixtures/synthetic/slimming-tea-ar.webm",
+  "at": "2026-10-13T22:29:56.152Z",
+  "models": {
+    "asr": "whisper-1",
+    "llm": "gpt-6.1-sol"
+  },
+  "duration": 21.869,
+  "frames": 23,
+  "timings_ms": {
+    "extract": 2169,
+    "asr": 4516,
+    "llm": 23923,
+    "total": 30614
+  },
+  "usage": {
+    "input_tokens": 5579,
+    "output_tokens": 1408,
+    "cached_input_tokens": 0
+  },
+  "cost_usd": 0.027385999954223632,
+  "status": "needs_fixes",
+  "transcript": [
+    {
+      "start": 0,
+      "end": 7.679999828338623,
+      "text": "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد، صراحة طعمه حلو وريخته تجنن."
+    },
+    {
+      "start": 8.199999809265137,
+      "end": 14.9399995803833,
+      "text": "هذا الشاي ينحث وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية."
+    },
+    {
+      "start": 15.479999542236328,
+      "end": 21.440000534057617,
+      "text": "استخدموا كود سليم 20 والرابط في البيو، اطلبوا الحين قبل لا يخلص."
+    }
+  ],
+  "on_screen_text": [
+    {
+      "t": 0,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 1,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 2,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 3,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 4,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 5,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 6,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 7,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 8,
+      "text": "تجربتي مع\nشاي الأعشاب الجديد"
+    },
+    {
+      "t": 9,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 10,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 11,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 12,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 13,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 14,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 15,
+      "text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!"
+    },
+    {
+      "t": 16,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 17,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 18,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 19,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 20,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 21,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    },
+    {
+      "t": 21.8,
+      "text": "كود الخصم: SLIM50\nالرابط في البايو"
+    }
+  ],
+  "findings": [
+    {
+      "rule_code": "MAW-01",
+      "severity": "violation",
+      "t_start": 0,
+      "t_end": 5,
+      "evidence_type": "frame",
+      "evidence_text": "كود الخصم: SLIM50\nالرابط في البايو",
+      "explanation_ar": "المحتوى ترويجي (تم تحديد «إعلان مدفوع») دون إفصاح صريح عن الإعلان في الوصف أو في أول 5 ثوانٍ.",
+      "explanation_en": "Promotional content without a clear ad disclosure in the caption or the first 5 seconds.",
+      "fix_ar": "ابدأ المقطع بعبارة «إعلان مدفوع» واكتب #إعلان في بداية الوصف.",
+      "fix_en": "Open with \"paid ad\" and put #ad at the start of the caption.",
+      "confidence": 0.95,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "COM-01",
+      "severity": "violation",
+      "t_start": 8.2,
+      "t_end": 14.9,
+      "evidence_type": "transcript",
+      "evidence_text": "هذا الشاي ينحث وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
+      "evidence_frame_t": null,
+      "explanation_ar": "يتضمن الإعلان وعدًا مطلقًا بخسارة الوزن وضمانًا لعدم حدوث أعراض جانبية.",
+      "explanation_en": "The ad makes an absolute weight-loss promise and guarantees no side effects.",
+      "fix_ar": "احذف وعود خسارة الوزن والضمان وعدم وجود أعراض جانبية من الصوت والنص الظاهر.",
+      "fix_en": "Remove the weight-loss promises, guarantee, and no-side-effects claim from the audio and on-screen text.",
+      "confidence": 1,
+      "source": "llm"
+    },
+    {
+      "rule_code": "MAW-02",
+      "severity": "warning",
+      "t_start": 8.2,
+      "t_end": 14.9,
+      "evidence_type": "transcript",
+      "evidence_text": "هذا الشاي ينحث وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
+      "evidence_frame_t": null,
+      "explanation_ar": "يُسوَّق الشاي بفوائد صحية للتنحيف، مما يستدعي تأكيد ترخيص المنتج دون افتراض أنه غير مرخّص.",
+      "explanation_en": "The tea is marketed with health-related weight-loss benefits, so its licensing should be confirmed without assuming it is unlicensed.",
+      "fix_ar": "تحقق من وثيقة ترخيص المنتج لدى الجهة المختصة قبل نشر الإعلان.",
+      "fix_en": "Verify the product’s licensing document with the relevant authority before publishing the ad.",
+      "confidence": 0.95,
+      "source": "llm"
+    },
+    {
+      "rule_code": "COM-01",
+      "severity": "violation",
+      "t_start": 12,
+      "t_end": 13,
+      "evidence_type": "frame",
+      "evidence_text": "ينحف ٥ كيلو\nفي أسبوع — مضمون!",
+      "explanation_ar": "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي.",
+      "explanation_en": "Absolute or guaranteed health claim in promotional content.",
+      "fix_ar": "احذف وعود النتائج والضمان، واكتفِ بوصف تجربتك الشخصية مع توضيح أن النتائج تختلف.",
+      "fix_en": "Remove result and guarantee promises; describe your personal experience and note results vary.",
+      "confidence": 0.9,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "MAW-03",
+      "severity": "warning",
+      "t_start": null,
+      "t_end": null,
+      "evidence_type": "metadata",
+      "evidence_text": "لا يوجد عقد مكتوب مع العلامة",
+      "explanation_ar": "محتوى ترويجي دون عقد أو اتفاق مكتوب مع الجهة المعلنة.",
+      "explanation_en": "Promotional content without a written agreement with the advertiser.",
+      "fix_ar": "وثّق الاتفاق مع العلامة كتابياً قبل النشر.",
+      "fix_en": "Put the brand agreement in writing before publishing.",
+      "confidence": 0.9,
+      "source": "deterministic"
+    },
+    {
+      "rule_code": "MAW-04",
+      "severity": "warning",
+      "t_start": null,
+      "t_end": null,
+      "evidence_type": "metadata",
+      "evidence_text": "لم يُدخل رقم رخصة موثوق",
+      "explanation_ar": "لم يُدخل رقم رخصة موثوق لحساب ينشر محتوى ترويجياً.",
+      "explanation_en": "No Mawthooq license number provided for promotional content.",
+      "fix_ar": "تحقق من ربط حسابك برخصة موثوق وأدخل رقمها.",
+      "fix_en": "Make sure your account is linked to a Mawthooq license and enter its number.",
+      "confidence": 0.8,
+      "source": "deterministic"
+    }
+  ],
+  "dropped": {
+    "unknownRule": [],
+    "duplicates": 8,
+    "downgraded": 0
+  },
+  "expected": [
+    {
+      "rule": "MAW-01",
+      "t": 0
+    },
+    {
+      "rule": "COM-01",
+      "t": 8
+    },
+    {
+      "rule": "MAW-02",
+      "t": null
+    },
+    {
+      "rule": "MAW-03",
+      "t": null
+    },
+    {
+      "rule": "MAW-04",
+      "t": null
+    }
+  ]
+}

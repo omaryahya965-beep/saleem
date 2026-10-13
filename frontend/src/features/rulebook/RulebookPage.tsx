@@ -134,7 +134,7 @@ export function RulebookPage() {
                   code={r.code}
                   title={lang === "en" ? r.title_en : r.title_ar}
                   description={lang === "en" ? r.description_en : r.description_ar}
-                  sourceName={r.source_name}
+                  sourceName={(lang === "en" ? r.source_name_en : null) || r.source_name}
                   sourceUrl={r.source_url || null}
                   version={version}
                   severity={r.default_severity}

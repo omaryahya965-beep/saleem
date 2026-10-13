@@ -35,3 +35,25 @@
 - **Mocked/pending:** signed-in screenshots use network mocks (no test account). Demo login shows a clear
   message because `demo@saleem.app` doesn't exist on the hosted project. Real pipeline results depend on
   Phase 4. `/verify/:id` target page is Phase 5.6.
+
+## Phase 4 — Core product works (done, with blockers noted)
+- **Done:** provider layer (OpenAI ASR + vision/reasoning, strict JSON, retries; Gemini/Anthropic disabled),
+  resumable `analyze` (auth + ownership + rate limit + heartbeat + cancel + clear errors + cost/tokens/
+  durations/models/prompt+rulebook versions stored), browser extraction (frames + WAV), deterministic
+  Arabic checks (disclosure, codes, promo phrases, health/finance claims, metadata, AI), merge rules,
+  integrity migration, cron cleanup, cancel/retry RPCs, evidence frames in reports, English source names,
+  eval harness + admin page, clip runner.
+- **Verified (evidence):**
+  - Backend tests 42 pass (+7 live isolation tests skipped: need test accounts); frontend 19 pass; Deno check ✓.
+  - Live function checks: no JWT → 401, publishable key → 401, cron w/o secret → 403, anon finding insert → RLS 42501.
+  - Live model eval (`backend/eval/results/latest.json`): 12 cases, recall 100 %, precision 94 % (1 false alarm:
+    perfume "lasts all day" flagged COM-01), mean timestamp error 0 s, $0.0057 and 7.5 s per case.
+    Deterministic-only baseline: recall 53 %, precision 100 %.
+  - Real video through the full path (`docs/demo/CLIPS.md`): synthetic 22 s Saudi-dialect ad (TTS + slides) →
+    23 frames + WAV → 6 findings, 5/5 expected rules, claim at 8.2 s, 30.6 s, $0.027.
+  - Browser extraction verified in Chromium (`scripts/verify-extract.mjs`): 7 frames @1/s 768×432 + 16 kHz WAV.
+- **Blocked / pending:**
+  - Your real clips: `backend/tests/fixtures/` had none → run `npm --workspace backend run clips` after adding them.
+  - Live end-to-end through the deployed function + storage isolation proof: needs two confirmed test accounts
+    (`TEST_USER_A/B_*` in backend/.env) or the demo user.
+  - `eval_runs` upload needs `SUPABASE_SERVICE_ROLE_KEY` locally; the admin page currently has no DB rows.

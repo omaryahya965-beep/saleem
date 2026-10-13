@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.18";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       ai_settings: {
@@ -38,42 +63,66 @@ export type Database = {
       analysis_runs: {
         Row: {
           asr_model: string | null;
+          asr_provider: string | null;
+          cost_usd: number | null;
+          durations_ms: Json;
+          error: string | null;
           finished_at: string | null;
+          frames_count: number | null;
           id: string;
           llm_model: string | null;
+          llm_provider: string | null;
+          on_screen_text: Json;
           prompt_version: string | null;
           raw_llm_output: Json | null;
           rulebook_version: string | null;
           rulebook_version_id: string | null;
           started_at: string;
+          status: string;
           step_outputs: Json;
           submission_id: string;
           token_usage: Json | null;
         };
         Insert: {
           asr_model?: string | null;
+          asr_provider?: string | null;
+          cost_usd?: number | null;
+          durations_ms?: Json;
+          error?: string | null;
           finished_at?: string | null;
+          frames_count?: number | null;
           id?: string;
           llm_model?: string | null;
+          llm_provider?: string | null;
+          on_screen_text?: Json;
           prompt_version?: string | null;
           raw_llm_output?: Json | null;
           rulebook_version?: string | null;
           rulebook_version_id?: string | null;
           started_at?: string;
+          status?: string;
           step_outputs?: Json;
           submission_id: string;
           token_usage?: Json | null;
         };
         Update: {
           asr_model?: string | null;
+          asr_provider?: string | null;
+          cost_usd?: number | null;
+          durations_ms?: Json;
+          error?: string | null;
           finished_at?: string | null;
+          frames_count?: number | null;
           id?: string;
           llm_model?: string | null;
+          llm_provider?: string | null;
+          on_screen_text?: Json;
           prompt_version?: string | null;
           raw_llm_output?: Json | null;
           rulebook_version?: string | null;
           rulebook_version_id?: string | null;
           started_at?: string;
+          status?: string;
           step_outputs?: Json;
           submission_id?: string;
           token_usage?: Json | null;
@@ -155,6 +204,48 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      eval_runs: {
+        Row: {
+          asr_model: string | null;
+          cases: Json;
+          created_at: string;
+          id: string;
+          label: string;
+          llm_model: string | null;
+          mode: string;
+          per_rule: Json;
+          prompt_version: string | null;
+          rulebook_version: string | null;
+          summary: Json;
+        };
+        Insert: {
+          asr_model?: string | null;
+          cases?: Json;
+          created_at?: string;
+          id?: string;
+          label: string;
+          llm_model?: string | null;
+          mode?: string;
+          per_rule?: Json;
+          prompt_version?: string | null;
+          rulebook_version?: string | null;
+          summary?: Json;
+        };
+        Update: {
+          asr_model?: string | null;
+          cases?: Json;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          llm_model?: string | null;
+          mode?: string;
+          per_rule?: Json;
+          prompt_version?: string | null;
+          rulebook_version?: string | null;
+          summary?: Json;
+        };
+        Relationships: [];
       };
       findings: {
         Row: {
@@ -326,11 +417,14 @@ export type Database = {
           description_en: string;
           id: string;
           is_active: boolean;
+          legal_status: string;
           llm_instructions: string;
           rulebook_version_id: string;
           source_date: string | null;
           source_name: string;
+          source_name_en: string | null;
           source_url: string;
+          source_verified: boolean;
           title_ar: string;
           title_en: string;
         };
@@ -344,11 +438,14 @@ export type Database = {
           description_en: string;
           id?: string;
           is_active?: boolean;
+          legal_status?: string;
           llm_instructions: string;
           rulebook_version_id: string;
           source_date?: string | null;
           source_name: string;
+          source_name_en?: string | null;
           source_url: string;
+          source_verified?: boolean;
           title_ar: string;
           title_en: string;
         };
@@ -362,11 +459,14 @@ export type Database = {
           description_en?: string;
           id?: string;
           is_active?: boolean;
+          legal_status?: string;
           llm_instructions?: string;
           rulebook_version_id?: string;
           source_date?: string | null;
           source_name?: string;
+          source_name_en?: string | null;
           source_url?: string;
+          source_verified?: boolean;
           title_ar?: string;
           title_en?: string;
         };
@@ -384,6 +484,7 @@ export type Database = {
         Row: {
           ai_used: boolean;
           analyzed_at: string | null;
+          attempts: number;
           audio_path: string | null;
           caption: string;
           created_at: string;
@@ -392,6 +493,7 @@ export type Database = {
           error_message: string | null;
           file_path: string | null;
           has_written_contract: boolean;
+          heartbeat_at: string | null;
           id: string;
           is_demo: boolean;
           is_paid_ad: boolean;
@@ -413,6 +515,7 @@ export type Database = {
         Insert: {
           ai_used?: boolean;
           analyzed_at?: string | null;
+          attempts?: number;
           audio_path?: string | null;
           caption?: string;
           created_at?: string;
@@ -421,6 +524,7 @@ export type Database = {
           error_message?: string | null;
           file_path?: string | null;
           has_written_contract?: boolean;
+          heartbeat_at?: string | null;
           id?: string;
           is_demo?: boolean;
           is_paid_ad?: boolean;
@@ -442,6 +546,7 @@ export type Database = {
         Update: {
           ai_used?: boolean;
           analyzed_at?: string | null;
+          attempts?: number;
           audio_path?: string | null;
           caption?: string;
           created_at?: string;
@@ -450,6 +555,7 @@ export type Database = {
           error_message?: string | null;
           file_path?: string | null;
           has_written_contract?: boolean;
+          heartbeat_at?: string | null;
           id?: string;
           is_demo?: boolean;
           is_paid_ad?: boolean;
@@ -534,6 +640,8 @@ export type Database = {
     };
     Functions: {
       can_read_submission: { Args: { _sid: string }; Returns: boolean };
+      cancel_submission: { Args: { _sid: string }; Returns: undefined };
+      delete_submission_media: { Args: { _sid: string }; Returns: undefined };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -542,6 +650,8 @@ export type Database = {
         Returns: boolean;
       };
       owns_submission: { Args: { _sid: string }; Returns: boolean };
+      retry_submission: { Args: { _sid: string }; Returns: undefined };
+      verify_cron_secret: { Args: { _secret: string }; Returns: boolean };
     };
     Enums: {
       app_role: "admin" | "user";
@@ -675,6 +785,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "user"],

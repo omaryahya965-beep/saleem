@@ -1,0 +1,139 @@
+{
+  "$comment": "Saudi-dialect evaluation cases. 'expected' lists rule codes that should be raised (t = expected start second, null = whole post). Text-mode cases use a transcript instead of media; add { \"media\": \"tests/fixtures/<file>\" } to run a real clip through ASR + frames.",
+  "cases": [
+    {
+      "id": "slimming-tea",
+      "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
+      "submission": { "kind": "video", "caption": "جربت شاي التنحيف الجديد 🔥 كود الخصم SALEEM20 الرابط في البايو", "platform": "snapchat", "product_category": "health", "is_paid_ad": true, "has_written_contract": false, "ai_used": true, "mawthooq_license_no": null, "duration_seconds": 33 },
+      "segments": [
+        { "start": 0, "end": 4.5, "text": "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد" },
+        { "start": 4.5, "end": 12, "text": "صراحة طعمه حلو وريحته تجنن" },
+        { "start": 12, "end": 19, "text": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع" },
+        { "start": 19, "end": 24, "text": "ومضمون بدون أعراض جانبية" },
+        { "start": 24, "end": 33, "text": "استخدموا كود SALEEM20 والرابط في البايو" }
+      ],
+      "expected": [
+        { "rule": "MAW-01", "t": 0 },
+        { "rule": "COM-01", "t": 12 },
+        { "rule": "MAW-02", "t": null },
+        { "rule": "MAW-03", "t": null },
+        { "rule": "MAW-04", "t": null },
+        { "rule": "AI-01", "t": null }
+      ]
+    },
+    {
+      "id": "herbal-tea-fixed",
+      "title": "النسخة المعدّلة: إفصاح وتجربة شخصية",
+      "submission": { "kind": "video", "caption": "إعلان مدفوع | شاي الأعشاب من متجر نخلة · المحتوى معدّل بالذكاء الاصطناعي", "platform": "snapchat", "product_category": "food", "is_paid_ad": true, "has_written_contract": true, "ai_used": true, "mawthooq_license_no": "MW-2026-48213", "duration_seconds": 24 },
+      "segments": [
+        { "start": 0, "end": 4, "text": "إعلان مدفوع بالتعاون مع متجر نخلة" },
+        { "start": 4, "end": 14, "text": "هذا شاي أعشاب أشربه بعد العشاء" },
+        { "start": 14, "end": 24, "text": "وأحس فيه بالراحة، وهذي تجربتي الشخصية والنتائج تختلف من شخص لشخص" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "crypto-daily-return",
+      "title": "منصة استثمار بعائد يومي مضمون",
+      "submission": { "kind": "video", "caption": "#إعلان منصة استثمار جديدة", "platform": "tiktok", "product_category": "finance", "is_paid_ad": true, "has_written_contract": true, "ai_used": false, "mawthooq_license_no": "MW-2026-10001", "duration_seconds": 20 },
+      "segments": [
+        { "start": 0, "end": 5, "text": "إعلان، يا شباب لقيت لكم منصة استثمار رهيبة" },
+        { "start": 5, "end": 12, "text": "حطيت فيها ألف ريال وصار لي عائد يومي ثابت" },
+        { "start": 12, "end": 20, "text": "ربح مضمون مية بالمية ولا فيه أي مخاطرة" }
+      ],
+      "expected": [
+        { "rule": "COM-01", "t": 5 },
+        { "rule": "MAW-02", "t": null }
+      ]
+    },
+    {
+      "id": "kid-daily-vlog",
+      "title": "يوميات مع طفل",
+      "submission": { "kind": "video", "caption": "يومي مع ولدي في الحديقة", "platform": "snapchat", "product_category": "other", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 18 },
+      "segments": [
+        { "start": 0, "end": 6, "text": "صباح الخير، اليوم طلعنا أنا وولدي فهد للحديقة" },
+        { "start": 6, "end": 12, "text": "فهد سلّم على المتابعين، عمره خمس سنين وكذا يحب المراجيح" },
+        { "start": 12, "end": 18, "text": "وبعدين بنروح البيت نتغدى مع أهلي" }
+      ],
+      "expected": [{ "rule": "CNT-01", "t": 6 }]
+    },
+    {
+      "id": "domestic-worker",
+      "title": "تصوير العاملة المنزلية",
+      "submission": { "kind": "video", "caption": "روتيني الصباحي", "platform": "snapchat", "product_category": "other", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 15 },
+      "segments": [
+        { "start": 0, "end": 5, "text": "صباح الخير، هذا روتيني الصباحي" },
+        { "start": 5, "end": 10, "text": "تعالي يا الشغالة سلمي على المتابعين" },
+        { "start": 10, "end": 15, "text": "هي اللي تسوي لنا الفطور كل يوم" }
+      ],
+      "expected": [{ "rule": "CNT-02", "t": 5 }]
+    },
+    {
+      "id": "insult",
+      "title": "ألفاظ مسيئة",
+      "submission": { "kind": "video", "caption": "رأيي بصراحة", "platform": "tiktok", "product_category": "other", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 12 },
+      "segments": [
+        { "start": 0, "end": 6, "text": "اللي يقول هالمطعم زين واحد غبي ما يفهم" },
+        { "start": 6, "end": 12, "text": "يا حمار روح جرب قبل لا تتكلم" }
+      ],
+      "expected": [{ "rule": "CNT-05", "t": 0 }]
+    },
+    {
+      "id": "organic-review",
+      "title": "مراجعة مطعم غير مدفوعة",
+      "submission": { "kind": "video", "caption": "جربت مطعم جديد في جدة", "platform": "instagram", "product_category": "food", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 16 },
+      "segments": [
+        { "start": 0, "end": 6, "text": "اليوم جربت مطعم جديد في جدة على حسابي الخاص" },
+        { "start": 6, "end": 16, "text": "البرجر كان لذيذ والخدمة سريعة، والأسعار معقولة" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "ai-undisclosed",
+      "title": "صوت مولّد بالذكاء الاصطناعي دون إفصاح",
+      "submission": { "kind": "video", "caption": "#إعلان عطر العود الجديد", "platform": "instagram", "product_category": "beauty", "is_paid_ad": true, "has_written_contract": true, "ai_used": true, "mawthooq_license_no": "MW-2026-22222", "duration_seconds": 14 },
+      "segments": [
+        { "start": 0, "end": 7, "text": "إعلان، عطر العود الجديد ريحته تثبت طول اليوم" },
+        { "start": 7, "end": 14, "text": "متوفر في المتجر الإلكتروني" }
+      ],
+      "expected": [{ "rule": "AI-01", "t": null }]
+    },
+    {
+      "id": "wealth-flaunt",
+      "title": "استعراض الثراء",
+      "submission": { "kind": "video", "caption": "يوم عادي", "platform": "snapchat", "product_category": "other", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 12 },
+      "segments": [
+        { "start": 0, "end": 6, "text": "شوفوا الفلوس هذي كلها، كاش على الطاولة" },
+        { "start": 6, "end": 12, "text": "والساعة هذي بنص مليون، عادي عندي" }
+      ],
+      "expected": [{ "rule": "CNT-04", "t": 0 }]
+    },
+    {
+      "id": "code-no-paid-flag",
+      "title": "كود خصم دون تحديد إعلان",
+      "submission": { "kind": "text", "text_content": "جربت كريم الترطيب من متجر لمسة، استخدموا كوبون: LAMSA15 والرابط في البايو", "caption": "", "platform": "x", "product_category": "beauty", "is_paid_ad": false, "has_written_contract": true, "ai_used": false, "mawthooq_license_no": "MW-2026-33333", "duration_seconds": null },
+      "segments": [],
+      "expected": [{ "rule": "MAW-01", "t": null }]
+    },
+    {
+      "id": "cure-claim-text",
+      "title": "ادعاء علاجي في منشور نصي",
+      "submission": { "kind": "text", "text_content": "#إعلان زيت الأعشاب الطبيعي يعالج تساقط الشعر نهائياً ويشفي القشرة من أول استخدام", "caption": "", "platform": "x", "product_category": "health", "is_paid_ad": true, "has_written_contract": true, "ai_used": false, "mawthooq_license_no": "MW-2026-44444", "duration_seconds": null },
+      "segments": [],
+      "expected": [
+        { "rule": "COM-01", "t": null },
+        { "rule": "MAW-02", "t": null }
+      ]
+    },
+    {
+      "id": "family-privacy",
+      "title": "تفاصيل خاصة عن الأسرة",
+      "submission": { "kind": "video", "caption": "جلسة عائلية", "platform": "snapchat", "product_category": "other", "is_paid_ad": false, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null, "duration_seconds": 15 },
+      "segments": [
+        { "start": 0, "end": 7, "text": "هذي غرفة نوم أمي وأبوي، وهنا يحطون أغراضهم الخاصة" },
+        { "start": 7, "end": 15, "text": "وأختي الحين تتهاوش مع زوجها، خلونا نصورهم" }
+      ],
+      "expected": [{ "rule": "CNT-03", "t": 0 }]
+    }
+  ]
+}

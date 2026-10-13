@@ -1,0 +1,5 @@
+{
+  "$comment": "Synthetic clip (TTS + slides) used until real creator clips are added. Submission fields mirror the New-check form.",
+  "submission": { "caption": "جربت شاي الأعشاب الجديد 🌿", "platform": "snapchat", "product_category": "health", "is_paid_ad": true, "has_written_contract": false, "ai_used": false, "mawthooq_license_no": null },
+  "expected": [{ "rule": "MAW-01", "t": 0 }, { "rule": "COM-01", "t": 8 }, { "rule": "MAW-02", "t": null }, { "rule": "MAW-03", "t": null }, { "rule": "MAW-04", "t": null }]
+}

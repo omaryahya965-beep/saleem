@@ -270,7 +270,8 @@
     "sideDisclosure": "Ad and AI-use disclosure",
     "sideClaims": "Absolute health and financial claims",
     "privacyTitle": "Your privacy",
-    "privacyBody": "We automatically delete the video and frames 24 hours after the check and keep only the findings and the file hash. We never share your content with any regulator."
+    "privacyBody": "We automatically delete the video and frames 24 hours after the check and keep only the findings and the file hash. We never share your content with any regulator.",
+    "stageExtracting": "Extracting frames and audio…"
   },
   "dashboard": {
     "title": "My checks",
@@ -432,5 +433,37 @@
     "save": "Save changes",
     "saved": "Changes saved.",
     "loadError": "We couldn't load your settings"
+  },
+  "admin": {
+    "evalTitle": "Accuracy evaluation",
+    "evalSubtitle": "Results on a Saudi-dialect test set per rule: hits, misses, false alarms, and time and cost per clip.",
+    "forbiddenTitle": "Admins only",
+    "forbiddenBody": "This page is available to admin accounts.",
+    "loadError": "We couldn't load evaluation results",
+    "evalEmptyTitle": "No evaluation results yet",
+    "evalEmptyBody": "Run “npm run eval -- --upload” in backend/ with the service key configured to see results here.",
+    "recall": "Recall",
+    "precision": "Precision",
+    "hitsOf": "{hits} of {total} expected issues",
+    "falseAlarms": "False alarms: {n}",
+    "timePerClip": "Time per clip",
+    "costPerClip": "Cost per clip",
+    "cases": "Cases: {n}",
+    "perRule": "Results by rule",
+    "casesHeading": "Cases",
+    "col": {
+      "rule": "Rule",
+      "hits": "Hits",
+      "misses": "Misses",
+      "falseAlarmsCol": "False alarms",
+      "recall": "Recall",
+      "precision": "Precision",
+      "tError": "Timestamp error"
+    },
+    "outcome": {
+      "hit": "hit",
+      "miss": "missed",
+      "false_alarm": "false alarm"
+    }
   }
 }

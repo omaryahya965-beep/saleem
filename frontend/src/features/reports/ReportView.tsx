@@ -202,8 +202,8 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const issues = useMemo(
-    () => sortIssues(toIssueViews(findings, rules, lang)),
-    [findings, rules, lang],
+    () => sortIssues(toIssueViews(findings, rules, lang, bundle.frameUrls)),
+    [findings, rules, lang, bundle.frameUrls],
   );
   const { violations, warnings } = countBySeverity(findings);
   const status = sub.overall_status ?? "ready";
