@@ -2,13 +2,13 @@
 // Unit tests for Arabic deterministic compliance rules and pipeline merging
 
 import { describe, expect, it } from "vitest";
-import { runDeterministicChecks } from "../../supabase/functions/_shared/rules/deterministic.ts";
-import { mergeAndFilterFindings } from "../../supabase/functions/_shared/pipeline/merge.ts";
+import { runDeterministicChecks } from "../supabase/functions/_shared/rules/deterministic.ts";
+import { mergeAndFilterFindings } from "../supabase/functions/_shared/pipeline/merge.ts";
 import type {
   Finding,
   SubmissionData,
   TranscriptSegment,
-} from "../../supabase/functions/_shared/types.ts";
+} from "../supabase/functions/_shared/types.ts";
 
 describe("Deterministic Compliance Engine (Arabic Fixtures)", () => {
   it("detects MAW-01 violation when paid ad has no disclosure in caption or first 5s", () => {

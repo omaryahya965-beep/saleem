@@ -1,7 +1,7 @@
 // src/lib/api/types.ts
 // Typed contracts for SALEEM frontend API layer
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/types/supabase";
 
 export type DbSubmission = Database["public"]["Tables"]["submissions"]["Row"];
 export type DbRule = Database["public"]["Tables"]["rules"]["Row"];

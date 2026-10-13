@@ -1,0 +1,11 @@
+{
+  "name": "saleem-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "verify": "npx tsx tests/verify-flow.ts",
+    "seed": "npx tsx scripts/seed-demo-user.ts"
+  }
+}
