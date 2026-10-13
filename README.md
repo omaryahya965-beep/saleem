@@ -57,22 +57,25 @@ saleem/
 
 ### 1. Backend Setup (Local Supabase)
 
+> 💡 **Prerequisite**: Make sure **Docker Desktop** (or Podman) is running before starting Supabase containers.  
+> You can use `npx supabase` without installing Supabase CLI globally, or install globally via `npm install -g supabase`.
+
 Open a terminal and navigate to the backend directory:
 
 ```bash
 cd backend
 
 # Start local Supabase containers (Postgres, Auth, Storage, Studio)
-supabase start
+npx supabase start
 
 # Apply database migrations and seed regulatory rules & demo reports
-supabase db reset
+npx supabase db reset
 
 # Seed local demo user (demo@saleem.app / demo123456)
 npm run seed
 
 # Serve Supabase Edge Functions locally
-supabase functions serve --env-file supabase/functions/.env
+npx supabase functions serve --env-file supabase/functions/.env
 ```
 
 > **Studio Dashboard**: View the database UI locally at [http://localhost:54323](http://localhost:54323).  
