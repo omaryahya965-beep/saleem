@@ -64,6 +64,7 @@ export type Database = {
         Row: {
           asr_model: string | null;
           asr_provider: string | null;
+          audio_mode: string | null;
           cost_usd: number | null;
           durations_ms: Json;
           error: string | null;
@@ -86,6 +87,7 @@ export type Database = {
         Insert: {
           asr_model?: string | null;
           asr_provider?: string | null;
+          audio_mode?: string | null;
           cost_usd?: number | null;
           durations_ms?: Json;
           error?: string | null;
@@ -108,6 +110,7 @@ export type Database = {
         Update: {
           asr_model?: string | null;
           asr_provider?: string | null;
+          audio_mode?: string | null;
           cost_usd?: number | null;
           durations_ms?: Json;
           error?: string | null;
@@ -342,6 +345,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      finding_feedback: {
+        Row: {
+          created_at: string;
+          finding_id: string;
+          id: string;
+          reason: string | null;
+          submission_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          finding_id: string;
+          id?: string;
+          reason?: string | null;
+          submission_id: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          finding_id?: string;
+          id?: string;
+          reason?: string | null;
+          submission_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "finding_feedback_finding_id_fkey";
+            columns: ["finding_id"];
+            isOneToOne: false;
+            referencedRelation: "findings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "finding_feedback_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       findings: {
         Row: {
           confidence: number;
@@ -423,6 +468,7 @@ export type Database = {
       };
       frames: {
         Row: {
+          blurred: boolean;
           id: string;
           image_path: string | null;
           ocr_text: string | null;
@@ -430,6 +476,7 @@ export type Database = {
           t_seconds: number;
         };
         Insert: {
+          blurred?: boolean;
           id?: string;
           image_path?: string | null;
           ocr_text?: string | null;
@@ -437,6 +484,7 @@ export type Database = {
           t_seconds: number;
         };
         Update: {
+          blurred?: boolean;
           id?: string;
           image_path?: string | null;
           ocr_text?: string | null;
@@ -873,6 +921,7 @@ export type Database = {
           analyzed_at: string | null;
           attempts: number;
           audio_path: string | null;
+          audio_probe: Json | null;
           batch_id: string | null;
           campaign_id: string | null;
           caption: string;
@@ -884,6 +933,7 @@ export type Database = {
           has_written_contract: boolean;
           heartbeat_at: string | null;
           id: string;
+          image_count: number;
           is_demo: boolean;
           is_paid_ad: boolean;
           kind: Database["public"]["Enums"]["submission_kind"];
@@ -907,6 +957,7 @@ export type Database = {
           analyzed_at?: string | null;
           attempts?: number;
           audio_path?: string | null;
+          audio_probe?: Json | null;
           batch_id?: string | null;
           campaign_id?: string | null;
           caption?: string;
@@ -918,6 +969,7 @@ export type Database = {
           has_written_contract?: boolean;
           heartbeat_at?: string | null;
           id?: string;
+          image_count?: number;
           is_demo?: boolean;
           is_paid_ad?: boolean;
           kind: Database["public"]["Enums"]["submission_kind"];
@@ -941,6 +993,7 @@ export type Database = {
           analyzed_at?: string | null;
           attempts?: number;
           audio_path?: string | null;
+          audio_probe?: Json | null;
           batch_id?: string | null;
           campaign_id?: string | null;
           caption?: string;
@@ -952,6 +1005,7 @@ export type Database = {
           has_written_contract?: boolean;
           heartbeat_at?: string | null;
           id?: string;
+          image_count?: number;
           is_demo?: boolean;
           is_paid_ad?: boolean;
           kind?: Database["public"]["Enums"]["submission_kind"];
@@ -1057,6 +1111,8 @@ export type Database = {
     };
     Functions: {
       accept_org_invite: { Args: { _token: string }; Returns: string };
+      admin_dedupe_stats: { Args: { _days?: number }; Returns: Json };
+      admin_finding_feedback: { Args: { _limit?: number }; Returns: Json };
       admin_metrics: { Args: { _days?: number }; Returns: Json };
       can_read_submission: { Args: { _sid: string }; Returns: boolean };
       cancel_submission: { Args: { _sid: string }; Returns: undefined };
@@ -1095,6 +1151,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      log_duplicate_reuse: { Args: { _previous: string }; Returns: undefined };
       my_usage: { Args: never; Returns: Json };
       org_role_of: {
         Args: { _org: string; _uid?: string };

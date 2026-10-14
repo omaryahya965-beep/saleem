@@ -1,10 +1,13 @@
 import type { RuleRecord, SubmissionData, TokenUsage, TranscriptSegment } from "../types.ts";
 import type { AnalysisOutput } from "../pipeline/schema.ts";
 import type { ProviderErrorInfo } from "./errors.ts";
+import type { ScoredSegment } from "../rules/speech.ts";
 
 export interface TranscriptionResult {
   full_text: string;
   segments: TranscriptSegment[];
+  /** Same segments with confidence signals (no_speech_prob, avg_logprob, compression_ratio). */
+  scored: ScoredSegment[];
   provider: string;
   model: string;
   /** Audio seconds billed. */

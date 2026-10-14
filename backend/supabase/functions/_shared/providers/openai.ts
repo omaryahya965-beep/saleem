@@ -2,6 +2,7 @@
 // via the Responses API with strict Structured Outputs.
 
 import { classifyProviderError } from "./errors.ts";
+import type { ScoredSegment } from "../rules/speech.ts";
 import { ANALYSIS_SCHEMA, SchemaError, parseModelJson, validateAnalysis, type AnalysisOutput } from "../pipeline/schema.ts";
 import type { TokenUsage, TranscriptSegment } from "../types.ts";
 import { SYSTEM_PROMPT, buildUserPrompt } from "./prompt.ts";
@@ -58,13 +59,29 @@ interface RawSegment {
   start?: number;
   end?: number;
   text?: string;
+  no_speech_prob?: number;
+  avg_logprob?: number;
+  compression_ratio?: number;
+}
+
+/** Normalized segments, keeping Whisper's confidence signals when present. */
+export function normalizeScoredSegments(raw: RawSegment[]): ScoredSegment[] {
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+  return raw
+    .map((s) => ({
+      start: Number(s.start ?? 0),
+      end: Number(s.end ?? s.start ?? 0),
+      text: String(s.text ?? "").trim(),
+      no_speech_prob: num(s.no_speech_prob),
+      avg_logprob: num(s.avg_logprob),
+      compression_ratio: num(s.compression_ratio),
+    }))
+    .filter((s) => s.text.length > 0 && Number.isFinite(s.start))
+    .sort((a, b) => a.start - b.start);
 }
 
 export function normalizeSegments(raw: RawSegment[]): TranscriptSegment[] {
-  return raw
-    .map((s) => ({ start: Number(s.start ?? 0), end: Number(s.end ?? s.start ?? 0), text: String(s.text ?? "").trim() }))
-    .filter((s) => s.text.length > 0 && Number.isFinite(s.start))
-    .sort((a, b) => a.start - b.start);
+  return normalizeScoredSegments(raw).map(({ start, end, text }) => ({ start, end, text }));
 }
 
 export class OpenAITranscription implements TranscriptionProvider {
@@ -93,11 +110,13 @@ export class OpenAITranscription implements TranscriptionProvider {
     const res = await fetchWithTimeout(`${API}/audio/transcriptions`, { method: "POST", headers: { Authorization: `Bearer ${this.apiKey}` }, body: form }, 120_000);
     if (!res.ok) await fail(res, `transcription (${model})`);
     const data = (await res.json()) as { text?: string; segments?: RawSegment[]; duration?: number; usage?: { seconds?: number } };
-    const segments = normalizeSegments(data.segments ?? []);
+    const scored = normalizeScoredSegments(data.segments ?? []);
+    const segments = scored.map(({ start, end, text }) => ({ start, end, text }));
     const seconds = Number(data.duration ?? data.usage?.seconds ?? segments.at(-1)?.end ?? 0);
     return {
       full_text: (data.text ?? segments.map((s) => s.text).join(" ")).trim(),
       segments,
+      scored,
       provider: this.name,
       model,
       seconds,

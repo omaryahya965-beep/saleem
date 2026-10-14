@@ -14,6 +14,7 @@ import {
   Trash2,
   TriangleAlert,
   Upload,
+  VolumeX,
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { MobileActionBar } from "@/components/layout/SiteShell";
@@ -270,12 +271,18 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
           : t("report.summaryNeedsFixesOnly", { violations: tn("count.violations", violations) });
 
   const model = [run?.llm_model, run?.asr_model].filter(Boolean).join(" · ");
+  const audioMode =
+    sub.kind === "video"
+      ? (run?.audio_mode as "speech" | "music_no_speech" | "no_audio" | null)
+      : null;
+  const noSpeech = audioMode === "music_no_speech" || audioMode === "no_audio";
   const facts = [
     { label: t("report.factContent"), value: sub.title || t("dashboard.untitled") },
     { label: t("report.factPlatform"), value: t(`platforms.${sub.platform}`) },
     { label: t("report.factDate"), value: formatDate(sub.analyzed_at ?? sub.created_at) },
     { label: t("report.factRulebook"), value: bundle.rulebookVersion ?? "—", ltr: true },
     { label: t("report.factModel"), value: model || "—", ltr: true },
+    ...(audioMode ? [{ label: t("audioMode.label"), value: t(`audioMode.${audioMode}`) }] : []),
   ];
 
   const primary =
@@ -418,11 +425,26 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
             onSelectIssue={(id) => selectIssue(id, true)}
           />
           {sub.kind === "video" && (
-            <TranscriptPanel segments={transcript} time={time} onSeek={seek} />
+            <TranscriptPanel
+              segments={transcript}
+              time={time}
+              onSeek={seek}
+              noSpeech={noSpeech}
+              seekDisabled={!sub.is_demo && Boolean(sub.file_path) && !bundle.mediaUrl}
+            />
           )}
         </div>
 
         <section aria-labelledby="issues-heading" className="flex flex-col gap-3">
+          {noSpeech && (
+            <p
+              role="note"
+              className="flex items-start gap-2 rounded-md border border-border bg-sunken px-4 py-3 text-sm text-fg"
+            >
+              <VolumeX aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-fg-muted" />
+              {t("report.noSpeechNote")}
+            </p>
+          )}
           <h2 id="issues-heading" className="flex items-baseline gap-2 text-xl font-bold">
             {t("report.issuesHeading")}
             <span className="tabular text-base font-medium text-fg-muted">({issues.length})</span>

@@ -42,6 +42,9 @@ ${sub.caption || "(empty)"}
 ${sub.kind === "text" ? `\nPost text:\n${sub.text_content ?? ""}\n` : ""}
 Transcript (Saudi dialect, timestamps in seconds):
 ${transcript}
+${sub.audio_mode && sub.audio_mode !== "speech" ? `
+Audio: ${sub.audio_mode === "no_audio" ? "the clip has no audio track" : "music or ambient sound only, no speech"}. Rely on on-screen text, the caption and the frames. An ad disclosure can only be satisfied in writing (on screen in the first 5 s, or in the caption) — say so in the explanation and the fix.
+` : ""}
 
 ${frameTimes.length ? `Frames attached in order, at seconds: ${frameTimes.map((t) => t.toFixed(1)).join(", ")}${batch.total > 1 ? ` (batch ${batch.index + 1} of ${batch.total}; report only what these frames and the transcript show)` : ""}` : "No frames attached."}
 

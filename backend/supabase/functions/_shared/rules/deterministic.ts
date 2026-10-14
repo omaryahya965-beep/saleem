@@ -3,6 +3,7 @@
 
 import type { Finding, OnScreenText, SubmissionData, TranscriptSegment } from "../types.ts";
 import { normalizeArabic } from "./arabic.ts";
+import type { AudioMode } from "./speech.ts";
 
 /** Window (seconds) in which a spoken/on-screen disclosure counts as "before the ad". */
 export const DISCLOSURE_WINDOW_S = 5;
@@ -91,7 +92,9 @@ export function runDeterministicChecks(
   submission: SubmissionData,
   segments: TranscriptSegment[] = [],
   onScreen: OnScreenText[] = [],
+  opts: { audioMode?: AudioMode | null } = {},
 ): DeterministicResult {
+  const noSpeech = opts.audioMode === "music_no_speech" || opts.audioMode === "no_audio";
   const findings: Finding[] = [];
   const all = spans(submission, segments, onScreen);
   const caption = all.find((s) => s.evidence_type === "caption");
@@ -123,10 +126,18 @@ export function runDeterministicChecks(
       t_end: DISCLOSURE_WINDOW_S,
       evidence_type: trigger?.evidence_type ?? "metadata",
       evidence_text: trigger ? quote(trigger.raw) : `${reason}، ولا توجد كلمة «إعلان» في الوصف أو أول ${DISCLOSURE_WINDOW_S} ثوانٍ`,
-      explanation_ar: `المحتوى ترويجي (${reason}) دون إفصاح صريح عن الإعلان في الوصف أو في أول ${DISCLOSURE_WINDOW_S} ثوانٍ.`,
-      explanation_en: `Promotional content without a clear ad disclosure in the caption or the first ${DISCLOSURE_WINDOW_S} seconds.`,
-      fix_ar: "ابدأ المقطع بعبارة «إعلان مدفوع» واكتب #إعلان في بداية الوصف.",
-      fix_en: 'Open with "paid ad" and put #ad at the start of the caption.',
+      explanation_ar: noSpeech
+        ? `المقطع بدون كلام، لذا لا يتحقق الإفصاح إلا كتابةً: لا توجد كلمة «إعلان» على الشاشة في أول ${DISCLOSURE_WINDOW_S} ثوانٍ ولا في الوصف رغم أن المحتوى ترويجي (${reason}).`
+        : `المحتوى ترويجي (${reason}) دون إفصاح صريح عن الإعلان في الوصف أو في أول ${DISCLOSURE_WINDOW_S} ثوانٍ.`,
+      explanation_en: noSpeech
+        ? `The clip has no speech, so disclosure must be written: no "ad" label on screen in the first ${DISCLOSURE_WINDOW_S} seconds or in the caption, although the content is promotional.`
+        : `Promotional content without a clear ad disclosure in the caption or the first ${DISCLOSURE_WINDOW_S} seconds.`,
+      fix_ar: noSpeech
+        ? "أضف نصاً واضحاً «إعلان مدفوع» على الشاشة من الثانية الأولى، واكتب #إعلان في بداية الوصف."
+        : "ابدأ المقطع بعبارة «إعلان مدفوع» واكتب #إعلان في بداية الوصف.",
+      fix_en: noSpeech
+        ? 'Add a clear on-screen "Paid ad" label from the first second and put #ad at the start of the caption.'
+        : 'Open with "paid ad" and put #ad at the start of the caption.',
       confidence: 0.95,
       source: "deterministic",
     });

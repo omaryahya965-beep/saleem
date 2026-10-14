@@ -156,3 +156,7 @@ Format: decision — why — alternatives considered.
   real transcription) without exposing secrets; documented in OPERATIONS.
 - **D63. Eval scripts must not mask hosted config** — they now remain useful, but hosted health is checked with
   `scripts/run-diagnostics.mjs` against the deployed secret.
+- **D64. Blur every evidence frame server-side (not only frames with people)** — detecting people/minors would
+  need another model call; blurring all evidence guarantees no unblurred child image reaches the report or the
+  compliance log. Cost: on-screen text in the thumbnail is unreadable (it is quoted in the evidence line).
+  Face-only blurring is a later improvement. Only the demo reports were backfilled; older reports show no thumbnail.

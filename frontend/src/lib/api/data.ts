@@ -1,6 +1,6 @@
 // Data access for SALEEM. All reads go through RLS with the user's session; nothing here
 // falls back to fixtures — demo content comes from `is_demo` rows in the database.
-import type { Database } from "@/types/supabase";
+import type { Database, Json } from "@/types/supabase";
 import { supabase, IS_DEMO_MODE } from "@/lib/supabase";
 
 type Tables = Database["public"]["Tables"];
@@ -198,10 +198,16 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     const { data: frames } = await supabase
       .from("frames")
       .select("id, image_path")
-      .in("id", frameIds);
-    const withPath = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
+      .in("id", frameIds)
+      // Only server-blurred copies are ever shown (frames may show people, including minors).
+      .eq("blurred", true);
+    const all = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
       Boolean(f.image_path),
     );
+    // Demo thumbnails ship with the app (already blurred) under /public/demo/evidence.
+    for (const f of all)
+      if (f.image_path.startsWith("demo:")) frameUrls.set(f.id, f.image_path.slice("demo:".length));
+    const withPath = all.filter((f) => !f.image_path.startsWith("demo:"));
     if (withPath.length) {
       const { data: signed } = await supabase.storage.from("media").createSignedUrls(
         withPath.map((f) => f.image_path),
@@ -288,6 +294,7 @@ export async function createSubmission(
   let filePath: string | null = null;
   let thumbPath: string | null = null;
   let audioPath: string | null = null;
+  let audioProbe: import("@/lib/speech").SpeechProbe | null = null;
 
   onStage?.("hashing");
   const sha256 = await sha256Hex(
@@ -299,12 +306,14 @@ ${input.textContent}`,
   if (input.file) {
     // Prepare model inputs in the browser: frames (≤ 768 px) and a 16 kHz mono audio track.
     onStage?.("extracting");
-    const { extractAudio, extractFrames, imageToFrame } = await import("@/lib/extract");
+    const { extractAudioWithProbe, extractFrames, imageToFrame } = await import("@/lib/extract");
     const frames =
       input.kind === "video"
         ? await extractFrames(input.file, (done, total) => onStage?.("extracting", { done, total }))
         : [await imageToFrame(input.file)].filter((f): f is NonNullable<typeof f> => f !== null);
-    const audio = input.kind === "video" ? await extractAudio(input.file) : null;
+    const extraction = input.kind === "video" ? await extractAudioWithProbe(input.file) : null;
+    const audio = extraction?.wav ?? null;
+    audioProbe = extraction?.probe ?? null;
 
     onStage?.("uploading");
     const ext = (
@@ -356,6 +365,7 @@ ${input.textContent}`,
     duration_seconds: input.durationSeconds,
     file_path: filePath,
     audio_path: audioPath,
+    audio_probe: audioProbe as unknown as Json,
     thumbnail_path: thumbPath,
   });
   if (error) fail(error);

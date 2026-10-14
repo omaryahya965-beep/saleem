@@ -17,6 +17,8 @@ interface VideoTimelineProps {
   selectedId?: string | null;
   onSeek: (t: number) => void;
   onSelectMarker: (id: string) => void;
+  /** Media is gone (deleted after 24 h): markers still select findings, but nothing seeks. */
+  seekDisabled?: boolean;
   className?: string;
 }
 
@@ -33,6 +35,7 @@ export function VideoTimeline({
   selectedId,
   onSeek,
   onSelectMarker,
+  seekDisabled = false,
   className,
 }: VideoTimelineProps) {
   const { t } = useI18n();
@@ -41,6 +44,7 @@ export function VideoTimeline({
   const pct = (s: number) => `${Math.max(0, Math.min(100, (s / safeDuration) * 100))}%`;
 
   const seekFromPointer = (e: PointerEvent) => {
+    if (seekDisabled) return;
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return;
     const ratio = (e.clientX - rect.left) / rect.width;
@@ -48,6 +52,7 @@ export function VideoTimeline({
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
+    if (seekDisabled) return;
     const step = { ArrowRight: 1, ArrowLeft: -1, PageUp: 5, PageDown: -5 }[e.key];
     if (step !== undefined) {
       e.preventDefault();
@@ -67,7 +72,8 @@ export function VideoTimeline({
         <div
           ref={trackRef}
           role="slider"
-          tabIndex={0}
+          tabIndex={seekDisabled ? -1 : 0}
+          aria-disabled={seekDisabled || undefined}
           aria-label={t("timeline.label")}
           aria-valuemin={0}
           aria-valuemax={Math.round(safeDuration)}
@@ -79,7 +85,10 @@ export function VideoTimeline({
             seekFromPointer(e);
           }}
           onPointerMove={(e) => e.buttons === 1 && seekFromPointer(e)}
-          className="absolute inset-x-0 top-1/2 h-11 -translate-y-1/2 cursor-pointer rounded-full"
+          className={cn(
+            "absolute inset-x-0 top-1/2 h-11 -translate-y-1/2 rounded-full",
+            seekDisabled ? "cursor-default opacity-60" : "cursor-pointer",
+          )}
         >
           <span className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-line" />
           <span

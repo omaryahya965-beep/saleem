@@ -125,3 +125,24 @@
   transcribe 5.9 s, model 29.1 s, 23 frames, 5,584/1,518 tokens, **$0.0285**. Screenshot `docs/demo/real-check-report.png`.
   Open: ~60 s spent between 95 % and done (persist/notify phase) — not yet profiled.
 - `diagnostics` is kept as an admin-only function (`node scripts/run-diagnostics.mjs`); it returns no secret values.
+
+## Audio modes 2026-10-14 — speech / music_no_speech / no_audio
+- **Browser probe** (`frontend/src/lib/speech.ts`, stored as `submissions.audio_probe`): RMS p95 (silent < −50 dB),
+  2–8 Hz envelope modulation, pause ratio, ZCR variation; score = 0.2·mod + 0.4·pause + 0.4·zcr, pause < 0.08 →
+  no_speech_likely. Calibration (Chromium): speech 0.89 / 0.91 → speech_likely; music 0.18 → no_speech_likely; silent clip → silent.
+  The probe only skips the API call for no-audio/silent; "no_speech_likely" switches the post-filter to strict.
+- **Post-transcription filter** (`_shared/rules/speech.ts`): drops segments by no_speech_prob + avg_logprob,
+  very low logprob, compression ratio > 2.4 (loops) and known hallucinations («شكراً للمشاهدة», «اشتركوا في القناة»,
+  subtitle credits, [موسيقى]). Speech requires ≥ 2 kept words; otherwise the transcript is emptied and dropped lines are kept in `step_outputs.asr_dropped`.
+- **No-speech handling:** MAW-01 only satisfied by written disclosure (on screen in first 5 s or caption) with explicit wording;
+  report note «المقطع بدون كلام…», transcript «لا يوجد كلام في المقطع», `analysis_runs.audio_mode` shown in report facts and compliance log.
+- **Real end-to-end (hosted, real UI, demo account):**
+
+| Clip | audio_mode | Status | Findings | Processing | Cost |
+|---|---|---|---|---|---|
+| music-only-ar (fixture) | music_no_speech | يحتاج تعديلات | 4 (MAW-01 written-disclosure, MAW-02, COM-01 ×2) | ~118 s | $0.0232 |
+| no-audio-ar (fixture) | no_audio | جاهز للنشر | 0 (transcription skipped) | ~95 s | $0.0111 |
+| slimming-tea-ar | speech | يحتاج تعديلات | 6 | ~116 s | $0.0284 |
+
+  Whisper hallucinated «اشتركوا في القناة» on the music clip; the filter dropped it. Screenshots in `docs/demo/audio/`.
+  Tests: backend 84 (+speech), frontend 28 (+probe).
