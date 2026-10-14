@@ -6,6 +6,14 @@ const sb = () => import("@/lib/supabase").then((m) => m.supabase);
 export const DEMO_EMAIL = "demo@saleem.app";
 export const DEMO_PASSWORD = "demo123456";
 
+/** Pre-launch test accounts shown on the sign-in page (set VITE_SHOW_TEST_ACCOUNTS=false to hide). */
+export const SHOW_TEST_ACCOUNTS = import.meta.env["VITE_SHOW_TEST_ACCOUNTS"] !== "false";
+export const TEST_ACCOUNTS = [
+  { email: DEMO_EMAIL, password: DEMO_PASSWORD, label: "auth.testCreator" },
+  { email: "agency@saleem.app", password: "agency123456", label: "auth.testAgency" },
+  { email: "admin@saleem.app", password: "admin123456", label: "auth.testAdmin" },
+] as const;
+
 interface AuthState {
   session: Session | null;
   user: User | null;

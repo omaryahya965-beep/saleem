@@ -432,7 +432,12 @@
       "rateLimited": "Too many attempts. Wait a moment and try again.",
       "demoUnavailable": "The demo account isn't enabled on this server yet. You can still view the sample report without signing in.",
       "generic": "We couldn't complete that. Please try again."
-    }
+    },
+    "testAccounts": "Test accounts",
+    "testAccountsHint": "Tap an account to sign in directly.",
+    "testCreator": "Creator (Creator plan)",
+    "testAgency": "Agency (Agency plan + sample workspace)",
+    "testAdmin": "Admin (evaluation, rulebook and metrics)"
   },
   "settings": {
     "title": "Settings",

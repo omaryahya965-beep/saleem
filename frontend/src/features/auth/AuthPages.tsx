@@ -1,13 +1,14 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { MailCheck, PlayCircle } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { Brand, Button, Card, Field, Input, toast } from "@/components/ui";
+import { Brand, Button, Card, Field, Input, Spinner, toast } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import {
   authErrorKey,
   sendPasswordReset,
   signIn,
-  signInDemo,
+  TEST_ACCOUNTS,
+  SHOW_TEST_ACCOUNTS,
   signUp,
   updatePassword,
   type AuthErrorKey,
@@ -75,7 +76,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [fieldErr, setFieldErr] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState<AuthErrorKey | null>(null);
-  const [busy, setBusy] = useState<"form" | "demo" | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   const done = () => void navigate({ to: redirect ?? "/dashboard" });
 
@@ -99,11 +100,13 @@ export function LoginPage() {
     }
   };
 
-  const onDemo = async () => {
-    setBusy("demo");
+  const onTestAccount = async (acc: (typeof TEST_ACCOUNTS)[number]) => {
+    setBusy(acc.email);
     setError(null);
+    setEmail(acc.email);
+    setPassword(acc.password);
     try {
-      await signInDemo();
+      await signIn(acc.email, acc.password);
       done();
     } catch {
       setError("demoUnavailable");
@@ -159,18 +162,41 @@ export function LoginPage() {
         {t("auth.or")}
         <span className="h-px flex-1 bg-border" />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <Button
-          variant="secondary"
-          block
-          icon={<PlayCircle />}
-          loading={busy === "demo"}
-          onClick={onDemo}
-        >
-          {t("auth.tryDemo")}
-        </Button>
-        <p className="text-center text-xs text-fg-muted">{t("auth.demoHint")}</p>
-      </div>
+      {SHOW_TEST_ACCOUNTS && (
+        <section aria-labelledby="test-accounts" className="flex flex-col gap-2">
+          <h2 id="test-accounts" className="text-sm font-bold">
+            {t("auth.testAccounts")}
+          </h2>
+          <p className="text-xs text-fg-muted">{t("auth.testAccountsHint")}</p>
+          <ul className="flex flex-col gap-2">
+            {TEST_ACCOUNTS.map((acc) => (
+              <li key={acc.email}>
+                <button
+                  type="button"
+                  onClick={() => void onTestAccount(acc)}
+                  disabled={busy !== null}
+                  className="flex min-h-14 w-full items-center gap-3 rounded-md border border-border bg-sunken px-3 py-2 text-start transition-colors hover:border-green disabled:opacity-60"
+                >
+                  {busy === acc.email ? (
+                    <Spinner className="text-green" />
+                  ) : (
+                    <PlayCircle aria-hidden="true" className="size-5 shrink-0 text-green" />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-fg">{t(acc.label)}</span>
+                    <span
+                      dir="ltr"
+                      className="block truncate font-mono text-xs text-fg-muted rtl:text-end"
+                    >
+                      {acc.email} · {acc.password}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </AuthLayout>
   );
 }

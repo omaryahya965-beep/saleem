@@ -77,6 +77,16 @@ Every capture run reported zero console errors and zero failed requests; no hori
 
 ## 6. What you must do manually
 
+**Test accounts (created 2026-10-14, shown on the sign-in page)**
+
+| Account | Password | Plan / role |
+|---|---|---|
+| demo@saleem.app | demo123456 | Creator plan |
+| agency@saleem.app | agency123456 | Agency plan + workspace «وكالة نخلة للتسويق» with one campaign |
+| admin@saleem.app | admin123456 | Agency plan + admin (evaluation, rulebook admin, metrics) |
+
+Hide the panel before launch with `VITE_SHOW_TEST_ACCOUNTS=false` and change or delete these accounts.
+
 **Secrets & accounts**
 1. Create the demo user (Dashboard → Auth → Add user `demo@saleem.app` / `demo123456`, auto-confirm) or run
    `SUPABASE_SERVICE_ROLE_KEY=… npm run seed:backend` in your shell. Until then "Try the demo account" shows a
