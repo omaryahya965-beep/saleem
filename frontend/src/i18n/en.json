@@ -185,7 +185,7 @@
     "deleteMediaTitle": "Delete media?",
     "deleteMediaBody": "We'll permanently delete the video and frames now. Findings, the file hash and the compliance log remain.",
     "deleteMediaDone": "Media deleted.",
-    "mediaDeletedNote": "The video was deleted after the check to protect your privacy. Findings and timestamps are still available.",
+    "mediaDeletedNote": "The video was deleted after 24 hours to protect your privacy. Your findings are saved.",
     "noMediaDemo": "Demo report without a video. Use the timeline to move between issues.",
     "issuesHeading": "Issues",
     "transcriptHeading": "Speech transcript",

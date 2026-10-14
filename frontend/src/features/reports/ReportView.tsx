@@ -425,7 +425,13 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
             onSelectIssue={(id) => selectIssue(id, true)}
           />
           {sub.kind === "video" && (
-            <TranscriptPanel segments={transcript} time={time} onSeek={seek} noSpeech={noSpeech} />
+            <TranscriptPanel
+              segments={transcript}
+              time={time}
+              onSeek={seek}
+              noSpeech={noSpeech}
+              seekDisabled={!sub.is_demo && Boolean(sub.file_path) && !bundle.mediaUrl}
+            />
           )}
         </div>
 

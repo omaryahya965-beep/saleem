@@ -24,6 +24,10 @@ export const MediaPanel = forwardRef<HTMLVideoElement, MediaPanelProps>(function
 ) {
   const { t } = useI18n();
   const timed = issues.filter((i) => i.time !== null);
+  // Uploaded media is purged 24 h after the check; a missing signed URL for a real upload means the same.
+  const deleted =
+    Boolean(submission.media_deleted_at) ||
+    (!submission.is_demo && Boolean(submission.file_path) && !mediaUrl);
 
   let media: ReactNode;
   if (submission.kind === "text") {
@@ -60,9 +64,8 @@ export const MediaPanel = forwardRef<HTMLVideoElement, MediaPanelProps>(function
       />
     );
   } else {
-    const deleted = Boolean(submission.media_deleted_at);
     media = (
-      <div className="flex aspect-[4/3] max-h-[50dvh] w-full flex-col items-center justify-center gap-3 rounded-md bg-ink px-6 text-center text-paper/85">
+      <div data-testid={deleted ? "media-deleted" : undefined} className="flex aspect-[4/3] max-h-[50dvh] w-full flex-col items-center justify-center gap-3 rounded-md bg-ink px-6 text-center text-paper/85">
         {deleted ? (
           <ImageOff aria-hidden="true" className="size-8 text-mint" />
         ) : (
@@ -92,6 +95,7 @@ export const MediaPanel = forwardRef<HTMLVideoElement, MediaPanelProps>(function
           selectedId={selectedId}
           onSeek={onSeek}
           onSelectMarker={onSelectIssue}
+          seekDisabled={deleted}
           className="px-1"
         />
       )}
@@ -105,12 +109,15 @@ export function TranscriptPanel({
   time,
   onSeek,
   noSpeech = false,
+  seekDisabled = false,
 }: {
   segments: TranscriptSegment[];
   time: number;
   onSeek: (t: number) => void;
   /** Clip has no speech (music only or no audio track). */
   noSpeech?: boolean;
+  /** Media deleted: the transcript stays readable but lines no longer seek. */
+  seekDisabled?: boolean;
 }) {
   const { t } = useI18n();
   const listRef = useRef<HTMLOListElement>(null);
@@ -142,8 +149,10 @@ export function TranscriptPanel({
             <li key={i} data-active={i === active}>
               <button
                 type="button"
+                disabled={seekDisabled}
                 onClick={() => onSeek(s.start)}
                 className={cn(
+                  "disabled:cursor-default",
                   "flex w-full gap-3 rounded-sm px-3 py-2 text-start transition-colors duration-150",
                   i === active ? "bg-green-bg" : "hover:bg-sunken",
                 )}
