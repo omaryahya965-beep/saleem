@@ -291,6 +291,18 @@ export function LandingPage() {
             <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             {t("brand.disclaimer")}
           </p>
+          <nav aria-label={t("legal.nav")} className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {(["terms", "privacy", "disclaimer", "ai"] as const).map((d) => (
+              <Link
+                key={d}
+                to="/legal/$doc"
+                params={{ doc: d }}
+                className="inline-flex min-h-11 items-center text-green hover:underline"
+              >
+                {t(`legal.${d}.title`)}
+              </Link>
+            ))}
+          </nav>
           <p className="text-xs text-fg-muted">{t("landing.footerRights")}</p>
         </div>
       </footer>

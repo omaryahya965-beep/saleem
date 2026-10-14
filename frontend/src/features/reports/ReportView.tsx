@@ -8,6 +8,8 @@ import {
   FileCheck2,
   Info,
   MoreHorizontal,
+  RefreshCw,
+  Share2,
   Plus,
   Trash2,
   TriangleAlert,
@@ -30,7 +32,9 @@ import {
 import { formatClock, useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { deleteMedia, type ReportBundle } from "@/lib/api/data";
-import { qk } from "@/lib/api/hooks";
+import { qk, useRulebook } from "@/lib/api/hooks";
+import { rerunSubmission } from "@/lib/api/features";
+import { ShareDialog } from "@/features/share/SharePages";
 import { cn } from "@/lib/utils";
 import { MediaPanel, TranscriptPanel } from "./MediaPanel";
 import { countBySeverity, diffFindings, sortIssues, toIssueViews } from "./model";
@@ -200,6 +204,17 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
   const [time, setTime] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const currentVersion = useRulebook().data?.version?.version_label;
+  const rerun = useMutation({
+    mutationFn: () => rerunSubmission(sub.id),
+    onSuccess: () => {
+      toast.success(t("report.rerunDone"));
+      void qc.invalidateQueries({ queryKey: qk.submission(sub.id) });
+      void qc.invalidateQueries({ queryKey: qk.report(sub.id) });
+    },
+    onError: () => toast.error(t("errors.generic")),
+  });
 
   const issues = useMemo(
     () => sortIssues(toIssueViews(findings, rules, lang, bundle.frameUrls)),
@@ -294,7 +309,7 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
         </Link>
       </Button>
     );
-  const more = isOwner && !sub.media_deleted_at && sub.file_path && (
+  const more = isOwner && (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <IconButton label={t("report.moreActions")} variant="secondary">
@@ -305,15 +320,35 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
         <DropdownMenu.Content
           align="end"
           sideOffset={6}
-          className="z-50 min-w-52 rounded-md border border-border bg-surface p-1.5 shadow-overlay"
+          className="z-50 min-w-60 rounded-md border border-border bg-surface p-1.5 shadow-overlay"
         >
           <DropdownMenu.Item
-            onSelect={() => setConfirmDelete(true)}
-            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm text-red outline-none data-[highlighted]:bg-red-bg"
+            onSelect={() => setShareOpen(true)}
+            className={
+              "flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            }
           >
-            <Trash2 aria-hidden="true" className="size-4" />
-            {t("report.deleteMedia")}
+            <Share2 aria-hidden="true" className="size-4" />
+            {t("report.share")}
           </DropdownMenu.Item>
+          <DropdownMenu.Item
+            onSelect={() => rerun.mutate()}
+            className={
+              "flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            }
+          >
+            <RefreshCw aria-hidden="true" className="size-4" />
+            {t("report.rerun")}
+          </DropdownMenu.Item>
+          {!sub.media_deleted_at && sub.file_path && (
+            <DropdownMenu.Item
+              onSelect={() => setConfirmDelete(true)}
+              className="flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm text-red outline-none data-[highlighted]:bg-red-bg"
+            >
+              <Trash2 aria-hidden="true" className="size-4" />
+              {t("report.deleteMedia")}
+            </DropdownMenu.Item>
+          )}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
@@ -347,6 +382,24 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
           {secondary}
         </div>
       </MobileActionBar>
+
+      {isOwner &&
+        currentVersion &&
+        bundle.rulebookVersion &&
+        currentVersion !== bundle.rulebookVersion && (
+          <p className="flex flex-wrap items-center gap-3 rounded-md border border-amber/25 bg-amber-bg px-4 py-3 text-sm">
+            {t("report.rerunHint", { old: bundle.rulebookVersion, current: currentVersion })}
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<RefreshCw />}
+              loading={rerun.isPending}
+              onClick={() => rerun.mutate()}
+            >
+              {t("report.rerun")}
+            </Button>
+          </p>
+        )}
 
       {status === "ready" && <ReadyComparison bundle={bundle} />}
 
@@ -407,6 +460,10 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
       </div>
 
       <Disclaimer className="border-t border-border pt-5" />
+
+      {isOwner && (
+        <ShareDialog submissionId={sub.id} open={shareOpen} onOpenChange={setShareOpen} />
+      )}
 
       <Dialog
         open={confirmDelete}

@@ -144,20 +144,85 @@ export type Database = {
           },
         ];
       };
+      batches: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      campaigns: {
+        Row: {
+          brand: string | null;
+          created_at: string;
+          created_by: string;
+          ends_on: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          starts_on: string | null;
+        };
+        Insert: {
+          brand?: string | null;
+          created_at?: string;
+          created_by: string;
+          ends_on?: string | null;
+          id?: string;
+          name: string;
+          org_id: string;
+          starts_on?: string | null;
+        };
+        Update: {
+          brand?: string | null;
+          created_at?: string;
+          created_by?: string;
+          ends_on?: string | null;
+          id?: string;
+          name?: string;
+          org_id?: string;
+          starts_on?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       compliance_logs: {
         Row: {
           content_hash: string;
           generated_at: string;
+          report_hash: string | null;
           submission_id: string;
         };
         Insert: {
           content_hash: string;
           generated_at?: string;
+          report_hash?: string | null;
           submission_id: string;
         };
         Update: {
           content_hash?: string;
           generated_at?: string;
+          report_hash?: string | null;
           submission_id?: string;
         };
         Relationships: [
@@ -358,50 +423,259 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          created_at: string;
+          id: string;
+          kind: string;
+          payload: Json;
+          read_at: string | null;
+          submission_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          kind: string;
+          payload?: Json;
+          read_at?: string | null;
+          submission_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          payload?: Json;
+          read_at?: string | null;
+          submission_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_invites: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string;
+          org_id: string;
+          revoked_at: string | null;
+          role: Database["public"]["Enums"]["org_role"];
+          token: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by: string;
+          org_id: string;
+          revoked_at?: string | null;
+          role: Database["public"]["Enums"]["org_role"];
+          token?: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string;
+          org_id?: string;
+          revoked_at?: string | null;
+          role?: Database["public"]["Enums"]["org_role"];
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_invites_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_members: {
+        Row: {
+          created_at: string;
+          display_name: string | null;
+          email: string | null;
+          org_id: string;
+          role: Database["public"]["Enums"]["org_role"];
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_name?: string | null;
+          email?: string | null;
+          org_id: string;
+          role: Database["public"]["Enums"]["org_role"];
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string | null;
+          email?: string | null;
+          org_id?: string;
+          role?: Database["public"]["Enums"]["org_role"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organizations: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          name: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      plans: {
+        Row: {
+          id: string;
+          max_batch: number;
+          max_clip_seconds: number;
+          monthly_checks: number;
+          name_ar: string;
+          name_en: string;
+          orgs_allowed: boolean;
+          sort: number;
+        };
+        Insert: {
+          id: string;
+          max_batch: number;
+          max_clip_seconds?: number;
+          monthly_checks: number;
+          name_ar: string;
+          name_en: string;
+          orgs_allowed?: boolean;
+          sort?: number;
+        };
+        Update: {
+          id?: string;
+          max_batch?: number;
+          max_clip_seconds?: number;
+          monthly_checks?: number;
+          name_ar?: string;
+          name_en?: string;
+          orgs_allowed?: boolean;
+          sort?: number;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
           display_name: string | null;
           id: string;
           mawthooq_license_no: string | null;
+          notify_email: boolean;
+          plan_id: string;
           platforms: Database["public"]["Enums"]["platform"][];
+          preferred_lang: string | null;
         };
         Insert: {
           created_at?: string;
           display_name?: string | null;
           id: string;
           mawthooq_license_no?: string | null;
+          notify_email?: boolean;
+          plan_id?: string;
           platforms?: Database["public"]["Enums"]["platform"][];
+          preferred_lang?: string | null;
         };
         Update: {
           created_at?: string;
           display_name?: string | null;
           id?: string;
           mawthooq_license_no?: string | null;
+          notify_email?: boolean;
+          plan_id?: string;
           platforms?: Database["public"]["Enums"]["platform"][];
+          preferred_lang?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       rulebook_versions: {
         Row: {
+          changelog: string | null;
           created_at: string;
+          created_by: string | null;
+          effective_from: string | null;
           id: string;
           is_active: boolean;
           notes: string | null;
+          published_at: string | null;
+          status: string;
           version_label: string;
         };
         Insert: {
+          changelog?: string | null;
           created_at?: string;
+          created_by?: string | null;
+          effective_from?: string | null;
           id?: string;
           is_active?: boolean;
           notes?: string | null;
+          published_at?: string | null;
+          status?: string;
           version_label: string;
         };
         Update: {
+          changelog?: string | null;
           created_at?: string;
+          created_by?: string | null;
+          effective_from?: string | null;
           id?: string;
           is_active?: boolean;
           notes?: string | null;
+          published_at?: string | null;
+          status?: string;
           version_label?: string;
         };
         Relationships: [];
@@ -480,12 +754,97 @@ export type Database = {
           },
         ];
       };
+      share_links: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          expires_at: string;
+          id: string;
+          revoked_at: string | null;
+          submission_id: string;
+          token: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          expires_at: string;
+          id?: string;
+          revoked_at?: string | null;
+          submission_id: string;
+          token?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          expires_at?: string;
+          id?: string;
+          revoked_at?: string | null;
+          submission_id?: string;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "share_links_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      share_reviews: {
+        Row: {
+          comment: string | null;
+          created_at: string;
+          decision: string;
+          id: string;
+          reviewer_name: string;
+          share_link_id: string;
+          submission_id: string;
+        };
+        Insert: {
+          comment?: string | null;
+          created_at?: string;
+          decision: string;
+          id?: string;
+          reviewer_name: string;
+          share_link_id: string;
+          submission_id: string;
+        };
+        Update: {
+          comment?: string | null;
+          created_at?: string;
+          decision?: string;
+          id?: string;
+          reviewer_name?: string;
+          share_link_id?: string;
+          submission_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "share_reviews_share_link_id_fkey";
+            columns: ["share_link_id"];
+            isOneToOne: false;
+            referencedRelation: "share_links";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "share_reviews_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       submissions: {
         Row: {
           ai_used: boolean;
           analyzed_at: string | null;
           attempts: number;
           audio_path: string | null;
+          batch_id: string | null;
+          campaign_id: string | null;
           caption: string;
           created_at: string;
           current_step: Database["public"]["Enums"]["pipeline_step"];
@@ -500,6 +859,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["submission_kind"];
           mawthooq_license_no: string | null;
           media_deleted_at: string | null;
+          org_id: string | null;
           overall_status: Database["public"]["Enums"]["overall_status"] | null;
           parent_id: string | null;
           platform: Database["public"]["Enums"]["platform"];
@@ -517,6 +877,8 @@ export type Database = {
           analyzed_at?: string | null;
           attempts?: number;
           audio_path?: string | null;
+          batch_id?: string | null;
+          campaign_id?: string | null;
           caption?: string;
           created_at?: string;
           current_step?: Database["public"]["Enums"]["pipeline_step"];
@@ -531,6 +893,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["submission_kind"];
           mawthooq_license_no?: string | null;
           media_deleted_at?: string | null;
+          org_id?: string | null;
           overall_status?: Database["public"]["Enums"]["overall_status"] | null;
           parent_id?: string | null;
           platform: Database["public"]["Enums"]["platform"];
@@ -548,6 +911,8 @@ export type Database = {
           analyzed_at?: string | null;
           attempts?: number;
           audio_path?: string | null;
+          batch_id?: string | null;
+          campaign_id?: string | null;
           caption?: string;
           created_at?: string;
           current_step?: Database["public"]["Enums"]["pipeline_step"];
@@ -562,6 +927,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["submission_kind"];
           mawthooq_license_no?: string | null;
           media_deleted_at?: string | null;
+          org_id?: string | null;
           overall_status?: Database["public"]["Enums"]["overall_status"] | null;
           parent_id?: string | null;
           platform?: Database["public"]["Enums"]["platform"];
@@ -575,6 +941,27 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "submissions_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "batches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "submissions_parent_id_fkey";
             columns: ["parent_id"];
@@ -639,9 +1026,29 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_org_invite: { Args: { _token: string }; Returns: string };
       can_read_submission: { Args: { _sid: string }; Returns: boolean };
       cancel_submission: { Args: { _sid: string }; Returns: undefined };
+      compute_report_hash: { Args: { _sid: string }; Returns: string };
+      create_org_invite: {
+        Args: {
+          _email: string;
+          _org: string;
+          _role: Database["public"]["Enums"]["org_role"];
+        };
+        Returns: string;
+      };
+      create_organization: { Args: { _name: string }; Returns: string };
+      create_rulebook_draft: {
+        Args: { _label: string; _notes?: string };
+        Returns: string;
+      };
+      create_share_link: {
+        Args: { _days?: number; _sid: string };
+        Returns: string;
+      };
       delete_submission_media: { Args: { _sid: string }; Returns: undefined };
+      get_shared_report: { Args: { _token: string }; Returns: Json };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -649,8 +1056,50 @@ export type Database = {
         };
         Returns: boolean;
       };
+      is_org_member: {
+        Args: {
+          _org: string;
+          _roles?: Database["public"]["Enums"]["org_role"][];
+        };
+        Returns: boolean;
+      };
+      my_usage: { Args: never; Returns: Json };
+      org_role_of: {
+        Args: { _org: string; _uid?: string };
+        Returns: Database["public"]["Enums"]["org_role"];
+      };
       owns_submission: { Args: { _sid: string }; Returns: boolean };
+      remove_org_member: {
+        Args: { _org: string; _user: string };
+        Returns: undefined;
+      };
+      rerun_submission: { Args: { _sid: string }; Returns: undefined };
       retry_submission: { Args: { _sid: string }; Returns: undefined };
+      revoke_org_invite: { Args: { _invite: string }; Returns: undefined };
+      revoke_share_link: { Args: { _id: string }; Returns: undefined };
+      seal_compliance_log: { Args: { _sid: string }; Returns: undefined };
+      set_org_member_role: {
+        Args: {
+          _org: string;
+          _role: Database["public"]["Enums"]["org_role"];
+          _user: string;
+        };
+        Returns: undefined;
+      };
+      set_rulebook_status: {
+        Args: { _status: string; _version: string };
+        Returns: undefined;
+      };
+      submit_share_review: {
+        Args: {
+          _comment: string;
+          _decision: string;
+          _name: string;
+          _token: string;
+        };
+        Returns: undefined;
+      };
+      verify_compliance_log: { Args: { _sid: string }; Returns: Json };
       verify_cron_secret: { Args: { _secret: string }; Returns: boolean };
     };
     Enums: {
@@ -658,6 +1107,7 @@ export type Database = {
       check_type: "audio" | "visual" | "text" | "metadata" | "hybrid";
       evidence_type: "transcript" | "frame" | "caption" | "metadata";
       finding_source: "deterministic" | "llm";
+      org_role: "owner" | "admin" | "reviewer" | "creator";
       overall_status: "ready" | "needs_fixes" | "review";
       pipeline_step: "transcribe" | "deterministic" | "llm" | "merge" | "done";
       platform: "snapchat" | "tiktok" | "instagram" | "x" | "youtube";
@@ -794,6 +1244,7 @@ export const Constants = {
       check_type: ["audio", "visual", "text", "metadata", "hybrid"],
       evidence_type: ["transcript", "frame", "caption", "metadata"],
       finding_source: ["deterministic", "llm"],
+      org_role: ["owner", "admin", "reviewer", "creator"],
       overall_status: ["ready", "needs_fixes", "review"],
       pipeline_step: ["transcribe", "deterministic", "llm", "merge", "done"],
       platform: ["snapchat", "tiktok", "instagram", "x", "youtube"],

@@ -256,6 +256,9 @@ export interface NewSubmissionInput {
   aiUsed: boolean;
   licenseNo: string;
   parentId: string | null;
+  batchId?: string | null;
+  orgId?: string | null;
+  campaignId?: string | null;
 }
 
 export async function sha256Hex(data: Blob | string): Promise<string> {
@@ -350,6 +353,9 @@ ${input.textContent}`,
     ai_used: input.aiUsed,
     mawthooq_license_no: input.licenseNo.trim() || null,
     parent_id: input.parentId,
+    batch_id: input.batchId ?? null,
+    org_id: input.orgId ?? null,
+    campaign_id: input.campaignId ?? null,
     sha256,
     duration_seconds: input.durationSeconds,
     file_path: filePath,

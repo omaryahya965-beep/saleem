@@ -21,8 +21,18 @@ import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
 import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
+import { Route as AppAdminRulesRouteImport } from './routes/_app/admin/rules'
+import { Route as AppArchiveIndexRouteImport } from './routes/_app/archive/index'
+import { Route as AppArchiveIdRouteImport } from './routes/_app/archive/$id'
 import { Route as AppChecksIdRouteImport } from './routes/_app/checks.$id'
+import { Route as AppInviteTokenRouteImport } from './routes/_app/invite/$token'
+import { Route as AppLegalDocRouteImport } from './routes/_app/legal/$doc'
+import { Route as AppOrgIndexRouteImport } from './routes/_app/org/index'
+import { Route as AppShareTokenRouteImport } from './routes/_app/share/$token'
+import { Route as AppVerifyIdRouteImport } from './routes/_app/verify/$id'
 import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
+import { Route as AppOrgIdIndexRouteImport } from './routes/_app/org/$id.index'
+import { Route as AppOrgIdCampaignsCidRouteImport } from './routes/_app/org/$id.campaigns.$cid'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -83,14 +93,64 @@ const AppAdminEvalRoute = AppAdminEvalRouteImport.update({
   path: '/admin/eval',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRulesRoute = AppAdminRulesRouteImport.update({
+  id: '/admin/rules',
+  path: '/admin/rules',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppArchiveIndexRoute = AppArchiveIndexRouteImport.update({
+  id: '/archive/',
+  path: '/archive/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppArchiveIdRoute = AppArchiveIdRouteImport.update({
+  id: '/archive/$id',
+  path: '/archive/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChecksIdRoute = AppChecksIdRouteImport.update({
   id: '/checks/$id',
   path: '/checks/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInviteTokenRoute = AppInviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLegalDocRoute = AppLegalDocRouteImport.update({
+  id: '/legal/$doc',
+  path: '/legal/$doc',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgIndexRoute = AppOrgIndexRouteImport.update({
+  id: '/org/',
+  path: '/org/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppShareTokenRoute = AppShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVerifyIdRoute = AppVerifyIdRouteImport.update({
+  id: '/verify/$id',
+  path: '/verify/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChecksIdLogRoute = AppChecksIdLogRouteImport.update({
   id: '/checks_/$id/log',
   path: '/checks/$id/log',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgIdIndexRoute = AppOrgIdIndexRouteImport.update({
+  id: '/org/$id/',
+  path: '/org/$id/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgIdCampaignsCidRoute = AppOrgIdCampaignsCidRouteImport.update({
+  id: '/org/$id/campaigns/$cid',
+  path: '/org/$id/campaigns/$cid',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -106,8 +166,18 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/admin/eval': typeof AppAdminEvalRoute
+  '/admin/rules': typeof AppAdminRulesRoute
+  '/archive/$id': typeof AppArchiveIdRoute
   '/checks/$id': typeof AppChecksIdRoute
+  '/invite/$token': typeof AppInviteTokenRoute
+  '/legal/$doc': typeof AppLegalDocRoute
+  '/share/$token': typeof AppShareTokenRoute
+  '/verify/$id': typeof AppVerifyIdRoute
+  '/archive/': typeof AppArchiveIndexRoute
+  '/org/': typeof AppOrgIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/org/$id/': typeof AppOrgIdIndexRoute
+  '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
 export interface FileRoutesByTo {
   '/styleguide': typeof StyleguideRoute
@@ -121,8 +191,18 @@ export interface FileRoutesByTo {
   '/signup': typeof AppSignupRoute
   '/': typeof AppIndexRoute
   '/admin/eval': typeof AppAdminEvalRoute
+  '/admin/rules': typeof AppAdminRulesRoute
+  '/archive/$id': typeof AppArchiveIdRoute
   '/checks/$id': typeof AppChecksIdRoute
+  '/invite/$token': typeof AppInviteTokenRoute
+  '/legal/$doc': typeof AppLegalDocRoute
+  '/share/$token': typeof AppShareTokenRoute
+  '/verify/$id': typeof AppVerifyIdRoute
+  '/archive': typeof AppArchiveIndexRoute
+  '/org': typeof AppOrgIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/org/$id': typeof AppOrgIdIndexRoute
+  '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -138,8 +218,18 @@ export interface FileRoutesById {
   '/_app/signup': typeof AppSignupRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/eval': typeof AppAdminEvalRoute
+  '/_app/admin/rules': typeof AppAdminRulesRoute
+  '/_app/archive/$id': typeof AppArchiveIdRoute
   '/_app/checks/$id': typeof AppChecksIdRoute
+  '/_app/invite/$token': typeof AppInviteTokenRoute
+  '/_app/legal/$doc': typeof AppLegalDocRoute
+  '/_app/share/$token': typeof AppShareTokenRoute
+  '/_app/verify/$id': typeof AppVerifyIdRoute
+  '/_app/archive/': typeof AppArchiveIndexRoute
+  '/_app/org/': typeof AppOrgIndexRoute
   '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
+  '/_app/org/$id/': typeof AppOrgIdIndexRoute
+  '/_app/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,8 +245,18 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/admin/eval'
+    | '/admin/rules'
+    | '/archive/$id'
     | '/checks/$id'
+    | '/invite/$token'
+    | '/legal/$doc'
+    | '/share/$token'
+    | '/verify/$id'
+    | '/archive/'
+    | '/org/'
     | '/checks/$id/log'
+    | '/org/$id/'
+    | '/org/$id/campaigns/$cid'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/styleguide'
@@ -170,8 +270,18 @@ export interface FileRouteTypes {
     | '/signup'
     | '/'
     | '/admin/eval'
+    | '/admin/rules'
+    | '/archive/$id'
     | '/checks/$id'
+    | '/invite/$token'
+    | '/legal/$doc'
+    | '/share/$token'
+    | '/verify/$id'
+    | '/archive'
+    | '/org'
     | '/checks/$id/log'
+    | '/org/$id'
+    | '/org/$id/campaigns/$cid'
   id:
     | '__root__'
     | '/_app'
@@ -186,8 +296,18 @@ export interface FileRouteTypes {
     | '/_app/signup'
     | '/_app/'
     | '/_app/admin/eval'
+    | '/_app/admin/rules'
+    | '/_app/archive/$id'
     | '/_app/checks/$id'
+    | '/_app/invite/$token'
+    | '/_app/legal/$doc'
+    | '/_app/share/$token'
+    | '/_app/verify/$id'
+    | '/_app/archive/'
+    | '/_app/org/'
     | '/_app/checks_/$id/log'
+    | '/_app/org/$id/'
+    | '/_app/org/$id/campaigns/$cid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,6 +401,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminEvalRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/rules': {
+      id: '/_app/admin/rules'
+      path: '/admin/rules'
+      fullPath: '/admin/rules'
+      preLoaderRoute: typeof AppAdminRulesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/archive/': {
+      id: '/_app/archive/'
+      path: '/archive'
+      fullPath: '/archive/'
+      preLoaderRoute: typeof AppArchiveIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/archive/$id': {
+      id: '/_app/archive/$id'
+      path: '/archive/$id'
+      fullPath: '/archive/$id'
+      preLoaderRoute: typeof AppArchiveIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/checks/$id': {
       id: '/_app/checks/$id'
       path: '/checks/$id'
@@ -288,11 +429,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChecksIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/invite/$token': {
+      id: '/_app/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof AppInviteTokenRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/legal/$doc': {
+      id: '/_app/legal/$doc'
+      path: '/legal/$doc'
+      fullPath: '/legal/$doc'
+      preLoaderRoute: typeof AppLegalDocRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/': {
+      id: '/_app/org/'
+      path: '/org'
+      fullPath: '/org/'
+      preLoaderRoute: typeof AppOrgIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/share/$token': {
+      id: '/_app/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof AppShareTokenRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/verify/$id': {
+      id: '/_app/verify/$id'
+      path: '/verify/$id'
+      fullPath: '/verify/$id'
+      preLoaderRoute: typeof AppVerifyIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/checks_/$id/log': {
       id: '/_app/checks_/$id/log'
       path: '/checks/$id/log'
       fullPath: '/checks/$id/log'
       preLoaderRoute: typeof AppChecksIdLogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/$id/': {
+      id: '/_app/org/$id/'
+      path: '/org/$id'
+      fullPath: '/org/$id/'
+      preLoaderRoute: typeof AppOrgIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/$id/campaigns/$cid': {
+      id: '/_app/org/$id/campaigns/$cid'
+      path: '/org/$id/campaigns/$cid'
+      fullPath: '/org/$id/campaigns/$cid'
+      preLoaderRoute: typeof AppOrgIdCampaignsCidRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -309,8 +499,18 @@ interface AppRouteChildren {
   AppSignupRoute: typeof AppSignupRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminEvalRoute: typeof AppAdminEvalRoute
+  AppAdminRulesRoute: typeof AppAdminRulesRoute
+  AppArchiveIdRoute: typeof AppArchiveIdRoute
   AppChecksIdRoute: typeof AppChecksIdRoute
+  AppInviteTokenRoute: typeof AppInviteTokenRoute
+  AppLegalDocRoute: typeof AppLegalDocRoute
+  AppShareTokenRoute: typeof AppShareTokenRoute
+  AppVerifyIdRoute: typeof AppVerifyIdRoute
+  AppArchiveIndexRoute: typeof AppArchiveIndexRoute
+  AppOrgIndexRoute: typeof AppOrgIndexRoute
   AppChecksIdLogRoute: typeof AppChecksIdLogRoute
+  AppOrgIdIndexRoute: typeof AppOrgIdIndexRoute
+  AppOrgIdCampaignsCidRoute: typeof AppOrgIdCampaignsCidRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -324,8 +524,18 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignupRoute: AppSignupRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminEvalRoute: AppAdminEvalRoute,
+  AppAdminRulesRoute: AppAdminRulesRoute,
+  AppArchiveIdRoute: AppArchiveIdRoute,
   AppChecksIdRoute: AppChecksIdRoute,
+  AppInviteTokenRoute: AppInviteTokenRoute,
+  AppLegalDocRoute: AppLegalDocRoute,
+  AppShareTokenRoute: AppShareTokenRoute,
+  AppVerifyIdRoute: AppVerifyIdRoute,
+  AppArchiveIndexRoute: AppArchiveIndexRoute,
+  AppOrgIndexRoute: AppOrgIndexRoute,
   AppChecksIdLogRoute: AppChecksIdLogRoute,
+  AppOrgIdIndexRoute: AppOrgIdIndexRoute,
+  AppOrgIdCampaignsCidRoute: AppOrgIdCampaignsCidRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -42,7 +42,13 @@
     "mainNav": "Main navigation",
     "language": "Language",
     "switchTo": "العربية",
-    "signedInAs": "Signed in as"
+    "signedInAs": "Signed in as",
+    "archive": "Archive audit",
+    "workspace": "Agency workspace",
+    "admin": "Admin",
+    "evalNav": "Accuracy evaluation",
+    "rulesAdmin": "Rulebook admin",
+    "legal": "Terms & privacy"
   },
   "status": {
     "ready": "Ready to publish",
@@ -197,7 +203,11 @@
     "notFoundBody": "The check may have been deleted, or it belongs to another account.",
     "loadErrorTitle": "We couldn't load this report",
     "playerLabel": "Clip player",
-    "imageAlt": "The checked image"
+    "imageAlt": "The checked image",
+    "share": "Share with brand",
+    "rerun": "Re-check with latest rules",
+    "rerunDone": "We re-ran the check on the latest version.",
+    "rerunHint": "Checked with version {old}; the current version is {current}."
   },
   "processing": {
     "title": "Checking your content",
@@ -271,7 +281,11 @@
     "sideClaims": "Absolute health and financial claims",
     "privacyTitle": "Your privacy",
     "privacyBody": "We automatically delete the video and frames 24 hours after the check and keep only the findings and the file hash. We never share your content with any regulator.",
-    "stageExtracting": "Extracting frames and audio…"
+    "stageExtracting": "Extracting frames and audio…",
+    "workspace": "Workspace",
+    "campaign": "Campaign",
+    "personal": "My personal checks",
+    "none": "No campaign"
   },
   "dashboard": {
     "title": "My checks",
@@ -432,7 +446,25 @@
     "language": "Interface language",
     "save": "Save changes",
     "saved": "Changes saved.",
-    "loadError": "We couldn't load your settings"
+    "loadError": "We couldn't load your settings",
+    "exportDone": "Your data was downloaded.",
+    "deleteDone": "Your account and data were deleted.",
+    "deleteTransferFirst": "Transfer ownership of your agency workspace before deleting your account.",
+    "deleteMismatch": "The email doesn't match your account.",
+    "preferences": "Preferences",
+    "notifyEmail": "Email me when a check finishes",
+    "notifyEmailHint": "A short email when a check completes or fails.",
+    "security": "Security",
+    "data": "Your data",
+    "exportBody": "Download your profile, checks and findings as JSON.",
+    "export": "Download my data",
+    "deleteTitle": "Delete account",
+    "deleteBody": "Permanently deletes your account, checks and files. This can't be undone.",
+    "delete": "Delete my account",
+    "deleteConfirmTitle": "Delete your account permanently?",
+    "deleteConfirmBody": "We'll delete your account, checks, compliance logs and related files.",
+    "deleteConfirm": "Delete permanently",
+    "deleteTypeEmail": "Type your email to confirm: {email}"
   },
   "admin": {
     "evalTitle": "Accuracy evaluation",
@@ -464,6 +496,304 @@
       "hit": "hit",
       "miss": "missed",
       "false_alarm": "false alarm"
+    }
+  },
+  "plans": {
+    "title": "Plan & usage",
+    "used": "{used} of {limit} checks this month",
+    "resets": "Resets on {date}",
+    "meterLabel": "Monthly plan usage",
+    "exhausted": "You've used this month's checks.",
+    "nearLimit": "You're close to your monthly check limit.",
+    "limits": "Up to {batch} clips per archive audit.",
+    "orgsYes": "Includes an agency workspace.",
+    "orgsNo": "No agency workspace."
+  },
+  "quota": {
+    "quota_exceeded": "You've reached your plan's checks for this month.",
+    "clip_too_long": "This clip is longer than your plan allows.",
+    "batch_full": "This archive audit is full.",
+    "plan_no_orgs": "Agency workspaces are part of the Agency plan.",
+    "invite_invalid": "This invite is invalid or expired.",
+    "invite_email_mismatch": "This invite was sent to a different email.",
+    "last_owner": "You can't remove the workspace's last owner.",
+    "link_invalid": "This link is invalid or expired.",
+    "rate_limited": "Too many attempts. Try again later.",
+    "campaign_mismatch": "That campaign doesn't belong to this workspace.",
+    "transfer_ownership_first": "Transfer workspace ownership first.",
+    "confirmation_mismatch": "The confirmation doesn't match.",
+    "forbidden": "You don't have permission to do that.",
+    "generic": "We couldn't complete that. Please try again."
+  },
+  "archive": {
+    "title": "Archive audit",
+    "subtitle": "Check clips you already published, in one go, and see what could affect your Mawthooq license renewal.",
+    "newTitle": "New archive audit",
+    "name": "Group name",
+    "namePlaceholder": "e.g. Ramadan ads",
+    "defaultName": "Archive {date}",
+    "addClips": "Add clips",
+    "count": "{n} of {max} clips",
+    "state": {
+      "ready": "Ready",
+      "uploading": "Uploading",
+      "done": "Sent for checking",
+      "failed": "Failed"
+    },
+    "allPaid": "All clips are paid ads",
+    "allPaidHint": "Applies to every clip in this group.",
+    "progress": "Upload progress",
+    "start": "Check {n} clips",
+    "history": "Previous archive audits",
+    "loadError": "We couldn't load the archive",
+    "emptyTitle": "No archive audits yet",
+    "emptyBody": "Add up to 20 older clips to check them in one go.",
+    "flaggedShort": "{n} need fixes",
+    "clean": "No violations",
+    "csv": "Export CSV",
+    "summaryFlagged": "{clips} may affect your Mawthooq license renewal",
+    "summaryClean": "No violations found in these clips",
+    "mawthooqNote": "{clips} with Mawthooq-term violations.",
+    "pending": "{n} still being checked."
+  },
+  "org": {
+    "title": "Agency workspace",
+    "subtitle": "Track creators, campaigns and compliance in one place.",
+    "loadError": "We couldn't load the workspace",
+    "emptyTitle": "No workspaces yet",
+    "emptyBody": "Create a workspace for your agency or accept an invite.",
+    "membersCount": "{n} members",
+    "createTitle": "Create a workspace",
+    "planRequired": "Agency workspaces are part of the Agency plan.",
+    "name": "Agency name",
+    "create": "Create",
+    "yourRole": "Your role: {role}",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "reviewer": "Reviewer",
+      "creator": "Creator"
+    },
+    "role": "Role",
+    "rolesHelp": "Owners and admins manage members and campaigns. Reviewers see every check. Creators see only their own checks.",
+    "sections": "Workspace sections",
+    "overview": "Overview",
+    "campaigns": "Campaigns",
+    "members": "Members",
+    "invites": "Invites",
+    "readyRate": "Ready rate",
+    "noChecks": "No checks in this workspace yet",
+    "noChecksBody": "Start a check and choose this workspace.",
+    "noCampaigns": "No campaigns yet",
+    "checksCount": "{n} checks",
+    "newCampaign": "New campaign",
+    "campaignName": "Campaign name",
+    "brand": "Brand",
+    "startsOn": "Starts on",
+    "endsOn": "Ends on",
+    "addCampaign": "Add campaign",
+    "remove": "Remove member",
+    "inviteTitle": "Invite a member",
+    "invite": "Send invite",
+    "inviteCreated": "Invite created. Send this link to the member:",
+    "expires": "Expires {date}",
+    "revoke": "Revoke",
+    "joined": "You joined the workspace.",
+    "inviteHeading": "Invitation to an agency workspace",
+    "inviteBody": "Accept to join with the email on your account.",
+    "acceptInvite": "Accept invite"
+  },
+  "share": {
+    "button": "Share with brand",
+    "title": "Share report",
+    "body": "A read-only link without the video or transcript. The brand can approve or request changes.",
+    "expiresIn": "Link valid for",
+    "days": "{n} days",
+    "create": "Create & copy link",
+    "until": "until {date}",
+    "revoke": "Revoke link",
+    "history": "Brand decisions",
+    "copied": "Link created and copied.",
+    "noReviews": "No decisions yet.",
+    "decision": {
+      "approved": "Approved",
+      "changes_requested": "Changes requested",
+      "comment": "Comment"
+    },
+    "sent": "Your decision was sent.",
+    "invalidTitle": "This link isn't valid",
+    "invalidBody": "The link expired or was revoked. Ask the creator for a new one.",
+    "readOnly": "Read-only · until {date}",
+    "yourDecision": "Your decision",
+    "name": "Your name",
+    "comment": "Comment",
+    "approve": "Approve",
+    "requestChanges": "Request changes",
+    "commentOnly": "Comment only"
+  },
+  "verify": {
+    "notFoundTitle": "We couldn't find this log",
+    "notFoundBody": "Check the link or verification ID.",
+    "error": "We can't verify right now",
+    "authentic": "Authentic and unchanged",
+    "altered": "Doesn't match the original",
+    "authenticBody": "This log was issued by SALEEM and its results match what was sealed at check time.",
+    "alteredBody": "This check's results changed after sealing, or it was never sealed. Don't rely on a printed copy.",
+    "reportHash": "Report fingerprint",
+    "sealedAt": "Sealed at",
+    "fileTitle": "Match the original file",
+    "fileBody": "Choose the published file; we hash it on your device only and compare it with the log.",
+    "fileMatch": "This file matches the checked file",
+    "fileNoMatch": "This file differs from the checked file",
+    "privacy": "This page never shows the name, caption or content."
+  },
+  "rulesAdmin": {
+    "title": "Rulebook admin",
+    "subtitle": "Rulebook versions: draft → legal review → published, with changelog and effective date.",
+    "newLabel": "New version label",
+    "newHint": "The current version's rules are copied into the draft.",
+    "createDraft": "Create draft",
+    "status": {
+      "draft": "Draft",
+      "legal_review": "Legal review",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "active": "Active version",
+    "publishedOn": "Published {date}",
+    "backToDraft": "Back to draft",
+    "to": {
+      "legal_review": "Send to legal review",
+      "published": "Publish version"
+    },
+    "effective": "Effective from",
+    "changelog": "Changelog",
+    "inactive": "Inactive",
+    "edit": "Edit",
+    "titleAr": "Arabic title",
+    "titleEn": "English title",
+    "descAr": "Arabic description",
+    "descEn": "English description",
+    "severity": "Default severity",
+    "sourceUrl": "Source URL",
+    "instructions": "Model instructions",
+    "activeRule": "Rule is active"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "done": "Check “{title}” finished: {status}",
+    "failed": "Check “{title}” failed",
+    "review": "{reviewer}: {decision}",
+    "generic": "New notification"
+  },
+  "legal": {
+    "nav": "Legal documents",
+    "updated": "Last updated: 14 October 2026",
+    "draftNotice": "Initial draft for demonstration. Needs legal counsel review before launch; items in [ ] are to be completed.",
+    "terms": {
+      "title": "Terms of use",
+      "s1": {
+        "h": "The service",
+        "p": "SALEEM is an advisory tool that helps creators review content before publishing against an illustrative rulebook. It never grants an official approval or license."
+      },
+      "s2": {
+        "h": "Your responsibility",
+        "p": "You are responsible for the decision to publish, the accuracy of the details you enter, and your right to upload the content."
+      },
+      "s3": {
+        "h": "Acceptable use",
+        "p": "Don't upload unlawful content or other people's content without permission, or try to access other users' data."
+      },
+      "s4": {
+        "h": "Plans and limits",
+        "p": "The service is subject to monthly plan limits. [Pricing and payment details to be added]."
+      },
+      "s5": {
+        "h": "Limitation of liability",
+        "p": "The service is provided as is. We don't guarantee content is free of violations after a check. [Final wording by legal counsel]."
+      },
+      "s6": {
+        "h": "Governing law",
+        "p": "These terms are governed by the laws of the Kingdom of Saudi Arabia. [Jurisdiction to be specified]."
+      }
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "s1": {
+        "h": "Who we are",
+        "p": "[Legal entity name, address and CR number]. Data enquiries: [data protection officer email]."
+      },
+      "s2": {
+        "h": "Data we collect",
+        "p": "Account data (name, email, optional Mawthooq license number), the content you upload, and check results."
+      },
+      "s3": {
+        "h": "Purpose and legal basis",
+        "p": "We process data to provide the checking service, based on your consent and the contract, under the Personal Data Protection Law (PDPL)."
+      },
+      "s4": {
+        "h": "Retention",
+        "p": "Video, frames and audio are deleted automatically 24 hours after a check. Findings and the file hash are kept while your account exists."
+      },
+      "s5": {
+        "h": "Processors and transfers outside the Kingdom",
+        "p": "We use a database hosting provider and an AI model provider to analyze content; processing may occur outside the Kingdom. [List of processors, processing locations and safeguards]."
+      },
+      "s6": {
+        "h": "No surveillance, no sharing",
+        "p": "We don't sell your data or share it with any regulator or advertiser, and we don't use your content to train models."
+      },
+      "s7": {
+        "h": "Your rights",
+        "p": "You can access, correct, port and delete your data. Download your data or delete your account directly from Settings."
+      },
+      "s8": {
+        "h": "Contact and complaints",
+        "p": "[Request channel, response time, and right to lodge a complaint with the competent authority]."
+      }
+    },
+    "disclaimer": {
+      "title": "Disclaimer",
+      "s1": {
+        "h": "Advisory alerts",
+        "p": "SALEEM results are advisory alerts, not an official approval from any government body. The final decision is yours."
+      },
+      "s2": {
+        "h": "Illustrative rules",
+        "p": "The rulebook was drafted for illustration from public sources and is pending legal review."
+      },
+      "s3": {
+        "h": "Possible errors",
+        "p": "The system may miss violations or flag acceptable content. Review the findings yourself and consult a specialist when needed."
+      }
+    },
+    "ai": {
+      "title": "How the AI works",
+      "s1": {
+        "h": "What we analyze",
+        "p": "Timed speech transcript, one frame per second (up to 60), on-screen text, the caption and post details."
+      },
+      "s2": {
+        "h": "Two layers",
+        "p": "Fixed automatic rules catch disclosures, discount codes and explicit claims; a vision language model understands context. We merge both and remove duplicates."
+      },
+      "s3": {
+        "h": "Confidence calibration",
+        "p": "Weak-evidence findings are shown as warnings, not violations; subjective rules (privacy, wealth display, attire) are always warnings."
+      },
+      "s4": {
+        "h": "Measured accuracy",
+        "p": "We measure per-rule hits, misses, false alarms and timestamp error on a Saudi-dialect test set. Current results come from a small set and don't cover every case."
+      },
+      "s5": {
+        "h": "Limits",
+        "p": "Transcription can confuse similar words or struggle with noise, and the model can misjudge age or context. We never identify people."
+      },
+      "s6": {
+        "h": "Transparency",
+        "p": "Every report records the model, prompt version and rulebook version, and each compliance log is sealed with a publicly verifiable fingerprint."
+      }
     }
   }
 }
