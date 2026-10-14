@@ -1,6 +1,6 @@
 {
   "clip": "backend/tests/fixtures/synthetic/slimming-tea-ar.webm",
-  "at": "2026-10-13T22:29:56.152Z",
+  "at": "2026-10-14T07:29:57.491Z",
   "models": {
     "asr": "whisper-1",
     "llm": "gpt-6.1-sol"
@@ -8,17 +8,17 @@
   "duration": 21.869,
   "frames": 23,
   "timings_ms": {
-    "extract": 2169,
-    "asr": 4516,
-    "llm": 23923,
-    "total": 30614
+    "extract": 3932,
+    "asr": 4054,
+    "llm": 22049,
+    "total": 30041
   },
   "usage": {
     "input_tokens": 5579,
-    "output_tokens": 1408,
-    "cached_input_tokens": 0
+    "output_tokens": 1344,
+    "cached_input_tokens": 5576
   },
-  "cost_usd": 0.027385999954223632,
+  "cost_usd": 0.016151599954223633,
   "status": "needs_fixes",
   "transcript": [
     {
@@ -154,7 +154,7 @@
       "evidence_type": "transcript",
       "evidence_text": "هذا الشاي ينحث وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
       "evidence_frame_t": null,
-      "explanation_ar": "يتضمن الإعلان وعدًا مطلقًا بخسارة الوزن وضمانًا لعدم حدوث أعراض جانبية.",
+      "explanation_ar": "يتضمن الإعلان وعدًا قطعيًا بخسارة الوزن وضمانًا لعدم وجود أعراض جانبية.",
       "explanation_en": "The ad makes an absolute weight-loss promise and guarantees no side effects.",
       "fix_ar": "احذف وعود خسارة الوزن والضمان وعدم وجود أعراض جانبية من الصوت والنص الظاهر.",
       "fix_en": "Remove the weight-loss promises, guarantee, and no-side-effects claim from the audio and on-screen text.",
@@ -169,10 +169,10 @@
       "evidence_type": "transcript",
       "evidence_text": "هذا الشاي ينحث وتنزلين 5 كيلو في أسبوع، ومضمون بدون أعراض جانبية.",
       "evidence_frame_t": null,
-      "explanation_ar": "يُسوَّق الشاي بفوائد صحية للتنحيف، مما يستدعي تأكيد ترخيص المنتج دون افتراض أنه غير مرخّص.",
-      "explanation_en": "The tea is marketed with health-related weight-loss benefits, so its licensing should be confirmed without assuming it is unlicensed.",
-      "fix_ar": "تحقق من وثيقة ترخيص المنتج لدى الجهة المختصة قبل نشر الإعلان.",
-      "fix_en": "Verify the product’s licensing document with the relevant authority before publishing the ad.",
+      "explanation_ar": "يُروَّج للشاي بوصفه منتجًا للتنحيف، مما يستدعي تأكيد ترخيصه دون افتراض أنه غير مرخّص.",
+      "explanation_en": "The tea is promoted as a weight-loss product, requiring confirmation of its licensing without assuming it is unlicensed.",
+      "fix_ar": "اطلب من المعلن وثيقة ترخيص المنتج وتحقق من صلاحيتها قبل النشر.",
+      "fix_en": "Request the product’s licensing document from the advertiser and verify its validity before publishing.",
       "confidence": 0.95,
       "source": "llm"
     },

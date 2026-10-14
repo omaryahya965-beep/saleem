@@ -96,3 +96,11 @@
 - **CI:** `.github/workflows/ci.yml` (needs repo variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`).
 - **Deployment:** `docs/OPERATIONS.md` (staging/prod, env per env, hosting options, cron, backups, domain, email,
   Sentry, Saudi data residency path); README ≤ 10 commands.
+
+## Phase 7 — Demo & pitch assets (done)
+- `docs/DEMO_SCRIPT.md` (3-minute flow: needs fixes → seek → re-check → ready → verify log), demo pair seeded from
+  real pipeline output with playable video, `docs/demo/ACCURACY.md` (pitch slide), `docs/demo/final/` (60
+  screenshots), `docs/demo/CLIPS.md`, `docs/FINAL_REPORT.md`.
+- **Verified:** final run — tsc ✓, eslint 0 errors, Vitest 22 + 42 (+7 skipped), Deno ✓, E2E 33/33, build with
+  12/12 prerendered pages; demo verify page reports `unchanged: true`.
+- **Next:** see FINAL_REPORT §5–6 (test accounts, real clips, mobile LCP, legal review, deployment).

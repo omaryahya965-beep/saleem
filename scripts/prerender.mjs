@@ -9,7 +9,7 @@ import http from "node:http";
 import path from "node:path";
 
 const dist = path.resolve(process.argv[2] ?? "frontend/dist");
-const ROUTES = ["/", "/rules", "/login", "/signup", "/legal/terms", "/legal/privacy", "/legal/disclaimer", "/legal/ai", "/checks/d0000000-0000-0000-0000-000000000001", "/checks/d0000000-0000-0000-0000-000000000002"];
+const ROUTES = ["/", "/rules", "/login", "/signup", "/legal/terms", "/legal/privacy", "/legal/disclaimer", "/legal/ai", "/checks/d0000000-0000-0000-0000-000000000001", "/checks/d0000000-0000-0000-0000-000000000002", "/checks/d0000000-0000-0000-0000-000000000003", "/checks/d0000000-0000-0000-0000-000000000004"];
 const rawTemplate = fs.readFileSync(path.join(dist, "index.html"), "utf8");
 // Preload the two fonts the first screen needs (Arabic UI 400, Arabic display 700) so text
 // doesn't re-layout late on slow networks.
@@ -38,8 +38,9 @@ await page.addInitScript(() => localStorage.setItem("saleem-lang", "ar"));
 let ok = 0;
 for (const route of ROUTES) {
   try {
-    await page.goto(`http://localhost:4199${route}`, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForSelector("main#main > *", { timeout: 15000 });
+    await page.goto(`http://localhost:4199${route}`, { waitUntil: "load", timeout: 30000 });
+    await page.waitForSelector("main#main > *", { timeout: 20000 });
+    await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {}); // media may stream indefinitely
     const html = await page.evaluate(() => {
       const root = document.getElementById("root").cloneNode(true);
       // Strip interactive-only bits that must not appear before hydration (portals, live regions).
