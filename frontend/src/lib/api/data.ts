@@ -180,7 +180,10 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
   }
 
   let mediaUrl: string | null = null;
-  if (submission.file_path && !submission.media_deleted_at) {
+  if (submission.is_demo && submission.file_path?.startsWith("demo:")) {
+    // Demo media ships with the app (synthetic clips in /public/demo).
+    mediaUrl = submission.file_path.slice("demo:".length);
+  } else if (submission.file_path && !submission.media_deleted_at) {
     const { data } = await supabase.storage
       .from("media")
       .createSignedUrl(submission.file_path, 3600);

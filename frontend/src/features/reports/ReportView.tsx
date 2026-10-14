@@ -153,7 +153,7 @@ function ReadyComparison({ bundle }: { bundle: ReportBundle }) {
           {fixedViews.map((f) => (
             <li key={f.id} className="flex items-start gap-3 px-4 py-3">
               <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-green" />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-56">
                 <p className="font-medium text-fg">{f.ruleTitle}</p>
                 <p className="text-sm text-fg-muted line-through decoration-fg-muted/50">
                   {f.title}
@@ -172,9 +172,9 @@ function ReadyComparison({ bundle }: { bundle: ReportBundle }) {
       <Link
         to="/checks/$id"
         params={{ id: parent.id }}
-        className="group flex items-center gap-3 rounded-md border border-border bg-sunken px-4 py-3 hover:border-border-strong"
+        className="group flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border bg-sunken px-4 py-3 hover:border-border-strong"
       >
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-56">
           <p className="text-xs text-fg-muted">{t("report.previousVersion")}</p>
           <p className="truncate font-medium text-fg">{parent.title}</p>
           <div className="mt-1 flex flex-wrap gap-2">
