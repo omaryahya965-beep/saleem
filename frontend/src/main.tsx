@@ -7,6 +7,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 import { getRouter } from "./router";
+import { installGlobalErrorHandlers } from "./lib/telemetry";
+import { handOffPrerender } from "./lib/prerender";
+
+installGlobalErrorHandlers();
+handOffPrerender();
 
 const router = getRouter();
 

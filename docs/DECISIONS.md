@@ -111,3 +111,27 @@ Format: decision — why — alternatives considered.
   different context and rendering `dir="ltr"` inside Arabic pages (wrong chevrons, reversed arrow keys).
 - **D46. Legal pages are drafts with explicit `[ ]` placeholders** and an on-page notice; they must be completed
   by counsel (PDPL: controller identity, processors and cross-border transfers, complaint channel).
+
+## Phase 6
+- **D47. Audit log via triggers** on share links, org members/invites, organizations, user roles, rulebook versions,
+  and submission deletion/media deletion; admin-read only.
+- **D48. Watchdog cron** (`fail_stuck_submissions`, every 5 min): stale heartbeat > 10 min → failed with a retry
+  message, so no check spins forever.
+- **D49. Error tracking = provider interface** (`lib/telemetry.ts`, console by default). Recommended: Sentry.
+  No account created.
+- **D50. Build-time prerendering of 10 public pages** (`scripts/prerender.mjs`) + same-frame hand-off
+  (`lib/prerender.ts`, MutationObserver) + `inert` snapshot + `html[data-app-ready]`. Unknown paths are served
+  the clean `spa.html` (hosting rewrite; mirrored in `vite preview`). English visitors drop the Arabic snapshot
+  before paint. Alt considered: migrate to SSR (TanStack Start) — reverted by the owner earlier, so not reintroduced.
+- **D51. Chunking**: vendor-react / vendor-router / vendor-supabase / vendor-tslib groups; Supabase loads lazily
+  (auth, roles, notifications) so it never blocks first paint; app scripts `fetchpriority=low`, no modulepreload.
+  `tslib` got its own chunk because Radix and Supabase share it (it was pulling Supabase into first load).
+- **D52. Lighthouse** measured with Playwright's Chromium (`docs/lighthouse/*.json`). Mobile *simulated* perf stays
+  ~70 because Lantern models JS as render-gating; with *applied* throttling FCP ≈ 1.9 s. Remaining gap (landing/legal
+  LCP ~8 s under applied throttling) = React re-painting the heading after the web font arrives → needs true
+  hydration (SSR/SSG) or metric-matched fallback fonts. Recorded as an open issue, not hidden.
+- **D53. E2E**: Playwright, 11 flows × {ar-desktop, en-desktop, ar-mobile} = 33 tests; signed-in flows use the
+  network mocks; public flows hit the real project. CI: GitHub Actions (lint, typecheck, unit, audit, build,
+  Deno check, E2E) — no remote configured, so not yet run on GitHub.
+- **D54. Hosting configs** for Vercel (`vercel.json`) and Netlify/Cloudflare Pages (`_headers`, `_redirects`) with
+  CSP/HSTS/frame-ancestors and immutable asset caching.

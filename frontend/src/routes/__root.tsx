@@ -9,6 +9,7 @@ import {
 import { Compass } from "lucide-react";
 import { I18nProvider, useI18n } from "@/i18n";
 import { AuthProvider } from "@/lib/api/auth";
+import { reportError } from "@/lib/telemetry";
 import { Button, EmptyState, ErrorState, Toaster } from "@/components/ui";
 
 function NotFoundComponent() {
@@ -33,7 +34,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const { t } = useI18n();
   const router = useRouter();
-  console.error(error);
+  reportError(error, { source: "route" });
   return (
     <div className="mx-auto flex min-h-[70dvh] max-w-xl items-center px-4">
       <ErrorState

@@ -144,6 +144,36 @@ export type Database = {
           },
         ];
       };
+      audit_events: {
+        Row: {
+          action: string;
+          actor: string | null;
+          at: string;
+          id: number;
+          meta: Json;
+          target_id: string | null;
+          target_table: string;
+        };
+        Insert: {
+          action: string;
+          actor?: string | null;
+          at?: string;
+          id?: never;
+          meta?: Json;
+          target_id?: string | null;
+          target_table: string;
+        };
+        Update: {
+          action?: string;
+          actor?: string | null;
+          at?: string;
+          id?: never;
+          meta?: Json;
+          target_id?: string | null;
+          target_table?: string;
+        };
+        Relationships: [];
+      };
       batches: {
         Row: {
           created_at: string;
@@ -1027,6 +1057,7 @@ export type Database = {
     };
     Functions: {
       accept_org_invite: { Args: { _token: string }; Returns: string };
+      admin_metrics: { Args: { _days?: number }; Returns: Json };
       can_read_submission: { Args: { _sid: string }; Returns: boolean };
       cancel_submission: { Args: { _sid: string }; Returns: undefined };
       compute_report_hash: { Args: { _sid: string }; Returns: string };
@@ -1048,6 +1079,7 @@ export type Database = {
         Returns: string;
       };
       delete_submission_media: { Args: { _sid: string }; Returns: undefined };
+      fail_stuck_submissions: { Args: never; Returns: number };
       get_shared_report: { Args: { _token: string }; Returns: Json };
       has_role: {
         Args: {

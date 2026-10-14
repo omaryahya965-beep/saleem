@@ -21,6 +21,7 @@ import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
 import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
+import { Route as AppAdminMetricsRouteImport } from './routes/_app/admin/metrics'
 import { Route as AppAdminRulesRouteImport } from './routes/_app/admin/rules'
 import { Route as AppArchiveIndexRouteImport } from './routes/_app/archive/index'
 import { Route as AppArchiveIdRouteImport } from './routes/_app/archive/$id'
@@ -91,6 +92,11 @@ const AppSignupRoute = AppSignupRouteImport.update({
 const AppAdminEvalRoute = AppAdminEvalRouteImport.update({
   id: '/admin/eval',
   path: '/admin/eval',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminMetricsRoute = AppAdminMetricsRouteImport.update({
+  id: '/admin/metrics',
+  path: '/admin/metrics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminRulesRoute = AppAdminRulesRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/admin/eval': typeof AppAdminEvalRoute
+  '/admin/metrics': typeof AppAdminMetricsRoute
   '/admin/rules': typeof AppAdminRulesRoute
   '/archive/$id': typeof AppArchiveIdRoute
   '/checks/$id': typeof AppChecksIdRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AppSignupRoute
   '/': typeof AppIndexRoute
   '/admin/eval': typeof AppAdminEvalRoute
+  '/admin/metrics': typeof AppAdminMetricsRoute
   '/admin/rules': typeof AppAdminRulesRoute
   '/archive/$id': typeof AppArchiveIdRoute
   '/checks/$id': typeof AppChecksIdRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/_app/signup': typeof AppSignupRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/eval': typeof AppAdminEvalRoute
+  '/_app/admin/metrics': typeof AppAdminMetricsRoute
   '/_app/admin/rules': typeof AppAdminRulesRoute
   '/_app/archive/$id': typeof AppArchiveIdRoute
   '/_app/checks/$id': typeof AppChecksIdRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/admin/eval'
+    | '/admin/metrics'
     | '/admin/rules'
     | '/archive/$id'
     | '/checks/$id'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/'
     | '/admin/eval'
+    | '/admin/metrics'
     | '/admin/rules'
     | '/archive/$id'
     | '/checks/$id'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/_app/signup'
     | '/_app/'
     | '/_app/admin/eval'
+    | '/_app/admin/metrics'
     | '/_app/admin/rules'
     | '/_app/archive/$id'
     | '/_app/checks/$id'
@@ -401,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminEvalRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/metrics': {
+      id: '/_app/admin/metrics'
+      path: '/admin/metrics'
+      fullPath: '/admin/metrics'
+      preLoaderRoute: typeof AppAdminMetricsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/rules': {
       id: '/_app/admin/rules'
       path: '/admin/rules'
@@ -499,6 +518,7 @@ interface AppRouteChildren {
   AppSignupRoute: typeof AppSignupRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminEvalRoute: typeof AppAdminEvalRoute
+  AppAdminMetricsRoute: typeof AppAdminMetricsRoute
   AppAdminRulesRoute: typeof AppAdminRulesRoute
   AppArchiveIdRoute: typeof AppArchiveIdRoute
   AppChecksIdRoute: typeof AppChecksIdRoute
@@ -524,6 +544,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignupRoute: AppSignupRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminEvalRoute: AppAdminEvalRoute,
+  AppAdminMetricsRoute: AppAdminMetricsRoute,
   AppAdminRulesRoute: AppAdminRulesRoute,
   AppArchiveIdRoute: AppArchiveIdRoute,
   AppChecksIdRoute: AppChecksIdRoute,

@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
-import { ApiError } from "@/lib/api/data";
+import { ApiError } from "@/lib/api/errors";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {

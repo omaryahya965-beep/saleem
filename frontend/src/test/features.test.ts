@@ -36,9 +36,9 @@ describe("errorCode", () => {
     for (const [doc, n] of Object.entries(sections)) {
       for (let i = 1; i <= n; i++) {
         for (const dict of [ar, en]) {
-          const d = (dict.legal as Record<string, Record<string, { h: string; p: string }>>)[doc]![
-            `s${i}`
-          ];
+          const d = (
+            dict.legal as unknown as Record<string, Record<string, { h: string; p: string }>>
+          )[doc]![`s${i}`];
           expect(d?.h && d?.p, `${doc}.s${i}`).toBeTruthy();
         }
       }

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Public values only (publishable key is safe in the browser). Set as repository variables.
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_DEMO_MODE: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Write public env for Vite (envDir is backend/)
+        run: |
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$VITE_SUPABASE_URL" "$VITE_SUPABASE_PUBLISHABLE_KEY" > backend/.env
+      - run: npm --workspace frontend exec tsc -- --noEmit -p .
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npx playwright install --with-deps chromium
+      - run: npm --workspace frontend run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: frontend/dist
+          retention-days: 7
+
+  edge-functions:
+    name: Deno check (Edge Functions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check backend/supabase/functions/analyze/index.ts backend/supabase/functions/cleanup-media/index.ts backend/supabase/functions/account/index.ts
+
+  e2e:
+    name: Playwright E2E (AR + EN, desktop + mobile)
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: |
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$VITE_SUPABASE_URL" "$VITE_SUPABASE_PUBLISHABLE_KEY" > backend/.env
+      - run: npx playwright install --with-deps chromium
+      - run: npm --workspace frontend run build
+      - run: npm --workspace frontend run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7

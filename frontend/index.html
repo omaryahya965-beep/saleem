@@ -8,6 +8,19 @@
       name="description"
       content="سَليم يفحص إعلانك أو منشورك قبل نشره، ويقول لك أين المشكلة وكيف تصلحها."
     />
+    <script>
+      // The prerendered snapshot is Arabic; English visitors get the SPA only.
+      try {
+        if (localStorage.getItem("saleem-lang") === "en") {
+          document.documentElement.lang = "en";
+          document.documentElement.dir = "ltr";
+          document.addEventListener("DOMContentLoaded", function () {
+            var p = document.getElementById("prerender");
+            if (p) p.remove();
+          });
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
   <body>

@@ -57,3 +57,7 @@ Thumbs.db
 # Eval build artifacts
 backend/eval/results/*.js
 deno.lock
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/

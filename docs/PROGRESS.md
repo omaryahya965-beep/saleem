@@ -81,3 +81,18 @@
   errors, no 390 px overflow.
 - **Mocked/pending:** signed-in Phase 5 screens were exercised with network mocks (no test accounts);
   org/share/rerun/delete flows are not yet proven end-to-end against the live DB. Email sending is console-only.
+
+## Phase 6 — Quality & production readiness (done; one target missed)
+- **Security:** RLS everywhere, results write-protected, quotas in triggers, JWT + ownership checks in functions,
+  rate limits (analyze, reviews), audit log, security headers, `npm audit` 0 vulnerabilities (prod + dev).
+  Live two-user isolation tests written (`backend/tests/isolation.test.ts`), skipped until test accounts exist.
+- **Reliability:** resumable idempotent steps, heartbeat + watchdog cron, backoff + timeouts, orphan cleanup.
+- **Observability:** structured function logs, client error reporter interface, `/admin/metrics` (runs, failures,
+  p50/p95, cost by model, daily, recent errors), `/admin/eval`.
+- **Performance:** code splitting + vendor groups, lazy Supabase, prerendered public pages, font preloads.
+  Lighthouse desktop: landing 97 / rules 97 / report 85 perf; accessibility 95–100; best-practices 100; SEO 100.
+  Mobile (simulated) perf ~70 — **below the ≥ 90 target**; applied-throttling FCP ≈ 1.9 s, login 92.
+- **Tests:** frontend Vitest 22, backend Vitest 42 (+7 live, skipped), Deno type-check, Playwright E2E 33/33.
+- **CI:** `.github/workflows/ci.yml` (needs repo variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`).
+- **Deployment:** `docs/OPERATIONS.md` (staging/prod, env per env, hosting options, cron, backups, domain, email,
+  Sentry, Saudi data residency path); README ≤ 10 commands.

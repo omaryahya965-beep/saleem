@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node ../scripts/prerender.mjs dist",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "build:spa": "vite build"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-arabic": "^5.3.0",

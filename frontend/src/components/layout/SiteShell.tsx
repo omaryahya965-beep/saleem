@@ -2,6 +2,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   Archive,
   BookCheck,
   Building2,
@@ -16,13 +17,15 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AppShell, Brand, LanguageToggle, type NavItem } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
-import { useIsAdmin } from "@/lib/api/hooks";
-import { NotificationsBell } from "./Notifications";
+import { useIsAdmin } from "@/lib/api/roles";
+const NotificationsBell = lazy(() =>
+  import("./Notifications").then((m) => ({ default: m.NotificationsBell })),
+);
 
 const ActionBarContext = createContext<HTMLElement | null>(null);
 
@@ -127,6 +130,15 @@ function AccountMenu() {
                 >
                   <BookCheck aria-hidden="true" className="size-4" />
                   {t("nav.rulesAdmin")}
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link
+                  to="/admin/metrics"
+                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+                >
+                  <Activity aria-hidden="true" className="size-4" />
+                  {t("nav.metricsNav")}
                 </Link>
               </DropdownMenu.Item>
             </>
@@ -237,7 +249,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
         actions={
           <>
             <LanguageToggle />
-            {ready && user && <NotificationsBell />}
+            {ready && user && (
+              <Suspense fallback={<span className="size-11" />}>
+                <NotificationsBell />
+              </Suspense>
+            )}
             {ready && <AccountMenu />}
           </>
         }

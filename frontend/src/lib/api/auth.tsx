@@ -1,6 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+// Loaded lazily so the first paint never waits for the Supabase client bundle.
+const sb = () => import("@/lib/supabase").then((m) => m.supabase);
 
 export const DEMO_EMAIL = "demo@saleem.app";
 export const DEMO_PASSWORD = "demo123456";
@@ -16,22 +17,30 @@ const AuthContext = createContext<AuthState>({ session: null, user: null, ready:
 
 /** Resolves once the persisted session is known — used by route guards. */
 export async function getSession(): Promise<Session | null> {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await (await sb()).auth.getSession();
   return data.session;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ session: null, user: null, ready: false });
   useEffect(() => {
-    void supabase.auth
-      .getSession()
-      .then(({ data }) =>
-        setState({ session: data.session, user: data.session?.user ?? null, ready: true }),
+    let unsubscribe = () => {};
+    let alive = true;
+    void sb().then((client) => {
+      if (!alive) return;
+      void client.auth.getSession().then(({ data }) => {
+        if (alive)
+          setState({ session: data.session, user: data.session?.user ?? null, ready: true });
+      });
+      const { data } = client.auth.onAuthStateChange((_event, session) =>
+        setState({ session, user: session?.user ?? null, ready: true }),
       );
-    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
-      setState({ session, user: session?.user ?? null, ready: true }),
-    );
-    return () => data.subscription.unsubscribe();
+      unsubscribe = () => data.subscription.unsubscribe();
+    });
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
   }, []);
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
@@ -60,12 +69,14 @@ export function authErrorKey(err: unknown): AuthErrorKey {
 }
 
 export async function signIn(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await (await sb()).auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 
 export async function signInDemo() {
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await (
+    await sb()
+  ).auth.signInWithPassword({
     email: DEMO_EMAIL,
     password: DEMO_PASSWORD,
   });
@@ -73,7 +84,9 @@ export async function signInDemo() {
 }
 
 export async function signUp(email: string, password: string, displayName: string) {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await (
+    await sb()
+  ).auth.signUp({
     email,
     password,
     options: {
@@ -86,17 +99,19 @@ export async function signUp(email: string, password: string, displayName: strin
 }
 
 export async function sendPasswordReset(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await (
+    await sb()
+  ).auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
   if (error) throw error;
 }
 
 export async function updatePassword(password: string) {
-  const { error } = await supabase.auth.updateUser({ password });
+  const { error } = await (await sb()).auth.updateUser({ password });
   if (error) throw error;
 }
 
 export async function signOut() {
-  await supabase.auth.signOut();
+  await (await sb()).auth.signOut();
 }

@@ -48,7 +48,8 @@
     "admin": "Admin",
     "evalNav": "Accuracy evaluation",
     "rulesAdmin": "Rulebook admin",
-    "legal": "Terms & privacy"
+    "legal": "Terms & privacy",
+    "metricsNav": "Operations metrics"
   },
   "status": {
     "ready": "Ready to publish",
@@ -795,5 +796,26 @@
         "p": "Every report records the model, prompt version and rulebook version, and each compliance log is sealed with a publicly verifiable fingerprint."
       }
     }
+  },
+  "metrics": {
+    "title": "Operations metrics",
+    "subtitle": "Checks, failures, duration and cost.",
+    "range": "Range",
+    "days": "{n} days",
+    "checks": "Checks",
+    "users": "{n} users",
+    "failed": "Failed",
+    "failRate": "Failure rate {p}%",
+    "duration": "Median duration",
+    "p95": "p95: {v}",
+    "cost": "Cost",
+    "avgCost": "Average per check {v}",
+    "daily": "Checks per day",
+    "noData": "No data in this range.",
+    "failedN": "{n} failed",
+    "byModel": "By model",
+    "runsCost": "{n} runs · {cost}",
+    "errors": "Recent errors",
+    "noErrors": "No errors in this range."
   }
 }

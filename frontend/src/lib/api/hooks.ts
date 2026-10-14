@@ -59,22 +59,7 @@ export function useProfile(userId: string | undefined) {
   });
 }
 
-export function useIsAdmin(userId: string | undefined) {
-  return useQuery({
-    queryKey: ["is-admin", userId],
-    enabled: Boolean(userId),
-    staleTime: 5 * 60_000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId!)
-        .eq("role", "admin");
-      if (error) throw error;
-      return (data ?? []).length > 0;
-    },
-  });
-}
+export { useIsAdmin } from "./roles";
 
 export function useEvalRuns() {
   return useQuery({

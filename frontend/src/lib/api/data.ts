@@ -32,15 +32,8 @@ export interface TranscriptSegment {
   text: string;
 }
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public readonly code:
-      "not_found" | "unauthorized" | "network" | "upload" | "unknown" = "unknown",
-  ) {
-    super(message);
-  }
-}
+import { ApiError } from "./errors";
+export { ApiError };
 
 function fail(error: { message: string; code?: string } | null, fallback = "unknown"): never {
   const msg = error?.message ?? fallback;
