@@ -37,10 +37,12 @@ stamp(`submitted → /checks/${id}`);
 const submittedAt = Date.now();
 
 let last = "";
+let reportAt = 0;
 const deadline = Date.now() + 6 * 60_000;
 while (Date.now() < deadline) {
   const status = await page.locator("#report-status").textContent({ timeout: 1000 }).catch(() => null);
   if (status) {
+    reportAt = Date.now();
     stamp(`report: ${status.trim()} (processing ${((Date.now() - submittedAt) / 1000).toFixed(0)} s)`);
     break;
   }
@@ -49,12 +51,12 @@ while (Date.now() < deadline) {
     stamp(`FAILED: ${(await page.locator('[class*="bg-red-bg"]').first().innerText().catch(() => "")).replace(/\s+/g, " ")}`);
     break;
   }
-  const progress = await page.getByRole("progressbar").getAttribute("aria-valuenow").catch(() => null);
-  const step = await page.locator('[aria-current="step"]').innerText().catch(() => "");
+  const progress = await page.getByRole("progressbar").getAttribute("aria-valuenow", { timeout: 300 }).catch(() => null);
+  const step = await page.locator('[aria-current="step"]').innerText({ timeout: 300 }).catch(() => "");
   const now = `${progress ?? "?"}% ${step.trim()}`;
   if (now !== last) stamp(`processing ${now}`);
   last = now;
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(500);
 }
 
 const cards = await page.locator("article").evaluateAll((els) => els.map((e) => e.innerText.split("\n").slice(0, 4).join(" | ")));
@@ -63,6 +65,8 @@ await page.screenshot({ path: process.env.SHOT ?? "docs/demo/real-check-report.p
 
 // Run metadata (cost, models, durations) via the user's own session — readable through RLS.
 const tok = await (await fetch(`${env.VITE_SUPABASE_URL}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email: "demo@saleem.app", password: "demo123456" }) })).json();
-const runs = await (await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/analysis_runs?select=audio_mode,llm_model,asr_model,cost_usd,durations_ms,token_usage,frames_count,status&submission_id=eq.${id}`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${tok.access_token}` } })).json();
+const runs = await (await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/analysis_runs?select=finished_at,started_at,audio_mode,llm_model,asr_model,cost_usd,durations_ms,token_usage,frames_count,status&submission_id=eq.${id}`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${tok.access_token}` } })).json();
 console.log("run:", JSON.stringify(runs[0]));
+const subRow = (await (await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/submissions?select=created_at,analyzed_at&id=eq.${id}`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${tok.access_token}` } })).json())[0];
+console.log(`server: created→analyzed ${((new Date(subRow.analyzed_at) - new Date(subRow.created_at)) / 1000).toFixed(1)} s; report visible ${((reportAt - new Date(subRow.analyzed_at).getTime()) / 1000).toFixed(1)} s after done`);
 await b.close();

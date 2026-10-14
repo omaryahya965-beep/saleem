@@ -59,8 +59,7 @@ async function assertNotCancelled(db: Db, id: string) {
 async function blurEvidenceFrames(db: Db, folder: string, frameIds: string[]) {
   if (!frameIds.length) return;
   const { data: rows } = await db.from("frames").select("id, image_path, blurred").in("id", frameIds);
-  for (const row of rows ?? []) {
-    if (row.blurred) continue;
+  await Promise.all((rows ?? []).filter((row) => !row.blurred).map(async (row) => {
     try {
       const { data: blob, error } = await db.storage.from("media").download(row.image_path);
       if (error || !blob) throw error ?? new Error("missing frame");
@@ -74,7 +73,7 @@ async function blurEvidenceFrames(db: Db, folder: string, frameIds: string[]) {
       log("evidence_blur_failed", { frame_id: row.id, error: String((e as Error)?.message ?? e).slice(0, 200) });
       await db.from("findings").update({ evidence_frame_id: null }).eq("evidence_frame_id", row.id);
     }
-  }
+  }));
 }
 
 async function listFrames(db: Db, folder: string): Promise<{ t: number; path: string }[]> {
@@ -111,6 +110,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   const cfg = config(env);
   const folder = `${sub.user_id}/${sub.id}`;
   const durations: Record<string, number> = {};
+  const pipelineStart = Date.now();
   const timed = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
     const t0 = Date.now();
     try {
@@ -124,6 +124,29 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   const { data: runRow } = await db.from("analysis_runs").select("*").eq("id", runId).single();
   const outputs: Record<string, unknown> = (runRow?.step_outputs as Record<string, unknown>) ?? {};
   const saveRun = (patch: Record<string, unknown>) => db.from("analysis_runs").update(patch).eq("id", runId);
+
+  // LLM inputs (rules, frame list + rows, signed URLs) do not depend on the transcript:
+  // prepare them while transcription runs.
+  const prepared = timed("prepare", async () => {
+    let rulesQuery = db.from("rules").select("*").eq("is_active", true).order("code");
+    if (runRow?.rulebook_version_id) rulesQuery = rulesQuery.eq("rulebook_version_id", runRow.rulebook_version_id);
+    const [{ data: rulesData, error: rulesErr }, frames, { count: frameRows }] = await Promise.all([
+      rulesQuery,
+      sub.kind === "text" ? Promise.resolve([]) : listFrames(db, folder),
+      db.from("frames").select("id", { count: "exact", head: true }).eq("submission_id", sub.id),
+    ]);
+    if (rulesErr) throw rulesErr;
+    const [, signedRes] = await Promise.all([
+      frames.length && !frameRows
+        ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path })))
+        : Promise.resolve(null),
+      frames.length && !outputs.llm_done
+        ? db.storage.from("media").createSignedUrls(frames.map((f) => f.path), 900)
+        : Promise.resolve({ data: [] }),
+    ]);
+    return { rules: (rulesData ?? []) as RuleRecord[], frames, signed: (signedRes?.data ?? []) as { signedUrl?: string | null }[] };
+  });
+  prepared.catch(() => {}); // awaited below; avoids an unhandled rejection while transcription runs
 
   // ---- 1. Transcribe ---------------------------------------------------------------------
   await setProgress(db, sub.id, { status: "transcribing", current_step: "transcribe", progress: 10 });
@@ -184,20 +207,11 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   await assertNotCancelled(db, sub.id);
 
   // ---- 2. Frames + vision/reasoning model -----------------------------------------------
-  await setProgress(db, sub.id, { status: "analyzing", current_step: "llm", progress: 40 });
-  const { data: runMeta } = await db.from("analysis_runs").select("rulebook_version_id").eq("id", runId).single();
-  let rulesQuery = db.from("rules").select("*").eq("is_active", true).order("code");
-  if (runMeta?.rulebook_version_id) rulesQuery = rulesQuery.eq("rulebook_version_id", runMeta.rulebook_version_id);
-  const { data: rulesData, error: rulesErr } = await rulesQuery;
-  if (rulesErr) throw rulesErr;
-  const rules = (rulesData ?? []) as RuleRecord[];
+  const [, { rules, frames, signed }] = await Promise.all([
+    setProgress(db, sub.id, { status: "analyzing", current_step: "llm", progress: 40 }),
+    prepared,
+  ]);
   const validCodes = new Set(rules.map((r) => r.code));
-
-  const frames = sub.kind === "text" ? [] : await listFrames(db, folder);
-  const { count: frameRows } = await db.from("frames").select("id", { count: "exact", head: true }).eq("submission_id", sub.id);
-  if (frames.length && !frameRows) {
-    await db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path })));
-  }
 
   let llmFindings: Finding[] = [];
   let onScreen: OnScreenText[] = [];
@@ -205,9 +219,6 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     llmFindings = (outputs.llm_findings as Finding[]) ?? [];
     onScreen = (runRow?.on_screen_text as OnScreenText[]) ?? [];
   } else {
-    const signed = frames.length
-      ? ((await db.storage.from("media").createSignedUrls(frames.map((f) => f.path), 900)).data ?? [])
-      : [];
     const frameInputs = frames
       .map((f, i) => ({ t: f.t, url: signed[i]?.signedUrl ?? "" }))
       .filter((f) => f.url);
@@ -224,7 +235,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     outputs.llm_done = true;
     outputs.llm_findings = llmFindings;
     outputs.llm_attempts = analysis.attempts;
-    await saveRun({
+    const saved = saveRun({
       llm_model: analysis.model,
       llm_provider: analysis.provider,
       raw_llm_output: analysis.raw,
@@ -234,29 +245,40 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       step_outputs: outputs,
     });
     // Store on-screen text on the nearest frame rows (for the report and audits).
-    for (const o of onScreen) {
-      await db.from("frames").update({ ocr_text: o.text }).eq("submission_id", sub.id).gte("t_seconds", o.t - 0.5).lte("t_seconds", o.t + 0.5);
-    }
+    // On-screen text on the nearest frame rows (report + audits): all at once, alongside the run save.
+    await timed("ocr_store", () =>
+      Promise.all([
+        saved,
+        ...onScreen.map((o) => db.from("frames").update({ ocr_text: o.text }).eq("submission_id", sub.id).gte("t_seconds", o.t - 0.5).lte("t_seconds", o.t + 0.5)),
+      ]),
+    );
   }
   await assertNotCancelled(db, sub.id);
 
   // ---- 3. Deterministic checks ---------------------------------------------------------
-  await setProgress(db, sub.id, { current_step: "deterministic", progress: 85 });
+  // Deterministic checks take ~1 ms, so there is no separate 85 % write.
   const det = await timed("deterministic", async () => runDeterministicChecks(sub, segments, onScreen, { audioMode }));
 
   // ---- 4. Merge + persist ----------------------------------------------------------------
-  await setProgress(db, sub.id, { current_step: "merge", progress: 95 });
   const merged = mergeAndFilterFindings([...det.findings, ...llmFindings], validCodes);
   if (merged.dropped.unknownRule.length) log("dropped_unknown_rules", { submission_id: sub.id, codes: merged.dropped.unknownRule });
 
-  const { data: frameIndex } = await db.from("frames").select("id, t_seconds").eq("submission_id", sub.id);
+  const [, { data: frameIndex }] = await timed("progress_95", () =>
+    Promise.all([
+      setProgress(db, sub.id, { current_step: "merge", progress: 95 }),
+      db.from("frames").select("id, t_seconds").eq("submission_id", sub.id),
+    ]),
+  );
   const nearestFrame = (t: number | null | undefined) => {
     if (t == null || !frameIndex?.length) return null;
     return frameIndex.reduce((a, b) => (Math.abs(Number(b.t_seconds) - t) < Math.abs(Number(a.t_seconds) - t) ? b : a)).id;
   };
 
-  await db.from("findings").delete().eq("run_id", runId);
-  if (merged.mergedFindings.length) {
+  const evidenceIds = [...new Set(merged.mergedFindings.map((f) => (f.evidence_type === "frame" ? nearestFrame(f.evidence_frame_t ?? f.t_start) : null)).filter((x): x is string => Boolean(x)))];
+  // Blur runs alongside the findings writes; it finishes before "done" so thumbnails are never missing or unblurred.
+  const blurred = timed("blur", () => blurEvidenceFrames(db, folder, evidenceIds));
+  await timed("findings_delete", async () => await db.from("findings").delete().eq("run_id", runId));
+  if (merged.mergedFindings.length) await timed("findings_insert", async () => {
     const { error } = await db.from("findings").insert(
       merged.mergedFindings.map((f) => ({
         run_id: runId,
@@ -277,19 +299,20 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       })),
     );
     if (error) throw error;
-  }
+  });
 
-  const evidenceIds = [...new Set(merged.mergedFindings.map((f) => (f.evidence_type === "frame" ? nearestFrame(f.evidence_frame_t ?? f.t_start) : null)).filter((x): x is string => Boolean(x)))];
-  await timed("blur", () => blurEvidenceFrames(db, folder, evidenceIds));
-
-  await db.from("compliance_logs").upsert({ submission_id: sub.id, content_hash: sub.sha256 ?? "", generated_at: new Date().toISOString() });
-
-  const usage = (await db.from("analysis_runs").select("token_usage, llm_model, asr_model").eq("id", runId).single()).data;
+  const [, , usageRes] = await Promise.all([
+    blurred,
+    timed("compliance_log", async () => await db.from("compliance_logs").upsert({ submission_id: sub.id, content_hash: sub.sha256 ?? "", generated_at: new Date().toISOString() })),
+    db.from("analysis_runs").select("token_usage, llm_model, asr_model").eq("id", runId).single(),
+  ]);
+  const usage = usageRes.data;
   const cost =
     textCost(usage?.llm_model ?? cfg.llmModel, (usage?.token_usage as never) ?? { input_tokens: 0, output_tokens: 0 }, env(`PRICE_${(usage?.llm_model ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`)) +
     audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds);
 
-  await saveRun({
+  const tSave = Date.now();
+  const doneRun = saveRun({
     status: "done",
     finished_at: new Date().toISOString(),
     durations_ms: { ...(runRow?.durations_ms as object), ...durations },
@@ -304,16 +327,24 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       discount_codes: det.discountCodes,
     },
   });
-  await setProgress(db, sub.id, {
+  await timed("set_done", () => setProgress(db, sub.id, {
     status: "done",
     progress: 100,
     current_step: "done",
     overall_status: merged.overallStatus,
     analyzed_at: new Date().toISOString(),
     error_message: null,
-  });
-  await db.rpc("seal_compliance_log", { _sid: sub.id });
-  await notifyUser(db, sub, true, merged.overallStatus);
+  }));
+  await doneRun;
+  durations.save_run = Date.now() - tSave;
+  durations.total = Date.now() - pipelineStart;
+  // After "done" (the report is already visible): seal the log and notify in parallel.
+  await Promise.all([
+    timed("seal", async () => await db.rpc("seal_compliance_log", { _sid: sub.id })),
+    timed("notify", () => notifyUser(db, sub, true, merged.overallStatus)),
+  ]);
+  // Post-done timings (saveRun already happened) are appended so the tail is fully measured.
+  await saveRun({ durations_ms: { ...(runRow?.durations_ms as object), ...durations } });
   log("pipeline_done", { submission_id: sub.id, status: merged.overallStatus, findings: merged.mergedFindings.length, cost_usd: cost, durations });
 }
 
@@ -346,19 +377,17 @@ Deno.serve(async (req: Request) => {
 
   // --- Rate limit: analyses started per user per hour.
   const since = new Date(Date.now() - 3600_000).toISOString();
-  const { count } = await db.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since);
+  // Independent lookups run together (each round trip is ~0.4 s).
+  const [{ count }, { data: version }, latestRun] = await Promise.all([
+    db.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since),
+    db.from("rulebook_versions").select("id, version_label").eq("is_active", true).limit(1).maybeSingle(),
+    db.from("analysis_runs").select("id, status").eq("submission_id", sub.id).order("started_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
   if ((count ?? 0) > RATE_LIMIT_PER_HOUR) return json({ error: "rate_limited" }, 429);
 
   // --- Run row: reuse the latest unfinished run so steps resume.
   const cfg = config(env);
-  const { data: version } = await db.from("rulebook_versions").select("id, version_label").eq("is_active", true).limit(1).maybeSingle();
-  let { data: run } = await db
-    .from("analysis_runs")
-    .select("id, status")
-    .eq("submission_id", sub.id)
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  let run = latestRun.data;
   if (!run || run.status === "done") {
     const created = await db
       .from("analysis_runs")

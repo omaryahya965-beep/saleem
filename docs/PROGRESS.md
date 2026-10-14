@@ -146,3 +146,25 @@
 
   Whisper hallucinated «اشتركوا في القناة» on the music clip; the filter dropped it. Screenshots in `docs/demo/audio/`.
   Tests: backend 84 (+speech), frontend 28 (+probe).
+
+## Report latency 2026-10-14 — the "~60 s after 95 %" gap and total time
+- **Root cause of the gap: the measurement, not the pipeline.** `scripts/e2e-real-check.mjs` polled the progress bar with
+  Playwright's default 30 s timeout; once the processing view unmounted, two lookups waited 30 s each (~60 s). The server
+  itself reached "done" ~9 s after 95 % (instrumented: blur 6.7 s, findings/log/run writes ~0.4 s each), and the browser polls
+  status every 1.5 s. **No cron job finishes normal runs**: the only jobs are `saleem-fail-stuck` (every 5 min, fails checks idle
+  ≥ 10 min) and `saleem-cleanup-media` (hourly). `backend/tests/no-cron-dependency.test.ts` fails if a scheduled job ever calls
+  `analyze` or writes `done`, if the pipeline stops writing `done` itself (before seal/notify), or if it gains fixed waits.
+- **Speed-ups (analyze):** rules/frame list/frame rows/signed URLs prepared while transcription runs; on-screen text written in
+  one parallel batch (was ~22 sequential updates, 9.4 s → 1.2–1.8 s); evidence frames blurred in parallel and alongside the
+  findings writes; run save + status "done" written together; seal + notification after "done", in parallel; handler lookups
+  (rate limit, rulebook, latest run) in parallel; no separate 85 % write. Every step is now timed in `durations_ms`.
+  Transcription stays before the model call on purpose: the model needs the transcript to judge spoken claims and disclosure.
+- **Before / after (hosted, real UI, demo account; processing = submit → report visible):**
+
+| Clip | audio_mode | Before (as reported) | Before (corrected) | After | Server total after | Transcribe | Model | OCR store | Blur | Cost after | Findings |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| music-only-ar | music_no_speech | ~118 s | — | **44 s** | 35.6 s | 4.4 s | 21.2 s | 1.3 s | 4.3 s | $0.0145 | 4 (same) |
+| no-audio-ar | no_audio | ~95 s | — | **21 s** | 14.7 s | skipped | 8.4 s | 1.2 s | 0 | $0.0040 | 0 (same) |
+| slimming-tea-ar (22 s) | speech | ~116–131 s | 64 s (server 58.6 s: OCR 9.4, blur 6.7) | **48 s** | 42.0 s | 5.5 s | 25.3 s | 1.8 s | 4.7 s | $0.0170 | 6 (same) |
+
+  95 % → report is now ~4–5 s (mostly the blur). Cost differences vs. earlier runs come from prompt caching, not code changes.
