@@ -104,6 +104,14 @@ export function LogPage({ id }: { id: string }) {
       v: [run?.llm_model, run?.asr_model].filter(Boolean).join(" · ") || "—",
       ltr: true,
     },
+    ...(sub.kind === "video" && run?.audio_mode
+      ? [
+          {
+            k: t("audioMode.label"),
+            v: t(`audioMode.${run.audio_mode as "speech" | "music_no_speech" | "no_audio"}`),
+          },
+        ]
+      : []),
     ...(sub.mawthooq_license_no
       ? [{ k: t("log.license"), v: sub.mawthooq_license_no, ltr: true }]
       : []),

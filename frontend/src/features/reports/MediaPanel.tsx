@@ -104,10 +104,13 @@ export function TranscriptPanel({
   segments,
   time,
   onSeek,
+  noSpeech = false,
 }: {
   segments: TranscriptSegment[];
   time: number;
   onSeek: (t: number) => void;
+  /** Clip has no speech (music only or no audio track). */
+  noSpeech?: boolean;
 }) {
   const { t } = useI18n();
   const listRef = useRef<HTMLOListElement>(null);
@@ -130,7 +133,9 @@ export function TranscriptPanel({
         {t("report.transcriptHeading")}
       </h2>
       {segments.length === 0 ? (
-        <p className="px-5 py-4 text-sm text-fg-muted">{t("report.transcriptEmpty")}</p>
+        <p className="px-5 py-4 text-sm text-fg-muted">
+          {noSpeech ? t("report.transcriptNoSpeech") : t("report.transcriptEmpty")}
+        </p>
       ) : (
         <ol ref={listRef} className="relative max-h-72 overflow-y-auto p-2">
           {segments.map((s, i) => (

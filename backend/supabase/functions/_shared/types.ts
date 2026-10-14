@@ -56,6 +56,10 @@ export interface SubmissionData {
   progress: number;
   current_step: PipelineStep;
   overall_status?: OverallStatus | null;
+  /** Set by the pipeline after the transcription step (video only). */
+  audio_mode?: "speech" | "music_no_speech" | "no_audio" | null;
+  audio_probe?: unknown;
+  image_count?: number | null;
 }
 
 export interface RuleRecord {

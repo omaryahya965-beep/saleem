@@ -3,6 +3,7 @@
 //  • audio: mono 16 kHz 16-bit PCM WAV (≈ 1.9 MB per minute)
 
 import { grabFrame, resolveDuration, seek } from "./media";
+import { NO_AUDIO_PROBE, probeSpeech, type SpeechProbe } from "./speech";
 
 export const FRAME_MAX_SIDE = 768;
 export const MAX_SAMPLED_FRAMES = 60;
@@ -100,26 +101,76 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
  * Decodes the file's audio track and resamples to mono 16 kHz WAV.
  * Returns null when the file has no decodable audio (the server then falls back to the original file).
  */
-export async function extractAudio(file: File): Promise<Blob | null> {
+export interface AudioExtraction {
+  /** 16 kHz mono WAV, or null when the file has no decodable audio. */
+  wav: Blob | null;
+  /** Speech-presence probe; null when we couldn't tell (server then transcribes and filters). */
+  probe: SpeechProbe | null;
+}
+
+/** True/false when the browser can tell whether the video has an audio track, null if unknown. */
+async function hasAudioTrack(file: File): Promise<boolean | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const v = document.createElement("video");
+    v.muted = true;
+    v.preload = "auto";
+    await new Promise<void>((resolve, reject) => {
+      v.onloadeddata = () => resolve();
+      v.onerror = () => reject(new Error("decode"));
+      v.src = url;
+    });
+    const el = v as HTMLVideoElement & {
+      audioTracks?: { length: number };
+      mozHasAudio?: boolean;
+      captureStream?: () => MediaStream;
+    };
+    if (el.audioTracks) return el.audioTracks.length > 0;
+    if (typeof el.mozHasAudio === "boolean") return el.mozHasAudio;
+    if (el.captureStream) return el.captureStream().getAudioTracks().length > 0;
+    return null;
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
+ * Decodes the audio track, resamples to mono 16 kHz WAV and runs the speech-presence probe.
+ * No audio stream → { wav: null, probe: NO_AUDIO_PROBE } (the server skips transcription).
+ */
+export async function extractAudioWithProbe(file: File): Promise<AudioExtraction> {
   const AC =
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AC || typeof OfflineAudioContext === "undefined") return null;
+  if (!AC || typeof OfflineAudioContext === "undefined") return { wav: null, probe: null };
   const ctx = new AC();
   try {
     const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
     const length = Math.ceil(decoded.duration * AUDIO_SAMPLE_RATE);
-    if (length <= 0) return null;
+    if (length <= 0) return { wav: null, probe: NO_AUDIO_PROBE };
     const offline = new OfflineAudioContext(1, length, AUDIO_SAMPLE_RATE);
     const src = offline.createBufferSource();
     src.buffer = decoded;
     src.connect(offline.destination);
     src.start();
     const rendered = await offline.startRendering();
-    return encodeWav(rendered.getChannelData(0), AUDIO_SAMPLE_RATE);
+    const samples = rendered.getChannelData(0);
+    return {
+      wav: encodeWav(samples, AUDIO_SAMPLE_RATE),
+      probe: probeSpeech(samples, AUDIO_SAMPLE_RATE),
+    };
   } catch {
-    return null;
+    // Decoding failed: either there is no audio stream, or this browser can't decode the codec.
+    const has = await hasAudioTrack(file);
+    return has === false ? { wav: null, probe: NO_AUDIO_PROBE } : { wav: null, probe: null };
   } finally {
     void ctx.close();
   }
+}
+
+/** Back-compat: the WAV only. */
+export async function extractAudio(file: File): Promise<Blob | null> {
+  return (await extractAudioWithProbe(file)).wav;
 }

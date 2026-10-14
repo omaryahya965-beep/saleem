@@ -208,7 +208,9 @@
     "share": "Share with brand",
     "rerun": "Re-check with latest rules",
     "rerunDone": "We re-ran the check on the latest version.",
-    "rerunHint": "Checked with version {old}; the current version is {current}."
+    "rerunHint": "Checked with version {old}; the current version is {current}.",
+    "noSpeechNote": "This clip has no speech: we checked the on-screen text, the caption and the frames.",
+    "transcriptNoSpeech": "There is no speech in this clip."
   },
   "processing": {
     "title": "Checking your content",
@@ -833,5 +835,11 @@
     "provider_provider_down": "The analysis provider is temporarily unreachable. Try again shortly.",
     "provider_unknown": "Unexpected error from the analysis provider. Please retry.",
     "pipeline_unexpected": "An unexpected error happened during the check. Please retry."
+  },
+  "audioMode": {
+    "label": "Audio",
+    "speech": "Speech",
+    "music_no_speech": "Music or sound, no speech",
+    "no_audio": "No audio"
   }
 }

@@ -17,6 +17,7 @@ import { analysisProvider, config, transcriptionProvider } from "../_shared/prov
 import { ProviderError } from "../_shared/providers/types.ts";
 import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
+import { decideAudioMode, filterSegments, shouldTranscribe, type AudioMode, type AudioProbe } from "../_shared/rules/speech.ts";
 import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { checkEmail, emailProvider } from "../_shared/notify.ts";
@@ -100,31 +101,58 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   await setProgress(db, sub.id, { status: "transcribing", current_step: "transcribe", progress: 10 });
   let segments: TranscriptSegment[] = [];
   let asrSeconds = Number(outputs.asr_seconds ?? 0);
-  const { data: existing } = await db.from("transcripts").select("segments").eq("submission_id", sub.id).maybeSingle();
+  let audioMode: AudioMode | null = (outputs.audio_mode as AudioMode | undefined) ?? null;
+  const probe = (sub.audio_probe ?? null) as AudioProbe | null;
+  const { data: existing } = await db.from("transcripts").select("segments, provider").eq("submission_id", sub.id).maybeSingle();
   if (existing) {
     segments = (existing.segments as TranscriptSegment[]) ?? [];
+    if (sub.kind === "video" && !audioMode) audioMode = segments.length ? "speech" : "music_no_speech";
   } else if (sub.kind === "video") {
-    const audioPath = sub.audio_path ?? sub.file_path;
-    if (!audioPath) throw new ProviderError("لا يوجد ملف صوتي أو فيديو لهذا الفحص", false);
-    const result = await timed("transcribe", async () => {
-      const { data: blob, error } = await db.storage.from("media").download(audioPath);
-      if (error || !blob) throw new ProviderError(`تعذّر تنزيل الملف الصوتي: ${error?.message ?? "missing"}`, true);
-      if (blob.size > 25 * 1024 * 1024) throw new ProviderError("الملف الصوتي أكبر من 25 م.ب", false);
-      return transcriptionProvider(env).transcribe(blob, audioPath.split("/").pop() ?? "audio.wav");
-    });
-    segments = result.segments;
-    asrSeconds = result.seconds;
-    await db.from("transcripts").upsert({
-      submission_id: sub.id,
-      full_text: result.full_text,
-      segments,
-      language: "ar",
-      provider: `${result.provider}:${result.model}`,
-    });
+    // A client WAV exists only when the browser decoded an audio track; otherwise fall back to the
+    // original file unless the probe says there is no audio stream at all.
+    const hasAudioFile = Boolean(sub.audio_path) || (probe?.has_audio !== false && Boolean(sub.file_path));
+    const storeTranscript = (rows: TranscriptSegment[], provider: string) =>
+      db.from("transcripts").upsert({ submission_id: sub.id, full_text: rows.map((r) => r.text).join(" "), segments: rows, language: "ar", provider });
+
+    if (!shouldTranscribe(probe, hasAudioFile)) {
+      // Case 1 (no audio stream) or a silent track: no API call.
+      audioMode = probe?.has_audio === false || !hasAudioFile ? "no_audio" : "music_no_speech";
+      await storeTranscript([], `skipped:${audioMode}`);
+      log("transcription_skipped", { submission_id: sub.id, audio_mode: audioMode, probe: probe?.verdict ?? null });
+    } else {
+      const audioPath = (sub.audio_path ?? sub.file_path)!;
+      try {
+        const result = await timed("transcribe", async () => {
+          const { data: blob, error } = await db.storage.from("media").download(audioPath);
+          if (error || !blob) throw new ProviderError(`تعذّر تنزيل الملف الصوتي: ${error?.message ?? "missing"}`, true);
+          if (blob.size > 25 * 1024 * 1024) throw new ProviderError("الملف الصوتي أكبر من 25 م.ب", false);
+          return transcriptionProvider(env).transcribe(blob, audioPath.split("/").pop() ?? "audio.wav");
+        });
+        // Case 2/3: drop hallucinated or low-confidence segments (stricter if the probe suspected music).
+        const filtered = filterSegments(result.scored, { strict: probe?.verdict === "no_speech_likely" });
+        segments = filtered.kept.map(({ start, end, text }) => ({ start, end, text }));
+        audioMode = decideAudioMode({ hasAudioStream: true, kept: filtered.kept });
+        if (audioMode !== "speech") segments = [];
+        asrSeconds = result.seconds;
+        await storeTranscript(segments, `${result.provider}:${result.model}`);
+        outputs.asr_dropped = filtered.dropped.slice(0, 20);
+        outputs.asr_model = result.model;
+        await saveRun({ asr_model: result.model, asr_provider: result.provider });
+        log("transcription_filtered", { submission_id: sub.id, kept: filtered.kept.length, dropped: filtered.dropped.length, audio_mode: audioMode });
+      } catch (e) {
+        // The original file had no audio the provider could read (no client WAV) → treat as no audio.
+        if (e instanceof ProviderError && e.info?.code === "bad_request" && !sub.audio_path) {
+          audioMode = "no_audio";
+          await storeTranscript([], "skipped:no_audio");
+          log("transcription_no_audio_stream", { submission_id: sub.id, provider_type: e.info.type });
+        } else throw e;
+      }
+    }
     outputs.asr_seconds = asrSeconds;
-    outputs.asr_model = result.model;
-    await saveRun({ asr_model: result.model, asr_provider: result.provider, step_outputs: outputs });
+    outputs.audio_mode = audioMode;
+    await saveRun({ audio_mode: audioMode, step_outputs: outputs });
   }
+  (sub as SubmissionData).audio_mode = audioMode;
   await assertNotCancelled(db, sub.id);
 
   // ---- 2. Frames + vision/reasoning model -----------------------------------------------
@@ -186,7 +214,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
 
   // ---- 3. Deterministic checks ---------------------------------------------------------
   await setProgress(db, sub.id, { current_step: "deterministic", progress: 85 });
-  const det = await timed("deterministic", async () => runDeterministicChecks(sub, segments, onScreen));
+  const det = await timed("deterministic", async () => runDeterministicChecks(sub, segments, onScreen, { audioMode }));
 
   // ---- 4. Merge + persist ----------------------------------------------------------------
   await setProgress(db, sub.id, { current_step: "merge", progress: 95 });
