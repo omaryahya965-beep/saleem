@@ -57,3 +57,27 @@
   - Live end-to-end through the deployed function + storage isolation proof: needs two confirmed test accounts
     (`TEST_USER_A/B_*` in backend/.env) or the demo user.
   - `eval_runs` upload needs `SUPABASE_SERVICE_ROLE_KEY` locally; the admin page currently has no DB rows.
+
+## Phase 5 — Product features (done; some paths verified only with mocks)
+- **5.1 Settings:** plan & usage meter, profile, license, platforms, language (saved to profile), email
+  notifications toggle, change password, JSON export, account deletion (Edge Function `account`).
+- **5.2 Archive audit:** `/archive` multi-clip upload (≤ plan batch, validated), shared metadata, progress;
+  `/archive/:id` summary («N مقاطع قد تؤثر على تجديد رخصة موثوق»), per-clip status/rules, CSV (UTF-8 BOM for Excel).
+- **5.3 Agency workspace:** `/org`, `/org/:id` (overview stats, campaigns, members + roles, invites),
+  `/org/:id/campaigns/:cid` compliance view, `/invite/:token`; New check can target a workspace + campaign;
+  org-scoped RLS for submissions, child tables and storage.
+- **5.4 Sharing:** share dialog on reports (expiry, copy, revoke, decision history), public `/share/:token`
+  read-only report with approve / request changes / comment.
+- **5.5 Rulebook admin:** `/admin/rules` versions draft → legal review → published, changelog, effective date,
+  rule editing on drafts; report banner + menu action to re-run on the latest version.
+- **5.6 `/verify/:id`:** authentic + unchanged check, local file hash match.
+- **5.7 Notifications:** in-app table + bell + toasts; email via provider interface (console by default).
+- **5.8 Plans & quotas:** server-side limits + usage meter; friendly quota errors in New check/Archive.
+- **5.9 i18n:** all new strings in ar/en (typed keys; test asserts quota + legal coverage); LTR screenshots.
+- **5.10 Legal:** `/legal/terms|privacy|disclaimer|ai` + footer links.
+- **Verified:** migration applied; live RPC checks (verify demo → `unchanged: true`; bad token → `valid:false`;
+  anon can't create links/compute hashes); functions deployed (`analyze` v-next, `account`); tsc ✓, eslint 0
+  errors, frontend 22 tests, backend 42 (+7 skipped); 28 screenshots in `docs/screens/phase5/`, no console
+  errors, no 390 px overflow.
+- **Mocked/pending:** signed-in Phase 5 screens were exercised with network mocks (no test accounts);
+  org/share/rerun/delete flows are not yet proven end-to-end against the live DB. Email sending is console-only.

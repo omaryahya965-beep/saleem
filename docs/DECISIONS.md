@@ -83,3 +83,31 @@ Format: decision — why — alternatives considered.
   optional upload to `eval_runs` (needs service key); admin page `/admin/eval`. `npm run clips` runs real
   clips via headless Chromium using the app's own extraction module. Test users can't be created
   (Supabase rejects example.com; no real mailboxes) → live isolation tests skip until creds are provided.
+
+## Phase 5
+- **D37. One schema migration for all product features** (`20261014020000_product_features.sql`): plans/quotas,
+  batches, organizations (+members, invites, campaigns), share links/reviews, rulebook versions, sealed logs,
+  notifications. Every privileged action is a SECURITY DEFINER RPC that checks the caller; tables expose
+  read-only RLS. Rules unique constraint changed from `code` to `(rulebook_version_id, code)` so versions can coexist.
+- **D38. Quotas enforced in the database insert trigger** (monthly checks, clip length, batch size, org/campaign
+  membership) — not bypassable from the client. Plans: Free 10/mo (batch 5), Creator 100/mo (batch 20),
+  Agency 1000/mo + workspace. Users can't change their own plan (column-level grants). No payments.
+- **D39. Org roles**: owner/admin manage; reviewer reads all org checks + media; creator sees own checks only.
+  Invites are single-use tokens bound to an email (7 days); link is copied by the inviter (no email provider yet).
+- **D40. Sharing**: 1–30 day, revocable, unguessable token; `get_shared_report` returns findings/rules only
+  (no video, transcript, user); reviews rate-limited 20/hour/link and notify the owner.
+- **D41. Verifiable logs**: `report_hash = sha256(sid | file sha256 | status | rulebook version | findings)` sealed
+  by the pipeline; `/verify/:id` recomputes it server-side (`unchanged`) and can hash a file locally to match the
+  stored SHA-256. Public facts are minimal (no title/caption/user).
+- **D42. Re-run on latest rulebook** keeps old runs; works after media deletion using the stored transcript and
+  the previous run's on-screen text (no frames).
+- **D43. Email provider interface** (`_shared/notify.ts`): `console` (default, masked address) and `resend`
+  (needs `RESEND_API_KEY`, `EMAIL_FROM`, `APP_URL`) — no account was created. In-app: notifications table +
+  bell + toasts (20 s polling; Realtime is a later optimisation).
+- **D44. Account deletion via `account` Edge Function** (needs the admin API) with typed-email confirmation;
+  blocks if the user is the sole owner of a workspace with other members. Data export is client-side JSON of
+  everything RLS lets the user read.
+- **D45. Fixed duplicate `@radix-ui/react-direction`** (1.1.1 vs 1.2.0): Radix Tabs/RadioGroup were reading a
+  different context and rendering `dir="ltr"` inside Arabic pages (wrong chevrons, reversed arrow keys).
+- **D46. Legal pages are drafts with explicit `[ ]` placeholders** and an on-page notice; they must be completed
+  by counsel (PDPL: controller identity, processors and cross-border transfers, complaint channel).

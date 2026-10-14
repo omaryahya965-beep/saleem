@@ -420,3 +420,6 @@ verify_jwt = true
 # (owner deletion) or the x-cron-secret header against the database vault.
 [functions.cleanup-media]
 verify_jwt = false
+
+[functions.account]
+verify_jwt = true

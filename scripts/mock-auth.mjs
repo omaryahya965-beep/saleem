@@ -44,6 +44,14 @@ export async function installMockAuth(context, { empty = false } = {}) {
   };
   await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`sb-${ref}-auth-token`, JSON.stringify(session)]);
 
+  // Catch-all (registered first = lowest priority): forward un-mocked REST calls anonymously,
+  // so public data (rules, demo rows) still loads without the fake JWT.
+  await context.route(`${url}/rest/v1/**`, async (route) => {
+    const headers = { ...route.request().headers() };
+    delete headers["authorization"];
+    const res = await route.fetch({ headers });
+    return route.fulfill({ response: res });
+  });
   const json = (route, body, headers = {}) => route.fulfill({ status: 200, contentType: "application/json", headers, body: JSON.stringify(body) });
   await context.route(`${url}/auth/v1/**`, (route) => json(route, session.user));
   await context.route(`${url}/rest/v1/profiles**`, (route) =>
@@ -57,6 +65,36 @@ export async function installMockAuth(context, { empty = false } = {}) {
     const r = JSON.parse(fs.readFileSync(file, "utf8"));
     return json(route, [{ id: "eval-latest", created_at: r.at, label: "latest", llm_model: r.llm_model, prompt_version: r.prompt_version, mode: "text", summary: r.summary, per_rule: r.per_rule, cases: r.cases }]);
   });
+  // --- Phase 5 mocks -------------------------------------------------------------
+  const ORG = "bbbbbbbb-0000-4000-8000-000000000001";
+  const CAMP = "cccccccc-0000-4000-8000-000000000001";
+  const BATCH = "dddddddd-0000-4000-8000-000000000001";
+  const members = [
+    { org_id: ORG, user_id: MOCK_USER_ID, role: "owner", display_name: "نورة", email: "creator@example.com", created_at: iso(9000) },
+    { org_id: ORG, user_id: "22222222-0000-4000-8000-000000000002", role: "creator", display_name: "فهد", email: "fahad@example.com", created_at: iso(8000) },
+    { org_id: ORG, user_id: "22222222-0000-4000-8000-000000000003", role: "reviewer", display_name: "سارة", email: "sara@example.com", created_at: iso(7000) },
+  ];
+  const orgSubs = MOCK_SUBMISSIONS.map((m, i) => ({ ...m, org_id: ORG, campaign_id: i < 3 ? CAMP : null, user_id: members[i % 3].user_id }));
+  await context.route(`${url}/rest/v1/rpc/my_usage**`, (route) => json(route, { plan: "agency", plan_name_ar: "وكالة", plan_name_en: "Agency", monthly_checks: 1000, max_batch: 20, orgs_allowed: true, used: 37, period_start: iso(14 * 1440), period_end: iso(-17 * 1440) }));
+  await context.route(`${url}/rest/v1/notifications**`, (route) =>
+    json(route, [
+      { id: "n1", user_id: MOCK_USER_ID, kind: "check_done", submission_id: MOCK_SUBMISSIONS[1].id, payload: { title: MOCK_SUBMISSIONS[1].title, overall_status: "needs_fixes" }, read_at: null, created_at: iso(3) },
+      { id: "n2", user_id: MOCK_USER_ID, kind: "share_review", submission_id: MOCK_SUBMISSIONS[3].id, payload: { decision: "approved", reviewer: "متجر نخلة" }, read_at: iso(30), created_at: iso(90) },
+    ]),
+  );
+  await context.route(`${url}/rest/v1/organizations**`, (route) => {
+    const org = { id: ORG, name: "وكالة نخلة للتسويق", created_by: MOCK_USER_ID, created_at: iso(9000) };
+    return json(route, route.request().headers()["accept"]?.includes("vnd.pgrst.object") ? org : [{ ...org, org_members: members }]);
+  });
+  await context.route(`${url}/rest/v1/org_members**`, (route) => json(route, members));
+  await context.route(`${url}/rest/v1/org_invites**`, (route) => json(route, [{ id: "i1", org_id: ORG, email: "khalid@example.com", role: "creator", token: "x", invited_by: MOCK_USER_ID, created_at: iso(60), expires_at: iso(-7 * 1440), accepted_at: null, accepted_by: null, revoked_at: null }]));
+  await context.route(`${url}/rest/v1/campaigns**`, (route) => json(route, [{ id: CAMP, org_id: ORG, name: "حملة اليوم الوطني", brand: "متجر نخلة", starts_on: "2026-09-15", ends_on: "2026-09-30", created_by: MOCK_USER_ID, created_at: iso(3000) }]));
+  await context.route(`${url}/rest/v1/batches**`, (route) => {
+    const u = new URL(route.request().url());
+    const b = { id: BATCH, user_id: MOCK_USER_ID, name: "إعلانات رمضان", created_at: iso(2000) };
+    if (u.searchParams.get("id")) return json(route, route.request().headers()["accept"]?.includes("vnd.pgrst.object") ? b : [b]);
+    return json(route, [{ ...b, submissions: MOCK_SUBMISSIONS.map((m) => ({ id: m.id, status: m.status, overall_status: m.overall_status })) }]);
+  });
   await context.route(`${url}/rest/v1/submissions**`, async (route) => {
     const u = new URL(route.request().url());
     const idEq = u.searchParams.get("id")?.replace(/^eq\./, "");
@@ -65,6 +103,8 @@ export async function installMockAuth(context, { empty = false } = {}) {
       if (!row) return route.continue(); // demo rows come from the real backend
       return json(route, route.request().headers()["accept"]?.includes("vnd.pgrst.object") ? row : [row]);
     }
+    if (u.searchParams.get("org_id")) return json(route, orgSubs);
+    if (u.searchParams.get("batch_id")) return json(route, MOCK_SUBMISSIONS.map((m) => ({ ...m, findings: m.overall_status === "needs_fixes" ? [{ rule_code: "MAW-01", severity: "violation", run_id: "r" }, { rule_code: "COM-01", severity: "violation", run_id: "r" }] : m.overall_status === "review" ? [{ rule_code: "CNT-03", severity: "warning", run_id: "r" }] : [], analysis_runs: [{ id: "r", started_at: m.created_at }] })));
     if (u.searchParams.get("user_id")) {
       let rows = empty ? [] : MOCK_SUBMISSIONS;
       const st = u.searchParams.get("overall_status")?.replace(/^eq\./, "");

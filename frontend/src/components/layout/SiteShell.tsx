@@ -2,7 +2,12 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Archive,
+  BookCheck,
+  Building2,
   FilePlus2,
+  FlaskConical,
+  Scale,
   Home,
   LayoutList,
   LogIn,
@@ -16,6 +21,8 @@ import { createPortal } from "react-dom";
 import { AppShell, Brand, LanguageToggle, type NavItem } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
+import { useIsAdmin } from "@/lib/api/hooks";
+import { NotificationsBell } from "./Notifications";
 
 const ActionBarContext = createContext<HTMLElement | null>(null);
 
@@ -36,6 +43,7 @@ export function MobileActionBar({ children }: { children: ReactNode }) {
 function AccountMenu() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin(user?.id).data === true;
   const navigate = useNavigate();
   const qc = useQueryClient();
   if (!user) {
@@ -82,6 +90,58 @@ function AccountMenu() {
               {t("nav.settings")}
             </Link>
           </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/archive"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <Archive aria-hidden="true" className="size-4" />
+              {t("nav.archive")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/org"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <Building2 aria-hidden="true" className="size-4" />
+              {t("nav.workspace")}
+            </Link>
+          </DropdownMenu.Item>
+          {isAdmin && (
+            <>
+              <DropdownMenu.Separator className="my-1 h-px bg-border" />
+              <DropdownMenu.Item asChild>
+                <Link
+                  to="/admin/eval"
+                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+                >
+                  <FlaskConical aria-hidden="true" className="size-4" />
+                  {t("nav.evalNav")}
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link
+                  to="/admin/rules"
+                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+                >
+                  <BookCheck aria-hidden="true" className="size-4" />
+                  {t("nav.rulesAdmin")}
+                </Link>
+              </DropdownMenu.Item>
+            </>
+          )}
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/legal/$doc"
+              params={{ doc: "privacy" }}
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <Scale aria-hidden="true" className="size-4" />
+              {t("nav.legal")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
           <DropdownMenu.Item
             onSelect={async () => {
               await signOut();
@@ -177,6 +237,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         actions={
           <>
             <LanguageToggle />
+            {ready && user && <NotificationsBell />}
             {ready && <AccountMenu />}
           </>
         }

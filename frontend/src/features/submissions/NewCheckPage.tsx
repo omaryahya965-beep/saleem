@@ -32,6 +32,7 @@ import {
   type SubmissionKind,
 } from "@/lib/api/data";
 import { useProfile } from "@/lib/api/hooks";
+import { errorCode, fetchMyOrgs, fetchOrg } from "@/lib/api/features";
 import type { InspectedMedia } from "@/lib/media";
 
 type Stage = "hashing" | "extracting" | "uploading" | "saving";
@@ -50,7 +51,19 @@ export function NewCheckPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { parent: parentId } = useSearch({ from: "/_app/new" });
+  const {
+    parent: parentId,
+    org: orgParam,
+    campaign: campaignParam,
+  } = useSearch({ from: "/_app/new" });
+  const orgs = useQuery({ queryKey: ["orgs"], queryFn: fetchMyOrgs });
+  const [orgId, setOrgId] = useState<string>(orgParam ?? "");
+  const [campaignId, setCampaignId] = useState<string>(campaignParam ?? "");
+  const orgDetail = useQuery({
+    queryKey: ["org", orgId],
+    queryFn: () => fetchOrg(orgId),
+    enabled: Boolean(orgId),
+  });
   const profile = useProfile(user?.id);
   const parent = useQuery({
     queryKey: ["submission", parentId],
@@ -126,6 +139,8 @@ export function NewCheckPage() {
           aiUsed,
           licenseNo: license,
           parentId: parentId ?? null,
+          orgId: orgId || null,
+          campaignId: (orgId && campaignId) || null,
         },
         (st, detail) => {
           setStage(st);
@@ -142,7 +157,11 @@ export function NewCheckPage() {
       toast.error(
         err instanceof ApiError && err.code === "upload"
           ? t("newCheck.errUpload")
-          : t("newCheck.errGeneric"),
+          : ["quota_exceeded", "clip_too_long", "forbidden", "campaign_mismatch"].includes(
+                errorCode(err),
+              )
+            ? t(`quota.${errorCode(err)}` as TKey)
+            : t("newCheck.errGeneric"),
       );
     },
   });
@@ -317,6 +336,38 @@ export function NewCheckPage() {
                 hint={t("newCheck.aiUsedHint")}
               />
             </div>
+            {(orgs.data?.length ?? 0) > 0 && (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label={t("newCheck.workspace")}>
+                  <Select
+                    value={orgId}
+                    onChange={(e) => {
+                      setOrgId(e.target.value);
+                      setCampaignId("");
+                    }}
+                  >
+                    <option value="">{t("newCheck.personal")}</option>
+                    {orgs.data!.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                {orgId && (
+                  <Field label={t("newCheck.campaign")}>
+                    <Select value={campaignId} onChange={(e) => setCampaignId(e.target.value)}>
+                      <option value="">{t("newCheck.none")}</option>
+                      {(orgDetail.data?.campaigns ?? []).map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                )}
+              </div>
+            )}
             <Field
               label={t("newCheck.license")}
               hint={t("newCheck.licenseHint")}

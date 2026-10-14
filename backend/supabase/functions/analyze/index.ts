@@ -18,6 +18,7 @@ import { ProviderError } from "../_shared/providers/types.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
 import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
+import { checkEmail, emailProvider } from "../_shared/notify.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
@@ -56,6 +57,27 @@ async function listFrames(db: Db, folder: string): Promise<{ t: number; path: st
     .map((f) => ({ t: Number(f.name.replace(".jpg", "")) / 1000, path: `${folder}/frames/${f.name}` }))
     .sort((a, b) => a.t - b.t)
     .slice(0, MAX_FRAMES);
+}
+
+/** In-app notification + email (respecting the profile's notify_email). Never throws. */
+async function notifyUser(db: Db, sub: SubmissionData & { user_id: string; title?: string | null }, ok: boolean, status: string | null) {
+  try {
+    await db.from("notifications").insert({
+      user_id: sub.user_id,
+      kind: ok ? "check_done" : "check_failed",
+      submission_id: sub.id,
+      payload: { title: sub.title ?? "", overall_status: status },
+    });
+    const { data: profile } = await db.from("profiles").select("notify_email, preferred_lang").eq("id", sub.user_id).maybeSingle();
+    if (profile?.notify_email === false) return;
+    const { data: u } = await db.auth.admin.getUserById(sub.user_id);
+    if (!u?.user?.email) return;
+    const base = env("APP_URL") ?? "https://saleem.app";
+    const msg = checkEmail({ ok, title: sub.title || "—", status, url: `${base}/checks/${sub.id}`, lang: profile?.preferred_lang === "en" ? "en" : "ar" });
+    await emailProvider(env).send({ to: u.user.email, ...msg });
+  } catch (e) {
+    log("notify_failed", { submission_id: sub.id, error: (e as Error).message });
+  }
 }
 
 async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, runId: string) {
@@ -109,7 +131,10 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
 
   // ---- 2. Frames + vision/reasoning model -----------------------------------------------
   await setProgress(db, sub.id, { status: "analyzing", current_step: "llm", progress: 40 });
-  const { data: rulesData, error: rulesErr } = await db.from("rules").select("*").eq("is_active", true).order("code");
+  const { data: runMeta } = await db.from("analysis_runs").select("rulebook_version_id").eq("id", runId).single();
+  let rulesQuery = db.from("rules").select("*").eq("is_active", true).order("code");
+  if (runMeta?.rulebook_version_id) rulesQuery = rulesQuery.eq("rulebook_version_id", runMeta.rulebook_version_id);
+  const { data: rulesData, error: rulesErr } = await rulesQuery;
   if (rulesErr) throw rulesErr;
   const rules = (rulesData ?? []) as RuleRecord[];
   const validCodes = new Set(rules.map((r) => r.code));
@@ -132,6 +157,11 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     const frameInputs = frames
       .map((f, i) => ({ t: f.t, url: signed[i]?.signedUrl ?? "" }))
       .filter((f) => f.url);
+    if (!frameInputs.length && sub.kind !== "text") {
+      // Media already deleted (re-run): reuse on-screen text read in the previous run.
+      const { data: prev } = await db.from("analysis_runs").select("on_screen_text").eq("submission_id", sub.id).neq("id", runId).order("started_at", { ascending: false }).limit(1).maybeSingle();
+      onScreen = ((prev?.on_screen_text as OnScreenText[]) ?? []);
+    }
     const analysis = await timed("llm", () =>
       analysisProvider(env).analyze({ submission: sub, segments, rules, frames: frameInputs, duration: sub.duration_seconds ?? null }),
     );
@@ -225,6 +255,8 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     analyzed_at: new Date().toISOString(),
     error_message: null,
   });
+  await db.rpc("seal_compliance_log", { _sid: sub.id });
+  await notifyUser(db, sub, true, merged.overallStatus);
   log("pipeline_done", { submission_id: sub.id, status: merged.overallStatus, findings: merged.mergedFindings.length, cost_usd: cost, durations });
 }
 
@@ -250,7 +282,6 @@ Deno.serve(async (req: Request) => {
   if (!sub || sub.user_id !== userId || sub.is_demo) return json({ error: "not found" }, 404);
   if (sub.status === "done") return json({ status: "done" }, 200);
   if (sub.status === "failed" && sub.error_message === CANCELLED) return json({ status: "cancelled" }, 409);
-  if (sub.media_deleted_at) return json({ error: "media deleted" }, 410);
 
   // Another worker is active if the heartbeat is fresh (idempotent re-invocation).
   const fresh = sub.heartbeat_at && Date.now() - new Date(sub.heartbeat_at).getTime() < 45_000;
@@ -307,6 +338,7 @@ Deno.serve(async (req: Request) => {
     const message = friendlyError(e);
     log("pipeline_failed", { submission_id: sub.id, error: (e as Error)?.message?.slice(0, 500) });
     await db.from("analysis_runs").update({ status: "failed", error: (e as Error)?.message?.slice(0, 1000) ?? "unknown" }).eq("id", run!.id);
+    await notifyUser(db, sub, false, null);
     await db.from("submissions").update({ status: "failed", error_message: message }).eq("id", sub.id).or(`error_message.is.null,error_message.neq.${CANCELLED}`);
   });
 
