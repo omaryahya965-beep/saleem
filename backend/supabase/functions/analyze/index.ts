@@ -15,6 +15,7 @@ import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
 import { analysisProvider, config, transcriptionProvider } from "../_shared/providers/index.ts";
 import { ProviderError } from "../_shared/providers/types.ts";
+import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
 import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
@@ -31,14 +32,11 @@ type Db = SupabaseClient;
 
 class Cancelled extends Error {}
 
-function friendlyError(e: unknown): string {
-  if (e instanceof ProviderError) {
-    if (e.status === 401) return "تعذّر الاتصال بمزوّد التحليل (مفتاح غير صالح). أبلغ فريق سَليم.";
-    if (e.status === 429) return "مزوّد التحليل مشغول حالياً. أعد المحاولة بعد دقيقة.";
-    if (e.retryable) return "انقطع الاتصال بمزوّد التحليل. أعد المحاولة.";
-    return `تعذّر تحليل المحتوى: ${e.message.slice(0, 160)}`;
-  }
-  return "حدث خطأ غير متوقع أثناء الفحص. أعد المحاولة.";
+/** Stored in submissions.error_message as a code the UI translates (Arabic/English). */
+function errorMessageFor(e: unknown): string {
+  if (e instanceof ProviderError && e.info) return errorToken(e.info.code);
+  if (e instanceof ProviderError) return errorToken("unknown");
+  return "code:pipeline_unexpected";
 }
 
 async function setProgress(db: Db, id: string, patch: Record<string, unknown>) {
@@ -335,8 +333,15 @@ Deno.serve(async (req: Request) => {
       log("pipeline_cancelled", { submission_id: sub.id });
       return;
     }
-    const message = friendlyError(e);
-    log("pipeline_failed", { submission_id: sub.id, error: (e as Error)?.message?.slice(0, 500) });
+    const message = errorMessageFor(e);
+    log("pipeline_failed", {
+      submission_id: sub.id,
+      error: (e as Error)?.message?.slice(0, 500),
+      provider_status: e instanceof ProviderError ? (e.info?.status ?? e.status ?? null) : null,
+      provider_code: e instanceof ProviderError ? (e.info?.code ?? null) : null,
+      provider_type: e instanceof ProviderError ? (e.info?.type ?? null) : null,
+      provider_request_id: e instanceof ProviderError ? (e.info?.requestId ?? null) : null,
+    });
     await db.from("analysis_runs").update({ status: "failed", error: (e as Error)?.message?.slice(0, 1000) ?? "unknown" }).eq("id", run!.id);
     await notifyUser(db, sub, false, null);
     await db.from("submissions").update({ status: "failed", error_message: message }).eq("id", sub.id).or(`error_message.is.null,error_message.neq.${CANCELLED}`);

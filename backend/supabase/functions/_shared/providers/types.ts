@@ -1,5 +1,6 @@
 import type { RuleRecord, SubmissionData, TokenUsage, TranscriptSegment } from "../types.ts";
 import type { AnalysisOutput } from "../pipeline/schema.ts";
+import type { ProviderErrorInfo } from "./errors.ts";
 
 export interface TranscriptionResult {
   full_text: string;
@@ -48,6 +49,8 @@ export class ProviderError extends Error {
     message: string,
     public readonly retryable: boolean,
     public readonly status?: number,
+    /** Classified provider failure (code, status, error type, request id). */
+    public readonly info?: ProviderErrorInfo,
   ) {
     super(message);
   }

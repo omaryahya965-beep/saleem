@@ -79,3 +79,22 @@ describe("media validation", () => {
     expect(validateDuration(90.2)).toBeNull();
   });
 });
+
+import { pipelineErrorText } from "@/features/reports/model";
+
+describe("pipelineErrorText", () => {
+  const tAr = (k: string) => translate("ar", k as never);
+  const tEn = (k: string) => translate("en", k as never);
+  it("translates provider codes in both languages; invalid key only for that code", () => {
+    expect(pipelineErrorText("code:provider_invalid_key", tAr)).toContain("مفتاح");
+    expect(pipelineErrorText("code:provider_insufficient_quota", tEn)).toMatch(/credit/);
+    expect(pipelineErrorText("code:provider_insufficient_quota", tAr)).not.toContain("مفتاح");
+    expect(pipelineErrorText("code:provider_model_not_found", tEn)).toMatch(/model/);
+  });
+  it("keeps legacy plain-text messages and falls back for unknown codes", () => {
+    expect(pipelineErrorText("رسالة قديمة", tAr)).toBe("رسالة قديمة");
+    expect(pipelineErrorText("code:something_new", tEn)).toBe(
+      translate("en", "pipelineErrors.pipeline_unexpected"),
+    );
+  });
+});

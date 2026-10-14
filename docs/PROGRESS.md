@@ -104,3 +104,24 @@
 - **Verified:** final run — tsc ✓, eslint 0 errors, Vitest 22 + 42 (+7 skipped), Deno ✓, E2E 33/33, build with
   12/12 prerendered pages; demo verify page reports `unchanged: true`.
 - **Next:** see FINAL_REPORT §5–6 (test accounts, real clips, mobile LCP, legal review, deployment).
+
+## Hotfix 2026-10-14 — real checks failed at «تفريغ الكلام» («مفتاح غير صالح»)
+- **Root cause:** the hosted `OPENAI_API_KEY` secret was a 19-character placeholder (no `sk-` prefix) — byte-identical
+  (SHA-256 digest match) to `backend/supabase/functions/.env`, from which it had been pushed at project setup. The
+  real key (164 chars, `sk-proj-…`, no spaces/quotes) existed only in `backend/.env`. Local smoke/eval/clip runs
+  worked because `backend/eval/lib.ts` lets `backend/.env` override the functions env, so the bad hosted secret
+  went unnoticed. Code read the right variable (`OPENAI_API_KEY`); project/function linkage was correct.
+- **Evidence (hosted, via new admin-only `diagnostics` function):** before — `/v1/models` 401 `invalid_api_key`
+  (also for `gpt-6.1-sol` and `whisper-1`); after — all 200, 2 s transcription OK in 1.9 s.
+- **Fix:** set the real key as the hosted secret (temp file, deleted; value never printed), replaced the placeholder
+  in the git-ignored `functions/.env`, redeployed `analyze` + `diagnostics`.
+- **Error mapping rewritten** (`_shared/providers/errors.ts`): "invalid key" only for 401; 403 no access, 404 model
+  not found, 429 split into insufficient_quota vs rate_limited, 400/413/415/422 bad request, 5xx/timeouts provider
+  down. Stored as `code:` tokens, translated in the UI (ar/en generated from the same table by
+  `scripts/gen-pipeline-errors.ts`). Server logs provider status, error type and request id (keys redacted).
+  Tests: backend 60 (+18 mapping), frontend 24.
+- **Real end-to-end check (deployed pipeline, demo@saleem.app, synthetic 22 s ad):** reached report «يحتاج تعديلات»
+  in ~140 s; 6 findings (MAW-01 00:00, COM-01 00:08 speech, MAW-02 00:08, COM-01 00:12 on-screen, MAW-03, MAW-04);
+  transcribe 5.9 s, model 29.1 s, 23 frames, 5,584/1,518 tokens, **$0.0285**. Screenshot `docs/demo/real-check-report.png`.
+  Open: ~60 s spent between 95 % and done (persist/notify phase) — not yet profiled.
+- `diagnostics` is kept as an admin-only function (`node scripts/run-diagnostics.mjs`); it returns no secret values.

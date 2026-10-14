@@ -822,5 +822,16 @@
     "runsCost": "{n} runs · {cost}",
     "errors": "Recent errors",
     "noErrors": "No errors in this range."
+  },
+  "pipelineErrors": {
+    "provider_invalid_key": "The analysis provider key is invalid. Please contact the SALEEM team.",
+    "provider_no_access": "The analysis provider account has no access to the required model. Please contact the SALEEM team.",
+    "provider_model_not_found": "The configured analysis model doesn't exist or isn't available. Please contact the SALEEM team.",
+    "provider_insufficient_quota": "The analysis provider is out of credit. Please contact the SALEEM team.",
+    "provider_rate_limited": "The analysis provider is busy right now. Try again in a minute.",
+    "provider_bad_request": "The analysis provider rejected the file (unsupported format or settings). Try another file or retry.",
+    "provider_provider_down": "The analysis provider is temporarily unreachable. Try again shortly.",
+    "provider_unknown": "Unexpected error from the analysis provider. Please retry.",
+    "pipeline_unexpected": "An unexpected error happened during the check. Please retry."
   }
 }

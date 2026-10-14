@@ -148,3 +148,11 @@ Format: decision — why — alternatives considered.
 - **D59. Phase 6 committed directly on master** (branch creation was in a shell command that aborted);
   `phase-6-quality` points at that commit. History was not rewritten.
 - **D60. Accuracy claims are scoped**: pitch numbers come with the sample size and limits (docs/demo/ACCURACY.md).
+
+## Hotfix
+- **D61. Provider errors are classified codes, not provider text** — precise user messages per cause and no leakage
+  of provider details; "invalid key" only on 401.
+- **D62. Keep `diagnostics` (admin-only)** — cheap way to prove the hosted AI config (key format, model access,
+  real transcription) without exposing secrets; documented in OPERATIONS.
+- **D63. Eval scripts must not mask hosted config** — they now remain useful, but hosted health is checked with
+  `scripts/run-diagnostics.mjs` against the deployed secret.

@@ -15,6 +15,7 @@ import {
 import { useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { cancelSubmission, retrySubmission, type Submission } from "@/lib/api/data";
+import { pipelineErrorText } from "./model";
 import { qk } from "@/lib/api/hooks";
 
 const STEPS: { key: string; label: TKey }[] = [
@@ -148,7 +149,7 @@ export function ProcessingView({ submission: sub }: { submission: Submission }) 
           <div className="rounded-md border border-red/20 bg-red-bg/60 p-4 text-sm">
             <p className="font-bold text-red">{t("processing.reason")}</p>
             <p dir="auto" className="mt-1 break-words text-fg">
-              {sub.error_message}
+              {pipelineErrorText(sub.error_message, t)}
             </p>
           </div>
         )}

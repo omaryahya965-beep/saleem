@@ -1,5 +1,5 @@
 import type { IssueView } from "@/components/ui";
-import type { Lang } from "@/i18n";
+import type { Lang, TKey } from "@/i18n";
 import type { Finding, Rule } from "@/lib/api/data";
 
 /** Maps DB findings + rules to the localized view model used by IssueCard and the timeline. */
@@ -69,4 +69,15 @@ export function verificationId(id: string): string {
 export function shortHash(hash: string | null | undefined): string {
   if (!hash) return "—";
   return hash.length > 20 ? `${hash.slice(0, 10)}…${hash.slice(-8)}` : hash;
+}
+
+/**
+ * Translates a stored pipeline error. New errors are stored as `code:<key>` tokens
+ * (see backend/supabase/functions/_shared/providers/errors.ts); older rows hold plain text.
+ */
+export function pipelineErrorText(message: string, t: (key: TKey) => string): string {
+  if (!message.startsWith("code:")) return message;
+  const key = `pipelineErrors.${message.slice(5)}` as TKey;
+  const text = t(key);
+  return text === key ? t("pipelineErrors.pipeline_unexpected") : text;
 }

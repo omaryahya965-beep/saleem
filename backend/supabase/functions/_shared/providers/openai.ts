@@ -1,6 +1,7 @@
 // OpenAI providers: transcription (segment timestamps) and vision + reasoning analysis
 // via the Responses API with strict Structured Outputs.
 
+import { classifyProviderError } from "./errors.ts";
 import { ANALYSIS_SCHEMA, SchemaError, parseModelJson, validateAnalysis, type AnalysisOutput } from "../pipeline/schema.ts";
 import type { TokenUsage, TranscriptSegment } from "../types.ts";
 import { SYSTEM_PROMPT, buildUserPrompt } from "./prompt.ts";
@@ -21,16 +22,17 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
   try {
     return await fetch(url, { ...init, signal: ctrl.signal });
   } catch (e) {
-    throw new ProviderError(`network error calling OpenAI: ${(e as Error).message}`, true);
+    throw new ProviderError(`network error calling OpenAI: ${(e as Error).message}`, true, undefined, classifyProviderError(null, (e as Error).message));
   } finally {
     clearTimeout(id);
   }
 }
 
 async function fail(res: Response, what: string): Promise<never> {
-  const body = (await res.text()).slice(0, 400);
-  // 408/409/429/5xx are transient; 400/401/403/404 are configuration or input errors.
-  throw new ProviderError(`${what} failed (${res.status}): ${body}`, res.status === 408 || res.status === 409 || res.status === 429 || res.status >= 500, res.status);
+  const info = classifyProviderError(res.status, await res.text(), res.headers.get("x-request-id"));
+  // Transient: rate limits, 409, 5xx/timeouts. Not transient: auth, access, model, quota, bad input.
+  const retryable = info.code === "provider_down" || info.code === "rate_limited" || res.status === 409;
+  throw new ProviderError(`${what} failed (${res.status} ${info.type ?? ""}): ${info.detail}`, retryable, res.status, info);
 }
 
 /** Retries transient failures with exponential backoff + jitter. */

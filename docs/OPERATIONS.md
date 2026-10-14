@@ -110,6 +110,14 @@ Alternatives: Amazon SES (cheapest at volume), Postmark. Implement another `Emai
 - **Alerts** to set up once a tracker exists: function error rate > 5 %/h, `pipeline_failed` spikes,
   OpenAI spend over budget (OpenAI dashboard usage limits), cron job failures.
 
+### AI provider health check
+
+`node scripts/run-diagnostics.mjs` (as an admin account) calls the admin-only `diagnostics` function, which uses the
+**deployed** secret and reports only: key present / length / `sk-` prefix / whitespace, HTTP status + error type for
+the models list and each configured model, and a real 2-second transcription. Run it after rotating keys or
+changing models. If it reports 401, the hosted `OPENAI_API_KEY` is wrong:
+`npx supabase secrets set --env-file backend/supabase/functions/.env --workdir backend` with a real key in that file.
+
 ## 8. Security checklist
 
 - RLS on every table; results tables are service-role-write only (owners can't forge reports).
