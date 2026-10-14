@@ -65,7 +65,10 @@ export const MediaPanel = forwardRef<HTMLVideoElement, MediaPanelProps>(function
     );
   } else {
     media = (
-      <div data-testid={deleted ? "media-deleted" : undefined} className="flex aspect-[4/3] max-h-[50dvh] w-full flex-col items-center justify-center gap-3 rounded-md bg-ink px-6 text-center text-paper/85">
+      <div
+        data-testid={deleted ? "media-deleted" : undefined}
+        className="flex aspect-[4/3] max-h-[50dvh] w-full flex-col items-center justify-center gap-3 rounded-md bg-ink px-6 text-center text-paper/85"
+      >
         {deleted ? (
           <ImageOff aria-hidden="true" className="size-8 text-mint" />
         ) : (

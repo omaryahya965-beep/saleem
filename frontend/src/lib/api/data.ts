@@ -201,9 +201,13 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
       .in("id", frameIds)
       // Only server-blurred copies are ever shown (frames may show people, including minors).
       .eq("blurred", true);
-    const withPath = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
+    const all = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
       Boolean(f.image_path),
     );
+    // Demo thumbnails ship with the app (already blurred) under /public/demo/evidence.
+    for (const f of all)
+      if (f.image_path.startsWith("demo:")) frameUrls.set(f.id, f.image_path.slice("demo:".length));
+    const withPath = all.filter((f) => !f.image_path.startsWith("demo:"));
     if (withPath.length) {
       const { data: signed } = await supabase.storage.from("media").createSignedUrls(
         withPath.map((f) => f.image_path),
