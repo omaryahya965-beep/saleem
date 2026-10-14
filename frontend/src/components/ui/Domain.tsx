@@ -26,7 +26,7 @@ export interface IssueView {
   sourceUrl: string | null;
   evidenceType: EvidenceType;
   evidence: string | null;
-  /** Signed URL of the evidence frame; rendered blurred by default (privacy). */
+  /** Signed URL of the evidence frame; always a server-side blurred copy (privacy). */
   frameUrl?: string | null;
   fix: string;
 }
@@ -117,8 +117,7 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
               <img
                 src={issue.frameUrl}
                 alt={t("issue.evidenceFrame", { time: formatClock(issue.time) })}
-                className="h-16 w-12 shrink-0 rounded-sm object-cover blur-[6px] transition-[filter] hover:blur-none focus:blur-none"
-                tabIndex={0}
+                className="h-16 w-12 shrink-0 rounded-sm object-cover"
               />
             ) : (
               <span className="mt-0.5 text-fg-muted [&_svg]:size-4">

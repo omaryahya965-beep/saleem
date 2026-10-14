@@ -198,7 +198,9 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     const { data: frames } = await supabase
       .from("frames")
       .select("id, image_path")
-      .in("id", frameIds);
+      .in("id", frameIds)
+      // Only server-blurred copies are ever shown (frames may show people, including minors).
+      .eq("blurred", true);
     const withPath = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
       Boolean(f.image_path),
     );

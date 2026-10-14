@@ -20,6 +20,8 @@ import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
 import { decideAudioMode, filterSegments, shouldTranscribe, type AudioMode, type AudioProbe } from "../_shared/rules/speech.ts";
 import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
+import { evidencePath, pixelateRgba } from "../_shared/media/blur.ts";
+import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
 import { checkEmail, emailProvider } from "../_shared/notify.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
@@ -47,6 +49,32 @@ async function setProgress(db: Db, id: string, patch: Record<string, unknown>) {
 async function assertNotCancelled(db: Db, id: string) {
   const { data } = await db.from("submissions").select("status, error_message").eq("id", id).single();
   if (data?.status === "failed" && data.error_message === CANCELLED) throw new Cancelled();
+}
+
+/**
+ * Stores a pixelated copy of every evidence frame and points the frame row at it (blurred = true).
+ * Frames can show people, including minors, so no unblurred evidence ever reaches the browser.
+ * A frame that cannot be blurred is unlinked from its findings instead of being shown raw.
+ */
+async function blurEvidenceFrames(db: Db, folder: string, frameIds: string[]) {
+  if (!frameIds.length) return;
+  const { data: rows } = await db.from("frames").select("id, image_path, blurred").in("id", frameIds);
+  for (const row of rows ?? []) {
+    if (row.blurred) continue;
+    try {
+      const { data: blob, error } = await db.storage.from("media").download(row.image_path);
+      if (error || !blob) throw error ?? new Error("missing frame");
+      const img = await Image.decode(new Uint8Array(await blob.arrayBuffer()));
+      pixelateRgba(img.bitmap, img.width, img.height);
+      const path = evidencePath(folder, row.id);
+      const up = await db.storage.from("media").upload(path, await img.encodeJPEG(70), { contentType: "image/jpeg", upsert: true });
+      if (up.error) throw up.error;
+      await db.from("frames").update({ image_path: path, blurred: true }).eq("id", row.id);
+    } catch (e) {
+      log("evidence_blur_failed", { frame_id: row.id, error: String((e as Error)?.message ?? e).slice(0, 200) });
+      await db.from("findings").update({ evidence_frame_id: null }).eq("evidence_frame_id", row.id);
+    }
+  }
 }
 
 async function listFrames(db: Db, folder: string): Promise<{ t: number; path: string }[]> {
@@ -250,6 +278,9 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     );
     if (error) throw error;
   }
+
+  const evidenceIds = [...new Set(merged.mergedFindings.map((f) => (f.evidence_type === "frame" ? nearestFrame(f.evidence_frame_t ?? f.t_start) : null)).filter((x): x is string => Boolean(x)))];
+  await timed("blur", () => blurEvidenceFrames(db, folder, evidenceIds));
 
   await db.from("compliance_logs").upsert({ submission_id: sub.id, content_hash: sub.sha256 ?? "", generated_at: new Date().toISOString() });
 
