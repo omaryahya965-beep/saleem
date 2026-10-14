@@ -160,3 +160,7 @@ Format: decision — why — alternatives considered.
   need another model call; blurring all evidence guarantees no unblurred child image reaches the report or the
   compliance log. Cost: on-screen text in the thumbnail is unreadable (it is quoted in the evidence line).
   Face-only blurring is a later improvement. Only the demo reports were backfilled; older reports show no thumbnail.
+- **D65. Keep transcription before the model call** — running them in parallel would drop the transcript from the model's
+  input (spoken claims/disclosure); instead everything independent of the transcript is prepared during transcription.
+- **D66. Blur completes before "done"** — the report never shows a missing or unblurred thumbnail; the blur runs in parallel
+  with the findings writes so it costs ~4–5 s, not extra round trips. Status polling stays at 1.5 s while running.
