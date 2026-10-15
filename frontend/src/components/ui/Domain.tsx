@@ -6,9 +6,10 @@ import {
   Tag,
   Wrench,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { formatClock, useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { Dialog } from "./Overlays";
 import { Badge, StatusChip } from "./Status";
 
 export type Severity = "violation" | "warning";
@@ -52,7 +53,9 @@ const evidenceIcon: Record<EvidenceType, ReactNode> = {
  */
 export function IssueCard({ issue, selected, onSelect, className }: IssueCardProps) {
   const { t } = useI18n();
+  const [frameOpen, setFrameOpen] = useState(false);
   const hasTime = issue.time !== null;
+  const frameAlt = t("issue.evidenceFrame", { time: formatClock(issue.time) });
   return (
     <article
       aria-current={selected || undefined}
@@ -114,11 +117,30 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
         {(issue.evidence || issue.frameUrl) && (
           <div className="flex items-start gap-3 rounded-md bg-sunken p-3 text-sm">
             {issue.frameUrl ? (
-              <img
-                src={issue.frameUrl}
-                alt={t("issue.evidenceFrame", { time: formatClock(issue.time) })}
-                className="h-16 w-12 shrink-0 rounded-sm object-cover"
-              />
+              <>
+                {/* Click to enlarge: the thumbnail is too small to read the evidence. */}
+                <button
+                  type="button"
+                  onClick={() => setFrameOpen(true)}
+                  aria-label={t("issue.enlargeFrame")}
+                  className="shrink-0 cursor-zoom-in rounded-sm transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <img src={issue.frameUrl} alt={frameAlt} className="h-16 w-12 rounded-sm object-cover" />
+                </button>
+                <Dialog
+                  open={frameOpen}
+                  onOpenChange={setFrameOpen}
+                  title={frameAlt}
+                  description={issue.evidence ?? undefined}
+                  className="sm:max-w-2xl"
+                >
+                  <img
+                    src={issue.frameUrl}
+                    alt={frameAlt}
+                    className="mx-auto mb-4 max-h-[70dvh] w-auto rounded-md object-contain"
+                  />
+                </Dialog>
+              </>
             ) : (
               <span className="mt-0.5 text-fg-muted [&_svg]:size-4">
                 {evidenceIcon[issue.evidenceType]}

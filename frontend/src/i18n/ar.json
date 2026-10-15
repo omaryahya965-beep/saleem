@@ -118,6 +118,7 @@
     "noTime": "على المقطع كاملاً",
     "seek": "انتقل إلى {time}",
     "evidenceFrame": "لقطة من الثانية {time}",
+    "enlargeFrame": "تكبير اللقطة",
     "evidenceMetadata": "من بيانات النشر",
     "evidenceCaption": "من الوصف"
   },

@@ -118,6 +118,7 @@
     "noTime": "Whole clip",
     "seek": "Jump to {time}",
     "evidenceFrame": "Frame at {time}",
+    "enlargeFrame": "Enlarge frame",
     "evidenceMetadata": "From post details",
     "evidenceCaption": "From caption"
   },
