@@ -222,7 +222,6 @@ saleem/
   docs/
     ARCHITECTURE.md
     CLEANUP_PLAN.md
-    CLEANUP_REPORT.md
     PARITY_CHECKLIST.md
   README.md
   .gitignore
