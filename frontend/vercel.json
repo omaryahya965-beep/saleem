@@ -3,7 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "cleanUrls": false,
-  "rewrites": [{ "source": "/((?!assets/|.*\.).*)", "destination": "/spa.html" }],
+  "rewrites": [{ "source": "/((?!assets/|.*\\.).*)", "destination": "/spa.html" }],
   "headers": [
     {
       "source": "/assets/(.*)",

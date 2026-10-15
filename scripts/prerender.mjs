@@ -32,7 +32,13 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((r) => server.listen(4199, r));
 
-const browser = await chromium.launch();
+// CI images without Chromium's system libs (e.g. Vercel): ship the plain SPA shell instead of failing.
+const browser = await chromium.launch().catch((e) => {
+  console.warn(`prerender skipped (no browser): ${e.message.split("\n")[0]}`);
+  fs.writeFileSync(path.join(dist, "spa.html"), template);
+  server.close();
+  process.exit(0);
+});
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.addInitScript(() => localStorage.setItem("saleem-lang", "ar"));
 let ok = 0;
