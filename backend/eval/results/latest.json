@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-13T22:24:52.495Z",
+  "at": "2026-10-14T18:25:09.926Z",
   "llm_model": "gpt-6.1-sol",
   "prompt_version": "v3-2026-10",
   "summary": {
@@ -10,9 +10,9 @@
     "hits": 17,
     "misses": 0,
     "false_alarms": 1,
-    "avg_ms_per_case": 7495,
-    "avg_cost_usd_per_case": 0.005674666666666667,
-    "total_cost_usd": 0.068096
+    "avg_ms_per_case": 7459,
+    "avg_cost_usd_per_case": 0.006416666666666667,
+    "total_cost_usd": 0.077
   },
   "per_rule": [
     {
@@ -119,8 +119,8 @@
     {
       "id": "slimming-tea",
       "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
-      "ms": 15208,
-      "cost_usd": 0.0095455,
+      "ms": 17939,
+      "cost_usd": 0.012556,
       "outcome": {
         "MAW-01": "hit",
         "COM-01": "hit",
@@ -145,14 +145,22 @@
           "t": 12,
           "source": "llm",
           "confidence": 1,
+          "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع\nومضمون بدون أعراض جانبية"
+        },
+        {
+          "rule": "MAW-02",
+          "severity": "warning",
+          "t": 12,
+          "source": "llm",
+          "confidence": 0.98,
           "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع"
         },
         {
           "rule": "COM-01",
           "severity": "violation",
           "t": 19,
-          "source": "llm",
-          "confidence": 1,
+          "source": "deterministic",
+          "confidence": 0.9,
           "evidence": "ومضمون بدون أعراض جانبية"
         },
         {
@@ -178,22 +186,14 @@
           "source": "deterministic",
           "confidence": 0.95,
           "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
-        },
-        {
-          "rule": "MAW-02",
-          "severity": "warning",
-          "t": null,
-          "source": "llm",
-          "confidence": 0.98,
-          "evidence": "جربت شاي التنحيف الجديد 🔥 كود الخصم SALEEM20 الرابط في البايو"
         }
       ]
     },
     {
       "id": "herbal-tea-fixed",
       "title": "النسخة المعدّلة: إفصاح وتجربة شخصية",
-      "ms": 3047,
-      "cost_usd": 0.00347,
+      "ms": 3257,
+      "cost_usd": 0.00348,
       "outcome": {},
       "error": null,
       "findings": []
@@ -201,8 +201,8 @@
     {
       "id": "crypto-daily-return",
       "title": "منصة استثمار بعائد يومي مضمون",
-      "ms": 8370,
-      "cost_usd": 0.0068,
+      "ms": 7512,
+      "cost_usd": 0.00691,
       "outcome": {
         "COM-01": "hit",
         "MAW-02": "hit"
@@ -214,7 +214,7 @@
           "severity": "warning",
           "t": 0,
           "source": "llm",
-          "confidence": 0.99,
+          "confidence": 1,
           "evidence": "إعلان، يا شباب لقيت لكم منصة استثمار رهيبة"
         },
         {
@@ -238,8 +238,8 @@
     {
       "id": "kid-daily-vlog",
       "title": "يوميات مع طفل",
-      "ms": 7132,
-      "cost_usd": 0.0033012,
+      "ms": 8543,
+      "cost_usd": 0.00642,
       "outcome": {
         "CNT-01": "hit"
       },
@@ -250,16 +250,16 @@
           "severity": "violation",
           "t": 6,
           "source": "llm",
-          "confidence": 0.97,
-          "evidence": "عمره خمس سنين وكذا يحب المراجيح"
+          "confidence": 0.98,
+          "evidence": "سلّم على المتابعين، عمره خمس سنين وكذا يحب المراجيح"
         }
       ]
     },
     {
       "id": "domestic-worker",
       "title": "تصوير العاملة المنزلية",
-      "ms": 5642,
-      "cost_usd": 0.004982,
+      "ms": 5168,
+      "cost_usd": 0.004892,
       "outcome": {
         "CNT-02": "hit"
       },
@@ -278,8 +278,8 @@
     {
       "id": "insult",
       "title": "ألفاظ مسيئة",
-      "ms": 7010,
-      "cost_usd": 0.00667,
+      "ms": 7389,
+      "cost_usd": 0.00678,
       "outcome": {
         "CNT-05": "hit"
       },
@@ -306,7 +306,7 @@
     {
       "id": "organic-review",
       "title": "مراجعة مطعم غير مدفوعة",
-      "ms": 3102,
+      "ms": 1760,
       "cost_usd": 0.003042,
       "outcome": {},
       "error": null,
@@ -315,8 +315,8 @@
     {
       "id": "ai-undisclosed",
       "title": "صوت مولّد بالذكاء الاصطناعي دون إفصاح",
-      "ms": 11061,
-      "cost_usd": 0.0053973,
+      "ms": 10672,
+      "cost_usd": 0.008092,
       "outcome": {
         "AI-01": "hit",
         "COM-01": "false_alarm"
@@ -325,11 +325,11 @@
       "findings": [
         {
           "rule": "COM-01",
-          "severity": "warning",
+          "severity": "violation",
           "t": 0,
           "source": "llm",
-          "confidence": 0.8,
-          "evidence": "ريحته تثبت طول اليوم"
+          "confidence": 0.9,
+          "evidence": "إعلان، عطر العود الجديد ريحته تثبت طول اليوم"
         },
         {
           "rule": "AI-01",
@@ -344,8 +344,8 @@
     {
       "id": "wealth-flaunt",
       "title": "استعراض الثراء",
-      "ms": 4985,
-      "cost_usd": 0.005032,
+      "ms": 5496,
+      "cost_usd": 0.005072,
       "outcome": {
         "CNT-04": "hit"
       },
@@ -357,15 +357,15 @@
           "t": 0,
           "source": "llm",
           "confidence": 0.6,
-          "evidence": "شوفوا الفلوس هذي كلها، كاش على الطاولة\nوالساعة هذي بنص مليون، عادي عندي"
+          "evidence": "شوفوا الفلوس هذي كلها، كاش على الطاولة والساعة هذي بنص مليون، عادي عندي"
         }
       ]
     },
     {
       "id": "code-no-paid-flag",
       "title": "كود خصم دون تحديد إعلان",
-      "ms": 5668,
-      "cost_usd": 0.005094,
+      "ms": 4612,
+      "cost_usd": 0.005014,
       "outcome": {
         "MAW-01": "hit"
       },
@@ -384,8 +384,8 @@
     {
       "id": "cure-claim-text",
       "title": "ادعاء علاجي في منشور نصي",
-      "ms": 11398,
-      "cost_usd": 0.00811,
+      "ms": 10110,
+      "cost_usd": 0.0079,
       "outcome": {
         "COM-01": "hit",
         "MAW-02": "hit"
@@ -413,8 +413,8 @@
     {
       "id": "family-privacy",
       "title": "تفاصيل خاصة عن الأسرة",
-      "ms": 7321,
-      "cost_usd": 0.006652,
+      "ms": 7051,
+      "cost_usd": 0.006842,
       "outcome": {
         "CNT-03": "hit"
       },
