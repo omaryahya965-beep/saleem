@@ -113,11 +113,9 @@ function StatusBand({
         {facts.map((f) => (
           <div key={f.label} className="min-w-0">
             <dt className="text-xs text-fg-muted">{f.label}</dt>
-            <dd
-              dir={f.ltr ? "ltr" : undefined}
-              className="m-0 truncate text-sm font-medium text-fg rtl:text-end ltr:text-start"
-            >
-              {f.value}
+            {/* Value sits directly under its label; LTR values (model ids) are isolated, not flipped. */}
+            <dd className="m-0 truncate text-start text-sm font-medium text-fg">
+              {f.ltr ? <bdi dir="ltr">{f.value}</bdi> : f.value}
             </dd>
           </div>
         ))}
