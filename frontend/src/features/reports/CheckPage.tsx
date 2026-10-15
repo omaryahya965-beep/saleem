@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { FileQuestion } from "lucide-react";
+import { useEffect } from "react";
 import { Button, Card, EmptyState, ErrorState, Page, Skeleton } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { ApiError } from "@/lib/api/data";
@@ -50,7 +51,13 @@ export function CheckPage({ id }: { id: string }) {
   const { t } = useI18n();
   const status = useSubmissionStatus(id);
   const done = status.data?.status === "done";
-  const report = useReport(id, done);
+  // Start the report alongside the status poll (most opened checks are already done);
+  // refetch once if it was loaded before the pipeline finished.
+  const report = useReport(id, done || status.isPending);
+  const staleReport = done && report.data && report.data.submission.status !== "done";
+  useEffect(() => {
+    if (staleReport) void report.refetch();
+  }, [staleReport, report]);
 
   if (status.isPending) return <ReportSkeleton />;
   if (status.isError) {

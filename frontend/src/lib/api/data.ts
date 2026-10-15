@@ -159,13 +159,21 @@ async function latestRunWithFindings(submissionId: string) {
 }
 
 export async function fetchReport(id: string): Promise<ReportBundle> {
-  const submission = await fetchSubmission(id);
-  const [{ run, findings }, transcriptRes, rulebook, logRes] = await Promise.all([
-    latestRunWithFindings(id),
-    supabase.from("transcripts").select("*").eq("submission_id", id).maybeSingle(),
-    fetchRulebook(),
-    supabase.from("compliance_logs").select("*").eq("submission_id", id).maybeSingle(),
-  ]);
+  // One parallel round: Supabase RTT dominates, so nothing here waits on the submission row.
+  const [submission, { run, findings }, transcriptRes, rulebook, logRes, framesRes] =
+    await Promise.all([
+      fetchSubmission(id),
+      latestRunWithFindings(id),
+      supabase.from("transcripts").select("*").eq("submission_id", id).maybeSingle(),
+      fetchRulebook(),
+      supabase.from("compliance_logs").select("*").eq("submission_id", id).maybeSingle(),
+      supabase
+        .from("frames")
+        .select("id, image_path")
+        .eq("submission_id", id)
+        // Only server-blurred copies are ever shown (frames may show people, including minors).
+        .eq("blurred", true),
+    ]);
 
   let parent: Submission | null = null;
   let parentFindings: Finding[] = [];
@@ -195,14 +203,9 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     ...new Set(findings.map((f) => f.evidence_frame_id).filter((x): x is string => Boolean(x))),
   ];
   if (frameIds.length && !submission.media_deleted_at) {
-    const { data: frames } = await supabase
-      .from("frames")
-      .select("id, image_path")
-      .in("id", frameIds)
-      // Only server-blurred copies are ever shown (frames may show people, including minors).
-      .eq("blurred", true);
-    const all = (frames ?? []).filter((f): f is { id: string; image_path: string } =>
-      Boolean(f.image_path),
+    const wanted = new Set(frameIds);
+    const all = (framesRes.data ?? []).filter(
+      (f): f is { id: string; image_path: string } => wanted.has(f.id) && Boolean(f.image_path),
     );
     // Demo thumbnails ship with the app (already blurred) under /public/demo/evidence.
     for (const f of all)
