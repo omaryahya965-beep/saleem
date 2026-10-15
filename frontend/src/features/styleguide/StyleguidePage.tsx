@@ -99,7 +99,7 @@ export function StyleguidePage() {
       ruleCode: "MAW-01",
       ruleTitle: ar ? "الإفصاح الواضح عن الإعلان" : "Clear ad disclosure",
       sourceName: ar ? "شروط منصة موثوق" : "Mawthooq terms",
-      sourceUrl: "https://mawthooq.gcam.gov.sa",
+      sourceUrl: "https://www.mawthooq.sa",
       evidenceType: "transcript",
       evidence: ar ? "استخدموا كود SALEEM20 والرابط في البايو" : "Use code SALEEM20, link in bio",
       fix: ar

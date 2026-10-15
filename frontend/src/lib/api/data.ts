@@ -207,7 +207,8 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     const all = (framesRes.data ?? []).filter(
       (f): f is { id: string; image_path: string } => wanted.has(f.id) && Boolean(f.image_path),
     );
-    // Demo thumbnails ship with the app (already blurred) under /public/demo/evidence.
+    // Demo thumbnails ship with the app under /public/demo/evidence: synthetic clip, no people,
+    // so they are shown sharp (rows stay blurred=true to pass the filter above).
     for (const f of all)
       if (f.image_path.startsWith("demo:")) frameUrls.set(f.id, f.image_path.slice("demo:".length));
     const withPath = all.filter((f) => !f.image_path.startsWith("demo:"));
