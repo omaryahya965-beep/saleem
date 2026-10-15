@@ -22,7 +22,7 @@ import { formatClock, useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 
-const DEMO_ID = "d0000000-0000-0000-0000-000000000003";
+export const DEMO_ID = "d0000000-0000-0000-0000-000000000003";
 const DEMO_DURATION = 42;
 const DEMO_ISSUES: {
   id: string;
@@ -160,7 +160,7 @@ export function LandingPage() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-              <Link to="/checks/$id" params={{ id: DEMO_ID }}>
+              <Link to="/sample">
                 <Eye aria-hidden="true" />
                 {t("landing.ctaExample")}
               </Link>

@@ -18,6 +18,7 @@ import { Route as AppLoginRouteImport } from './routes/_app/login'
 import { Route as AppNewRouteImport } from './routes/_app/new'
 import { Route as AppResetPasswordRouteImport } from './routes/_app/reset-password'
 import { Route as AppRulesRouteImport } from './routes/_app/rules'
+import { Route as AppSampleRouteImport } from './routes/_app/sample'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
 import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
@@ -77,6 +78,11 @@ const AppResetPasswordRoute = AppResetPasswordRouteImport.update({
 const AppRulesRoute = AppRulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSampleRoute = AppSampleRouteImport.update({
+  id: '/sample',
+  path: '/sample',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof AppNewRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
+  '/sample': typeof AppSampleRoute
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/admin/eval': typeof AppAdminEvalRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/new': typeof AppNewRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
+  '/sample': typeof AppSampleRoute
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/': typeof AppIndexRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/_app/new': typeof AppNewRoute
   '/_app/reset-password': typeof AppResetPasswordRoute
   '/_app/rules': typeof AppRulesRoute
+  '/_app/sample': typeof AppSampleRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signup': typeof AppSignupRoute
   '/_app/': typeof AppIndexRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/reset-password'
     | '/rules'
+    | '/sample'
     | '/settings'
     | '/signup'
     | '/admin/eval'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/reset-password'
     | '/rules'
+    | '/sample'
     | '/settings'
     | '/signup'
     | '/'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/_app/new'
     | '/_app/reset-password'
     | '/_app/rules'
+    | '/_app/sample'
     | '/_app/settings'
     | '/_app/signup'
     | '/_app/'
@@ -390,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof AppRulesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sample': {
+      id: '/_app/sample'
+      path: '/sample'
+      fullPath: '/sample'
+      preLoaderRoute: typeof AppSampleRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -514,6 +533,7 @@ interface AppRouteChildren {
   AppNewRoute: typeof AppNewRoute
   AppResetPasswordRoute: typeof AppResetPasswordRoute
   AppRulesRoute: typeof AppRulesRoute
+  AppSampleRoute: typeof AppSampleRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignupRoute: typeof AppSignupRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -540,6 +560,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNewRoute: AppNewRoute,
   AppResetPasswordRoute: AppResetPasswordRoute,
   AppRulesRoute: AppRulesRoute,
+  AppSampleRoute: AppSampleRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignupRoute: AppSignupRoute,
   AppIndexRoute: AppIndexRoute,
