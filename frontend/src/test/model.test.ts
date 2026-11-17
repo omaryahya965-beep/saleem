@@ -1,13 +1,52 @@
 import { describe, expect, it } from "vitest";
-import { diffFindings, sortIssues, verificationId } from "@/features/reports/model";
+import {
+  analysisReviewReasons,
+  diffFindings,
+  sortIssues,
+  toIssueViews,
+  verificationId,
+} from "@/features/reports/model";
 import { formatClock, translate } from "@/i18n";
 import ar from "@/i18n/ar.json";
 import en from "@/i18n/en.json";
 import { validateBasics, validateDuration } from "@/lib/media";
-import type { Finding } from "@/lib/api/data";
+import type { Finding, Rule } from "@/lib/api/data";
 
 const f = (rule_code: string, severity: "violation" | "warning" = "violation") =>
   ({ rule_code, severity }) as Finding;
+
+describe("regulatory references", () => {
+  const finding = {
+    ...f("COM-01"),
+    source_url: "https://untrusted.example/invented-law",
+    source_name: "Invented regulator",
+  };
+  it("resolves reference URLs and names only from database rules", () => {
+    const rule = {
+      source_url: "https://mc.gov.sa",
+      source_name: "وزارة التجارة",
+      title_ar: "قاعدة",
+    } as Rule;
+    const [issue] = toIssueViews([finding], new Map([["COM-01", rule]]), "ar");
+    expect(issue?.sourceUrl).toBe(rule.source_url);
+    expect(issue?.sourceName).toBe(rule.source_name);
+  });
+  it("does not fall back to a model reference when the database rule is missing", () => {
+    const [issue] = toIssueViews([finding], new Map(), "ar");
+    expect(issue?.sourceUrl).toBeNull();
+    expect(issue?.sourceName).toBe("");
+  });
+});
+
+describe("persisted human review notices", () => {
+  it("reads the actual run's localized notices and tolerates legacy output", () => {
+    const outputs = { review_reasons: [{ ar: "يتطلب مراجعة بشرية", en: "Human review required" }] };
+    expect(analysisReviewReasons(outputs, "ar")).toEqual(["يتطلب مراجعة بشرية"]);
+    expect(analysisReviewReasons(outputs, "en")).toEqual(["Human review required"]);
+    expect(analysisReviewReasons(null, "ar")).toEqual([]);
+    expect(analysisReviewReasons({ review_reasons: [null, { ar: 123 }] }, "ar")).toEqual([]);
+  });
+});
 
 describe("diffFindings", () => {
   it("reports rules present before and absent now as fixed (deduped)", () => {
@@ -85,6 +124,10 @@ import { pipelineErrorText } from "@/features/reports/model";
 describe("pipelineErrorText", () => {
   const tAr = (k: string) => translate("ar", k as never);
   const tEn = (k: string) => translate("en", k as never);
+  it("shows a temporary provider failure and retry guidance for exhausted 503s", () => {
+    expect(pipelineErrorText("code:provider_provider_down", tEn)).toMatch(/temporar.*try again/i);
+    expect(pipelineErrorText("code:provider_provider_down", tAr)).toContain("أعد المحاولة");
+  });
   it("translates provider codes in both languages; invalid key only for that code", () => {
     expect(pipelineErrorText("code:provider_invalid_key", tAr)).toContain("مفتاح");
     expect(pipelineErrorText("code:provider_insufficient_quota", tEn)).toMatch(/credit/);

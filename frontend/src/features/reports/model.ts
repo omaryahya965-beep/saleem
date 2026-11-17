@@ -2,6 +2,18 @@ import type { IssueView } from "@/components/ui";
 import type { Lang, TKey } from "@/i18n";
 import type { Finding, Rule } from "@/lib/api/data";
 
+/** Review notices are persisted with the actual analysis run, outside the rule findings. */
+export function analysisReviewReasons(outputs: unknown, lang: Lang): string[] {
+  if (!outputs || typeof outputs !== "object") return [];
+  const reasons = (outputs as { review_reasons?: unknown }).review_reasons;
+  if (!Array.isArray(reasons)) return [];
+  return reasons.flatMap((r: unknown) => {
+    if (!r || typeof r !== "object") return [];
+    const value = (r as Record<string, unknown>)[lang];
+    return typeof value === "string" && value.trim() ? [value] : [];
+  });
+}
+
 /** Maps DB findings + rules to the localized view model used by IssueCard and the timeline. */
 export function toIssueViews(
   findings: Finding[],

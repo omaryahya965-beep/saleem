@@ -38,7 +38,13 @@ import { rerunSubmission } from "@/lib/api/features";
 import { ShareDialog } from "@/features/share/SharePages";
 import { cn } from "@/lib/utils";
 import { MediaPanel, TranscriptPanel } from "./MediaPanel";
-import { countBySeverity, diffFindings, sortIssues, toIssueViews } from "./model";
+import {
+  analysisReviewReasons,
+  countBySeverity,
+  diffFindings,
+  sortIssues,
+  toIssueViews,
+} from "./model";
 
 type Tone = "violation" | "warning" | "ready";
 
@@ -220,7 +226,8 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
     [findings, rules, lang, bundle.frameUrls],
   );
   const { violations, warnings } = countBySeverity(findings);
-  const status = sub.overall_status ?? "ready";
+  const reviewNotices = analysisReviewReasons(run?.step_outputs, lang);
+  const status = sub.overall_status ?? "review";
   const tone: Tone = status === "ready" ? "ready" : status === "review" ? "warning" : "violation";
   const isOwner = Boolean(user && sub.user_id === user.id && !sub.is_demo);
 
@@ -260,7 +267,9 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
     status === "ready"
       ? t("report.summaryReady", { rules: tn("count.rules", rules.size) })
       : status === "review"
-        ? t("report.summaryReview", { warnings: tn("count.warnings", warnings) })
+        ? reviewNotices.length
+          ? t("report.summaryHumanReview")
+          : t("report.summaryReview", { warnings: tn("count.warnings", warnings) })
         : warnings > 0
           ? t("report.summaryNeedsFixes", {
               violations: tn("count.violations", violations),
@@ -388,6 +397,17 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
         </div>
       </MobileActionBar>
 
+      {reviewNotices.length > 0 && (
+        <Card className="border-amber/25 bg-amber-bg">
+          <h2 className="font-bold">{t("report.humanReviewRequired")}</h2>
+          <ul className="mt-2 list-inside list-disc text-sm">
+            {reviewNotices.map((notice, index) => (
+              <li key={index}>{notice}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {isOwner &&
         currentVersion &&
         bundle.rulebookVersion &&
@@ -449,8 +469,12 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
           </h2>
           {issues.length === 0 ? (
             <Card className="flex items-center gap-3 text-fg">
-              <CircleCheck aria-hidden="true" className="size-6 text-green" />
-              {t("report.readyNoIssues")}
+              {status === "ready" ? (
+                <CircleCheck aria-hidden="true" className="size-6 text-green" />
+              ) : (
+                <TriangleAlert aria-hidden="true" className="size-6 text-amber-text" />
+              )}
+              {t(status === "ready" ? "report.readyNoIssues" : "report.noConfirmedIssues")}
             </Card>
           ) : (
             issues.map((issue: IssueView) => (

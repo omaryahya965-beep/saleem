@@ -46,13 +46,24 @@ function fail(error: { message: string; code?: string } | null, fallback = "unkn
 // Rules
 // ---------------------------------------------------------------------------
 export async function fetchRulebook(): Promise<{ version: RulebookVersion | null; rules: Rule[] }> {
-  const [{ data: versions, error: vErr }, { data: rules, error: rErr }] = await Promise.all([
-    supabase.from("rulebook_versions").select("*").eq("is_active", true).limit(1),
-    supabase.from("rules").select("*").eq("is_active", true).order("code"),
-  ]);
+  return fetchRulebookVersion();
+}
+
+async function fetchRulebookVersion(
+  versionId?: string,
+): Promise<{ version: RulebookVersion | null; rules: Rule[] }> {
+  const versionsQuery = supabase.from("rulebook_versions").select("*");
+  const { data: versions, error: vErr } = await (
+    versionId ? versionsQuery.eq("id", versionId) : versionsQuery.eq("is_active", true)
+  ).limit(1);
   if (vErr) fail(vErr);
+  const version = versions?.[0] ?? null;
+  if (!version) return { version: null, rules: [] };
+  let rulesQuery = supabase.from("rules").select("*").eq("rulebook_version_id", version.id);
+  if (!versionId) rulesQuery = rulesQuery.eq("is_active", true);
+  const { data: rules, error: rErr } = await rulesQuery.order("code");
   if (rErr) fail(rErr);
-  return { version: versions?.[0] ?? null, rules: rules ?? [] };
+  return { version, rules: rules ?? [] };
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +186,11 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
         .eq("blurred", true),
     ]);
 
+  // A historical finding must cite the rulebook used in its own analysis, not today's rules.
+  const reportRulebook =
+    run?.rulebook_version_id && run.rulebook_version_id !== rulebook.version?.id
+      ? await fetchRulebookVersion(run.rulebook_version_id)
+      : rulebook;
   let parent: Submission | null = null;
   let parentFindings: Finding[] = [];
   if (submission.parent_id) {
@@ -232,7 +248,7 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     run,
     findings,
     transcript: segments,
-    rules: new Map(rulebook.rules.map((r) => [r.code, r])),
+    rules: new Map(reportRulebook.rules.map((r) => [r.code, r])),
     rulebookVersion: run?.rulebook_version ?? rulebook.version?.version_label ?? null,
     parent,
     parentFindings,

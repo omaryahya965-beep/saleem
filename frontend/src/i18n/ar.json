@@ -192,6 +192,9 @@
     }
   },
   "report": {
+    "humanReviewRequired": "يتطلب مراجعة بشرية قبل النشر",
+    "summaryHumanReview": "لا تكفي المعلومات المتاحة لإكمال التقييم. راجع الملاحظات التالية بشرياً قبل النشر.",
+    "noConfirmedIssues": "لم تُثبت مخالفات بالمعلومات المتاحة؛ هذا لا يعني اكتمال الفحص أو الموافقة على النشر.",
     "summaryNeedsFixes": "وجدنا {violations} و{warnings} تحتاج انتباهك قبل النشر.",
     "summaryNeedsFixesOnly": "وجدنا {violations} تحتاج تعديلاً قبل النشر.",
     "summaryReview": "لا توجد مخالفات، لكن {warnings} تحتاج مراجعتك قبل النشر.",

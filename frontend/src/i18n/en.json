@@ -168,6 +168,9 @@
     }
   },
   "report": {
+    "humanReviewRequired": "Human review required before publishing",
+    "summaryHumanReview": "The available information is insufficient for a complete assessment. Review the following notices before publishing.",
+    "noConfirmedIssues": "No violations were established from the available information; this does not mean the assessment is complete or publication is approved.",
     "summaryNeedsFixes": "We found {violations} and {warnings} to address before publishing.",
     "summaryNeedsFixesOnly": "We found {violations} to fix before publishing.",
     "summaryReview": "No violations, but {warnings} need your review before publishing.",
