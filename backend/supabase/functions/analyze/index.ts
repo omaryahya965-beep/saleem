@@ -13,12 +13,14 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import { mergeAndFilterFindings } from "../_shared/pipeline/merge.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
+import { AUDIO_REVIEW, VISUAL_REVIEW, reviewReasons, reviewedStatus } from "../_shared/pipeline/review.ts";
+import type { ReviewReason } from "../_shared/providers/types.ts";
 import { analysisProvider, config, transcriptionProvider } from "../_shared/providers/index.ts";
 import { ProviderError } from "../_shared/providers/types.ts";
 import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
 import { decideAudioMode, filterSegments, shouldTranscribe, type AudioMode, type AudioProbe } from "../_shared/rules/speech.ts";
-import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
+import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment, TokenUsage } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { evidencePath, pixelateRgba } from "../_shared/media/blur.ts";
 import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
@@ -136,6 +138,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       db.from("frames").select("id", { count: "exact", head: true }).eq("submission_id", sub.id),
     ]);
     if (rulesErr) throw rulesErr;
+    if (!rulesData?.length) throw new ProviderError("No active rules available; analysis cannot proceed", false);
     const [, signedRes] = await Promise.all([
       frames.length && !frameRows
         ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path })))
@@ -172,7 +175,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       log("transcription_skipped", { submission_id: sub.id, audio_mode: audioMode, probe: probe?.verdict ?? null });
     } else {
       const audioPath = (sub.audio_path ?? sub.file_path)!;
-      try {
+      {
         const result = await timed("transcribe", async () => {
           const { data: blob, error } = await db.storage.from("media").download(audioPath);
           if (error || !blob) throw new ProviderError(`تعذّر تنزيل الملف الصوتي: ${error?.message ?? "missing"}`, true);
@@ -188,15 +191,10 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
         await storeTranscript(segments, `${result.provider}:${result.model}`);
         outputs.asr_dropped = filtered.dropped.slice(0, 20);
         outputs.asr_model = result.model;
+        outputs.asr_usage = result.usage ?? null;
+        outputs.asr_requires_human_review = Boolean(result.requires_human_review || filtered.dropped.length);
         await saveRun({ asr_model: result.model, asr_provider: result.provider });
         log("transcription_filtered", { submission_id: sub.id, kept: filtered.kept.length, dropped: filtered.dropped.length, audio_mode: audioMode });
-      } catch (e) {
-        // The original file had no audio the provider could read (no client WAV) → treat as no audio.
-        if (e instanceof ProviderError && e.info?.code === "bad_request" && !sub.audio_path) {
-          audioMode = "no_audio";
-          await storeTranscript([], "skipped:no_audio");
-          log("transcription_no_audio_stream", { submission_id: sub.id, provider_type: e.info.type });
-        } else throw e;
       }
     }
     outputs.asr_seconds = asrSeconds;
@@ -215,14 +213,17 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
 
   let llmFindings: Finding[] = [];
   let onScreen: OnScreenText[] = [];
+  let reasons: ReviewReason[] = outputs.asr_requires_human_review ? [AUDIO_REVIEW] : [];
   if (outputs.llm_done) {
     llmFindings = (outputs.llm_findings as Finding[]) ?? [];
     onScreen = (runRow?.on_screen_text as OnScreenText[]) ?? [];
+    reasons = reviewReasons(reasons, (outputs.review_reasons as ReviewReason[]) ?? []);
   } else {
     const frameInputs = frames
       .map((f, i) => ({ t: f.t, url: signed[i]?.signedUrl ?? "" }))
       .filter((f) => f.url);
     if (!frameInputs.length && sub.kind !== "text") {
+      reasons.push(VISUAL_REVIEW);
       // Media already deleted (re-run): reuse on-screen text read in the previous run.
       const { data: prev } = await db.from("analysis_runs").select("on_screen_text").eq("submission_id", sub.id).neq("id", runId).order("started_at", { ascending: false }).limit(1).maybeSingle();
       onScreen = ((prev?.on_screen_text as OnScreenText[]) ?? []);
@@ -231,7 +232,11 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       analysisProvider(env).analyze({ submission: sub, segments, rules, frames: frameInputs, duration: sub.duration_seconds ?? null }),
     );
     llmFindings = analysis.findings;
-    onScreen = analysis.on_screen_text;
+    // Keep previous OCR for deterministic re-checks after media expiry. It must never be
+    // presented to the model as newly visible evidence or cause an unqualified clean result.
+    onScreen = frameInputs.length ? analysis.on_screen_text : onScreen;
+    reasons = reviewReasons(reasons, analysis.review_reasons);
+    outputs.review_reasons = reasons;
     outputs.llm_done = true;
     outputs.llm_findings = llmFindings;
     outputs.llm_attempts = analysis.attempts;
@@ -261,6 +266,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
 
   // ---- 4. Merge + persist ----------------------------------------------------------------
   const merged = mergeAndFilterFindings([...det.findings, ...llmFindings], validCodes);
+  const overallStatus = reviewedStatus(merged.overallStatus, reasons);
   if (merged.dropped.unknownRule.length) log("dropped_unknown_rules", { submission_id: sub.id, codes: merged.dropped.unknownRule });
 
   const [, { data: frameIndex }] = await timed("progress_95", () =>
@@ -309,7 +315,9 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   const usage = usageRes.data;
   const cost =
     textCost(usage?.llm_model ?? cfg.llmModel, (usage?.token_usage as never) ?? { input_tokens: 0, output_tokens: 0 }, env(`PRICE_${(usage?.llm_model ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`)) +
-    audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds);
+    (outputs.asr_usage
+      ? textCost(usage?.asr_model ?? cfg.transcriptionModel, outputs.asr_usage as TokenUsage, env(`PRICE_${(usage?.asr_model ?? cfg.transcriptionModel).toUpperCase().replace(/[^A-Z0-9]/g, "_")}`))
+      : audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds));
 
   const tSave = Date.now();
   const doneRun = saveRun({
@@ -331,7 +339,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     status: "done",
     progress: 100,
     current_step: "done",
-    overall_status: merged.overallStatus,
+    overall_status: overallStatus,
     analyzed_at: new Date().toISOString(),
     error_message: null,
   }));
@@ -341,11 +349,11 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   // After "done" (the report is already visible): seal the log and notify in parallel.
   await Promise.all([
     timed("seal", async () => await db.rpc("seal_compliance_log", { _sid: sub.id })),
-    timed("notify", () => notifyUser(db, sub, true, merged.overallStatus)),
+    timed("notify", () => notifyUser(db, sub, true, overallStatus)),
   ]);
   // Post-done timings (saveRun already happened) are appended so the tail is fully measured.
   await saveRun({ durations_ms: { ...(runRow?.durations_ms as object), ...durations } });
-  log("pipeline_done", { submission_id: sub.id, status: merged.overallStatus, findings: merged.mergedFindings.length, cost_usd: cost, durations });
+  log("pipeline_done", { submission_id: sub.id, status: overallStatus, findings: merged.mergedFindings.length, cost_usd: cost, durations });
 }
 
 Deno.serve(async (req: Request) => {

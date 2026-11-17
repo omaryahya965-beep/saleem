@@ -22,7 +22,7 @@ export function buildUserPrompt(
   batch: { index: number; total: number },
 ): string {
   const rulesList = rules
-    .map((r) => `- ${r.code} [${r.category}, default ${r.default_severity}] ${r.title_en} / ${r.title_ar}\n  ${r.llm_instructions}`)
+    .map((r) => `- ${r.code} [${r.category}, default ${r.default_severity}] ${r.title_en} / ${r.title_ar}\n  applies_to_categories: ${r.applies_to_categories.join(", ") || "all"}\n  ${r.llm_instructions}\n  Source (use only this supplied reference): ${r.source_name} ${r.source_url}`)
     .join("\n");
   const transcript = segments.length
     ? segments.map((s) => `[${s.start.toFixed(1)}–${s.end.toFixed(1)}] ${s.text}`).join("\n")

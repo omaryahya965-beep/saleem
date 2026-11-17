@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "smoke:gemini": "tsx eval/gemini-smoke.ts",
     "test": "vitest run",
     "eval": "npx tsx eval/run-eval.ts",
     "clips": "npx tsx eval/run-clips.ts",
     "smoke": "npx tsx eval/provider-smoke.ts",
     "seed": "npx tsx scripts/seed-demo-user.ts"
+  },
+  "dependencies": {
+    "@google/genai": "3.3.0"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
   }
 }

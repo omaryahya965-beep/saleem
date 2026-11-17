@@ -40,7 +40,7 @@ export function classifyProviderError(status: number | null, body: string, reque
   else if (status === null || status === 408 || status >= 500) code = "provider_down";
   else code = "unknown";
   // Never echo key material even if a provider message quotes it.
-  const detail = message.replace(/sk-[A-Za-z0-9_-]{6,}/g, "sk-***").slice(0, 300);
+  const detail = message.replace(/sk-[A-Za-z0-9_-]{6,}/g, "sk-***").replace(/AIza[A-Za-z0-9_-]+/g, "[redacted-google-key]").slice(0, 300);
   return { code, status, type, requestId, detail };
 }
 

@@ -12,6 +12,9 @@ export interface TranscriptionResult {
   model: string;
   /** Audio seconds billed. */
   seconds: number;
+  /** Token-billed providers (Gemini); absent for per-minute ASR such as Whisper. */
+  usage?: TokenUsage;
+  requires_human_review?: boolean;
 }
 
 export interface FrameInput {
@@ -35,7 +38,10 @@ export interface AnalysisResult extends AnalysisOutput {
   /** Raw model JSON per batch, kept for audit/debugging. */
   raw: unknown[];
   attempts: number;
+  review_reasons?: ReviewReason[];
 }
+
+export interface ReviewReason { ar: string; en: string }
 
 export interface TranscriptionProvider {
   readonly name: string;

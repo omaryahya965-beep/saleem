@@ -50,7 +50,8 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - run: deno check backend/supabase/functions/analyze/index.ts backend/supabase/functions/cleanup-media/index.ts backend/supabase/functions/account/index.ts
+      - run: deno check --config backend/supabase/functions/analyze/deno.json backend/supabase/functions/analyze/index.ts backend/supabase/functions/cleanup-media/index.ts backend/supabase/functions/account/index.ts
+      - run: deno check --config backend/supabase/functions/diagnostics/deno.json backend/supabase/functions/diagnostics/index.ts
 
   e2e:
     name: Playwright E2E (AR + EN, desktop + mobile)
