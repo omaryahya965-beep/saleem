@@ -25,7 +25,10 @@ coverage/
 !**/.env.example
 *.local
 
-# Supabase local temp files
+# Supabase local runtime, credentials and temp files
+saleem-local/
+**/e2e-credentials.json
+**/status.env
 backend/supabase/.temp/
 supabase/.temp/
 .temp/
@@ -56,6 +59,9 @@ Thumbs.db
 
 # Eval build artifacts
 backend/eval/results/*.js
+backend/eval/results/gemini-live.json
+backend/eval/results/gemini-api-diagnostics.json
+backend/eval/results/live-local/
 deno.lock
 
 # Playwright

@@ -93,12 +93,14 @@ docs/       القرارات، التشغيل، نظام التصميم، وال
 
 <br/>
 
-المتطلبات: Node 22، مشروع Supabase، ومفتاح OpenAI.
+المتطلبات: Node 22، مشروع Supabase، ومفتاح Gemini (أو OpenAI عند اختياره صراحةً).
+
+إعداد Gemini والمتغيرات والقيود ونتائج الاختبار: [`docs/GEMINI_INTEGRATION.md`](docs/GEMINI_INTEGRATION.md).
 
 ```bash
 npm ci
 cp backend/.env.example backend/.env                                        # VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY
-cp backend/supabase/functions/.env.example backend/supabase/functions/.env  # OPENAI_API_KEY
+cp backend/supabase/functions/.env.example backend/supabase/functions/.env  # GEMINI_API_KEY + GEMINI_MODEL (server-side)
 npx supabase link --project-ref <ref> --workdir backend
 npx supabase db push --workdir backend
 npx supabase secrets set --env-file backend/supabase/functions/.env --workdir backend
