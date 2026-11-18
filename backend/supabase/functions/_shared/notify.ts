@@ -54,8 +54,8 @@ export function checkEmail(opts: {
   url: string;
   lang: "ar" | "en";
 }): Omit<EmailMessage, "to"> {
-  const statusAr: Record<string, string> = { ready: "جاهز للنشر", review: "يحتاج مراجعة", needs_fixes: "يحتاج تعديلات" };
-  const statusEn: Record<string, string> = { ready: "Ready to publish", review: "Needs review", needs_fixes: "Needs fixes" };
+  const statusAr: Record<string, string> = { ready: "لا ملاحظات آلية", review: "ملاحظات للمراجعة", needs_fixes: "ملاحظات تستلزم التعديل" };
+  const statusEn: Record<string, string> = { ready: "No automated findings", review: "Findings to review", needs_fixes: "Findings that require changes" };
   const ar = opts.ok
     ? `اكتمل فحص «${opts.title}»: ${statusAr[opts.status ?? ""] ?? ""}.`
     : `تعذّر إكمال فحص «${opts.title}». يمكنك إعادة المحاولة من التقرير.`;
@@ -68,5 +68,36 @@ export function checkEmail(opts: {
     subject,
     text: `${ar}\n${en}\n\n${opts.url}\n\n${disclaimer}`,
     html: `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.7"><p>${esc(ar)}</p><p dir="ltr">${esc(en)}</p><p><a href="${esc(opts.url)}">${esc(opts.url)}</a></p><p style="color:#4b5552;font-size:13px">${esc(disclaimer)}</p></div>`,
+  };
+}
+
+export type ReviewKind = "review_submitted" | "review_assigned" | "review_decided" | "review_escalated" | "review_legal_response";
+
+const DECISION_AR: Record<string, string> = { approve: "اعتماد", conditional_approve: "اعتماد بشرط", request_changes: "طلب تعديلات", reject: "رفض" };
+const DECISION_EN: Record<string, string> = { approve: "approved", conditional_approve: "approved with a condition", request_changes: "changes requested", reject: "rejected" };
+
+/** Bilingual (Arabic first) review-workflow email. Decisions are human decisions; the advisory line stays. */
+export function reviewEmail(opts: { kind: ReviewKind; title: string; decision?: string | null; url: string; lang: "ar" | "en" }): Omit<EmailMessage, "to"> {
+  const t = opts.title || "—";
+  const ar: Record<ReviewKind, string> = {
+    review_submitted: `أُرسل الإعلان «${t}» للمراجعة.`,
+    review_assigned: `أُسندت إليك مراجعة الإعلان «${t}».`,
+    review_decided: `قرار المراجع على الإعلان «${t}»: ${DECISION_AR[opts.decision ?? ""] ?? ""}.`,
+    review_escalated: `صُعّد إليك الإعلان «${t}» لرأي قانوني.`,
+    review_legal_response: `ردّ الفريق القانوني على تصعيد الإعلان «${t}».`,
+  };
+  const en: Record<ReviewKind, string> = {
+    review_submitted: `“${t}” was submitted for review.`,
+    review_assigned: `You were assigned to review “${t}”.`,
+    review_decided: `Reviewer decision on “${t}”: ${DECISION_EN[opts.decision ?? ""] ?? ""}.`,
+    review_escalated: `“${t}” was escalated to you for a legal opinion.`,
+    review_legal_response: `Legal answered the escalation on “${t}”.`,
+  };
+  const subject = opts.lang === "en" ? `SALEEM: ${en[opts.kind]}` : `سَليم: ${ar[opts.kind]}`;
+  const disclaimer = "هذه نتيجة فحص آلي استرشادي، والاعتماد قرار يتخذه مسؤول مخوّل. · Approval is a decision made by an authorised person.";
+  return {
+    subject,
+    text: `${ar[opts.kind]}\n${en[opts.kind]}\n\n${opts.url}\n\n${disclaimer}`,
+    html: `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.7"><p>${esc(ar[opts.kind])}</p><p dir="ltr">${esc(en[opts.kind])}</p><p><a href="${esc(opts.url)}">${esc(opts.url)}</a></p><p style="color:#4b5552;font-size:13px">${esc(disclaimer)}</p></div>`,
   };
 }

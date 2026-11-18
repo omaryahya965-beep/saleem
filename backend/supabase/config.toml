@@ -426,3 +426,6 @@ verify_jwt = true
 
 [functions.diagnostics]
 verify_jwt = true
+
+[functions.review-notify]
+verify_jwt = true

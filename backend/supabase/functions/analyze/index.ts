@@ -116,6 +116,13 @@ async function notifyUser(db: Db, sub: SubmissionData & { user_id: string; title
 // ---------------------------------------------------------------------------------------------
 type SubV2 = SubmissionData & { user_id: string; parent_id?: string | null; promotion_id?: string | null; org_id?: string | null; version_no?: number | null };
 
+/** Review timeline + metrics: analysis_done / analysis_failed (service role). Never throws. */
+async function analysisEvent(db: Db, sub: { id: string; promotion_id?: string | null; org_id?: string | null }, type: string, payload: Record<string, unknown>) {
+  if (!sub.promotion_id) return;
+  const { error } = await db.from("review_events").insert({ org_id: sub.org_id ?? null, promotion_id: sub.promotion_id, submission_id: sub.id, event_type: type, payload });
+  if (error) log("review_event_failed", { submission_id: sub.id, error: error.message });
+}
+
 /** Builds the AnalysisContext from the promotion, its product, org settings and pack settings. */
 async function loadContext(db: Db, sub: SubV2): Promise<AnalysisContext> {
   const { data: promotion } = sub.promotion_id
@@ -500,6 +507,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
   await Promise.all([
     timed("seal", async () => await db.rpc("seal_compliance_log", { _sid: sub.id })),
     timed("notify", () => notifyUser(db, sub, true, merged.overallStatus)),
+    timed("review_event", () => analysisEvent(db, sub, "analysis_done", { overall_status: merged.overallStatus, coverage: result.coverage.status })),
   ]);
   // Post-done timings (saveRun already happened) are appended so the tail is fully measured.
   await saveRun({ durations_ms: { ...(runRow?.durations_ms as object), ...durations } });
@@ -596,6 +604,7 @@ Deno.serve(async (req: Request) => {
     });
     await db.from("analysis_runs").update({ status: "failed", error: (e as Error)?.message?.slice(0, 1000) ?? "unknown" }).eq("id", run!.id);
     await notifyUser(db, sub, false, null);
+    await analysisEvent(db, sub, "analysis_failed", { error: message });
     await db.from("submissions").update({ status: "failed", error_message: message }).eq("id", sub.id).or(`error_message.is.null,error_message.neq.${CANCELLED}`);
   });
 

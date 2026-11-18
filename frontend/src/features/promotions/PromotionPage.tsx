@@ -39,6 +39,9 @@ import {
 import { CheckPage } from "@/features/reports/CheckPage";
 import { ContextFields, type ContextValue } from "./ContextFields";
 import { pickVersion, resultOf } from "./model";
+import { ReviewActions } from "@/features/review/ReviewActions";
+import { ResponsesPanel } from "@/features/review/ResponsesPanel";
+import { HistoryPanel } from "@/features/review/HistoryPanel";
 
 export function PromotionPage({ id, v }: { id: string; v?: number }) {
   const { t } = useI18n();
@@ -136,6 +139,12 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
           )}
         </div>
 
+        <ReviewActions
+          promotion={p}
+          current={versions.at(-1) ?? null}
+          me={{ userId: user?.id ?? null, orgRole: role ?? null, isOwner }}
+        />
+
         {versions.length > 0 && (
           <nav aria-label={t("promo.versions")} className="flex flex-wrap items-center gap-2">
             {versions.map((x) => {
@@ -175,11 +184,26 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
         <TabsList label={t("promo.versions")}>
           <TabsTrigger value="findings">{t("promo.tabFindings")}</TabsTrigger>
           <TabsTrigger value="info">{t("promo.tabInfo")}</TabsTrigger>
+          <TabsTrigger value="history">{t("review.history.title")}</TabsTrigger>
         </TabsList>
       </Page>
 
       <TabsContent value="findings">
         {version ? <CheckPage key={version.id} id={version.id} /> : null}
+        {version && version.id === versions.at(-1)?.id && (
+          <ResponsesPanel
+            promotion={p}
+            version={version}
+            orgRole={role ?? null}
+            userId={user?.id ?? null}
+            isOwner={isOwner}
+          />
+        )}
+      </TabsContent>
+      <TabsContent value="history">
+        <Page narrow className="pt-6 sm:pt-6">
+          <HistoryPanel promotion={p} versions={versions} />
+        </Page>
       </TabsContent>
       <TabsContent value="info">
         <Page narrow className="pt-6 sm:pt-6">

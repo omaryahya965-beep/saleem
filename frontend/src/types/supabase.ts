@@ -396,6 +396,39 @@ export type Database = {
           },
         ];
       };
+      finding_responses: {
+        Row: {
+          action: string;
+          actor_id: string;
+          actor_role: string;
+          comment: string | null;
+          created_at: string;
+          finding_id: string;
+          id: string;
+          submission_id: string;
+        };
+        Insert: {
+          action: string;
+          actor_id: string;
+          actor_role: string;
+          comment?: string | null;
+          created_at?: string;
+          finding_id: string;
+          id?: string;
+          submission_id: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string;
+          actor_role?: string;
+          comment?: string | null;
+          created_at?: string;
+          finding_id?: string;
+          id?: string;
+          submission_id?: string;
+        };
+        Relationships: [];
+      };
       findings: {
         Row: {
           carried_from_finding_id: string | null;
@@ -540,6 +573,7 @@ export type Database = {
       notifications: {
         Row: {
           created_at: string;
+          emailed_at: string | null;
           id: string;
           kind: string;
           payload: Json;
@@ -549,6 +583,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          emailed_at?: string | null;
           id?: string;
           kind: string;
           payload?: Json;
@@ -558,6 +593,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          emailed_at?: string | null;
           id?: string;
           kind?: string;
           payload?: Json;
@@ -905,6 +941,7 @@ export type Database = {
           current_version_id: string | null;
           deadline_at: string | null;
           distribution: string | null;
+          escalated_to: string | null;
           first_decision_at: string | null;
           id: string;
           is_demo: boolean;
@@ -935,6 +972,7 @@ export type Database = {
           current_version_id?: string | null;
           deadline_at?: string | null;
           distribution?: string | null;
+          escalated_to?: string | null;
           first_decision_at?: string | null;
           id?: string;
           is_demo?: boolean;
@@ -965,6 +1003,7 @@ export type Database = {
           current_version_id?: string | null;
           deadline_at?: string | null;
           distribution?: string | null;
+          escalated_to?: string | null;
           first_decision_at?: string | null;
           id?: string;
           is_demo?: boolean;
@@ -1022,6 +1061,144 @@ export type Database = {
           verification?: string;
           verified_at?: string | null;
           verified_by?: string | null;
+        };
+        Relationships: [];
+      };
+      rejection_reasons: {
+        Row: {
+          archived: boolean;
+          id: string;
+          is_default: boolean;
+          is_other: boolean;
+          kind: string;
+          label_ar: string;
+          label_en: string;
+          org_id: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          archived?: boolean;
+          id?: string;
+          is_default?: boolean;
+          is_other?: boolean;
+          kind: string;
+          label_ar: string;
+          label_en: string;
+          org_id?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          archived?: boolean;
+          id?: string;
+          is_default?: boolean;
+          is_other?: boolean;
+          kind?: string;
+          label_ar?: string;
+          label_en?: string;
+          org_id?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      review_decisions: {
+        Row: {
+          actor_id: string;
+          actor_role: string;
+          asset_sha256: string;
+          comment: string | null;
+          condition_ar: string | null;
+          created_at: string;
+          decision: string;
+          findings_snapshot: Json;
+          from_status: Database["public"]["Enums"]["promotion_review_status"];
+          hash: string;
+          id: string;
+          prev_hash: string | null;
+          promotion_id: string;
+          reason_ids: string[];
+          reason_other: string | null;
+          rulebook_version_id: string | null;
+          submission_id: string;
+          to_status: Database["public"]["Enums"]["promotion_review_status"];
+        };
+        Insert: {
+          actor_id: string;
+          actor_role: string;
+          asset_sha256: string;
+          comment?: string | null;
+          condition_ar?: string | null;
+          created_at?: string;
+          decision: string;
+          findings_snapshot: Json;
+          from_status: Database["public"]["Enums"]["promotion_review_status"];
+          hash: string;
+          id?: string;
+          prev_hash?: string | null;
+          promotion_id: string;
+          reason_ids?: string[];
+          reason_other?: string | null;
+          rulebook_version_id?: string | null;
+          submission_id: string;
+          to_status: Database["public"]["Enums"]["promotion_review_status"];
+        };
+        Update: {
+          actor_id?: string;
+          actor_role?: string;
+          asset_sha256?: string;
+          comment?: string | null;
+          condition_ar?: string | null;
+          created_at?: string;
+          decision?: string;
+          findings_snapshot?: Json;
+          from_status?: Database["public"]["Enums"]["promotion_review_status"];
+          hash?: string;
+          id?: string;
+          prev_hash?: string | null;
+          promotion_id?: string;
+          reason_ids?: string[];
+          reason_other?: string | null;
+          rulebook_version_id?: string | null;
+          submission_id?: string;
+          to_status?: Database["public"]["Enums"]["promotion_review_status"];
+        };
+        Relationships: [];
+      };
+      review_events: {
+        Row: {
+          actor_id: string | null;
+          created_at: string;
+          event_type: string;
+          from_status: string | null;
+          id: number;
+          org_id: string | null;
+          payload: Json;
+          promotion_id: string;
+          submission_id: string | null;
+          to_status: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          created_at?: string;
+          event_type: string;
+          from_status?: string | null;
+          id?: number;
+          org_id?: string | null;
+          payload?: Json;
+          promotion_id: string;
+          submission_id?: string | null;
+          to_status?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          created_at?: string;
+          event_type?: string;
+          from_status?: string | null;
+          id?: number;
+          org_id?: string | null;
+          payload?: Json;
+          promotion_id?: string;
+          submission_id?: string | null;
+          to_status?: string | null;
         };
         Relationships: [];
       };
@@ -1539,6 +1716,39 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      respond_finding: {
+        Args: { _finding: string; _action: string; _comment?: string | null };
+        Returns: string;
+      };
+      verify_decision_chain: { Args: { _pid: string }; Returns: Json };
+      archive_promotion: { Args: { _pid: string; _reason: string }; Returns: undefined };
+      respond_escalation: { Args: { _pid: string; _response: string }; Returns: string };
+      escalate_promotion: {
+        Args: { _pid: string; _legal_user: string; _question: string };
+        Returns: string;
+      };
+      decide_promotion: {
+        Args: {
+          _pid: string;
+          _decision: string;
+          _reason_ids?: string[];
+          _reason_other?: string | null;
+          _condition?: string | null;
+          _comment?: string | null;
+        };
+        Returns: string;
+      };
+      assign_reviewer: { Args: { _pid: string; _user: string }; Returns: undefined };
+      open_review: { Args: { _pid: string }; Returns: undefined };
+      submit_promotion: {
+        Args: { _pid: string; _note?: string | null; _ack_failed?: boolean };
+        Returns: undefined;
+      };
+      can_decide: { Args: { _pid: string }; Returns: Json };
+      can_submit: {
+        Args: { _pid: string; _note?: string | null; _ack_failed?: boolean };
+        Returns: Json;
+      };
       set_rule_review_state: {
         Args: {
           _rule: string;
@@ -1655,7 +1865,7 @@ export type Database = {
       check_type: "audio" | "visual" | "text" | "metadata" | "hybrid";
       evidence_type: "transcript" | "frame" | "caption" | "metadata";
       finding_source: "deterministic" | "llm";
-      org_role: "owner" | "admin" | "reviewer" | "creator";
+      org_role: "owner" | "admin" | "reviewer" | "creator" | "legal";
       overall_status: "ready" | "needs_fixes" | "review";
       pipeline_step: "transcribe" | "deterministic" | "llm" | "merge" | "done";
       platform: "snapchat" | "tiktok" | "instagram" | "x" | "youtube";
@@ -1810,7 +2020,7 @@ export const Constants = {
       check_type: ["audio", "visual", "text", "metadata", "hybrid"],
       evidence_type: ["transcript", "frame", "caption", "metadata"],
       finding_source: ["deterministic", "llm"],
-      org_role: ["owner", "admin", "reviewer", "creator"],
+      org_role: ["owner", "admin", "reviewer", "creator", "legal"],
       overall_status: ["ready", "needs_fixes", "review"],
       pipeline_step: ["transcribe", "deterministic", "llm", "merge", "done"],
       platform: ["snapchat", "tiktok", "instagram", "x", "youtube"],

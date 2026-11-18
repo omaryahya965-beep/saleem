@@ -253,3 +253,25 @@ Format: decision — why — alternatives considered.
   with the v1 input. Fresh databases seal the demo logs at the end of seed.sql.
 - **D103. Eval v2 uses recorded model output** (no live model, D76); its metrics are on invented, self-labelled cases
   and must not be quoted as real-world accuracy.
+
+## v2 programme — Phase 3 (human review)
+- **D104. Finding responses live in a new append-only `finding_responses` table** written only by
+  `respond_finding()`. `finding_feedback` has `unique (finding_id, user_id)` and cannot hold a history; it stays as
+  is for the existing dispute UI. A reviewer response always overrides an uploader response.
+- **D105. Human review is for organisation promotions** (`can_submit` → `personal_promotion`): personal creators have
+  no reviewers. Their flow is unchanged.
+- **D106. The chosen legal member is stored on `promotions.escalated_to`** (written only by the RPCs; not in the client
+  column grants). Legal members can read their organisation's promotions (`can_read_promotion`/`can_read_submission`).
+- **D107. Decision hash input** = the decision row as JSON (promotion, version, decision, actor, role, reasons,
+  condition, comment, statuses, asset sha256, rulebook version, findings snapshot, created_at at millisecond
+  precision) chained with the previous hash; `verify_decision_chain` recomputes it.
+- **D108. `notifications.kind` check widened** to the review kinds (superset; existing rows stay valid). In-app
+  notifications are written by the RPCs; emails go through the new `review-notify` Edge Function, which the client
+  calls after a successful action and which sends each pending notification once (`emailed_at`).
+- **D109. Retention = `media_retention_candidates()`**: personal 24 h as before; org versions only while their
+  promotion was never submitted or decided (after `media_retention.unsubmitted_hours`). Submitted/decided/approved
+  versions keep media.
+- **D110. Finding response buttons are in a panel under the report** (current version only) instead of on each card —
+  the report card component stays shared with the public demo and compliance log.
+- **D111. «طابور المراجعة» and «سجل التدقيق» are in the account menu** (header nav has no room on mobile, D79).
+- **D112. The check-finished email uses the advisory labels** (same reason as D95).

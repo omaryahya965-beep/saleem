@@ -6,6 +6,7 @@ import { Brand, Button, EmptyState, ErrorState, Page, Skeleton } from "@/compone
 import { formatClock, useI18n } from "@/i18n";
 import { ApiError } from "@/lib/api/data";
 import { useReport, useSubmissionStatus } from "@/lib/api/hooks";
+import { ApprovalCertificate } from "@/features/review/ApprovalCertificate";
 import { cn } from "@/lib/utils";
 import { NotFoundReport } from "@/features/reports/CheckPage";
 import {
@@ -266,6 +267,10 @@ export function LogPage({ id }: { id: string }) {
             })}
           </p>
         )}
+
+        <div className="mt-8">
+          <ApprovalCertificate submissionId={id} />
+        </div>
 
         <footer className="mt-10 border-t border-line pt-4 text-xs leading-relaxed text-muted">
           <p>

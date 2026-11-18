@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as StyleguideRouteImport } from './routes/styleguide'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppForgotPasswordRouteImport } from './routes/_app/forgot-password'
 import { Route as AppLoginRouteImport } from './routes/_app/login'
 import { Route as AppNewRouteImport } from './routes/_app/new'
 import { Route as AppProductsRouteImport } from './routes/_app/products'
+import { Route as AppQueueRouteImport } from './routes/_app/queue'
 import { Route as AppResetPasswordRouteImport } from './routes/_app/reset-password'
 import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSampleRouteImport } from './routes/_app/sample'
@@ -53,6 +55,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAuditRoute = AppAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -76,6 +83,11 @@ const AppNewRoute = AppNewRouteImport.update({
 const AppProductsRoute = AppProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQueueRoute = AppQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
   getParentRoute: () => AppRoute,
 } as any)
 const AppResetPasswordRoute = AppResetPasswordRouteImport.update({
@@ -187,11 +199,13 @@ const AppOrgIdCampaignsCidRoute = AppOrgIdCampaignsCidRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/styleguide': typeof StyleguideRoute
+  '/audit': typeof AppAuditRoute
   '/dashboard': typeof AppDashboardRoute
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
   '/products': typeof AppProductsRoute
+  '/queue': typeof AppQueueRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
   '/sample': typeof AppSampleRoute
@@ -216,11 +230,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/styleguide': typeof StyleguideRoute
+  '/audit': typeof AppAuditRoute
   '/dashboard': typeof AppDashboardRoute
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
   '/products': typeof AppProductsRoute
+  '/queue': typeof AppQueueRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
   '/sample': typeof AppSampleRoute
@@ -248,11 +264,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/styleguide': typeof StyleguideRoute
+  '/_app/audit': typeof AppAuditRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/forgot-password': typeof AppForgotPasswordRoute
   '/_app/login': typeof AppLoginRoute
   '/_app/new': typeof AppNewRoute
   '/_app/products': typeof AppProductsRoute
+  '/_app/queue': typeof AppQueueRoute
   '/_app/reset-password': typeof AppResetPasswordRoute
   '/_app/rules': typeof AppRulesRoute
   '/_app/sample': typeof AppSampleRoute
@@ -281,11 +299,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/styleguide'
+    | '/audit'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/new'
     | '/products'
+    | '/queue'
     | '/reset-password'
     | '/rules'
     | '/sample'
@@ -310,11 +330,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/styleguide'
+    | '/audit'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/new'
     | '/products'
+    | '/queue'
     | '/reset-password'
     | '/rules'
     | '/sample'
@@ -341,11 +363,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/styleguide'
+    | '/_app/audit'
     | '/_app/dashboard'
     | '/_app/forgot-password'
     | '/_app/login'
     | '/_app/new'
     | '/_app/products'
+    | '/_app/queue'
     | '/_app/reset-password'
     | '/_app/rules'
     | '/_app/sample'
@@ -398,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/audit': {
+      id: '/_app/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AppAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -431,6 +462,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof AppProductsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/queue': {
+      id: '/_app/queue'
+      path: '/queue'
+      fullPath: '/queue'
+      preLoaderRoute: typeof AppQueueRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reset-password': {
@@ -584,11 +622,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAuditRoute: typeof AppAuditRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppForgotPasswordRoute: typeof AppForgotPasswordRoute
   AppLoginRoute: typeof AppLoginRoute
   AppNewRoute: typeof AppNewRoute
   AppProductsRoute: typeof AppProductsRoute
+  AppQueueRoute: typeof AppQueueRoute
   AppResetPasswordRoute: typeof AppResetPasswordRoute
   AppRulesRoute: typeof AppRulesRoute
   AppSampleRoute: typeof AppSampleRoute
@@ -614,11 +654,13 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAuditRoute: AppAuditRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppForgotPasswordRoute: AppForgotPasswordRoute,
   AppLoginRoute: AppLoginRoute,
   AppNewRoute: AppNewRoute,
   AppProductsRoute: AppProductsRoute,
+  AppQueueRoute: AppQueueRoute,
   AppResetPasswordRoute: AppResetPasswordRoute,
   AppRulesRoute: AppRulesRoute,
   AppSampleRoute: AppSampleRoute,

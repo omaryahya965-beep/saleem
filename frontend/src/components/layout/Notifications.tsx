@@ -38,6 +38,8 @@ function text(n: Notification, t: ReturnType<typeof useI18n>["t"]) {
       reviewer: p.reviewer ?? "",
       decision: t(`share.decision.${p.decision}` as never),
     });
+  if (n.kind.startsWith("review_"))
+    return t(`notif.${n.kind}` as never, { title: p.title || t("dashboard.untitled") });
   return t("notifications.generic");
 }
 

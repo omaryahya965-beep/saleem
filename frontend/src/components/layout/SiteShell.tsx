@@ -14,6 +14,8 @@ import {
   LogIn,
   LogOut,
   Megaphone,
+  Inbox,
+  ScrollText,
   Package,
   Settings,
   ShieldCheck,
@@ -120,6 +122,24 @@ function AccountMenu() {
             >
               <Package aria-hidden="true" className="size-4" />
               {t("nav.products")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/queue"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <Inbox aria-hidden="true" className="size-4" />
+              {t("nav.queue")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/audit"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <ScrollText aria-hidden="true" className="size-4" />
+              {t("nav.audit")}
             </Link>
           </DropdownMenu.Item>
           {isAdmin && (

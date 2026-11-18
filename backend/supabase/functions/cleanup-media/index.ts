@@ -72,14 +72,10 @@ Deno.serve(async (req) => {
     const { data: ok } = await db.rpc("verify_cron_secret", { _secret: secret });
     if (!secret || ok !== true) return json({ error: "forbidden" }, 403);
 
-    const cutoff = new Date(Date.now() - RETENTION_MS).toISOString();
-    const { data: due, error } = await db
-      .from("submissions")
-      .select("id, user_id")
-      .is("media_deleted_at", null)
-      .eq("is_demo", false)
-      .or(`analyzed_at.lt.${cutoff},and(status.eq.failed,created_at.lt.${cutoff})`)
-      .limit(100);
+    // Retention by policy (v2): personal creators 24 h; organisation versions only if their promotion was
+    // never submitted (after media_retention.unsubmitted_hours). Submitted, decided and approved versions keep
+    // their media for the audit record (SAMA Art. 15, CMA Art. 33).
+    const { data: due, error } = await db.rpc("media_retention_candidates", { _limit: 100 });
     if (error) throw error;
 
     let files = 0;

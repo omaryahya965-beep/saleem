@@ -453,6 +453,7 @@ export function OrgPage({ id }: { id: string }) {
             </ul>
           </Card>
           <p className="mt-3 text-sm text-fg-muted">{t("org.rolesHelp")}</p>
+          <p className="mt-1 text-sm text-fg-muted">{t("org.rolesHelpReview")}</p>
         </TabsContent>
 
         {manager && (
