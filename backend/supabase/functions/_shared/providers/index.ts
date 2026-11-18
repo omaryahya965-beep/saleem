@@ -9,23 +9,22 @@ export type Env = (key: string) => string | undefined;
 
 export const DEFAULTS = {
   TRANSCRIPTION_PROVIDER: "gemini",
-  // whisper-1: sentence-level segments. gpt-4o-transcribe-diarize segments by speaker turn,
-  // which gives one segment per monologue — too coarse for per-second issue timestamps.
-  TRANSCRIPTION_MODEL: "whisper-1",
+  TRANSCRIPTION_MODEL: "gemini-3.8-flash",
   LLM_PROVIDER: "gemini",
-  LLM_MODEL: "gpt-6.1-sol",
+  LLM_MODEL: "gemini-3.8-flash",
   LLM_REASONING_EFFORT: "medium",
 } as const;
 
 export function config(env: Env) {
+  // Gemini is the primary and default provider for SALEEM.
   const transcriptionProvider = env("TRANSCRIPTION_PROVIDER") || DEFAULTS.TRANSCRIPTION_PROVIDER;
   const llmProvider = env("LLM_PROVIDER") || DEFAULTS.LLM_PROVIDER;
   const geminiModel = env("GEMINI_MODEL") || GEMINI_DEFAULT_MODEL;
   return {
     transcriptionProvider,
-    transcriptionModel: transcriptionProvider === "gemini" ? geminiModel : env("TRANSCRIPTION_MODEL") || DEFAULTS.TRANSCRIPTION_MODEL,
+    transcriptionModel: transcriptionProvider === "gemini" ? geminiModel : env("TRANSCRIPTION_MODEL") || "whisper-1",
     llmProvider,
-    llmModel: llmProvider === "gemini" ? geminiModel : env("LLM_MODEL") || DEFAULTS.LLM_MODEL,
+    llmModel: llmProvider === "gemini" ? geminiModel : env("LLM_MODEL") || "gpt-6.1-sol",
     reasoningEffort: env("LLM_REASONING_EFFORT") || DEFAULTS.LLM_REASONING_EFFORT,
   };
 }
@@ -45,7 +44,15 @@ class DisabledProvider implements TranscriptionProvider, AnalysisProvider {
 
 function requireKey(env: Env, key: string): string {
   const v = env(key)?.trim();
-  if (!v) throw new ProviderError(`${key} is not set`, false);
+  if (!v || v === "your-gemini-api-key" || v === "your-openai-api-key" || /^(your[_-]|sk-\.\.\.)/i.test(v)) {
+    throw new ProviderError(`${key} is not configured`, false, undefined, {
+      code: "missing_key",
+      status: null,
+      type: "missing_key",
+      requestId: null,
+      detail: `${key} is not configured in the server environment.`,
+    });
+  }
   return v;
 }
 

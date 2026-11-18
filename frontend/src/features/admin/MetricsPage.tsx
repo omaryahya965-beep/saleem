@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/api/auth";
 import { useIsAdmin } from "@/lib/api/hooks";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
+import { AIProviderCard } from "./AIProviderCard";
 
 interface Metrics {
   submissions: number;
@@ -110,6 +111,7 @@ export function MetricsPage() {
         <Skeleton className="h-48 w-full rounded-lg" />
       ) : (
         <>
+          <AIProviderCard />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Tile
               label={t("metrics.checks")}

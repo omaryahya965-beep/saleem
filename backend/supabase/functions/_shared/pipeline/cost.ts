@@ -10,6 +10,11 @@ export const TEXT_PRICES: Record<string, { input: number; cached: number; output
   // Standard paid-tier estimate, all input modalities. Verified 2026-11-17:
   // https://aistudio.google.com/docs/pricing#gemini-3.8-flash
   "gemini-3.8-flash": { input: 0.75, cached: 0.075, output: 3.75 },
+  "gemini-3.5-flash-lite": { input: 0.075, cached: 0.01875, output: 0.30 },
+  "gemini-2.5-flash": { input: 0.15, cached: 0.0375, output: 0.60 },
+  "gemini-2.0-flash": { input: 0.10, cached: 0.025, output: 0.40 },
+  "gemini-1.5-flash": { input: 0.075, cached: 0.01875, output: 0.30 },
+  "gemini-1.5-pro": { input: 1.25, cached: 0.3125, output: 5.00 },
 };
 
 /** Per-minute transcription prices. */

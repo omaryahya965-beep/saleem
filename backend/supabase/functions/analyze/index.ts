@@ -612,7 +612,7 @@ async function tryRule(db: SupabaseClient, userId: string, input: Record<string,
   if (!sub || sub.is_demo || sub.status !== "done") return json({ error: "not found" }, 404);
   const { data: promo } = sub.promotion_id ? await db.from("promotions").select("org_id").eq("id", sub.promotion_id).maybeSingle() : { data: null };
   if (((promo?.org_id as string | null) ?? sub.org_id) !== rule.org_id) return json({ error: "not found" }, 404);
-  if (!env("OPENAI_API_KEY") && config(env).llmProvider === "openai") return json({ status: "unavailable", reason: "no_model_key" }, 200);
+  if (config(env).llmProvider === "gemini" && !env("GEMINI_API_KEY")) return json({ status: "unavailable", reason: "no_model_key" }, 200);
 
   const [ctx, transcript, lastRun] = await Promise.all([
     loadContext(db, sub),

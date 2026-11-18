@@ -2,6 +2,7 @@
 // "Invalid key" is used ONLY for HTTP 401. Pure module: used by Edge Functions and unit tests.
 
 export type ProviderErrorCode =
+  | "missing_key" // Key not set in environment
   | "invalid_key" // 401
   | "no_access" // 403 — key valid but no access to the model/project/region
   | "model_not_found" // 404 — wrong model name or model not available to this key
@@ -45,21 +46,25 @@ export function classifyProviderError(status: number | null, body: string, reque
 }
 
 export const PROVIDER_ERROR_MESSAGES: Record<ProviderErrorCode, { ar: string; en: string }> = {
+  missing_key: {
+    ar: "مزوّد التحليل غير مهيأ بعد. يرجى إعداد مفتاح API.",
+    en: "The analysis provider is not configured yet. Please configure the API key.",
+  },
   invalid_key: {
-    ar: "مفتاح مزوّد التحليل غير صالح. أبلغ فريق سَليم.",
-    en: "The analysis provider key is invalid. Please contact the SALEEM team.",
+    ar: "تعذر التحقق من مفتاح مزوّد التحليل. يرجى التحقق من صحة المفتاح.",
+    en: "Could not verify the analysis provider key. Please check the API key.",
   },
   no_access: {
     ar: "لا يملك حساب مزوّد التحليل صلاحية الوصول إلى النموذج المطلوب. أبلغ فريق سَليم.",
     en: "The analysis provider account has no access to the required model. Please contact the SALEEM team.",
   },
   model_not_found: {
-    ar: "نموذج التحليل المضبوط غير موجود أو غير متاح. أبلغ فريق سَليم.",
-    en: "The configured analysis model doesn't exist or isn't available. Please contact the SALEEM team.",
+    ar: "النموذج المحدد غير متاح أو لا يدعم هذا النوع من التحليل.",
+    en: "The configured model is not available or does not support this analysis.",
   },
   insufficient_quota: {
-    ar: "نفد رصيد مزوّد التحليل. أبلغ فريق سَليم لإضافة رصيد.",
-    en: "The analysis provider is out of credit. Please contact the SALEEM team.",
+    ar: "تم الوصول إلى حد استخدام مزوّد التحليل. يرجى التحقق من الرصيد والحدود.",
+    en: "Analysis provider quota exceeded. Please check credit and usage limits.",
   },
   rate_limited: {
     ar: "مزوّد التحليل مشغول حالياً. أعد المحاولة بعد دقيقة.",
@@ -70,12 +75,12 @@ export const PROVIDER_ERROR_MESSAGES: Record<ProviderErrorCode, { ar: string; en
     en: "The analysis provider rejected the file (unsupported format or settings). Try another file or retry.",
   },
   provider_down: {
-    ar: "تعذّر الوصول إلى مزوّد التحليل مؤقتاً. أعد المحاولة بعد قليل.",
-    en: "The analysis provider is temporarily unreachable. Try again shortly.",
+    ar: "خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. حاول مرة أخرى.",
+    en: "The AI analysis service is temporarily unavailable. Please retry shortly.",
   },
   unknown: {
-    ar: "حدث خطأ غير متوقع لدى مزوّد التحليل. أعد المحاولة.",
-    en: "Unexpected error from the analysis provider. Please retry.",
+    ar: "لم يكتمل الفحص. لم يتم إنشاء نتائج غير مؤكدة. أعد المحاولة.",
+    en: "The analysis did not complete. No ungrounded findings were produced. Please retry.",
   },
 };
 

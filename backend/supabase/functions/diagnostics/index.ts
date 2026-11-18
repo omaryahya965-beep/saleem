@@ -41,38 +41,75 @@ Deno.serve(async (req) => {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   const { data: auth } = token ? await db.auth.getUser(token) : { data: null };
   if (!auth?.user) return json({ error: "invalid session" }, 401);
-  const { data: role } = await db.from("user_roles").select("role").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle();
-  if (!role) return json({ error: "forbidden" }, 403);
+  const [{ data: platformAdmin }, { data: orgAdmin }] = await Promise.all([
+    db.from("user_roles").select("role").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle(),
+    db.from("org_members").select("role").eq("user_id", auth.user.id).in("role", ["owner", "admin"]).limit(1),
+  ]);
+  if (!platformAdmin && (!orgAdmin || !orgAdmin.length)) return json({ error: "forbidden" }, 403);
 
   const cfg = config(env);
   const raw = env(cfg.llmProvider === "gemini" ? "GEMINI_API_KEY" : "OPENAI_API_KEY") ?? "";
   const key = raw.trim();
+  const isPlaceholder = !key || key.startsWith("your-") || /^(your[_-]|sk-\.\.\.)/i.test(key);
+
+  // Aggregate real usage metrics from analysis_runs table
+  const { data: runs } = await db
+    .from("analysis_runs")
+    .select("status, cost_usd, token_usage, llm_provider, llm_model");
+  
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+  let totalCostUsd = 0;
+  let successfulRuns = 0;
+  let failedRuns = 0;
+  const totalRuns = (runs ?? []).length;
+
+  for (const r of runs ?? []) {
+    if (r.status === "done") successfulRuns++;
+    else if (r.status === "failed") failedRuns++;
+    if (r.cost_usd) totalCostUsd += Number(r.cost_usd);
+    const usage = r.token_usage as { input_tokens?: number; output_tokens?: number } | null;
+    if (usage?.input_tokens) totalInputTokens += usage.input_tokens;
+    if (usage?.output_tokens) totalOutputTokens += usage.output_tokens;
+  }
+
   const out: Record<string, unknown> = {
-    key: {
-      present: key.length > 0,
-      has_surrounding_whitespace: raw !== key,
-      has_quotes: /^["']|["']$/.test(key),
+    provider: cfg.llmProvider,
+    model: cfg.llmModel,
+    transcription_provider: cfg.transcriptionProvider,
+    transcription_model: cfg.transcriptionModel,
+    key_configured: Boolean(key && !isPlaceholder),
+    status: isPlaceholder ? "missing_key" : "configured",
+    usage: {
+      total_runs: totalRuns,
+      successful_runs: successfulRuns,
+      failed_runs: failedRuns,
+      total_input_tokens: totalInputTokens,
+      total_output_tokens: totalOutputTokens,
+      total_cost_usd: Number(totalCostUsd.toFixed(4)),
     },
-    config: { llm_provider: cfg.llmProvider, llm_model: cfg.llmModel, transcription_provider: cfg.transcriptionProvider, transcription_model: cfg.transcriptionModel },
   };
-  if (!key) return json(out);
 
+  if (isPlaceholder) {
+    return json(out);
+  }
+
+  // Real connection test: probe model availability
   try {
-    out.llm_model_access = await probe(cfg.llmProvider, cfg.llmModel, key);
-    const asrKey = env(cfg.transcriptionProvider === "gemini" ? "GEMINI_API_KEY" : "OPENAI_API_KEY")?.trim();
-    out.transcription_model_access = asrKey ? await probe(cfg.transcriptionProvider, cfg.transcriptionModel, asrKey) : { error_code: "missing_key" };
+    const probeRes = await probe(cfg.llmProvider, cfg.llmModel, key);
+    out.connection_test = probeRes;
+    if (probeRes.status === 200) {
+      out.status = "verified";
+    } else if (probeRes.error_code) {
+      out.status = probeRes.error_code;
+    } else {
+      out.status = "error";
+    }
   } catch {
-    out.model_access = { error_code: "provider_down" };
+    out.status = "provider_down";
+    out.connection_test = { status: 503, error_code: "provider_down" };
   }
 
-  const t0 = Date.now();
-  try {
-    const r = await transcriptionProvider(env).transcribe(testWav(), "diagnostic.wav");
-    out.transcription = { ok: true, model: r.model, segments: r.segments.length, seconds: r.seconds, ms: Date.now() - t0 };
-  } catch (e) {
-    const info = e instanceof ProviderError ? e.info : undefined;
-    out.transcription = { ok: false, status: info?.status ?? null, error_code: info?.code ?? "unknown", error_type: info?.type ?? null, request_id: info?.requestId ?? null, ms: Date.now() - t0 };
-  }
-  log("diagnostics_run", { by: auth.user.id, provider: cfg.llmProvider, transcription_ok: (out.transcription as { ok: boolean }).ok });
+  log("diagnostics_run", { by: auth.user.id, provider: cfg.llmProvider, status: out.status });
   return json(out);
 });

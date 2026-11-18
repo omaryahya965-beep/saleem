@@ -49,10 +49,10 @@ describe("provider error messages", () => {
       expect(PROVIDER_ERROR_MESSAGES[c].ar).toMatch(/[؀-ۿ]/);
     }
   });
-  it("only invalid_key mentions the key", () => {
+  it("only key-related errors mention the key", () => {
     for (const c of codes) {
       const mentionsKey = /مفتاح/.test(PROVIDER_ERROR_MESSAGES[c].ar) || /\bkey\b/i.test(PROVIDER_ERROR_MESSAGES[c].en);
-      expect(mentionsKey, c).toBe(c === "invalid_key");
+      expect(mentionsKey, c).toBe(c === "invalid_key" || c === "missing_key");
     }
   });
   it("credit and rate-limit messages are distinct", () => {

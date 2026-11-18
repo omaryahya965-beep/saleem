@@ -50,24 +50,23 @@ Deno.serve(async (req: Request) => {
   let answer = plainAnswer(sources, lang);
   let model = false;
   const c = config(env);
-  const key = env("OPENAI_API_KEY");
-  if (sources.length && c.llmProvider === "openai" && key) {
+  const geminiKey = env("GEMINI_API_KEY")?.trim();
+  if (sources.length && c.llmProvider === "gemini" && geminiKey && !geminiKey.startsWith("your-")) {
     try {
-      const res = await fetch("https://api.openai.com/v1/responses", {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(c.llmModel)}:generateContent`;
+      const promptText = `${ASK_INSTRUCTIONS}\n\nQuestion: ${question}\n\nSources:\n${sources.map((s, i) => `[${i + 1}] (${s.kind}) ${s.title} — ${s.detail}`).join("\n")}`;
+      const res = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        headers: { "x-goog-api-key": geminiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: c.llmModel,
-          instructions: ASK_INSTRUCTIONS,
-          input: [{ role: "user", content: [{ type: "input_text", text: `Question: ${question}\n\nSources:\n${sources.map((s, i) => `[${i + 1}] (${s.kind}) ${s.title} — ${s.detail}`).join("\n")}` }] }],
-          max_output_tokens: 800,
-          store: false,
+          contents: [{ role: "user", parts: [{ text: promptText }] }],
+          generationConfig: { maxOutputTokens: 800 },
         }),
         signal: AbortSignal.timeout(45_000),
       });
       if (res.ok) {
-        const d = (await res.json()) as { output_text?: string; output?: { type: string; content?: { type: string; text?: string }[] }[] };
-        const text = d.output_text ?? d.output?.flatMap((o) => o.content ?? []).find((x) => x.type === "output_text")?.text;
+        const d = (await res.json()) as { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] };
+        const text = d.candidates?.[0]?.content?.parts?.filter((p) => !p.thought)?.map((p) => p.text ?? "")?.join("");
         if (text) { answer = text; model = true; }
       }
     } catch (e) {

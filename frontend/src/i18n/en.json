@@ -937,14 +937,15 @@
     "noErrors": "No errors in this range."
   },
   "pipelineErrors": {
-    "provider_invalid_key": "The analysis provider key is invalid. Please contact the SALEEM team.",
+    "provider_missing_key": "The analysis provider is not configured yet. Please configure the API key.",
+    "provider_invalid_key": "Could not verify the analysis provider key. Please check the API key.",
     "provider_no_access": "The analysis provider account has no access to the required model. Please contact the SALEEM team.",
-    "provider_model_not_found": "The configured analysis model doesn't exist or isn't available. Please contact the SALEEM team.",
-    "provider_insufficient_quota": "The analysis provider is out of credit. Please contact the SALEEM team.",
+    "provider_model_not_found": "The configured model is not available or does not support this analysis.",
+    "provider_insufficient_quota": "Analysis provider quota exceeded. Please check credit and usage limits.",
     "provider_rate_limited": "The analysis provider is busy right now. Try again in a minute.",
     "provider_bad_request": "The analysis provider rejected the file (unsupported format or settings). Try another file or retry.",
-    "provider_provider_down": "The analysis provider is temporarily unreachable. Try again shortly.",
-    "provider_unknown": "Unexpected error from the analysis provider. Please retry.",
+    "provider_provider_down": "The AI analysis service is temporarily unavailable. Please retry shortly.",
+    "provider_unknown": "The analysis did not complete. No ungrounded findings were produced. Please retry.",
     "pipeline_unexpected": "An unexpected error happened during the check. Please retry.",
     "stuck_timeout": "The check stopped responding. Please retry."
   },
@@ -2242,5 +2243,33 @@
       "adminEval": "Engine evaluation",
       "adminCalibration": "Calibration"
     }
+  },
+  "aiProvider": {
+    "title": "AI Provider Settings",
+    "subtitle": "Manage the primary analysis provider, monitor token consumption and connection status.",
+    "primaryProvider": "Primary & Active Provider",
+    "gemini": "Google Gemini",
+    "openai": "OpenAI (Disabled)",
+    "configuredModel": "Configured Model",
+    "asrModel": "Speech Transcription Model",
+    "status": "Configuration Status",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "testDisclaimer": "Note: A successful test confirms key validity and model access; it does not guarantee long video processing.",
+    "serverSecretsNote": "API keys are securely managed via encrypted server environment variables (Supabase Secrets).",
+    "statusVerified": "Operational — Verified",
+    "statusConfigured": "Configured",
+    "statusMissingKey": "API Key Not Configured",
+    "statusInvalidKey": "Invalid API Key",
+    "statusModelNotFound": "Model Not Found",
+    "statusProviderDown": "Service Temporarily Unavailable",
+    "statusNotTested": "Not Tested Yet",
+    "usageTitle": "Usage & Cost Statistics",
+    "totalRuns": "Total Analysis Requests",
+    "successfulRuns": "Completed Analyses",
+    "failedRuns": "Failed Analyses",
+    "inputTokens": "Input Tokens",
+    "outputTokens": "Output Tokens",
+    "estimatedCost": "Estimated Cost"
   }
 }

@@ -15,24 +15,25 @@ Return at most 15 rules. Each rule: code "INT-" + 2–24 capital letters/digits/
 Arabic sentence saying what to check in an ad (logo, colours, fonts, tone, wording). Only use what the guideline says.
 These are internal company policy, not regulation: never cite or invent laws, regulators or articles.`;
 
-async function draftWithModel(apiKey: string, model: string, text: string): Promise<DraftRule[]> {
-  const res = await fetch("https://api.openai.com/v1/responses", {
+async function draftWithGemini(apiKey: string, model: string, text: string): Promise<DraftRule[]> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model,
-      instructions: INSTRUCTIONS,
-      input: [{ role: "user", content: [{ type: "input_text", text: text.slice(0, 40_000) }] }],
-      text: { format: { type: "json_schema", name: "saleem_internal_rules", strict: true, schema: DRAFT_SCHEMA } },
-      max_output_tokens: 4000,
-      store: false,
+      contents: [{ role: "user", parts: [{ text: `${INSTRUCTIONS}\n\nBrand guideline text:\n${text.slice(0, 40_000)}` }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: DRAFT_SCHEMA,
+        maxOutputTokens: 4000,
+      },
     }),
     signal: AbortSignal.timeout(90_000),
   });
   if (!res.ok) throw new Error(`code:model_failed:${res.status}`);
-  const data = (await res.json()) as { output_text?: string; output?: { type: string; content?: { type: string; text?: string }[] }[] };
-  const out = data.output_text ?? data.output?.flatMap((o) => o.content ?? []).find((c) => c.type === "output_text")?.text ?? "";
-  return cleanDrafts(JSON.parse(out || "{}"));
+  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] };
+  const candidate = data.candidates?.[0]?.content?.parts?.filter((p) => !p.thought)?.map((p) => p.text ?? "")?.join("") ?? "";
+  return cleanDrafts(JSON.parse(candidate || "{}"));
 }
 
 Deno.serve(async (req: Request) => {
@@ -55,12 +56,12 @@ Deno.serve(async (req: Request) => {
   if (!guideline) return json({ error: "code:not_found" }, 404);
 
   const c = config(env);
-  const key = env("OPENAI_API_KEY");
+  const geminiKey = env("GEMINI_API_KEY")?.trim();
   let drafts: DraftRule[];
   let source: "model_draft" | "heuristic_draft";
   try {
-    if (c.llmProvider === "openai" && key) {
-      drafts = await draftWithModel(key, c.llmModel, guideline.text_ar as string);
+    if (c.llmProvider === "gemini" && geminiKey && !geminiKey.startsWith("your-")) {
+      drafts = await draftWithGemini(geminiKey, c.llmModel, guideline.text_ar as string);
       source = "model_draft";
     } else {
       drafts = heuristicDrafts(guideline.text_ar as string);
