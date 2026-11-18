@@ -31,7 +31,12 @@ for (const [role, exp] of Object.entries(EXPECT)) {
   try {
     await page.goto(`${base}/login`);
     await page.getByTestId("demo-open").click();
-    await page.getByTestId(`demo-enter-${role}`).click();
+    const btn = page.getByTestId(`demo-enter-${role}`);
+    if (!(await btn.isVisible().catch(() => false))) {
+      const toggle = page.getByTestId("demo-advanced-toggle");
+      if (await toggle.isVisible().catch(() => false)) await toggle.click();
+    }
+    await btn.click();
     await page.waitForURL(/\/dashboard/, { timeout: 30000 });
     await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
     const nav = await page.locator("[data-testid=app-sidebar] a").evaluateAll((as) => as.map((a) => a.dataset.testid.replace("nav-", "")));

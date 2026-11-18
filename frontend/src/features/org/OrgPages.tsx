@@ -49,16 +49,11 @@ import {
   setMemberRole,
   type OrgRole,
 } from "@/lib/api/features";
+import { useOrgSettings } from "@/lib/api/promotions";
+import { getEnabledRoles } from "@/lib/roleConfig";
+import { ORG_ROLES } from "@/lib/permissions";
 
-const ROLES: OrgRole[] = [
-  "owner",
-  "admin",
-  "compliance_lead",
-  "reviewer",
-  "legal",
-  "creator",
-  "viewer",
-];
+const ROLES: OrgRole[] = [...ORG_ROLES];
 
 function useOrg(id: string) {
   return useQuery({ queryKey: ["org", id], queryFn: () => fetchOrg(id) });
@@ -227,6 +222,11 @@ export function OrgPage({ id }: { id: string }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const q = useOrg(id);
+  const settings = useOrgSettings(id);
+  const enabledRoles = getEnabledRoles(
+    (settings.data?.features as Record<string, unknown> | null) ?? null,
+    q.data?.members,
+  );
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<OrgRole>("creator");
   const [lastLink, setLastLink] = useState<string | null>(null);
@@ -448,9 +448,13 @@ export function OrgPage({ id }: { id: string }) {
                         }
                         className="h-10 w-40"
                       >
-                        {ROLES.filter((r) => r !== "owner" || myRole === "owner").map((r) => (
+                        {ROLES.filter(
+                          (r) =>
+                            (r !== "owner" || myRole === "owner") &&
+                            (enabledRoles.includes(r) || r === m.role),
+                        ).map((r) => (
                           <option key={r} value={r}>
-                            {t(`org.roles.${r}`)}
+                            {t(`org.roles.${r}`)} {!enabledRoles.includes(r) ? " (معطّل)" : ""}
                           </option>
                         ))}
                       </Select>
@@ -468,7 +472,14 @@ export function OrgPage({ id }: { id: string }) {
               ))}
             </ul>
           </Card>
-          <p className="mt-3 text-sm text-fg-muted">{t("org.rolesHelp")}</p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-fg-muted">
+            <p>{t("org.rolesHelp")}</p>
+            {manager && (
+              <Button asChild variant="secondary" size="sm">
+                <Link to="/roles">{t("rolesConfig.title")}</Link>
+              </Button>
+            )}
+          </div>
           <p className="mt-1 text-sm text-fg-muted">{t("org.rolesHelpReview")}</p>
         </TabsContent>
 
@@ -494,10 +505,14 @@ export function OrgPage({ id }: { id: string }) {
                 </Field>
                 <Field label={t("org.role")}>
                   <Select
-                    value={inviteRole}
+                    value={
+                      enabledRoles.filter((r) => r !== "owner").includes(inviteRole)
+                        ? inviteRole
+                        : (enabledRoles.find((r) => r !== "owner") ?? "creator")
+                    }
                     onChange={(e) => setInviteRole(e.target.value as OrgRole)}
                   >
-                    {ROLES.filter((r) => r !== "owner").map((r) => (
+                    {ROLES.filter((r) => r !== "owner" && enabledRoles.includes(r)).map((r) => (
                       <option key={r} value={r}>
                         {t(`org.roles.${r}`)}
                       </option>

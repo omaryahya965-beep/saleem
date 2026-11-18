@@ -3,10 +3,34 @@ import { AlertTriangle, BookOpen, CheckCircle2, FileText, Info, Layers, ShieldCh
 import { Badge, Button, Card } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import type { ReportBundle } from "@/lib/api/data";
-import { coverageGaps, outcomeCounts, reasonKey, type CoverageView } from "./model";
+import { coverageGaps, reasonKey, type CoverageView } from "./model";
 
-function coverageOf(bundle: ReportBundle): CoverageView | null {
-  return (bundle.run?.coverage as CoverageView | null) ?? null;
+type CheckRow = ReportBundle["ruleChecks"][number];
+
+function outcomeCounts(checks: CheckRow[]) {
+  const m = { passed: 0, failed: 0, unable_to_verify: 0, not_applicable: 0 };
+  for (const c of checks) {
+    const o = c.outcome as keyof typeof m;
+    if (o in m) m[o]++;
+  }
+  return m;
+}
+
+function coverageOf(bundle: ReportBundle) {
+  const run = bundle.run;
+  if (!run?.coverage || typeof run.coverage !== "object") return null;
+  const cov = run.coverage as {
+    status?: string;
+    items?: { modality: string; state: string }[];
+    packs?: {
+      code: string;
+      reason: string;
+      include_drafts: boolean;
+      applicable: number;
+      not_applicable: number;
+    }[];
+  };
+  return cov;
 }
 
 function stateLabel(t: (k: TKey, v?: Record<string, string | number>) => string, state: string) {

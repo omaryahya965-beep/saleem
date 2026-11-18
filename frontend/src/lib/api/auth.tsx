@@ -11,16 +11,24 @@ const sb = () => import("@/lib/supabase").then((m) => m.supabase);
 export const DEMO_LOGINS =
   import.meta.env["VITE_DEMO_LOGIN"] === "true" ||
   import.meta.env["VITE_DEMO_LOGIN"] !== "false";
-export const DEMO_PERSONAS = [
-  "owner",
+export const ESSENTIAL_PERSONAS = [
   "admin",
-  "compliance_lead",
-  "reviewer",
-  "legal",
   "creator",
+  "reviewer",
   "external_uploader",
+] as const;
+
+export const ADVANCED_PERSONAS = [
+  "owner",
+  "compliance_lead",
+  "legal",
   "external_reviewer",
   "viewer",
+] as const;
+
+export const DEMO_PERSONAS = [
+  ...ESSENTIAL_PERSONAS,
+  ...ADVANCED_PERSONAS,
 ] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number];
 

@@ -516,6 +516,12 @@
       "hint": "Enter as any role in one click, in the isolated «SALEEM Demo Bank» workspace.",
       "explore": "Explore demo accounts",
       "dialogHint": "Each role sees only what its real permissions allow. No email or password needed.",
+      "essentialSection": "Essential Roles",
+      "essentialHint": "The four most common roles in everyday advertising compliance and approval workflows.",
+      "advancedSection": "Advanced Roles",
+      "advancedHint": "Specialized governance, lead review, and oversight roles for larger organizations.",
+      "showAdvanced": "Show advanced roles (5 roles)",
+      "hideAdvanced": "Hide advanced roles",
       "enter": "Enter as this role",
       "fictional": "Fictional demo data only: «SALEEM Demo Bank» is not a real customer.",
       "error": {
@@ -526,6 +532,19 @@
       },
       "banner": "Demo session — fictional «SALEEM Demo Bank» data; ends automatically after two hours."
     }
+  },
+  "rolesConfig": {
+    "title": "Roles used in the organization",
+    "subtitle": "Configure which roles are available when inviting members and assigning approval workflows.",
+    "essentialGroup": "Recommended Essential Roles",
+    "advancedGroup": "Advanced Roles (Optional)",
+    "enabledBadge": "Enabled",
+    "disabledBadge": "Disabled",
+    "immutableBadge": "Essential",
+    "activeMembers": "{n} active members",
+    "saveSuccess": "Organization role configuration updated successfully.",
+    "cannotDisableAdmin": "Core administrative role cannot be disabled.",
+    "hasMembersWarning": "Cannot disable this role because {n} members are currently assigned to it. Reassign their roles first."
   },
   "settings": {
     "title": "Settings",

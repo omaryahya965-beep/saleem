@@ -6,8 +6,9 @@ import { ACTIONS, ORG_ROLES, type Action, type OrgRole } from "@/lib/permissions
 import { OrgSelect } from "@/features/libraries/OrgSelect";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { can } from "@/lib/permissions";
+import { OrgRolesConfigCard } from "./OrgRolesConfigCard";
 
-/** /roles — «الأدوار والصلاحيات»: the permission matrix (same source as the server) and the caller's role. */
+/** /roles — «الأدوار والصلاحيات»: the permission matrix (same source as the server), active roles configuration, and caller's role. */
 export function RolesPage() {
   const { t } = useI18n();
   const picker = useOrgPicker();
@@ -38,6 +39,10 @@ export function RolesPage() {
           )}
         </Card>
       )}
+
+      {/* Organization Roles Configuration: choose which roles are enabled for this workspace */}
+      {picker.orgId && <OrgRolesConfigCard orgId={picker.orgId} myRole={role} />}
+
       <Card className="overflow-x-auto">
         <table className="w-full text-sm" data-testid="permission-matrix">
           <thead>

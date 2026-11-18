@@ -27,8 +27,10 @@ import {
 } from "@/lib/api/flows";
 import { PRODUCT_TYPES, useOrgSettings } from "@/lib/api/promotions";
 import { useMembers } from "@/lib/api/review";
+import { getEnabledRoles } from "@/lib/roleConfig";
+import type { OrgRole } from "@/lib/permissions";
 
-const ROLES = ["reviewer", "admin", "owner"] as const;
+const ALL_STEP_ROLES: OrgRole[] = ["reviewer", "compliance_lead", "legal", "admin", "owner"];
 const blankStep = (): StepInput => ({ role: "reviewer", user_ids: [], label_ar: "" });
 
 /** Approval presets (sequential / parallel), the default preset and auto-apply by market + product type (Phase 6.1). */
@@ -39,6 +41,10 @@ export function PresetsCard({ orgId }: { orgId: string }) {
   const presets = usePresets(orgId);
   const auto = useAutoApply(orgId);
   const members = useMembers(orgId);
+  const enabledRoles = getEnabledRoles(
+    (settings.data?.features as Record<string, unknown> | null) ?? null,
+  );
+  const availableStepRoles = ALL_STEP_ROLES.filter((r) => enabledRoles.includes(r));
   const errText = usePreflightText();
   const [editing, setEditing] = useState<{
     id: string | null;
@@ -178,7 +184,7 @@ export function PresetsCard({ orgId }: { orgId: string }) {
                     onChange={(e) => setStep(i, { role: e.target.value || null, user_ids: [] })}
                   >
                     <option value="">—</option>
-                    {ROLES.map((r) => (
+                    {availableStepRoles.map((r) => (
                       <option key={r} value={r}>
                         {t(`org.roles.${r}` as TKey)}
                       </option>
