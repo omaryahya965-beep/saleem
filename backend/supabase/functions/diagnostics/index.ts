@@ -43,12 +43,15 @@ Deno.serve(async (req) => {
   let totalCostUsd = 0;
   let successfulRuns = 0;
   let failedRuns = 0;
+  // Completed runs whose model had no verified price: excluded from the total and reported, never counted as $0.
+  let unpricedRuns = 0;
   const totalRuns = (runs ?? []).length;
 
   for (const r of runs ?? []) {
     if (r.status === "done") successfulRuns++;
     else if (r.status === "failed") failedRuns++;
-    if (r.cost_usd) totalCostUsd += Number(r.cost_usd);
+    if (r.cost_usd !== null && r.cost_usd !== undefined) totalCostUsd += Number(r.cost_usd);
+    else if (r.status === "done") unpricedRuns++;
     const usage = r.token_usage as { input_tokens?: number; output_tokens?: number } | null;
     if (usage?.input_tokens) totalInputTokens += usage.input_tokens;
     if (usage?.output_tokens) totalOutputTokens += usage.output_tokens;
@@ -68,6 +71,7 @@ Deno.serve(async (req) => {
       total_input_tokens: totalInputTokens,
       total_output_tokens: totalOutputTokens,
       total_cost_usd: Number(totalCostUsd.toFixed(4)),
+      unpriced_runs: unpricedRuns,
     },
   };
 

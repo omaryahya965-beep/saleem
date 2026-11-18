@@ -597,6 +597,7 @@
     "failedRuns": "فحوصات متعثرة",
     "inputTokens": "رموز الإدخال (Input Tokens)",
     "outputTokens": "رموز الإخراج (Output Tokens)",
+    "unpricedRuns": "تكلفة {n} تحليل غير معروفة (لا يوجد سعر موثّق للنموذج) وغير مشمولة في المجموع",
     "estimatedCost": "التكلفة التقديرية"
   },
   "settings": {

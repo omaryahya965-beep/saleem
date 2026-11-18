@@ -110,7 +110,8 @@ for (const file of targets) {
   const llmMs = Date.now() - t1;
   const det = runDeterministicChecks(sub, asr.segments, llm.on_screen_text);
   const merged = mergeAndFilterFindings([...det.findings, ...llm.findings], new Set(rules.map((r) => r.code)));
-  const cost = textCost(llm.model, llm.usage) + (asr.usage ? textCost(asr.model, asr.usage) : audioCost(asr.model, asr.seconds));
+  // NaN = no verified price for a model (never reported as $0).
+  const cost = (textCost(llm.model, llm.usage) ?? Number.NaN) + (asr.usage ? (textCost(asr.model, asr.usage) ?? Number.NaN) : audioCost(asr.model, asr.seconds));
   const totalMs = Date.now() - t0;
 
   const result = {

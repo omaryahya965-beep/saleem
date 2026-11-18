@@ -61,8 +61,10 @@ console.log(`\nMerged: ${merged.overallStatus}`, merged.dropped);
 for (const f of merged.mergedFindings)
   console.log(`  ${f.rule_code} ${f.severity.padEnd(9)} t=${f.t_start ?? "—"} conf=${f.confidence.toFixed(2)} [${f.source}] ${f.evidence_text ?? ""}`);
 
-const cost = textCost(llm.model, llm.usage) + audioCost(asr.model, asr.seconds);
-console.log(`\nCost: $${cost.toFixed(4)}  (asr $${audioCost(asr.model, asr.seconds).toFixed(4)}, llm $${textCost(llm.model, llm.usage).toFixed(4)})`);
+// NaN = no verified price for the model (never reported as $0).
+const llmCost = textCost(llm.model, llm.usage) ?? Number.NaN;
+const cost = llmCost + audioCost(asr.model, asr.seconds);
+console.log(`\nCost: $${cost.toFixed(4)}  (asr $${audioCost(asr.model, asr.seconds).toFixed(4)}, llm $${llmCost.toFixed(4)})`);
 fs.writeFileSync(
   path.resolve(here, "results/provider-smoke.json"),
   JSON.stringify({ at: new Date().toISOString(), models: { asr: asr.model, llm: llm.model }, asrMs, llmMs, usage: llm.usage, cost, segments: asr.segments, on_screen_text: llm.on_screen_text, findings: merged.mergedFindings, status: merged.overallStatus }, null, 2),

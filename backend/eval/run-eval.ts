@@ -59,7 +59,7 @@ for (const c of cases.filter((x) => !only || x.id === only)) {
     try {
       const res = await analysisProvider(env).analyze({ submission: sub, segments: c.segments, rules, frames: [], duration: sub.duration_seconds ?? null });
       llmFindings = res.findings;
-      cost = textCost(res.model, res.usage);
+      cost = textCost(res.model, res.usage) ?? Number.NaN; // unknown price, never $0
     } catch (e) {
       error = (e as Error).message.slice(0, 200);
     }

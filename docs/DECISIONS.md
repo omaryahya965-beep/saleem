@@ -467,3 +467,9 @@ Format: decision — why — alternatives considered.
   (3) CheckPage briefly rendered a report bundle fetched before the run finished — a false "no automated
   findings" — now shows the skeleton until the fresh bundle arrives; (4) the project key is on the Gemini
   **Free Tier: 20 requests/day per model**, far below SALEEM's needs — billing is required before release.
+- **D165. Cost honesty and release rehearsal (2026-11-19).** Unknown model price is `null` (UI: "cost unknown",
+  excluded from totals), never $0. Official prices added for `gemini-3.6-flash` (= 3.8). `gemini-3.5-flash` is
+  deprecated and routed by Google to 3.6, so yesterday's live runs were effectively 3.6. Local upgrade rehearsal
+  (`master` + v1 data → 34 v2 migrations) kept existing rows byte-identical and seal verification unchanged; the
+  migrations backfill data and rewrite RLS, so the release needs a backup and a short maintenance window. Demo
+  login UI is opt-in (`VITE_DEMO_LOGIN=true`). Inherited `seroval` (prod) and `vite` (high, dev) advisories fixed.

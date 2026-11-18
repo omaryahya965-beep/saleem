@@ -28,6 +28,8 @@ interface DiagnosticsData {
     total_input_tokens: number;
     total_output_tokens: number;
     total_cost_usd: number;
+    /** Completed runs without a verified model price (not included in total_cost_usd). */
+    unpriced_runs?: number;
   };
   connection_test?: {
     status: number;
@@ -247,6 +249,11 @@ export function AIProviderCard() {
               <span dir="ltr" className="mt-1 block text-base font-bold tabular text-fg">
                 ${data.usage.total_cost_usd.toFixed(4)}
               </span>
+              {(data.usage.unpriced_runs ?? 0) > 0 && (
+                <span className="mt-1 block text-xs text-warning" data-testid="unpriced-runs">
+                  {t("aiProvider.unpricedRuns", { n: data.usage.unpriced_runs ?? 0 })}
+                </span>
+              )}
             </div>
           </div>
         </div>

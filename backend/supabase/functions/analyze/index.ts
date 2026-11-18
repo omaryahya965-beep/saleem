@@ -552,18 +552,20 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
     db.from("analysis_runs").select("token_usage, llm_model, asr_model").eq("id", runId).single(),
   ]);
   const usage = usageRes.data;
-  const cost =
-    textCost(usage?.llm_model ?? cfg.llmModel, (usage?.token_usage as never) ?? { input_tokens: 0, output_tokens: 0 }, env(`PRICE_${(usage?.llm_model ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`)) +
-    (outputs.asr_usage
+  // Unknown price (model not in TEXT_PRICES, no PRICE_* override) is stored as null — never as $0.
+  const llmCost = textCost(usage?.llm_model ?? cfg.llmModel, (usage?.token_usage as never) ?? { input_tokens: 0, output_tokens: 0 }, env(`PRICE_${(usage?.llm_model ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`));
+  const asrCost = (outputs.asr_usage
       ? textCost(usage?.asr_model ?? cfg.transcriptionModel, outputs.asr_usage as never, env(`PRICE_${(usage?.asr_model ?? cfg.transcriptionModel).toUpperCase().replace(/[^A-Z0-9]/g, "_")}`))
       : audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds));
+  const cost = llmCost === null || asrCost === null ? null : llmCost + asrCost;
+  if (cost === null) outputs.cost_unknown = { llm_model: usage?.llm_model ?? null, asr_model: usage?.asr_model ?? null };
 
   const tSave = Date.now();
   const doneRun = saveRun({
     status: "done",
     finished_at: new Date().toISOString(),
     durations_ms: { ...(runRow?.durations_ms as object), ...durations },
-    cost_usd: Number(cost.toFixed(5)),
+    cost_usd: cost === null ? null : Number(cost.toFixed(5)),
     step_outputs: {
       ...outputs,
       deterministic_count: det.findings.length,

@@ -2271,6 +2271,7 @@
     "failedRuns": "Failed Analyses",
     "inputTokens": "Input Tokens",
     "outputTokens": "Output Tokens",
+    "unpricedRuns": "Cost unknown for {n} analyses (no verified model price); not included in the total",
     "estimatedCost": "Estimated Cost"
   }
 }

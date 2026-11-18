@@ -225,7 +225,13 @@ describe("cost and transcription helpers", () => {
   it("prices tokens and audio", () => {
     expect(textCost("gpt-6.1-sol", { input_tokens: 20_000, output_tokens: 2_000 })).toBeCloseTo(0.06, 5);
     expect(textCost("gpt-6.1-sol", { input_tokens: 20_000, output_tokens: 0, cached_input_tokens: 10_000 })).toBeCloseTo(0.021, 5);
-    expect(textCost("unknown", { input_tokens: 1, output_tokens: 1 })).toBe(0);
+    // Unknown price is null (shown as unknown), never $0.
+    expect(textCost("unknown", { input_tokens: 1, output_tokens: 1 })).toBeNull();
+    expect(textCost("gemini-3.5-flash", { input_tokens: 1_000_000, output_tokens: 0 })).toBeNull();
+    // Official paid-tier prices (aistudio.google.com/docs/pricing, 2026-11-19), before and after 2027-01-01.
+    const u = { input_tokens: 1_000_000, output_tokens: 1_000_000, cached_input_tokens: 0 };
+    expect(textCost("gemini-3.6-flash", u, undefined, new Date("2026-12-01"))).toBeCloseTo(4.5, 6);
+    expect(textCost("gemini-3.8-flash", u, undefined, new Date("2027-01-02"))).toBeCloseTo(9.0, 6);
     expect(audioCost("whisper-1", 90)).toBeCloseTo(0.009, 5);
   });
 });
