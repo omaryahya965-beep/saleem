@@ -7,7 +7,8 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 20_000 },
   fullyParallel: true,
-  workers: process.env["CI"] ? 2 : 3,
+  // 2 workers locally too: with 3, `vite preview` on Windows stalls serving JS chunks (30 s+, seen in traces).
+  workers: 2,
   retries: process.env["CI"] ? 1 : 0,
   reporter: process.env["CI"] ? [["github"], ["html", { open: "never" }]] : [["list"]],
   use: { baseURL: "http://localhost:4173", trace: "retain-on-failure" },

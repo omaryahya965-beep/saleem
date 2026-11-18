@@ -84,33 +84,83 @@ export const DEMO_SUBMISSIONS = [
   },
 ];
 
+// Offline fallbacks only (no reachable backend, e.g. CI): same rows and column names as backend/supabase/seed.sql.
 const DEMO_FINDINGS_1 = [
-  { id: "f1", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-01", severity: "violation", start_seconds: 0, end_seconds: 5, source: "transcript", quote: "لا توجد كلمة «إعلان»", reason_ar: "المحتوى ترويجي دون إفصاح", reason_en: "Promotional without disclosure", suggestion_ar: "ابدأ المقطع بعبارة إعلان مدفوع", suggestion_en: "Open with paid ad", confidence: 0.95 },
-  { id: "f2", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "COM-01", severity: "violation", start_seconds: 12, end_seconds: 24, source: "transcript", quote: "هذا الشاي ينحف", reason_ar: "ادعاء صحي مطلق", reason_en: "Absolute health claim", suggestion_ar: "احذف وعود الوزن", suggestion_en: "Remove weight claims", confidence: 0.90 },
-  { id: "f3", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "AI-01", severity: "violation", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "ذكاء اصطناعي دون إفصاح", reason_en: "AI without disclosure", suggestion_ar: "أضف معدل بالذكاء الاصطناعي", suggestion_en: "Add AI edited", confidence: 0.95 },
-  { id: "f4", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-03", severity: "warning", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "لا يوجد عقد مكتوب", reason_en: "No written contract", suggestion_ar: "وثق الاتفاق كتابيا", suggestion_en: "Put agreement in writing", confidence: 0.90 },
-  { id: "f5", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-04", severity: "warning", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "لم يدخل رقم رخصة موثوق", reason_en: "No license number", suggestion_ar: "أدخل رخصة موثوق", suggestion_en: "Enter license", confidence: 0.80 },
-  { id: "f6", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-02", severity: "warning", start_seconds: 24, end_seconds: 33, source: "transcript", quote: "منتج تنحيف", reason_ar: "منتج صحي يحتاج ترخيص", reason_en: "Health product requires license", suggestion_ar: "تأكد من الترخيص", suggestion_en: "Confirm license", confidence: 0.60 },
+  {"id":"f1","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"MAW-01","severity":"violation","t_start":0,"t_end":5,"evidence_type":"transcript","evidence_text":"لا توجد كلمة «إعلان» في الوصف أو في أول ٥ ثوانٍ رغم وجود كود خصم","explanation_ar":"المحتوى ترويجي (كود خصم ورابط في البايو) دون إفصاح عن الإعلان قبل بدايته.","explanation_en":"Promotional content (discount code, link in bio) without an ad disclosure before it starts.","fix_ar":"ابدأ المقطع بعبارة «إعلان مدفوع» وأضف #إعلان في بداية الوصف.","fix_en":"Open with 'paid ad' and add #إعلان at the start of the caption.","confidence":0.95,"source":"deterministic"},
+  {"id":"f2","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"COM-01","severity":"violation","t_start":12,"t_end":24,"evidence_type":"transcript","evidence_text":"«هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية»","explanation_ar":"ادعاء صحي مطلق ومضمون النتيجة في إعلان منتج صحي.","explanation_en":"Absolute, guaranteed health claim in a health-product ad.","fix_ar":"احذف وعود الوزن والضمان، واكتفِ بوصف تجربتك الشخصية دون نتائج.","fix_en":"Remove weight and guarantee claims; describe your personal experience only.","confidence":0.9,"source":"llm"},
+  {"id":"f3","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"AI-01","severity":"violation","t_start":null,"t_end":null,"evidence_type":"metadata","evidence_text":"تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف","explanation_ar":"استُخدم الذكاء الاصطناعي في المحتوى دون إفصاح.","explanation_en":"AI was used without disclosure.","fix_ar":"أضف «المحتوى معدّل بالذكاء الاصطناعي» في الوصف.","fix_en":"Add 'AI-edited content' to the caption.","confidence":0.95,"source":"deterministic"},
+  {"id":"f4","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"MAW-03","severity":"warning","t_start":null,"t_end":null,"evidence_type":"metadata","evidence_text":"لا يوجد عقد مكتوب مع الماركة","explanation_ar":"إعلان مدفوع دون عقد مكتوب مع الجهة المعلنة.","explanation_en":"Paid ad without a written contract with the brand.","fix_ar":"وثّق الاتفاق مع الماركة كتابياً قبل النشر.","fix_en":"Put the brand agreement in writing before publishing.","confidence":0.9,"source":"deterministic"},
+  {"id":"f5","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"MAW-04","severity":"warning","t_start":null,"t_end":null,"evidence_type":"metadata","evidence_text":"لم يُدخل رقم رخصة موثوق","explanation_ar":"لم يتم إدخال رقم رخصة موثوق لحساب ينشر إعلاناً.","explanation_en":"No Mawthooq license number provided for a promotional post.","fix_ar":"تحقق من ربط حسابك برخصة موثوق وأدخل رقمها.","fix_en":"Verify your account is linked to a Mawthooq license and enter it.","confidence":0.8,"source":"deterministic"},
+  {"id":"f6","run_id":"a0000000-0000-0000-0000-000000000001","submission_id":"d0000000-0000-0000-0000-000000000001","rule_code":"MAW-02","severity":"warning","t_start":24,"t_end":33,"evidence_type":"transcript","evidence_text":"منتج تنحيف (فئة صحية) يُعلن عنه","explanation_ar":"منتج صحي يحتاج تأكيد الترخيص من الجهة المختصة.","explanation_en":"A health product requires confirmation of licensing.","fix_ar":"تأكد من ترخيص المنتج من هيئة الغذاء والدواء.","fix_en":"Confirm the product is licensed by the SFDA.","confidence":0.6,"source":"llm"},
 ];
 
 const DEMO_TRANSCRIPT_1 = {
-  submission_id: "d0000000-0000-0000-0000-000000000001",
-  language: "ar",
-  text: "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد... هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية. استخدموا كود SALEEM20 والرابط في البايو، اطلبوا الحين.",
-  segments: [
-    { start: 0, end: 12, text: "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد..." },
-    { start: 12, end: 24, text: "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية." },
-    { start: 24, end: 33, text: "استخدموا كود SALEEM20 والرابط في البايو، اطلبوا الحين." },
-    { start: 33, end: 42, text: "تنبيهات استرشادية وليست موافقة رسمية" },
-  ],
+  "submission_id": "d0000000-0000-0000-0000-000000000001",
+  "language": "ar",
+  "provider": "demo",
+  "full_text": "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد... هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية. استخدموا كود SALEEM20 والرابط في البايو، اطلبوا الحين.",
+  "segments": [
+    {
+      "start": 0,
+      "end": 4.5,
+      "text": "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد"
+    },
+    {
+      "start": 4.5,
+      "end": 12,
+      "text": "صراحة طعمه حلو وريحته تجنن"
+    },
+    {
+      "start": 12,
+      "end": 19,
+      "text": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع"
+    },
+    {
+      "start": 19,
+      "end": 24,
+      "text": "ومضمون بدون أعراض جانبية"
+    },
+    {
+      "start": 24,
+      "end": 33,
+      "text": "استخدموا كود SALEEM20 والرابط في البايو"
+    },
+    {
+      "start": 33,
+      "end": 42,
+      "text": "اطلبوا الحين قبل لا يخلص"
+    }
+  ]
 };
+
+let reachable;
+/** One probe per test run: is the Supabase REST endpoint from backend/.env (or the env) answering? */
+function backendReachable() {
+  reachable ??= (async () => {
+    const env = readEnv();
+    const url = env.VITE_SUPABASE_URL;
+    if (!url?.startsWith("http")) return false;
+    try {
+      const res = await fetch(`${url}/rest/v1/`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "" }, signal: AbortSignal.timeout(3000) });
+      return res.status < 500;
+    } catch {
+      return false;
+    }
+  })();
+  return reachable;
+}
 
 /** Adds REST mocks for public demo checks, reports, rulebook, and verification. */
 export async function installMockPublic(context) {
+  // Public data comes from the real backend whenever one answers (local Supabase + seed.sql). The handlers
+  // below are offline fallbacks only (CI without a backend). Decided once per run, never per request, so a
+  // page never mixes real rows with fallback rows and the fallbacks can't mask real API or schema behaviour.
+  const offline = !(await backendReachable());
+  const realFirst = (pattern, handler) => (offline ? context.route(pattern, handler) : Promise.resolve());
   const json = (route, body, headers = {}) => route.fulfill({ status: 200, contentType: "application/json", headers, body: JSON.stringify(body) });
   const allSubs = [...MOCK_SUBMISSIONS, ...DEMO_SUBMISSIONS];
 
-  await context.route("**/rest/v1/submissions**", async (route) => {
+  await realFirst("**/rest/v1/submissions**", async (route) => {
     const u = new URL(route.request().url());
     const idEq = u.searchParams.get("id")?.replace(/^eq\./, "");
     if (idEq) {
@@ -129,7 +179,7 @@ export async function installMockPublic(context) {
     return route.fallback ? route.fallback() : route.continue();
   });
 
-  await context.route("**/rest/v1/analysis_runs**", async (route) => {
+  await realFirst("**/rest/v1/analysis_runs**", async (route) => {
     const u = new URL(route.request().url());
     const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
     if (sid === "d0000000-0000-0000-0000-000000000001") {
@@ -141,7 +191,7 @@ export async function installMockPublic(context) {
     return json(route, []);
   });
 
-  await context.route("**/rest/v1/findings**", async (route) => {
+  await realFirst("**/rest/v1/findings**", async (route) => {
     const u = new URL(route.request().url());
     const rid = u.searchParams.get("run_id")?.replace(/^eq\./, "");
     if (rid === "a0000000-0000-0000-0000-000000000001") {
@@ -150,16 +200,16 @@ export async function installMockPublic(context) {
     return json(route, []);
   });
 
-  await context.route("**/rest/v1/transcripts**", async (route) => {
+  await realFirst("**/rest/v1/transcripts**", async (route) => {
     const u = new URL(route.request().url());
     const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
     if (sid === "d0000000-0000-0000-0000-000000000001") {
       return json(route, DEMO_TRANSCRIPT_1);
     }
-    return json(route, { submission_id: sid, language: "ar", text: "", segments: [] });
+    return json(route, null);
   });
 
-  await context.route("**/rest/v1/compliance_logs**", async (route) => {
+  await realFirst("**/rest/v1/compliance_logs**", async (route) => {
     const u = new URL(route.request().url());
     const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
     if (sid === "d0000000-0000-0000-0000-000000000002") {
@@ -172,27 +222,18 @@ export async function installMockPublic(context) {
     return route.fulfill({ status: 406, contentType: "application/json", body: JSON.stringify({ code: "PGRST116", message: "0 rows" }) });
   });
 
-  await context.route("**/rest/v1/rpc/verify_compliance_log**", async (route) => {
+  await realFirst("**/rest/v1/rpc/verify_compliance_log**", async (route) => {
     const post = route.request().postDataJSON?.() ?? {};
-    if (post._sid === "d0000000-0000-0000-0000-000000000002") {
-      return json(route, {
-        valid: true,
-        content_hash: "e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9",
-        platform: "snapchat",
-        product_category: "health",
-        duration_seconds: 38,
-        created_at: iso(60),
-        analyzed_at: iso(60),
-        sealed_at: iso(60),
-        findings_count: 0,
-        overall_status: "ready",
-      });
-    }
-    return json(route, null);
+    if (post._sid !== "d0000000-0000-0000-0000-000000000002") return json(route, { found: false });
+    return json(route, {
+      found: true, unchanged: true, kind: "video", status: "done", is_demo: true, platform: "snapchat",
+      violations: 0, warnings: 0, overall_status: "ready", analyzed_at: iso(60), sealed_at: iso(60),
+      content_hash: "e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9", report_hash: "offline-fixture",
+    });
   });
 
-  await context.route("**/rest/v1/evidence_frames**", (route) => json(route, []));
-  await context.route("**/rest/v1/sources**", (route) => json(route, []));
+  await realFirst("**/rest/v1/evidence_frames**", (route) => json(route, []));
+  await realFirst("**/rest/v1/sources**", (route) => json(route, []));
 }
 
 /** Adds the fake session + REST mocks to a Playwright BrowserContext. */
