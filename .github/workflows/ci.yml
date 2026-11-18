@@ -50,7 +50,8 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - run: deno check backend/supabase/functions/*/index.ts
+      # Every function, with the import map that resolves the Gemini SDK (PR #1).
+      - run: deno check --config backend/supabase/functions/analyze/deno.json backend/supabase/functions/*/index.ts
 
   e2e:
     name: Playwright E2E (AR + EN, desktop + mobile)

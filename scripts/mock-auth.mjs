@@ -8,10 +8,20 @@ const now = Date.now();
 const iso = (minsAgo) => new Date(now - minsAgo * 60_000).toISOString();
 
 function readEnv() {
-  const txt = fs.readFileSync(new URL("../backend/.env", import.meta.url), "utf8");
-  return Object.fromEntries(
-    txt.split(/\r?\n/).filter((l) => l.includes("=") && !l.startsWith("#")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
-  );
+  // Match Vite's production env precedence so local-backend tests seed the right auth key.
+  const values = {};
+  for (const name of [".env", ".env.local", ".env.production", ".env.production.local"]) {
+    const file = new URL(`../backend/${name}`, import.meta.url);
+    if (!fs.existsSync(file)) continue;
+    const txt = fs.readFileSync(file, "utf8");
+    Object.assign(values, Object.fromEntries(
+      txt.split(/\r?\n/).filter((l) => l.includes("=") && !l.trim().startsWith("#"))
+        .map((l) => [l.slice(0, l.indexOf("=")).trim(), l.slice(l.indexOf("=") + 1).trim().replace(/^["']|["']$/g, "")]),
+    ));
+  }
+  for (const name of ["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"])
+    if (process.env[name] !== undefined) values[name] = process.env[name];
+  return values;
 }
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");

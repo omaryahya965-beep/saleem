@@ -45,3 +45,19 @@ export async function loadRules(env: (k: string) => string | undefined): Promise
   if (!res.ok) throw new Error(`rules fetch failed: ${res.status}`);
   return (await res.json()) as RuleRecord[];
 }
+
+/** Offline test input, not model results: read the existing illustrative seed rulebook verbatim. */
+export function loadSeedRuleRecords(): RuleRecord[] {
+  const sql = fs.readFileSync(path.resolve(here, "../supabase/seed.sql"), "utf8");
+  const section = sql.split("-- 2. Rules")[1]?.split("on conflict")[0];
+  if (!section) throw new Error("Seed rulebook not found");
+  const header = section.match(/insert into public\.rules \(([^)]+)\)/)?.[1];
+  if (!header) throw new Error("Seed rulebook columns not found");
+  const columns = header.split(",").map((s) => s.trim());
+  const rows = section.split("\n").filter((line) => line.startsWith("('"));
+  return rows.map((line) => {
+    const values = [...line.matchAll(/'((?:[^']|'')*)'/g)].map((m) => m[1]!.replace(/''/g, "'"));
+    if (values.length !== columns.length) throw new Error("Seed rulebook format changed; update the smoke input loader");
+    return { ...Object.fromEntries(columns.map((c, i) => [c, values[i]])), applies_to_categories: [] } as unknown as RuleRecord;
+  });
+}

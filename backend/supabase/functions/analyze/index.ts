@@ -353,6 +353,8 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
         await storeTranscript(segments, `${result.provider}:${result.model}`);
         outputs.asr_dropped = filtered.dropped.slice(0, 20);
         outputs.asr_model = result.model;
+        // Token-billed ASR (Gemini, PR #1): cost from recorded token usage, not per-minute seconds.
+        outputs.asr_usage = result.usage ?? null;
         await saveRun({ asr_model: result.model, asr_provider: result.provider });
         log("transcription_filtered", { submission_id: sub.id, kept: filtered.kept.length, dropped: filtered.dropped.length, audio_mode: audioMode });
       } catch (e) {
@@ -550,7 +552,9 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
   const usage = usageRes.data;
   const cost =
     textCost(usage?.llm_model ?? cfg.llmModel, (usage?.token_usage as never) ?? { input_tokens: 0, output_tokens: 0 }, env(`PRICE_${(usage?.llm_model ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`)) +
-    audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds);
+    (outputs.asr_usage
+      ? textCost(usage?.asr_model ?? cfg.transcriptionModel, outputs.asr_usage as never, env(`PRICE_${(usage?.asr_model ?? cfg.transcriptionModel).toUpperCase().replace(/[^A-Z0-9]/g, "_")}`))
+      : audioCost(usage?.asr_model ?? cfg.transcriptionModel, asrSeconds));
 
   const tSave = Date.now();
   const doneRun = saveRun({
