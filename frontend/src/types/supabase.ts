@@ -624,6 +624,51 @@ export type Database = {
           },
         ];
       };
+      org_settings: {
+        Row: {
+          brand_aliases: string[];
+          features: Json;
+          hide_comments_from_external: boolean;
+          media_retention: Json;
+          org_id: string;
+          require_reviewer_responses: boolean;
+          require_uploader_responses: boolean;
+          review_sla_business_days: number;
+          sector: string | null;
+          updated_at: string;
+          updated_by: string | null;
+          weekend_days: number[];
+        };
+        Insert: {
+          brand_aliases?: string[];
+          features?: Json;
+          hide_comments_from_external?: boolean;
+          media_retention?: Json;
+          org_id: string;
+          require_reviewer_responses?: boolean;
+          require_uploader_responses?: boolean;
+          review_sla_business_days?: number;
+          sector?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          weekend_days?: number[];
+        };
+        Update: {
+          brand_aliases?: string[];
+          features?: Json;
+          hide_comments_from_external?: boolean;
+          media_retention?: Json;
+          org_id?: string;
+          require_reviewer_responses?: boolean;
+          require_uploader_responses?: boolean;
+          review_sla_business_days?: number;
+          sector?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          weekend_days?: number[];
+        };
+        Relationships: [];
+      };
       organizations: {
         Row: {
           created_at: string;
@@ -678,6 +723,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      products: {
+        Row: {
+          aliases: string[];
+          approved_at: string | null;
+          approved_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          id: string;
+          key_facts: Json;
+          name_ar: string;
+          name_en: string | null;
+          org_id: string;
+          product_type: string;
+          regulator: string;
+          sector: string;
+          status: string;
+          supersedes_id: string | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          aliases?: string[];
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          id?: string;
+          key_facts?: Json;
+          name_ar: string;
+          name_en?: string | null;
+          org_id: string;
+          product_type: string;
+          regulator: string;
+          sector: string;
+          status?: string;
+          supersedes_id?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          aliases?: string[];
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          id?: string;
+          key_facts?: Json;
+          name_ar?: string;
+          name_en?: string | null;
+          org_id?: string;
+          product_type?: string;
+          regulator?: string;
+          sector?: string;
+          status?: string;
+          supersedes_id?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -718,6 +826,99 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      promotions: {
+        Row: {
+          approved_at: string | null;
+          approved_version_id: string | null;
+          assigned_reviewer_id: string | null;
+          audience: string[];
+          campaign_id: string | null;
+          caption: string | null;
+          channels: string[];
+          communication_type: Database["public"]["Enums"]["communication_type"];
+          created_at: string;
+          creator_license_no: string | null;
+          current_version_id: string | null;
+          deadline_at: string | null;
+          distribution: string | null;
+          first_decision_at: string | null;
+          id: string;
+          is_demo: boolean;
+          is_paid: boolean | null;
+          market: string;
+          org_id: string | null;
+          owner_id: string | null;
+          product_id: string | null;
+          review_status: Database["public"]["Enums"]["promotion_review_status"];
+          reviewer_notes: string | null;
+          sector: string | null;
+          submitted_at: string | null;
+          tags: string[];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_version_id?: string | null;
+          assigned_reviewer_id?: string | null;
+          audience?: string[];
+          campaign_id?: string | null;
+          caption?: string | null;
+          channels?: string[];
+          communication_type?: Database["public"]["Enums"]["communication_type"];
+          created_at?: string;
+          creator_license_no?: string | null;
+          current_version_id?: string | null;
+          deadline_at?: string | null;
+          distribution?: string | null;
+          first_decision_at?: string | null;
+          id?: string;
+          is_demo?: boolean;
+          is_paid?: boolean | null;
+          market?: string;
+          org_id?: string | null;
+          owner_id?: string | null;
+          product_id?: string | null;
+          review_status?: Database["public"]["Enums"]["promotion_review_status"];
+          reviewer_notes?: string | null;
+          sector?: string | null;
+          submitted_at?: string | null;
+          tags?: string[];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          approved_at?: string | null;
+          approved_version_id?: string | null;
+          assigned_reviewer_id?: string | null;
+          audience?: string[];
+          campaign_id?: string | null;
+          caption?: string | null;
+          channels?: string[];
+          communication_type?: Database["public"]["Enums"]["communication_type"];
+          created_at?: string;
+          creator_license_no?: string | null;
+          current_version_id?: string | null;
+          deadline_at?: string | null;
+          distribution?: string | null;
+          first_decision_at?: string | null;
+          id?: string;
+          is_demo?: boolean;
+          is_paid?: boolean | null;
+          market?: string;
+          org_id?: string | null;
+          owner_id?: string | null;
+          product_id?: string | null;
+          review_status?: Database["public"]["Enums"]["promotion_review_status"];
+          reviewer_notes?: string | null;
+          sector?: string | null;
+          submitted_at?: string | null;
+          tags?: string[];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       rulebook_versions: {
         Row: {
@@ -945,12 +1146,14 @@ export type Database = {
           platform: Database["public"]["Enums"]["platform"];
           product_category: Database["public"]["Enums"]["product_category"];
           progress: number;
+          promotion_id: string | null;
           sha256: string | null;
           status: Database["public"]["Enums"]["submission_status"];
           text_content: string | null;
           thumbnail_path: string | null;
           title: string | null;
           user_id: string | null;
+          version_no: number | null;
         };
         Insert: {
           ai_used?: boolean;
@@ -981,12 +1184,14 @@ export type Database = {
           platform: Database["public"]["Enums"]["platform"];
           product_category: Database["public"]["Enums"]["product_category"];
           progress?: number;
+          promotion_id?: string | null;
           sha256?: string | null;
           status?: Database["public"]["Enums"]["submission_status"];
           text_content?: string | null;
           thumbnail_path?: string | null;
           title?: string | null;
           user_id?: string | null;
+          version_no?: number | null;
         };
         Update: {
           ai_used?: boolean;
@@ -1017,12 +1222,14 @@ export type Database = {
           platform?: Database["public"]["Enums"]["platform"];
           product_category?: Database["public"]["Enums"]["product_category"];
           progress?: number;
+          promotion_id?: string | null;
           sha256?: string | null;
           status?: Database["public"]["Enums"]["submission_status"];
           text_content?: string | null;
           thumbnail_path?: string | null;
           title?: string | null;
           user_id?: string | null;
+          version_no?: number | null;
         };
         Relationships: [
           {
@@ -1110,6 +1317,9 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      can_read_promotion: { Args: { _pid: string }; Returns: boolean };
+      archive_product: { Args: { _id: string }; Returns: undefined };
+      approve_product: { Args: { _id: string }; Returns: undefined };
       accept_org_invite: { Args: { _token: string }; Returns: string };
       admin_dedupe_stats: { Args: { _days?: number }; Returns: Json };
       admin_finding_feedback: { Args: { _limit?: number }; Returns: Json };
@@ -1192,6 +1402,19 @@ export type Database = {
       verify_cron_secret: { Args: { _secret: string }; Returns: boolean };
     };
     Enums: {
+      communication_type:
+        "financial_promotion" | "general_commercial" | "creator_sponsored" | "internal";
+      promotion_review_status:
+        | "draft"
+        | "pending_review"
+        | "in_review"
+        | "changes_requested"
+        | "conditionally_approved"
+        | "approved"
+        | "rejected"
+        | "escalated"
+        | "withdrawn"
+        | "archived";
       app_role: "admin" | "user";
       check_type: "audio" | "visual" | "text" | "metadata" | "hybrid";
       evidence_type: "transcript" | "frame" | "caption" | "metadata";
@@ -1329,6 +1552,24 @@ export const Constants = {
   },
   public: {
     Enums: {
+      communication_type: [
+        "financial_promotion",
+        "general_commercial",
+        "creator_sponsored",
+        "internal",
+      ],
+      promotion_review_status: [
+        "draft",
+        "pending_review",
+        "in_review",
+        "changes_requested",
+        "conditionally_approved",
+        "approved",
+        "rejected",
+        "escalated",
+        "withdrawn",
+        "archived",
+      ],
       app_role: ["admin", "user"],
       check_type: ["audio", "visual", "text", "metadata", "hybrid"],
       evidence_type: ["transcript", "frame", "caption", "metadata"],

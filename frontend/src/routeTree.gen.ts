@@ -16,6 +16,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppForgotPasswordRouteImport } from './routes/_app/forgot-password'
 import { Route as AppLoginRouteImport } from './routes/_app/login'
 import { Route as AppNewRouteImport } from './routes/_app/new'
+import { Route as AppProductsRouteImport } from './routes/_app/products'
 import { Route as AppResetPasswordRouteImport } from './routes/_app/reset-password'
 import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSampleRouteImport } from './routes/_app/sample'
@@ -30,6 +31,8 @@ import { Route as AppChecksIdRouteImport } from './routes/_app/checks.$id'
 import { Route as AppInviteTokenRouteImport } from './routes/_app/invite/$token'
 import { Route as AppLegalDocRouteImport } from './routes/_app/legal/$doc'
 import { Route as AppOrgIndexRouteImport } from './routes/_app/org/index'
+import { Route as AppPromotionsIndexRouteImport } from './routes/_app/promotions/index'
+import { Route as AppPromotionsIdRouteImport } from './routes/_app/promotions/$id'
 import { Route as AppShareTokenRouteImport } from './routes/_app/share/$token'
 import { Route as AppVerifyIdRouteImport } from './routes/_app/verify/$id'
 import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
@@ -68,6 +71,11 @@ const AppLoginRoute = AppLoginRouteImport.update({
 const AppNewRoute = AppNewRouteImport.update({
   id: '/new',
   path: '/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProductsRoute = AppProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
   getParentRoute: () => AppRoute,
 } as any)
 const AppResetPasswordRoute = AppResetPasswordRouteImport.update({
@@ -140,6 +148,16 @@ const AppOrgIndexRoute = AppOrgIndexRouteImport.update({
   path: '/org/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPromotionsIndexRoute = AppPromotionsIndexRouteImport.update({
+  id: '/promotions/',
+  path: '/promotions/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPromotionsIdRoute = AppPromotionsIdRouteImport.update({
+  id: '/promotions/$id',
+  path: '/promotions/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppShareTokenRoute = AppShareTokenRouteImport.update({
   id: '/share/$token',
   path: '/share/$token',
@@ -173,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
+  '/products': typeof AppProductsRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
   '/sample': typeof AppSampleRoute
@@ -185,10 +204,12 @@ export interface FileRoutesByFullPath {
   '/checks/$id': typeof AppChecksIdRoute
   '/invite/$token': typeof AppInviteTokenRoute
   '/legal/$doc': typeof AppLegalDocRoute
+  '/promotions/$id': typeof AppPromotionsIdRoute
   '/share/$token': typeof AppShareTokenRoute
   '/verify/$id': typeof AppVerifyIdRoute
   '/archive/': typeof AppArchiveIndexRoute
   '/org/': typeof AppOrgIndexRoute
+  '/promotions/': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
   '/org/$id/': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -199,6 +220,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
+  '/products': typeof AppProductsRoute
   '/reset-password': typeof AppResetPasswordRoute
   '/rules': typeof AppRulesRoute
   '/sample': typeof AppSampleRoute
@@ -212,10 +234,12 @@ export interface FileRoutesByTo {
   '/checks/$id': typeof AppChecksIdRoute
   '/invite/$token': typeof AppInviteTokenRoute
   '/legal/$doc': typeof AppLegalDocRoute
+  '/promotions/$id': typeof AppPromotionsIdRoute
   '/share/$token': typeof AppShareTokenRoute
   '/verify/$id': typeof AppVerifyIdRoute
   '/archive': typeof AppArchiveIndexRoute
   '/org': typeof AppOrgIndexRoute
+  '/promotions': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
   '/org/$id': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -228,6 +252,7 @@ export interface FileRoutesById {
   '/_app/forgot-password': typeof AppForgotPasswordRoute
   '/_app/login': typeof AppLoginRoute
   '/_app/new': typeof AppNewRoute
+  '/_app/products': typeof AppProductsRoute
   '/_app/reset-password': typeof AppResetPasswordRoute
   '/_app/rules': typeof AppRulesRoute
   '/_app/sample': typeof AppSampleRoute
@@ -241,10 +266,12 @@ export interface FileRoutesById {
   '/_app/checks/$id': typeof AppChecksIdRoute
   '/_app/invite/$token': typeof AppInviteTokenRoute
   '/_app/legal/$doc': typeof AppLegalDocRoute
+  '/_app/promotions/$id': typeof AppPromotionsIdRoute
   '/_app/share/$token': typeof AppShareTokenRoute
   '/_app/verify/$id': typeof AppVerifyIdRoute
   '/_app/archive/': typeof AppArchiveIndexRoute
   '/_app/org/': typeof AppOrgIndexRoute
+  '/_app/promotions/': typeof AppPromotionsIndexRoute
   '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
   '/_app/org/$id/': typeof AppOrgIdIndexRoute
   '/_app/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -258,6 +285,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/new'
+    | '/products'
     | '/reset-password'
     | '/rules'
     | '/sample'
@@ -270,10 +298,12 @@ export interface FileRouteTypes {
     | '/checks/$id'
     | '/invite/$token'
     | '/legal/$doc'
+    | '/promotions/$id'
     | '/share/$token'
     | '/verify/$id'
     | '/archive/'
     | '/org/'
+    | '/promotions/'
     | '/checks/$id/log'
     | '/org/$id/'
     | '/org/$id/campaigns/$cid'
@@ -284,6 +314,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/new'
+    | '/products'
     | '/reset-password'
     | '/rules'
     | '/sample'
@@ -297,10 +328,12 @@ export interface FileRouteTypes {
     | '/checks/$id'
     | '/invite/$token'
     | '/legal/$doc'
+    | '/promotions/$id'
     | '/share/$token'
     | '/verify/$id'
     | '/archive'
     | '/org'
+    | '/promotions'
     | '/checks/$id/log'
     | '/org/$id'
     | '/org/$id/campaigns/$cid'
@@ -312,6 +345,7 @@ export interface FileRouteTypes {
     | '/_app/forgot-password'
     | '/_app/login'
     | '/_app/new'
+    | '/_app/products'
     | '/_app/reset-password'
     | '/_app/rules'
     | '/_app/sample'
@@ -325,10 +359,12 @@ export interface FileRouteTypes {
     | '/_app/checks/$id'
     | '/_app/invite/$token'
     | '/_app/legal/$doc'
+    | '/_app/promotions/$id'
     | '/_app/share/$token'
     | '/_app/verify/$id'
     | '/_app/archive/'
     | '/_app/org/'
+    | '/_app/promotions/'
     | '/_app/checks_/$id/log'
     | '/_app/org/$id/'
     | '/_app/org/$id/campaigns/$cid'
@@ -388,6 +424,13 @@ declare module '@tanstack/react-router' {
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof AppNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/products': {
+      id: '/_app/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AppProductsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reset-password': {
@@ -488,6 +531,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/promotions/': {
+      id: '/_app/promotions/'
+      path: '/promotions'
+      fullPath: '/promotions/'
+      preLoaderRoute: typeof AppPromotionsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/promotions/$id': {
+      id: '/_app/promotions/$id'
+      path: '/promotions/$id'
+      fullPath: '/promotions/$id'
+      preLoaderRoute: typeof AppPromotionsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/share/$token': {
       id: '/_app/share/$token'
       path: '/share/$token'
@@ -531,6 +588,7 @@ interface AppRouteChildren {
   AppForgotPasswordRoute: typeof AppForgotPasswordRoute
   AppLoginRoute: typeof AppLoginRoute
   AppNewRoute: typeof AppNewRoute
+  AppProductsRoute: typeof AppProductsRoute
   AppResetPasswordRoute: typeof AppResetPasswordRoute
   AppRulesRoute: typeof AppRulesRoute
   AppSampleRoute: typeof AppSampleRoute
@@ -544,10 +602,12 @@ interface AppRouteChildren {
   AppChecksIdRoute: typeof AppChecksIdRoute
   AppInviteTokenRoute: typeof AppInviteTokenRoute
   AppLegalDocRoute: typeof AppLegalDocRoute
+  AppPromotionsIdRoute: typeof AppPromotionsIdRoute
   AppShareTokenRoute: typeof AppShareTokenRoute
   AppVerifyIdRoute: typeof AppVerifyIdRoute
   AppArchiveIndexRoute: typeof AppArchiveIndexRoute
   AppOrgIndexRoute: typeof AppOrgIndexRoute
+  AppPromotionsIndexRoute: typeof AppPromotionsIndexRoute
   AppChecksIdLogRoute: typeof AppChecksIdLogRoute
   AppOrgIdIndexRoute: typeof AppOrgIdIndexRoute
   AppOrgIdCampaignsCidRoute: typeof AppOrgIdCampaignsCidRoute
@@ -558,6 +618,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppForgotPasswordRoute: AppForgotPasswordRoute,
   AppLoginRoute: AppLoginRoute,
   AppNewRoute: AppNewRoute,
+  AppProductsRoute: AppProductsRoute,
   AppResetPasswordRoute: AppResetPasswordRoute,
   AppRulesRoute: AppRulesRoute,
   AppSampleRoute: AppSampleRoute,
@@ -571,10 +632,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppChecksIdRoute: AppChecksIdRoute,
   AppInviteTokenRoute: AppInviteTokenRoute,
   AppLegalDocRoute: AppLegalDocRoute,
+  AppPromotionsIdRoute: AppPromotionsIdRoute,
   AppShareTokenRoute: AppShareTokenRoute,
   AppVerifyIdRoute: AppVerifyIdRoute,
   AppArchiveIndexRoute: AppArchiveIndexRoute,
   AppOrgIndexRoute: AppOrgIndexRoute,
+  AppPromotionsIndexRoute: AppPromotionsIndexRoute,
   AppChecksIdLogRoute: AppChecksIdLogRoute,
   AppOrgIdIndexRoute: AppOrgIdIndexRoute,
   AppOrgIdCampaignsCidRoute: AppOrgIdCampaignsCidRoute,

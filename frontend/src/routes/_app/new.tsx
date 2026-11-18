@@ -6,10 +6,11 @@ export const Route = createFileRoute("/_app/new")({
   beforeLoad: requireAuth,
   validateSearch: (
     s: Record<string, unknown>,
-  ): { parent?: string; org?: string; campaign?: string } => ({
+  ): { parent?: string; org?: string; campaign?: string; promotion?: string } => ({
     parent: typeof s["parent"] === "string" ? s["parent"] : undefined,
     org: typeof s["org"] === "string" ? s["org"] : undefined,
     campaign: typeof s["campaign"] === "string" ? s["campaign"] : undefined,
+    promotion: typeof s["promotion"] === "string" ? s["promotion"] : undefined,
   }),
   component: NewCheckPage,
 });

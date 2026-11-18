@@ -36,7 +36,8 @@ export const MOCK_SUBMISSIONS = [
 /** Adds the fake session + REST mocks to a Playwright BrowserContext. */
 export async function installMockAuth(context, { empty = false } = {}) {
   const env = readEnv();
-  const url = env.VITE_SUPABASE_URL;
+  // An explicit VITE_SUPABASE_URL (e.g. an offline build) wins over backend/.env.
+  const url = process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL;
   const ref = new URL(url).hostname.split(".")[0];
   const session = {
     access_token: fakeJwt(), token_type: "bearer", expires_in: 3600, expires_at: Math.floor(now / 1000) + 3600, refresh_token: "mock-refresh",
@@ -49,8 +50,16 @@ export async function installMockAuth(context, { empty = false } = {}) {
   await context.route(`${url}/rest/v1/**`, async (route) => {
     const headers = { ...route.request().headers() };
     delete headers["authorization"];
-    const res = await route.fetch({ headers });
-    return route.fulfill({ response: res });
+    try {
+      const res = await route.fetch({ headers });
+      return route.fulfill({ response: res });
+    } catch {
+      // Offline run (no reachable backend): answer like RLS would for rows the caller can't see.
+      const single = headers["accept"]?.includes("vnd.pgrst.object");
+      return single
+        ? route.fulfill({ status: 406, contentType: "application/json", body: JSON.stringify({ code: "PGRST116", message: "0 rows" }) })
+        : route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+    }
   });
   const json = (route, body, headers = {}) => route.fulfill({ status: 200, contentType: "application/json", headers, body: JSON.stringify(body) });
   await context.route(`${url}/auth/v1/**`, (route) => json(route, session.user));

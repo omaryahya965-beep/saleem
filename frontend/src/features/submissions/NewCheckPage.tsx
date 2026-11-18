@@ -33,6 +33,17 @@ import {
 } from "@/lib/api/data";
 import { useProfile } from "@/lib/api/hooks";
 import { errorCode, fetchMyOrgs, fetchOrg } from "@/lib/api/features";
+import {
+  FINANCIAL_SECTORS,
+  createPromotion,
+  dbErrorCode,
+  deleteEmptyPromotion,
+  useOrgSettings,
+  usePromotion,
+  useProducts,
+} from "@/lib/api/promotions";
+import { ContextFields } from "@/features/promotions/ContextFields";
+import { emptyContext, type ContextValue } from "@/features/promotions/model";
 import type { InspectedMedia } from "@/lib/media";
 
 type Stage = "hashing" | "extracting" | "uploading" | "saving";
@@ -55,7 +66,9 @@ export function NewCheckPage() {
     parent: parentId,
     org: orgParam,
     campaign: campaignParam,
+    promotion: promotionParam,
   } = useSearch({ from: "/_app/new" });
+  const target = usePromotion(promotionParam ?? "", Boolean(promotionParam));
   const orgs = useQuery({ queryKey: ["orgs"], queryFn: fetchMyOrgs });
   const [orgId, setOrgId] = useState<string>(orgParam ?? "");
   const [campaignId, setCampaignId] = useState<string>(campaignParam ?? "");
@@ -84,6 +97,37 @@ export function NewCheckPage() {
   const [license, setLicense] = useState("");
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [context, setContext] = useState<ContextValue | null>(null);
+  const settings = useOrgSettings(orgId || null);
+  const products = useProducts(orgId || null);
+  const myRole = orgs.data
+    ?.find((o) => o.id === orgId)
+    ?.org_members.find((m) => m.user_id === user?.id)?.role;
+  // Org uploaders describe the ad (product, channels…); personal creators and reviewers keep
+  // today's form (the database attaches their upload to a new promotion).
+  const withContext =
+    Boolean(orgId) && !promotionParam && myRole !== undefined && myRole !== "reviewer";
+  const sector = settings.data?.sector ?? "";
+  useEffect(() => {
+    if (!withContext) {
+      setContext(null);
+      return;
+    }
+    setContext(
+      (c) =>
+        c ??
+        emptyContext(FINANCIAL_SECTORS.has(sector) ? "financial_promotion" : "general_commercial"),
+    );
+  }, [withContext, sector]);
+  // Adding a version: the promotion decides workspace, campaign, title and caption.
+  useEffect(() => {
+    const p = target.data?.promotion;
+    if (!p) return;
+    setOrgId(p.org_id ?? "");
+    setCampaignId(p.campaign_id ?? "");
+    setTitle((v) => v || p.title);
+    setCaption((v) => v || p.caption || "");
+  }, [target.data]);
   const [stage, setStage] = useState<Stage | null>(null);
   const [stageDetail, setStageDetail] = useState<{ done: number; total: number } | null>(null);
 
@@ -117,8 +161,27 @@ export function NewCheckPage() {
         media?.kind === "video" && media.previewUrl
           ? await fetch(media.previewUrl).then((r) => r.blob())
           : null;
-      return createSubmission(
+      const versionTitle =
+        title.trim() ||
+        caption.trim().slice(0, 60) ||
+        text.trim().slice(0, 60) ||
+        media?.file.name ||
+        "";
+      let promotionId = promotionParam ?? null;
+      let created = false;
+      if (!promotionId && withContext && context) {
+        promotionId = await createPromotion(user.id, {
+          ...context,
+          title: versionTitle,
+          orgId: orgId || null,
+          campaignId: campaignId || null,
+          caption,
+        });
+        created = true;
+      }
+      const upload = createSubmission(
         {
+          promotionId,
           userId: user.id,
           kind,
           file: kind === "text" ? null : (media?.file ?? null),
@@ -126,12 +189,7 @@ export function NewCheckPage() {
           durationSeconds: media?.duration ? Math.round(media.duration * 10) / 10 : null,
           textContent: text,
           caption,
-          title:
-            title.trim() ||
-            caption.trim().slice(0, 60) ||
-            text.trim().slice(0, 60) ||
-            media?.file.name ||
-            "",
+          title: versionTitle,
           platform,
           productCategory: category,
           isPaidAd,
@@ -147,6 +205,13 @@ export function NewCheckPage() {
           setStageDetail(detail ?? null);
         },
       );
+      // A promotion created here but left without a version is removed again.
+      if (!created || !promotionId) return upload;
+      const pid = promotionId;
+      return upload.catch(async (e: unknown) => {
+        await deleteEmptyPromotion(pid);
+        throw e;
+      });
     },
     onSuccess: (id) => {
       void qc.invalidateQueries({ queryKey: ["submissions"] });
@@ -157,11 +222,13 @@ export function NewCheckPage() {
       toast.error(
         err instanceof ApiError && err.code === "upload"
           ? t("newCheck.errUpload")
-          : ["quota_exceeded", "clip_too_long", "forbidden", "campaign_mismatch"].includes(
-                errorCode(err),
-              )
-            ? t(`quota.${errorCode(err)}` as TKey)
-            : t("newCheck.errGeneric"),
+          : dbErrorCode(err)
+            ? t(`promo.errors.${dbErrorCode(err)}` as TKey)
+            : ["quota_exceeded", "clip_too_long", "forbidden", "campaign_mismatch"].includes(
+                  errorCode(err),
+                )
+              ? t(`quota.${errorCode(err)}` as TKey)
+              : t("newCheck.errGeneric"),
       );
     },
   });
@@ -198,6 +265,18 @@ export function NewCheckPage() {
         description={t("newCheck.subtitle")}
         className="mb-6 sm:mb-8"
       />
+      {target.data && (
+        <p
+          data-testid="new-version-banner"
+          className="mb-6 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg"
+        >
+          <RefreshCw aria-hidden="true" className="mt-1 size-4 shrink-0 text-green" />
+          {t("promo.newVersionBanner", {
+            title: target.data.promotion.title,
+            n: (target.data.versions.at(-1)?.version_no ?? 0) + 1,
+          })}
+        </p>
+      )}
       {parent.data && (
         <p className="mb-6 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg">
           <RefreshCw aria-hidden="true" className="mt-1 size-4 shrink-0 text-green" />
@@ -336,7 +415,7 @@ export function NewCheckPage() {
                 hint={t("newCheck.aiUsedHint")}
               />
             </div>
-            {(orgs.data?.length ?? 0) > 0 && (
+            {!promotionParam && (orgs.data?.length ?? 0) > 0 && (
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label={t("newCheck.workspace")}>
                   <Select
@@ -383,6 +462,16 @@ export function NewCheckPage() {
               />
             </Field>
           </Card>
+
+          {context && (
+            <Card className="flex flex-col gap-5" data-testid="promotion-context">
+              <div>
+                <CardTitle>{t("promo.contextTitle")}</CardTitle>
+                <p className="mt-1 text-sm text-fg-muted">{t("promo.contextHint")}</p>
+              </div>
+              <ContextFields value={context} onChange={setContext} products={products.data ?? []} />
+            </Card>
+          )}
 
           <div className="flex flex-col gap-4">
             <Checkbox

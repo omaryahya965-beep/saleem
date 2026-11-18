@@ -265,6 +265,8 @@ export interface NewSubmissionInput {
   batchId?: string | null;
   orgId?: string | null;
   campaignId?: string | null;
+  /** Adds the upload as the next version of this promotion (v2). Omitted: a new promotion is created. */
+  promotionId?: string | null;
 }
 
 export async function sha256Hex(data: Blob | string): Promise<string> {
@@ -362,6 +364,7 @@ ${input.textContent}`,
     ai_used: input.aiUsed,
     mawthooq_license_no: input.licenseNo.trim() || null,
     parent_id: input.parentId,
+    promotion_id: input.promotionId ?? null,
     batch_id: input.batchId ?? null,
     org_id: input.orgId ?? null,
     campaign_id: input.campaignId ?? null,

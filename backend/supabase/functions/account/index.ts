@@ -53,6 +53,13 @@ Deno.serve(async (req) => {
     }
 
     const { count } = await db.from("submissions").delete({ count: "exact" }).eq("user_id", user.id);
+    // The user's promotions that are now empty go too. A promotion that still holds versions uploaded
+    // by other org members stays (owner becomes null) so the org keeps its record.
+    const { data: promos } = await db.from("promotions").select("id").eq("owner_id", user.id);
+    for (const p of promos ?? []) {
+      const { count: left } = await db.from("submissions").select("id", { count: "exact", head: true }).eq("promotion_id", p.id);
+      if (!left) await db.from("promotions").delete().eq("id", p.id);
+    }
     const { error } = await db.auth.admin.deleteUser(user.id);
     if (error) throw error;
     log("account_deleted", { user_id: user.id, submissions: count ?? 0, files: removed });

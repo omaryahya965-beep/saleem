@@ -13,6 +13,8 @@ import {
   LayoutList,
   LogIn,
   LogOut,
+  Megaphone,
+  Package,
   Settings,
   ShieldCheck,
   UserRound,
@@ -111,6 +113,15 @@ function AccountMenu() {
               {t("nav.workspace")}
             </Link>
           </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/products"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <Package aria-hidden="true" className="size-4" />
+              {t("nav.products")}
+            </Link>
+          </DropdownMenu.Item>
           {isAdmin && (
             <>
               <DropdownMenu.Separator className="my-1 h-px bg-border" />
@@ -192,7 +203,14 @@ export function SiteShell({ children }: { children: ReactNode }) {
           to: "/dashboard",
           label: t("nav.dashboard"),
           icon: <LayoutList />,
-          active: pathname.startsWith("/dashboard") || pathname.startsWith("/checks"),
+          active: pathname.startsWith("/dashboard"),
+        },
+        {
+          key: "promotions",
+          to: "/promotions",
+          label: t("nav.promotions"),
+          icon: <Megaphone />,
+          active: pathname.startsWith("/promotions") || pathname.startsWith("/checks"),
         },
         {
           key: "new",

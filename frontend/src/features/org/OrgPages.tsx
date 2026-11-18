@@ -27,6 +27,7 @@ import { statusOf } from "@/features/submissions/DashboardPage";
 import { useUsage } from "@/features/settings/UsageMeter";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
+import { OrgSettingsCard } from "./OrgSettingsCard";
 import {
   acceptInvite,
   createCampaign,
@@ -539,6 +540,7 @@ export function OrgPage({ id }: { id: string }) {
           </TabsContent>
         )}
       </Tabs>
+      <OrgSettingsCard orgId={id} canEdit={manager} />
     </Page>
   );
 }

@@ -194,3 +194,27 @@ Format: decision — why — alternatives considered.
   "not run". New e2e specs mock the network.
 - **D77. Database tests are pgTAP files in `backend/supabase/tests/`** (`npx supabase test db --workdir backend`), with
   assertions in `DO` blocks so they also run in the PGlite smoke harness.
+
+## v2 programme — Phase 1 (promotions)
+- **D78. Reuse `is_org_member` / `org_role_of` instead of a new `member_role` helper** — equivalent and already used
+  by every org policy; one source of truth for membership.
+- **D79. Navigation stays a header + mobile bottom bar** (no sidebar exists): «الإعلانات» added to the main nav,
+  «المنتجات» to the account menu. A sidebar redesign is out of scope.
+- **D80. FK delete behaviour** — `promotions.org_id … on delete set null` (like `submissions.org_id`; account deletion
+  deletes sole-owner orgs first), `submissions.promotion_id … on delete restrict`; the `account` function deletes the
+  user's now-empty promotions.
+- **D81. `types/supabase.ts` is extended by hand to match the SQL** (no local DB to run `gen types`); regenerate when
+  a local stack is available.
+- **D82. `promotions.owner_id` is nullable** — demo/seed submissions have no user.
+- **D83. A version always takes its promotion's org/campaign** (attach trigger), so org reviewers can read every
+  version; with that, submission read access needs no change (`can_read_promotion` mirrors `can_read_submission`).
+- **D84. Personal creators and org reviewers keep the existing upload path** (no explicit promotion; the trigger
+  creates one, `creator_sponsored`). Org owners/admins/creators get the context step and an explicit promotion.
+  Legacy re-checks of rows the caller cannot extend (e.g. the public demo) start a new promotion instead of failing.
+- **D85. `/checks/$id` redirects only when the version resolves** (`/promotions/$id?v=N`); otherwise the existing
+  page renders its own not-found/error state. Compliance-log, verify and share routes stay keyed by submission id.
+- **D86. Backfill is a function** (`v2_backfill_promotions()`, service role, idempotent) called once by the
+  migration, so it is testable on fixtures; chains never cross owners or demo↔real.
+- **D87. Offline e2e** — `scripts/mock-auth.mjs` prefers `process.env.VITE_SUPABASE_URL` and, when the backend is
+  unreachable, answers un-mocked REST calls like RLS would (`[]` / PGRST116). Behaviour with a reachable backend is
+  unchanged.
