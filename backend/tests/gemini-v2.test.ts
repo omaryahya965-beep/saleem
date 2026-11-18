@@ -1,7 +1,7 @@
 // PR #1 integration: Gemini on the v2 engine (analyzeV2). No network: the SDK call is injected via `generate`.
 import { describe, expect, it } from "vitest";
 import { GenerateContentResponse, type GenerateContentParameters } from "@google/genai";
-import { GeminiAnalysis, GEMINI_DEFAULT_MODEL } from "../supabase/functions/_shared/providers/gemini.ts";
+import { GeminiAnalysis, GeminiTranscription, GEMINI_DEFAULT_MODEL, packFrames } from "../supabase/functions/_shared/providers/gemini.ts";
 import { ANALYSIS_SCHEMA_V2 } from "../supabase/functions/_shared/pipeline/schema-v2.ts";
 import { buildContext } from "../supabase/functions/_shared/pipeline/context.ts";
 import { ProviderError } from "../supabase/functions/_shared/providers/types.ts";
@@ -55,5 +55,51 @@ describe("Gemini analyzeV2 (v2 engine)", () => {
   it("an authentication failure fails the run with a provider error (no fake success)", async () => {
     const err = Object.assign(new Error("API key not valid. Please pass a valid API key."), { status: 400 });
     await expect(provider(async () => { throw err; }).analyzeV2(req())).rejects.toBeInstanceOf(ProviderError);
+  });
+});
+
+// D161 token savings: duplicate frames merged, frames packed by byte budget, honest coverage counts.
+const jpeg = (fill: number) => `data:image/jpeg;base64,${Buffer.alloc(3000, fill).toString("base64")}`;
+describe("Gemini frame packing (token savings)", () => {
+  it("sends identical consecutive frames once, labelled with how long they stay on screen", async () => {
+    const calls: GenerateContentParameters[] = [];
+    const video = { ...sub, kind: "video" as const };
+    const out = await provider(async (p) => { calls.push(p); return response(valid); }).analyzeV2({
+      ...req(), submission: video, duration: 4,
+      frames: [{ t: 0, url: jpeg(1) }, { t: 1, url: jpeg(1) }, { t: 2, url: jpeg(1) }, { t: 3, url: jpeg(2) }],
+    });
+    expect(calls).toHaveLength(1);
+    const parts = (calls[0]!.contents as { parts: { text?: string; inlineData?: unknown }[] }[])[0]!.parts;
+    expect(parts.filter((x) => x.inlineData)).toHaveLength(2);
+    expect(parts.map((x) => x.text).join("|")).toContain("Frame at 0 seconds (unchanged on screen through 2 seconds)");
+    expect(out.framesAnalyzed).toBe(4);
+  });
+  it("packs frames into as few requests as the inline budget allows", () => {
+    const f = (t: number, size: number) => ({ t, until: t, part: {}, size });
+    expect(packFrames([f(0, 4), f(1, 4), f(2, 4)], 10).map((b) => b.map((x) => x.t))).toEqual([[0, 1], [2]]);
+    expect(packFrames(Array.from({ length: 60 }, (_, i) => f(i, 100_000))).length).toBe(1);
+  });
+  it("reports only frames from batches that validated", async () => {
+    const video = { ...sub, kind: "video" as const };
+    const out = await provider(async () => response({ bad: true })).analyzeV2({ ...req(), submission: video, duration: 2, frames: [{ t: 0, url: jpeg(1) }, { t: 1, url: jpeg(2) }] });
+    expect(out.batchesFailed).toBe(1);
+    expect(out.framesAnalyzed).toBe(0);
+  });
+});
+
+describe("Gemini transcription media fallback", () => {
+  it("accepts the original video container when the browser could not extract a WAV", async () => {
+    const calls: GenerateContentParameters[] = [];
+    const asr = new GeminiTranscription("test-key-not-a-real-credential", GEMINI_DEFAULT_MODEL, {
+      generate: async (p: GenerateContentParameters) => { calls.push(p); return response({ segments: [{ start: 0, end: 2, text: "تمويل بدون رسوم" }], requires_human_review: false }); },
+      sleep: async () => {},
+    } as never);
+    const out = await asr.transcribe(new Blob([new Uint8Array(100)], { type: "video/mp4" }), "ad.mp4");
+    expect(out.segments).toEqual([{ start: 0, end: 2, text: "تمويل بدون رسوم" }]);
+    expect(JSON.stringify(calls[0]!.contents)).toContain("video/mp4");
+  });
+  it("rejects media it cannot read as bad_request (the pipeline then marks transcription failed, not no-audio)", async () => {
+    const asr = new GeminiTranscription("test-key-not-a-real-credential", GEMINI_DEFAULT_MODEL, { generate: async () => response({}) } as never);
+    await expect(asr.transcribe(new Blob([new Uint8Array(10)], { type: "application/octet-stream" }), "x.bin")).rejects.toMatchObject({ info: { code: "bad_request" } });
   });
 });

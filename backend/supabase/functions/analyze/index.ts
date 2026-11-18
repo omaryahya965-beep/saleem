@@ -3,7 +3,7 @@
 // POST { submission_id }  with the user's JWT.
 // Verifies the caller owns the submission, replies 202 immediately and runs the steps in the
 // background. Each step persists its output, so a retry resumes after the last finished step:
-//   1. transcribe   — audio track → Arabic segments with timestamps (OpenAI)
+//   1. transcribe   — audio track → Arabic segments with timestamps (Gemini)
 //   2. llm          — frames (1/s, ≤60, ≤768 px) + transcript + caption → findings + on-screen text
 //   3. deterministic— regex checks over transcript, on-screen text, caption and metadata
 //   4. merge        — validate rule codes, downgrade weak evidence, dedupe within 3 s, status
@@ -19,7 +19,7 @@ import type { LibClaim, LibDisclaimer } from "../_shared/claims/match.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { isRateLimited, rateLimitFromEnv, RATE_WINDOW_MS } from "../_shared/pipeline/rate-limit.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
-import { analysisProvider, config, transcriptionProvider } from "../_shared/providers/index.ts";
+import { analysisProvider, config, hasGeminiKey, transcriptionProvider } from "../_shared/providers/index.ts";
 import { ProviderError } from "../_shared/providers/types.ts";
 import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
@@ -358,11 +358,13 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
         await saveRun({ asr_model: result.model, asr_provider: result.provider });
         log("transcription_filtered", { submission_id: sub.id, kept: filtered.kept.length, dropped: filtered.dropped.length, audio_mode: audioMode });
       } catch (e) {
-        // The original file had no audio the provider could read (no client WAV) → treat as no audio.
-        if (e instanceof ProviderError && e.info?.code === "bad_request" && !sub.audio_path) {
-          audioMode = "no_audio";
-          await storeTranscript([], "skipped:no_audio");
-          log("transcription_no_audio_stream", { submission_id: sub.id, provider_type: e.info.type });
+        // Gemini rejected the media itself (unsupported container or over the inline size limit). That is
+        // NOT "no audio": the speech was never heard. Mark transcription failed (coverage partial → human
+        // review) and keep analysing the visuals; no transcript row is stored, so a re-run retries.
+        // Auth, quota, model and availability errors still fail the run with their classified message.
+        if (e instanceof ProviderError && e.info?.code === "bad_request") {
+          outputs.transcription_failed = true;
+          log("transcription_media_rejected", { submission_id: sub.id, has_client_audio: Boolean(sub.audio_path), reason: e.message.slice(0, 120) });
         } else throw e;
       }
     }
@@ -406,7 +408,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
     modelOutput = analysis.output;
     batchesFailed = analysis.batchesFailed;
     modelStatus = !analysis.output ? "invalid" : "ok";
-    framesAnalyzed = analysis.batchesFailed ? Math.max(0, frameInputs.length - analysis.batchesFailed * 32) : frameInputs.length;
+    framesAnalyzed = analysis.framesAnalyzed ?? (analysis.batchesFailed ? 0 : frameInputs.length);
     if (analysis.output) onScreen = [...onScreen, ...ocrToOnScreen(analysis.output.ocr)];
     outputs.llm_done = true;
     outputs.llm_v2 = modelOutput;
@@ -612,7 +614,7 @@ async function tryRule(db: SupabaseClient, userId: string, input: Record<string,
   if (!sub || sub.is_demo || sub.status !== "done") return json({ error: "not found" }, 404);
   const { data: promo } = sub.promotion_id ? await db.from("promotions").select("org_id").eq("id", sub.promotion_id).maybeSingle() : { data: null };
   if (((promo?.org_id as string | null) ?? sub.org_id) !== rule.org_id) return json({ error: "not found" }, 404);
-  if (config(env).llmProvider === "gemini" && !env("GEMINI_API_KEY")) return json({ status: "unavailable", reason: "no_model_key" }, 200);
+  if (!hasGeminiKey(env)) return json({ status: "unavailable", reason: "no_model_key" }, 200);
 
   const [ctx, transcript, lastRun] = await Promise.all([
     loadContext(db, sub),

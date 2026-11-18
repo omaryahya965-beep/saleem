@@ -223,6 +223,20 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     supabase.from("regulatory_sources").select("*"),
   ]);
 
+  // A historical finding must cite the rulebook used by its own analysis, not today's rules
+  // (from PR #1, ahmad daghra). Rules of the run's version override same-code rules of others.
+  const runVersionId = run?.rulebook_version_id ?? null;
+  let runRules = runVersionId
+    ? rulebook.rules.filter((r) => r.rulebook_version_id === runVersionId)
+    : [];
+  if (runVersionId && !runRules.length) {
+    const { data } = await supabase
+      .from("rules")
+      .select("*")
+      .eq("rulebook_version_id", runVersionId);
+    runRules = data ?? [];
+  }
+
   let parent: Submission | null = null;
   let parentFindings: Finding[] = [];
   if (submission.parent_id) {
@@ -280,7 +294,7 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     run,
     findings,
     transcript: segments,
-    rules: new Map(rulebook.rules.map((r) => [r.code, r])),
+    rules: new Map([...rulebook.rules, ...runRules].map((r) => [r.code, r])),
     rulebookVersion: run?.rulebook_version ?? rulebook.version?.version_label ?? null,
     parent,
     parentFindings,

@@ -71,6 +71,8 @@ export interface AnalysisResultV2 {
   /** Batches whose output stayed invalid after one retry (coverage becomes partial). */
   batchesFailed: number;
   batches: number;
+  /** Source frames covered by batches that validated (merged duplicates count once per source frame). */
+  framesAnalyzed?: number;
   provider: string;
   model: string;
   usage: TokenUsage;

@@ -1,5 +1,5 @@
-// Classifies provider (OpenAI) failures into stable codes with Arabic/English messages.
-// "Invalid key" is used ONLY for HTTP 401. Pure module: used by Edge Functions and unit tests.
+// Classifies AI provider (Gemini) failures into stable codes with Arabic/English messages.
+// Pure module: used by Edge Functions and unit tests.
 
 export type ProviderErrorCode =
   | "missing_key" // Key not set in environment
@@ -33,10 +33,12 @@ export function classifyProviderError(status: number | null, body: string, reque
     // non-JSON body
   }
   let code: ProviderErrorCode;
-  if (status === 401) code = "invalid_key";
+  // Google reports a bad/expired key as HTTP 400 INVALID_ARGUMENT with reason API_KEY_INVALID.
+  if (status === 401 || /API_KEY_INVALID|API key not valid|API key expired/i.test(body)) code = "invalid_key";
   else if (status === 403) code = "no_access";
-  else if (status === 404) code = "model_not_found";
-  else if (status === 429) code = type === "insufficient_quota" || /quota|billing|credit/i.test(message) ? "insufficient_quota" : "rate_limited";
+  else if (status === 404 || (status === 400 && /is not supported for generateContent|models\/\S+ is not found/i.test(body))) code = "model_not_found";
+  // Google: per-minute limits are transient; daily/zero/billing quota is not.
+  else if (status === 429) code = /per.?minute/i.test(body) ? "rate_limited" : type === "insufficient_quota" || /quota|billing|credit|RESOURCE_EXHAUSTED/i.test(message + " " + body) ? "insufficient_quota" : "rate_limited";
   else if (status === 400 || status === 413 || status === 415 || status === 422) code = "bad_request";
   else if (status === null || status === 408 || status >= 500) code = "provider_down";
   else code = "unknown";

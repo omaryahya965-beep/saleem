@@ -5,7 +5,6 @@ import { CLAIM_PATTERNS, DISCOUNT_CODE, runDeterministicChecks } from "../supaba
 import { mergeAndFilterFindings, overallStatusOf } from "../supabase/functions/_shared/pipeline/merge.ts";
 import { SchemaError, parseModelJson, validateAnalysis } from "../supabase/functions/_shared/pipeline/schema.ts";
 import { audioCost, textCost } from "../supabase/functions/_shared/pipeline/cost.ts";
-import { normalizeSegments } from "../supabase/functions/_shared/providers/openai.ts";
 import type { Finding, SubmissionData, TranscriptSegment } from "../supabase/functions/_shared/types.ts";
 
 const sub = (over: Partial<SubmissionData> = {}): SubmissionData => ({
@@ -228,12 +227,6 @@ describe("cost and transcription helpers", () => {
     expect(textCost("gpt-6.1-sol", { input_tokens: 20_000, output_tokens: 0, cached_input_tokens: 10_000 })).toBeCloseTo(0.021, 5);
     expect(textCost("unknown", { input_tokens: 1, output_tokens: 1 })).toBe(0);
     expect(audioCost("whisper-1", 90)).toBeCloseTo(0.009, 5);
-  });
-  it("normalizes provider segments", () => {
-    expect(normalizeSegments([{ start: 4, end: 6, text: " ب " }, { start: 0, text: "أ" }, { start: 2, end: 3, text: "" }])).toEqual([
-      { start: 0, end: 0, text: "أ" },
-      { start: 4, end: 6, text: "ب" },
-    ]);
   });
 });
 

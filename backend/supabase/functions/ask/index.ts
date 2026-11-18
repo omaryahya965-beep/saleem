@@ -4,7 +4,7 @@
 // without a model key the sources are listed as they are.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { corsHeaders, json, log } from "../_shared/http.ts";
-import { config } from "../_shared/providers/index.ts";
+import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { ASK_INSTRUCTIONS, orFilter, plainAnswer, terms, type AskSource } from "../_shared/ask.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
   let model = false;
   const c = config(env);
   const geminiKey = env("GEMINI_API_KEY")?.trim();
-  if (sources.length && c.llmProvider === "gemini" && geminiKey && !geminiKey.startsWith("your-")) {
+  if (sources.length && geminiKey && hasGeminiKey(env)) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(c.llmModel)}:generateContent`;
       const promptText = `${ASK_INSTRUCTIONS}\n\nQuestion: ${question}\n\nSources:\n${sources.map((s, i) => `[${i + 1}] (${s.kind}) ${s.title} — ${s.detail}`).join("\n")}`;

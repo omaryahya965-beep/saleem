@@ -5,7 +5,7 @@
 // and must be edited and approved by a person before it runs. Never drafts regulatory rules.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { corsHeaders, json, log } from "../_shared/http.ts";
-import { config } from "../_shared/providers/index.ts";
+import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { cleanDrafts, DRAFT_SCHEMA, heuristicDrafts, type DraftRule } from "../_shared/rules/internal.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
   let drafts: DraftRule[];
   let source: "model_draft" | "heuristic_draft";
   try {
-    if (c.llmProvider === "gemini" && geminiKey && !geminiKey.startsWith("your-")) {
+    if (geminiKey && hasGeminiKey(env)) {
       drafts = await draftWithGemini(geminiKey, c.llmModel, guideline.text_ar as string);
       source = "model_draft";
     } else {

@@ -1,8 +1,8 @@
-// Live smoke test of the production pipeline modules against OpenAI (costs ≈ $0.02–0.05).
+// Live smoke test of the production pipeline modules against Gemini (needs GEMINI_API_KEY; costs a few cents).
 //   npx tsx eval/provider-smoke.ts
-// 1. Synthesizes an Arabic "slimming tea" ad with TTS (cached in tests/fixtures/synthetic/)
-// 2. Transcribes it with TRANSCRIPTION_MODEL (segments + timestamps)
-// 3. Analyzes transcript + a frame with on-screen Arabic text with LLM_MODEL (strict JSON)
+// 1. Uses the committed Arabic "slimming tea" ad audio (tests/fixtures/synthetic/slimming-tea-ar.mp3)
+// 2. Transcribes it with GEMINI_MODEL (segments + timestamps)
+// 3. Analyzes transcript + a frame with on-screen Arabic text with GEMINI_MODEL (strict JSON)
 // 4. Runs deterministic checks + merge, prints findings, timings, tokens and cost.
 import fs from "node:fs";
 import path from "node:path";
@@ -22,26 +22,13 @@ const SCRIPT =
   "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع، ومضمون بدون أعراض جانبية. " +
   "استخدموا كود سليم عشرين والرابط في البايو، اطلبوا الحين قبل لا يخلص.";
 
-async function tts(file: string) {
-  if (fs.existsSync(file)) return;
-  for (const model of ["gpt-4o-mini-tts", "tts-1"]) {
-    const res = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${env("OPENAI_API_KEY")}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, voice: "alloy", input: SCRIPT, response_format: "mp3" }),
-    });
-    if (res.ok) {
-      fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
-      console.log(`TTS: ${model} → ${path.basename(file)}`);
-      return;
-    }
-    console.warn(`TTS ${model} failed (${res.status}): ${(await res.text()).slice(0, 160)}`);
-  }
-  throw new Error("TTS unavailable");
+function tts(file: string) {
+  // The fixture is committed; SALEEM no longer calls OpenAI (D161), so it is never re-synthesized here.
+  if (!fs.existsSync(file)) throw new Error(`missing fixture ${file}`);
 }
 
 const audioFile = path.join(fixtures, "slimming-tea-ar.mp3");
-await tts(audioFile);
+tts(audioFile);
 const cfg = config(env);
 console.log("models:", cfg.transcriptionModel, "+", cfg.llmModel);
 

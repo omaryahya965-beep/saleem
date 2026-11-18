@@ -1,34 +1,16 @@
-// SALEEM diagnostics — admin-only health check of the AI provider configuration.
-// POST with an admin user's JWT. Returns ONLY non-secret facts: key present/length/prefix/whitespace,
-// HTTP status + error type for the models list, the configured models, and a 2-second transcription
-// through the production OpenAITranscription class (same multipart request as real checks).
+// SALEEM diagnostics — admin-only health check of the Gemini configuration.
+// POST with an admin user's JWT. Returns ONLY non-secret facts: whether GEMINI_API_KEY is set, the
+// configured model, the HTTP status + classified error code of a models.get probe, and usage totals.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { classifyProviderError } from "../_shared/providers/errors.ts";
-import { config, transcriptionProvider } from "../_shared/providers/index.ts";
-import { ProviderError } from "../_shared/providers/types.ts";
+import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 
 const env = (k: string) => Deno.env.get(k);
 
-/** 2 s mono 16 kHz PCM WAV: 0.5 s silence + 1.5 s quiet 440 Hz tone. */
-function testWav(): Blob {
-  const rate = 16000, n = rate * 2;
-  const buf = new ArrayBuffer(44 + n * 2);
-  const v = new DataView(buf);
-  const w = (o: number, s: string) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
-  v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, i < rate / 2 ? 0 : Math.round(Math.sin((2 * Math.PI * 440 * i) / rate) * 3000), true);
-  return new Blob([buf], { type: "audio/wav" });
-}
-
-async function probe(provider: string, model: string, key: string) {
-  const url = provider === "gemini"
-    ? `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`
-    : `https://api.openai.com/v1/models/${encodeURIComponent(model)}`;
-  const headers: Record<string, string> = provider === "gemini" ? { "x-goog-api-key": key } : { Authorization: `Bearer ${key}` };
-  const res = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
+async function probe(model: string, key: string) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`;
+  const res = await fetch(url, { headers: { "x-goog-api-key": key }, signal: AbortSignal.timeout(10_000) });
   const body = await res.text();
   if (res.ok) return { status: res.status, error_type: null, error_code: null, request_id: res.headers.get("x-request-id") };
   const info = classifyProviderError(res.status, body, res.headers.get("x-request-id"));
@@ -48,9 +30,8 @@ Deno.serve(async (req) => {
   if (!platformAdmin && (!orgAdmin || !orgAdmin.length)) return json({ error: "forbidden" }, 403);
 
   const cfg = config(env);
-  const raw = env(cfg.llmProvider === "gemini" ? "GEMINI_API_KEY" : "OPENAI_API_KEY") ?? "";
-  const key = raw.trim();
-  const isPlaceholder = !key || key.startsWith("your-") || /^(your[_-]|sk-\.\.\.)/i.test(key);
+  const key = env("GEMINI_API_KEY")?.trim() ?? "";
+  const isPlaceholder = !hasGeminiKey(env);
 
   // Aggregate real usage metrics from analysis_runs table
   const { data: runs } = await db
@@ -96,7 +77,7 @@ Deno.serve(async (req) => {
 
   // Real connection test: probe model availability
   try {
-    const probeRes = await probe(cfg.llmProvider, cfg.llmModel, key);
+    const probeRes = await probe(cfg.llmModel, key);
     out.connection_test = probeRes;
     if (probeRes.status === 200) {
       out.status = "verified";

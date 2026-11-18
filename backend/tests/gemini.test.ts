@@ -43,9 +43,13 @@ describe("Gemini provider selection", () => {
     expect(() => transcriptionProvider(() => undefined)).toThrow("GEMINI_API_KEY");
     expect(() => new GeminiAnalysis("  ")).toThrow("GEMINI_API_KEY");
   });
-  it("retains explicitly configured OpenAI and rejects unknown providers", () => {
-    expect(analysisProvider((k) => ({ LLM_PROVIDER: "openai", OPENAI_API_KEY: key })[k]).name).toBe("openai");
-    expect(() => analysisProvider((k) => k === "LLM_PROVIDER" ? "missing" : key)).toThrow("unknown LLM_PROVIDER");
+  it("uses Gemini only: legacy LLM_PROVIDER/TRANSCRIPTION_PROVIDER=openai never selects OpenAI", () => {
+    const legacy = (k: string) => ({ LLM_PROVIDER: "openai", TRANSCRIPTION_PROVIDER: "openai", OPENAI_API_KEY: "sk-legacy", GEMINI_API_KEY: key })[k];
+    expect(analysisProvider(legacy).name).toBe("gemini");
+    expect(transcriptionProvider(legacy).name).toBe("gemini");
+    expect(config(legacy)).toMatchObject({ llmProvider: "gemini", transcriptionProvider: "gemini" });
+    // An OpenAI key alone is not enough: Gemini is required and there is no fallback.
+    expect(() => analysisProvider((k) => ({ LLM_PROVIDER: "openai", OPENAI_API_KEY: "sk-legacy" })[k])).toThrow("GEMINI_API_KEY");
   });
 });
 
@@ -235,6 +239,19 @@ describe("Gemini transport failures", () => {
     expect(error.message).not.toContain("token=");
     const generate = vi.fn().mockRejectedValue({ status: 503, message: "private content" });
     await expect(provider(generate).analyze(request())).rejects.toThrow("provider_down");
+  });
+  it.each([
+    [400, "[400 Bad Request] API key expired. Please renew the API key. reason: API_KEY_INVALID", "invalid_key", false],
+    [403, "PERMISSION_DENIED: Generative Language API has not been used in project", "no_access", false],
+    [404, "models/gemini-x is not found for API version v1beta", "model_not_found", false],
+    [400, "models/gemini-x is not supported for generateContent", "model_not_found", false],
+    [429, "Quota exceeded for metric generate_content_free_tier_requests, limit: 0, per day. Check plan and billing", "insufficient_quota", false],
+    [429, "RESOURCE_EXHAUSTED: Quota exceeded for metric: requests per minute per model", "rate_limited", true],
+    [503, "The model is overloaded", "provider_down", true],
+  ])("classifies Google HTTP %s errors precisely (%s)", (status, message, code, retryable) => {
+    const error = geminiError({ status, message });
+    expect(error.info?.code).toBe(code);
+    expect(error.retryable).toBe(retryable);
   });
   it("times out even when a transport fails to honor its abort signal", async () => {
     const generate = vi.fn(() => new Promise<GenerateContentResponse>(() => {}));
