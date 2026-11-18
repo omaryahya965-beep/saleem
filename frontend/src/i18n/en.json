@@ -60,7 +60,8 @@
     "claims": "Claims library",
     "disclaimers": "Required disclaimers",
     "analytics": "Analytics",
-    "ask": "Ask Saleem"
+    "ask": "Ask Saleem",
+    "features": "Features"
   },
   "status": {
     "ready": "No automated findings",
@@ -1690,7 +1691,9 @@
     "ask_saleem": "Ask Saleem",
     "ask_saleemHint": "A read-only assistant: answers about the rules, promotions and findings you can open, with links. It changes nothing.",
     "readability_hint": "Readability hint",
-    "readability_hintHint": "Points out very long sentences and dense footnotes. A hint only, never a compliance finding."
+    "readability_hintHint": "Points out very long sentences and dense footnotes. A hint only, never a compliance finding.",
+    "pageTitle": "Features",
+    "managersOnly": "This page is for the workspace owner and admin."
   },
   "flows": {
     "title": "Approval flow",
