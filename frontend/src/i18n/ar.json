@@ -1162,7 +1162,7 @@
     "needs_evidence": "يحتاج دليلاً داعماً",
     "unable_to_verify": "تعذّر التحقق",
     "legacy": "ملاحظة (إصدار سابق من المحرك)",
-    "rule_draft": "قاعدة قيد المراجعة القانونية",
+    "rule_draft": "قاعدة مسودة — قيد المراجعة القانونية",
     "carried": "من الإصدار {n}",
     "article": "المادة",
     "missing": "المعلومة الناقصة",
@@ -1172,7 +1172,9 @@
       "secondary_only": "مصدر ثانوي",
       "internal": "فحص نظامي في سَليم"
     },
-    "internal_policy": "سياسة داخلية"
+    "internal_policy": "سياسة داخلية",
+    "evidencePolicy": "سياسة الدليل",
+    "evidenceRequest": "الدليل المطلوب قبل الحكم"
   },
   "report2": {
     "resultPrefix": "الفحص الآلي:",
@@ -1238,7 +1240,11 @@
       "unknown": "سبب غير محدد",
       "org_override": "استبعدتها مؤسستك من هذا النطاق",
       "no_claims_library": "لا توجد ادعاءات معتمدة في المكتبة",
-      "no_disclaimers_library": "لا توجد إفصاحات معتمدة في المكتبة"
+      "no_disclaimers_library": "لا توجد إفصاحات معتمدة في المكتبة",
+      "document_required": "يحتاج مستنداً: لا يُحكم عليها من الإعلان وحده",
+      "reviewer_checklist": "بند في قائمة تحقق المراجع",
+      "coverage_partial": "لم يكتمل التحليل (صوت أو صور أو صفحات)، فتعذّر التحقق",
+      "possible_duplicate": "تكرار محتمل للقاعدة {code} — مستبعدة حتى يراجع المختص المطابقة"
     },
     "signal": {
       "mentions_free": "ذكر المجاني أو بدون رسوم",
@@ -1250,12 +1256,26 @@
       "banknote_or_coin_image": "صور العملة",
       "real_customer_or_testimonial": "عميل حقيقي أو شهادة",
       "minors_targeted_or_present": "قُصّر",
-      "third_party_logo": "شعار جهة أخرى"
+      "third_party_logo": "شعار جهة أخرى",
+      "contest_or_prize": "مسابقة أو جائزة",
+      "discount_sale": "تخفيضات",
+      "direct_marketing": "تسويق مباشر ببيانات شخصية"
     },
     "draftCtaTitle": "قواعد البنك المركزي السعودي لم تُطبَّق",
     "draftCtaBody": "قواعد الإعلان المالي في سَليم مسودات بانتظار مراجعة قانونية. يستطيع مالك مساحة العمل أو مسؤولها تفعيل معاينتها، وتظهر نتائجها تنبيهات فقط.",
     "draftCtaAction": "دليل القواعد",
-    "noChecks": "هذا التقرير من إصدار سابق من محرك الفحص، ولا يتضمن نتائج لكل قاعدة."
+    "noChecks": "هذا التقرير من إصدار سابق من محرك الفحص، ولا يتضمن نتائج لكل قاعدة.",
+    "packsTitle": "الحزم المطبّقة ولماذا ({n})",
+    "packDrafts": "تشمل المسودات",
+    "packCounts": "{a} قاعدة في النطاق، {n} لا تنطبق",
+    "packReason": {
+      "creator_default": "الحزم الافتراضية لصنّاع المحتوى",
+      "always_enabled": "مفعّلة دائماً",
+      "org_enabled": "فعّلتها مؤسستك",
+      "sector_default": "افتراضية لقطاع مؤسستك",
+      "default": "مفعّلة افتراضياً"
+    },
+    "checklistTitle": "قائمة تحقق المراجع ({n})"
   },
   "rulebook2": {
     "packsTitle": "حزم القواعد",

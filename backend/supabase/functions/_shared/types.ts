@@ -108,6 +108,9 @@ export interface Applicability {
 }
 
 /** A rule row of the active release, joined with its source status (for guideline capping). */
+/** Why a pack is applied to a run (shown in the report): creator default, always on, org choice, sector default. */
+export type PackReason = "creator_default" | "always_enabled" | "org_enabled" | "sector_default" | "default";
+
 export interface RuleRow {
   id: string;
   code: string;
@@ -128,6 +131,16 @@ export interface RuleRow {
   content_triggers: string[];
   llm_instructions: string;
   review_state: ReviewState;
+  /** Phase 8 (CSV v0.1 rules): how the rule is checked. content = from the ad; document = needs a document, never a
+   * violation from the ad alone; workflow = SALEEM records or a reviewer checklist item, never a model guess;
+   * hybrid = content signal plus an evidence request, capped at potential risk. Absent on older rules. */
+  check_mode?: "content" | "document" | "workflow" | "hybrid" | null;
+  evidence_policy_ar?: string | null;
+  applicability_ar?: string | null;
+  /** A draft that may duplicate an existing rule (pending human mapping review): never applied. */
+  possible_duplicate_of?: string | null;
+  /** Release (rulebook version) the row belongs to, or the internal rule version: recorded on each finding. */
+  rule_version?: string | null;
 }
 
 export interface AnalysisContext {
@@ -157,7 +170,7 @@ export interface AnalysisContext {
     keyFacts: ProductKeyFacts;
   };
   brandAliases: string[];
-  enabledPacks: { code: string; includeDrafts: boolean }[];
+  enabledPacks: { code: string; includeDrafts: boolean; reason?: PackReason }[];
   kind: "video" | "image" | "text" | "pdf";
 }
 

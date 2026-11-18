@@ -52,9 +52,12 @@ const pack = (sector) => `sa-${sector.toLowerCase()}`;
 const SCOPE = {
   BANK: { applicability: { sectors: ["banking", "finance_company", "payments"] }, sectors: ["banking", "finance_company", "payments"] },
   CMA: { applicability: { sectors: ["capital_market"] }, sectors: ["capital_market"] },
-  SALE: { triggers: ["promo_offer"] },
+  // Cross-sector packs apply only when the ad shows the signal (signals.ts), so an enabled pack never fires on
+  // unrelated ads: discounts, competitions/prize draws, direct marketing with personal data, influencer distribution.
+  SALE: { triggers: ["discount_sale"] },
   MEDIA: { applicability: { distribution: ["influencer"] } },
-  COMP: { triggers: ["promo_offer"] },
+  COMP: { triggers: ["contest_or_prize"] },
+  PD: { triggers: ["direct_marketing"] },
 };
 const KIND = { content: ["llm", "potential_risk"], hybrid: ["hybrid", "needs_evidence"], document: ["workflow", "needs_evidence"], workflow: ["workflow", null] };
 const CATEGORY = { BANK: "finance", CMA: "securities" };

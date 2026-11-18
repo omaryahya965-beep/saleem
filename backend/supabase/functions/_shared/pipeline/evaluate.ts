@@ -28,6 +28,15 @@ export interface CoverageItem {
 export interface Coverage {
   status: "complete" | "partial";
   items: CoverageItem[];
+  /** Packs applied to this run and why, with how many of their rules were applicable (report: «الحزم المطبّقة ولماذا»). */
+  packs?: PackApplied[];
+}
+export interface PackApplied {
+  code: string;
+  reason: string;
+  include_drafts: boolean;
+  applicable: number;
+  not_applicable: number;
 }
 
 export interface EvaluateInput {
@@ -206,19 +215,36 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   }
   merged.sort((a, b) => (a.evidence.t_start ?? Infinity) - (b.evidence.t_start ?? Infinity));
 
+  // check_mode = document: never a violation from the ad alone — a request for the document («يحتاج مستنداً»).
+  const docRules = new Map(
+    (selection.notApplicable as NotApplicable[]).filter((n) => n.reason === "document_required").map((n) => [n.rule.code, n.rule]),
+  );
+  for (const rule of docRules.values()) merged.push(documentRequest(rule));
+  const ruleOf = (code: string) => applicable.get(code) ?? docRules.get(code)!;
+
   const findings: MergedFinding[] = merged.map((f) => {
-    const rule = applicable.get(f.rule_code)!;
+    const rule = ruleOf(f.rule_code);
     const draft = rule.review_state === "draft" || rule.review_state === "legal_review";
     const guideline = rule.source_status === "guideline";
-    const severity: Severity = draft || guideline ? "warning" : f.severity;
+    // check_mode = hybrid: capped at a potential risk until the requested evidence is reviewed.
+    const hybrid = rule.check_mode === "hybrid";
+    const severity: Severity = draft || guideline || hybrid || rule.check_mode === "document" ? "warning" : f.severity;
+    const finding_type: FindingType =
+      hybrid && (f.finding_type === "confirmed_mismatch" || f.finding_type === "missing_required") ? "potential_risk" : f.finding_type;
     return {
       ...f,
       severity,
+      finding_type,
       rule_id: rule.id,
       rule_draft: draft,
       citation: {
         rule_code: rule.code, rule_id: rule.id, source_id: rule.regulatory_source_id, article_ref: rule.article_ref,
         review_state: rule.review_state, pack: rule.pack, ...(f.values ? { values: f.values } : {}),
+        // Phase 8: how the rule is checked, the evidence policy shown on the finding, and the rule version used.
+        ...(rule.check_mode ? { check_mode: rule.check_mode } : {}),
+        ...(rule.evidence_policy_ar ? { evidence_policy_ar: rule.evidence_policy_ar } : {}),
+        ...(hybrid && rule.evidence_policy_ar ? { evidence_request_ar: rule.evidence_policy_ar } : {}),
+        ...(rule.rule_version ? { rule_version: rule.rule_version } : {}),
         // Organisation brand-guideline rules (Phase 6.7) are labelled «سياسة داخلية», never as regulation.
         ...(rule.category === "internal" ? { internal_policy: true } : {}),
         // Claim fields at top level: the database resolves findings by citation->>'claim_key'.
@@ -230,6 +256,8 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   });
 
   // ---- Rule checks ----
+  const partialMedia = input.media.transcriptionFailed || input.media.batchesFailed > 0 || (input.media.pdf?.unreadable ?? 0) > 0 ||
+    (ctx.kind !== "text" && input.media.framesTotal > 0 && input.media.framesAnalyzed === 0);
   const modelRule = new Map((modelOk ? model!.rule_results : []).map((r) => [r.rule_code, r]));
   const ruleChecks: RuleCheckResult[] = [];
   for (const rule of selection.applicable) {
@@ -246,10 +274,19 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
       if (!modelOk) reason = input.modelStatus === "invalid" ? "model_output_invalid" : "coverage:model";
       else if (modelRule.get(rule.code)?.outcome === "unable_to_verify") reason = "model_unable";
     }
+    // check_mode = content/hybrid: with incomplete analysis, «لا ملاحظة» is not «سليم» — «تعذّر التحقق».
+    if (!reason && (rule.check_mode === "content" || rule.check_mode === "hybrid") && partialMedia) reason = "coverage:partial";
     ruleChecks.push({ rule_id: rule.id, rule_code: rule.code, outcome: reason ? "unable_to_verify" : "passed", reason, finding_indexes: [] });
   }
-  for (const n of selection.notApplicable as NotApplicable[])
-    ruleChecks.push({ rule_id: n.rule.id, rule_code: n.rule.code, outcome: "not_applicable", reason: n.reason, finding_indexes: [] });
+  for (const n of selection.notApplicable as NotApplicable[]) {
+    if (n.reason === "document_required") {
+      const idx = findings.flatMap((f, i) => (f.rule_code === n.rule.code ? [i] : []));
+      ruleChecks.push({ rule_id: n.rule.id, rule_code: n.rule.code, outcome: "unable_to_verify", reason: "document_required", finding_indexes: idx });
+    } else if (n.reason === "reviewer_checklist")
+      // check_mode = workflow: never guessed — an item on the reviewer checklist.
+      ruleChecks.push({ rule_id: n.rule.id, rule_code: n.rule.code, outcome: "unable_to_verify", reason: "reviewer_checklist", finding_indexes: [] });
+    else ruleChecks.push({ rule_id: n.rule.id, rule_code: n.rule.code, outcome: "not_applicable", reason: n.reason, finding_indexes: [] });
+  }
 
   // ---- Coverage ----
   const items: CoverageItem[] = [];
@@ -272,7 +309,14 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
     items.push({ modality: "rule_packs", state: "pack_not_available" });
   const partial = input.media.transcriptionFailed || input.media.batchesFailed > 0 || !modelOk || unreadablePdf ||
     (kind !== "text" && input.media.framesTotal > 0 && input.media.framesAnalyzed === 0);
-  const coverage: Coverage = { status: partial ? "partial" : "complete", items };
+  const packs: PackApplied[] = ctx.enabledPacks.map((p) => ({
+    code: p.code,
+    reason: p.reason ?? "default",
+    include_drafts: p.includeDrafts,
+    applicable: ruleChecks.filter((c) => c.outcome !== "not_applicable" && input.rules.find((r) => r.id === c.rule_id)?.pack === p.code).length,
+    not_applicable: ruleChecks.filter((c) => c.outcome === "not_applicable" && input.rules.find((r) => r.id === c.rule_id)?.pack === p.code).length,
+  }));
+  const coverage: Coverage = { status: partial ? "partial" : "complete", items, packs };
 
   return { findings, ruleChecks, coverage, overallStatus: overallStatusV2(findings, coverage, ruleChecks), signals: [...signals], dropped };
 }
@@ -290,3 +334,20 @@ export function overallStatusV2(
 
 /** Facts status for the coverage chip (exported for the analyze function's logs). */
 export type { FactsStatus };
+
+/** check_mode = document: the document request finding. Text comes from the rule; nothing is inferred from the ad. */
+function documentRequest(rule: RuleRow): DraftFinding {
+  const policy = rule.evidence_policy_ar ? ` ${rule.evidence_policy_ar}` : "";
+  return {
+    rule_code: rule.code,
+    finding_type: "needs_evidence",
+    severity: "warning",
+    confidence: 1,
+    source: "deterministic",
+    evidence: { modality: "metadata", quote: "", t_start: null, t_end: null },
+    explanation_ar: `يحتاج مستنداً: ${rule.summary_ar ?? rule.title_ar}${policy}`,
+    explanation_en: `Needs a document: ${rule.code}`,
+    missing_information_ar: rule.evidence_policy_ar ?? null,
+    suggested_fix_ar: "أرفق المستند المطلوب للمراجع، أو أوضح سبب عدم انطباقه.",
+  };
+}

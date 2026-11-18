@@ -153,7 +153,7 @@ async function loadInternalRules(db: Db, orgId: string | null): Promise<Internal
   if (!orgId) return [];
   const { data: settings } = await db.from("org_settings").select("features").eq("org_id", orgId).maybeSingle();
   if ((settings?.features as Record<string, unknown> | null)?.["internal_rules"] !== true) return [];
-  const { data } = await db.from("internal_rules").select("id, code, title_ar, instruction_ar, severity, status").eq("org_id", orgId).eq("status", "active");
+  const { data } = await db.from("internal_rules").select("id, code, title_ar, instruction_ar, severity, status, version").eq("org_id", orgId).eq("status", "active");
   return (data ?? []) as InternalRule[];
 }
 
@@ -218,6 +218,11 @@ function toRuleRow(r: Record<string, unknown>, sources: Map<string, string>): Ru
     content_triggers: (r.content_triggers as string[]) ?? [],
     llm_instructions: (r.llm_instructions as string) ?? "",
     review_state: ((r.review_state as RuleRow["review_state"]) ?? "active"),
+    check_mode: (r.check_mode as RuleRow["check_mode"]) ?? null,
+    evidence_policy_ar: (r.evidence_policy_ar as string | null) ?? null,
+    applicability_ar: (r.applicability_ar as string | null) ?? null,
+    possible_duplicate_of: (r.possible_duplicate_of as string | null) ?? null,
+    rule_version: (r.rulebook_version_id as string | null) ?? null,
   };
 }
 
@@ -594,7 +599,7 @@ async function tryRule(db: SupabaseClient, userId: string, input: Record<string,
   const ruleId = typeof input.rule_id === "string" ? input.rule_id : null;
   const submissionId = typeof input.submission_id === "string" ? input.submission_id : null;
   if (!ruleId || !submissionId) return json({ error: "rule_id and submission_id are required" }, 400);
-  const { data: rule } = await db.from("internal_rules").select("id, org_id, code, title_ar, instruction_ar, severity, status").eq("id", ruleId).maybeSingle();
+  const { data: rule } = await db.from("internal_rules").select("id, org_id, code, title_ar, instruction_ar, severity, status, version").eq("id", ruleId).maybeSingle();
   if (!rule) return json({ error: "not found" }, 404);
   const { data: member } = await db.from("org_members").select("role").eq("org_id", rule.org_id).eq("user_id", userId).eq("access_status", "active").maybeSingle();
   const { data: cell } = member ? await db.rpc("org_role_can", { _role: member.role, _action: "manage_company_rules" }) : { data: "no" };

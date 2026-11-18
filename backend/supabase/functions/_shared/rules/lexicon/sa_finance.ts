@@ -77,3 +77,11 @@ export function hit(re: RegExp, s: string): boolean {
   re.lastIndex = 0;
   return r;
 }
+
+// --- Phase 8: cross-sector triggers for the CSV v0.1 packs (normalised text). ---
+/** Commercial competitions and prize draws (pack sa-comp). */
+export const CONTEST = new RegExp(`(مسابق${T}|سحب علي|السحب علي|اربح|فرص${T} للفوز|للفوز ب|جائز${T}|جوائز|giveaway|\bcontest\b|\bwin\b)`);
+/** Discounts and sales (pack sa-sale), narrower than PROMO (no gifts, no cashback). */
+export const DISCOUNT = new RegExp(`(خصم|خصومات|تخفيض|تخفيضات|تنزيلات|اوكازيون|\bsale\b|\d+ ?% ?(off|خصم))`);
+/** Direct marketing using personal data (pack sa-pd). */
+export const DIRECT_MARKETING = new RegExp(`(رسال${T} نصي${T}|رسائل نصي${T}|\bsms\b|سجل بياناتك|سجل رقمك|ارسل رقم|رقم جوالك|اشترك في القائم${T}|الغاء الاشتراك|لايقاف الرسائل|unsubscribe)`);

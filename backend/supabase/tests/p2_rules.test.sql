@@ -11,6 +11,10 @@ begin
   if (select count(*) from public.rules where rulebook_version_id = _v2) <> 51 + 187 then raise exception 'unexpected rule count'; end if;
   if exists (select 1 from public.rules where code like 'SA-%' and (review_state = 'active' or legal_status = 'legally_reviewed')) then raise exception 'a CSV rule is active or marked reviewed'; end if;
   if exists (select 1 from public.rules where code like 'SA-HAJ-%' and review_state <> 'archived') then raise exception 'HAJ rules must stay disabled'; end if;
+  -- Phase 8 mapping: pending only, flags only NEW drafts, changes no status (docs/saleem-v2/legal/SAMA_CMA_MAPPING.md).
+  if exists (select 1 from public.rule_mappings where status <> 'pending' or classification = 'verified_equivalent') then raise exception 'mapping decided without a reviewer'; end if;
+  if exists (select 1 from public.rules where possible_duplicate_of is not null and (review_state <> 'draft' or code not like 'SA-%')) then raise exception 'duplicate flag on a non-draft or old rule'; end if;
+  if (select count(*) from public.rules where pack in ('sa-sama-advertising', 'sa-cma-securities') and review_state <> 'draft' and rulebook_version_id = '22222222-2222-2222-2222-222222222222') > 0 then raise exception 'old SAMA/CMA status changed'; end if;
   -- Every SAMA/CMA rule is a draft, unverified, without official text.
   if exists (select 1 from public.rules where (code like 'SAMA-%' or code like 'CMA-%')
              and (review_state <> 'draft' or source_verified or official_text_ar is not null)) then

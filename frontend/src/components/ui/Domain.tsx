@@ -45,6 +45,9 @@ export interface IssueV2 {
   verification: string | null;
   missingInformation: string | null;
   carriedFromVersion: number | null;
+  /** Phase 8: the rule's evidence policy (what proves compliance) and, for hybrid rules, the evidence requested. */
+  evidencePolicy?: string | null;
+  evidenceRequest?: string | null;
 }
 
 interface IssueCardProps {
@@ -158,6 +161,18 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
             {issue.v2.verification && (
               <Badge>{t(`findingType.verification.${issue.v2.verification}` as TKey)}</Badge>
             )}
+          </p>
+        )}
+        {issue.v2?.evidenceRequest && (
+          <p className="text-sm text-fg" data-testid="evidence-request">
+            <span className="font-bold">{t("findingType.evidenceRequest")}: </span>
+            {issue.v2.evidenceRequest}
+          </p>
+        )}
+        {issue.v2?.evidencePolicy && !issue.v2.evidenceRequest && (
+          <p className="text-sm text-fg-muted" data-testid="evidence-policy">
+            <span className="font-bold">{t("findingType.evidencePolicy")}: </span>
+            {issue.v2.evidencePolicy}
           </p>
         )}
         {issue.v2?.missingInformation && (

@@ -10,6 +10,7 @@ export interface InternalRule {
   instruction_ar: string;
   severity: "warning" | "violation";
   status: string;
+  version?: number;
 }
 
 /** Rule rows for the engine. The id is prefixed so persistence never treats it as a rulebook rule id. */
@@ -36,6 +37,8 @@ export function internalRuleRows(rows: InternalRule[]): RuleRow[] {
       content_triggers: [],
       llm_instructions: `سياسة داخلية للمؤسسة (ليست نظاماً رقابياً): ${r.instruction_ar}`,
       review_state: "active",
+      check_mode: "content",
+      rule_version: `internal:v${r.version ?? 1}`,
     }));
 }
 

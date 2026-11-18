@@ -94,11 +94,20 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
     return r ? `${r.code} · ${lang === "en" ? r.title_en : r.title_ar}` : ruleId;
   };
   const reason = (code: string | null) => {
-    const { key, signal } = reasonKey(code);
+    const { key, signal, code: dup } = reasonKey(code);
+    if (dup) return t(key, { code: dup });
     return t(key, signal ? { signal: t(`report2.signal.${signal}` as TKey) } : undefined);
   };
+  // check_mode = workflow: shown as the reviewer's checklist, not as «تعذّر التحقق».
+  const checklist = checks.filter((c) => c.reason_code === "reviewer_checklist");
+  const policy = (ruleId: string) =>
+    (bundle.rulesById.get(ruleId) as { evidence_policy_ar?: string | null } | undefined)
+      ?.evidence_policy_ar ?? null;
+  const packs = coverageOf(bundle)?.packs ?? [];
   const list = (outcome: "not_applicable" | "unable_to_verify", heading: TKey, testId: string) => {
-    const rows = checks.filter((c) => c.outcome === outcome);
+    const rows = checks.filter(
+      (c) => c.outcome === outcome && c.reason_code !== "reviewer_checklist",
+    );
     if (!rows.length) return null;
     return (
       <details
@@ -133,6 +142,55 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
           </Badge>
         ))}
       </p>
+      {packs.length > 0 && (
+        <details
+          data-testid="packs-applied"
+          className="rounded-md border border-border bg-surface px-4 py-3"
+          open
+        >
+          <summary className="cursor-pointer font-bold text-fg">
+            {t("report2.packsTitle", { n: packs.length })}
+          </summary>
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            {packs.map((p) => (
+              <li key={p.code} className="flex flex-col gap-0.5">
+                <span className="text-fg">
+                  <bdi dir="ltr">{p.code}</bdi>
+                  {p.include_drafts && (
+                    <Badge variant="neutral" className="ms-2">
+                      {t("report2.packDrafts")}
+                    </Badge>
+                  )}
+                </span>
+                <span className="text-fg-muted">
+                  {t(`report2.packReason.${p.reason}` as TKey)} ·{" "}
+                  {t("report2.packCounts", { a: p.applicable, n: p.not_applicable })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {checklist.length > 0 && (
+        <details
+          data-testid="reviewer-checklist"
+          className="rounded-md border border-border bg-surface px-4 py-3"
+        >
+          <summary className="cursor-pointer font-bold text-fg">
+            {t("report2.checklistTitle", { n: checklist.length })}
+          </summary>
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            {checklist.map((c) => (
+              <li key={c.id} className="flex flex-col gap-0.5">
+                <span className="text-fg">
+                  ☐ <bdi>{title(c.rule_id)}</bdi>
+                </span>
+                {policy(c.rule_id) && <span className="text-fg-muted">{policy(c.rule_id)}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {list("unable_to_verify", "report2.unableTitle", "unable-list")}
       {list("not_applicable", "report2.notApplicableTitle", "not-applicable-list")}
     </section>

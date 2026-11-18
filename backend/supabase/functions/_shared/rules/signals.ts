@@ -29,6 +29,9 @@ export function computeSignals(
     if (L.hit(L.PAST_PERFORMANCE, n)) out.add("past_performance_mentioned");
     if (L.hit(L.PAID_PARTNERSHIP, n)) out.add("paid_partnership_mentioned");
     if (L.hit(L.SUPERLATIVE, n)) out.add("superlative_or_guarantee");
+    if (L.hit(L.CONTEST, n)) out.add("contest_or_prize");
+    if (L.hit(L.DISCOUNT, n)) out.add("discount_sale");
+    if (L.hit(L.DIRECT_MARKETING, n)) out.add("direct_marketing");
   }
   if (ctx.product && ctx.product.currency !== "SAR") out.add("foreign_currency");
   for (const s of modelSignals) if ((MODEL_SIGNALS as readonly string[]).includes(s)) out.add(s);

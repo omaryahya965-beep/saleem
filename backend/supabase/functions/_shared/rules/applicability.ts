@@ -1,5 +1,5 @@
 // Rule selection (04_AI_PIPELINE §5). SALEEM decides which rules apply; the model only sees those.
-import type { AnalysisContext, Applicability, RuleRow } from "../types.ts";
+import type { AnalysisContext, Applicability, PackReason, RuleRow } from "../types.ts";
 
 export interface NotApplicable {
   rule: RuleRow;
@@ -46,16 +46,25 @@ export function selectRules(ctx: AnalysisContext, rules: RuleRow[]): Selection {
       notApplicable.push({ rule, reason: "pack_disabled" });
       continue;
     }
-    if ((rule.review_state === "draft" || rule.review_state === "legal_review") && !pack?.includeDrafts) {
+    const draft = rule.review_state === "draft" || rule.review_state === "legal_review";
+    if (draft && !pack?.includeDrafts) {
       notApplicable.push({ rule, reason: "draft_excluded" });
       continue;
     }
-    if (rule.check_kind === "workflow") {
-      notApplicable.push({ rule, reason: "workflow_rule" });
+    // A draft that may duplicate an existing rule waits for the human mapping review (never applied twice).
+    if (draft && rule.possible_duplicate_of) {
+      notApplicable.push({ rule, reason: `possible_duplicate:${rule.possible_duplicate_of}` });
       continue;
     }
     const mismatch = applicabilityMismatch(rule.applicability ?? {}, ctx);
-    if (mismatch) notApplicable.push({ rule, reason: mismatch });
+    if (mismatch) {
+      notApplicable.push({ rule, reason: mismatch });
+      continue;
+    }
+    // In scope but not checked from the ad: a document request or a reviewer checklist item (never the model).
+    if (rule.check_mode === "document") notApplicable.push({ rule, reason: "document_required" });
+    else if (rule.check_mode === "workflow") notApplicable.push({ rule, reason: "reviewer_checklist" });
+    else if (rule.check_kind === "workflow") notApplicable.push({ rule, reason: "workflow_rule" });
     else applicable.push(rule);
   }
   return { applicable, notApplicable };
@@ -85,15 +94,16 @@ export function enabledPacksFor(
   sector: string | null,
   packs: { code: string; default_sectors: string[]; enabled_by_default: boolean; always_enabled: boolean }[],
   orgRows: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[],
-): { code: string; includeDrafts: boolean }[] {
-  if (!orgId) return CREATOR_PACKS.map((code) => ({ code, includeDrafts: false }));
+): { code: string; includeDrafts: boolean; reason: PackReason }[] {
+  if (!orgId) return CREATOR_PACKS.map((code) => ({ code, includeDrafts: false, reason: "creator_default" as const }));
   const rows = new Map(orgRows.map((r) => [r.pack_code, r]));
-  const out: { code: string; includeDrafts: boolean }[] = [];
+  const out: { code: string; includeDrafts: boolean; reason: PackReason }[] = [];
   for (const p of packs) {
     const row = rows.get(p.code);
     const byDefault = p.enabled_by_default && (p.default_sectors.length === 0 || (sector !== null && p.default_sectors.includes(sector)));
     const enabled = p.always_enabled || (row ? row.enabled : byDefault);
-    if (enabled) out.push({ code: p.code, includeDrafts: Boolean(row?.include_draft_rules) });
+    const reason: PackReason = p.always_enabled ? "always_enabled" : row ? "org_enabled" : p.default_sectors.length ? "sector_default" : "default";
+    if (enabled) out.push({ code: p.code, includeDrafts: Boolean(row?.include_draft_rules), reason });
   }
   return out;
 }

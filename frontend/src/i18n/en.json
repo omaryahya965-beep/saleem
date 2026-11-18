@@ -1138,7 +1138,7 @@
     "needs_evidence": "Needs supporting evidence",
     "unable_to_verify": "Unable to verify",
     "legacy": "Finding (earlier engine version)",
-    "rule_draft": "Rule pending legal review",
+    "rule_draft": "Draft rule — under legal review",
     "carried": "From version {n}",
     "article": "Article",
     "missing": "Missing information",
@@ -1148,7 +1148,9 @@
       "secondary_only": "Secondary source",
       "internal": "SALEEM system check"
     },
-    "internal_policy": "Internal policy"
+    "internal_policy": "Internal policy",
+    "evidencePolicy": "Evidence policy",
+    "evidenceRequest": "Evidence needed before a decision"
   },
   "report2": {
     "resultPrefix": "Automated check:",
@@ -1214,7 +1216,11 @@
       "unknown": "Unspecified reason",
       "org_override": "Excluded by your organisation",
       "no_claims_library": "No approved claims in the library",
-      "no_disclaimers_library": "No approved disclaimers in the library"
+      "no_disclaimers_library": "No approved disclaimers in the library",
+      "document_required": "Needs a document: not judged from the ad alone",
+      "reviewer_checklist": "Reviewer checklist item",
+      "coverage_partial": "Analysis incomplete (audio, frames or pages), so unable to verify",
+      "possible_duplicate": "Possible duplicate of {code} — excluded until the mapping is reviewed"
     },
     "signal": {
       "mentions_free": "free / no fees",
@@ -1226,12 +1232,26 @@
       "banknote_or_coin_image": "currency images",
       "real_customer_or_testimonial": "real customer or testimonial",
       "minors_targeted_or_present": "minors",
-      "third_party_logo": "third-party logo"
+      "third_party_logo": "third-party logo",
+      "contest_or_prize": "Competition or prize",
+      "discount_sale": "Discounts",
+      "direct_marketing": "Direct marketing with personal data"
     },
     "draftCtaTitle": "SAMA rules were not applied",
     "draftCtaBody": "SALEEM's financial advertising rules are drafts pending legal review. A workspace owner or admin can enable their preview; their results are shown as warnings only.",
     "draftCtaAction": "Rulebook",
-    "noChecks": "This report comes from an earlier engine version and has no per-rule outcomes."
+    "noChecks": "This report comes from an earlier engine version and has no per-rule outcomes.",
+    "packsTitle": "Rule packs applied and why ({n})",
+    "packDrafts": "Includes drafts",
+    "packCounts": "{a} rules in scope, {n} not applicable",
+    "packReason": {
+      "creator_default": "Creator default packs",
+      "always_enabled": "Always on",
+      "org_enabled": "Turned on by your organisation",
+      "sector_default": "Default for your organisation's sector",
+      "default": "On by default"
+    },
+    "checklistTitle": "Reviewer checklist ({n})"
   },
   "rulebook2": {
     "packsTitle": "Rule packs",

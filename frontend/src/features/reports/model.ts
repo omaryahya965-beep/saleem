@@ -47,6 +47,8 @@ function issueV2(
     source_id?: string | null;
     pack?: string | null;
     internal_policy?: boolean;
+    evidence_policy_ar?: string | null;
+    evidence_request_ar?: string | null;
   };
   const sourceId = citation.source_id ?? rule?.regulatory_source_id ?? null;
   const pack = citation.pack ?? rule?.pack ?? null;
@@ -63,12 +65,18 @@ function issueV2(
           : null,
     missingInformation: f.missing_information_ar,
     carriedFromVersion: f.carried_from_finding_id ? (v2.previousVersionNo ?? null) : null,
+    evidencePolicy:
+      citation.evidence_policy_ar ??
+      ((rule as { evidence_policy_ar?: string | null } | undefined)?.evidence_policy_ar || null),
+    evidenceRequest: citation.evidence_request_ar ?? null,
   };
 }
 
 /** i18n key for a rule-check reason code (e.g. "context:product_type" → report2.reason.context_product_type). */
-export function reasonKey(reason: string | null): { key: TKey; signal?: string } {
+export function reasonKey(reason: string | null): { key: TKey; signal?: string; code?: string } {
   if (!reason) return { key: "report2.reason.unknown" };
+  if (reason.startsWith("possible_duplicate:"))
+    return { key: "report2.reason.possible_duplicate", code: reason.slice(19) };
   if (reason.startsWith("trigger_absent:"))
     return { key: "report2.reason.trigger_absent", signal: reason.slice(15) };
   return { key: `report2.reason.${reason.replace(/:/g, "_")}` as TKey };
@@ -77,6 +85,14 @@ export function reasonKey(reason: string | null): { key: TKey; signal?: string }
 export interface CoverageView {
   status: "complete" | "partial";
   items: { modality: string; state: string }[];
+  /** Phase 8: packs applied to the run and why. Absent on older runs. */
+  packs?: {
+    code: string;
+    reason: string;
+    include_drafts: boolean;
+    applicable: number;
+    not_applicable: number;
+  }[];
 }
 
 /** Coverage items that explain a partial result (failed or missing modalities). */
