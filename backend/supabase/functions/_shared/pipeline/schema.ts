@@ -4,7 +4,7 @@
 
 import type { EvidenceType, Finding, OnScreenText, Severity } from "../types.ts";
 
-export const PROMPT_VERSION = "v3-2026-10";
+export const PROMPT_VERSION = "v4-2026-11";
 
 export const ANALYSIS_SCHEMA = {
   type: "object",

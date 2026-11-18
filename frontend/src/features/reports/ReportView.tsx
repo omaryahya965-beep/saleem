@@ -39,6 +39,7 @@ import { ShareDialog } from "@/features/share/SharePages";
 import { cn } from "@/lib/utils";
 import { MediaPanel, TranscriptPanel } from "./MediaPanel";
 import { countBySeverity, diffFindings, sortIssues, toIssueViews } from "./model";
+import { CoverageBanner, RuleOutcomes } from "./RuleOutcomes";
 
 type Tone = "violation" | "warning" | "ready";
 
@@ -48,7 +49,7 @@ export function Disclaimer({ className }: { className?: string }) {
     <p className={cn("flex items-start gap-2 text-sm text-fg-muted", className)}>
       <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span>
-        {t("brand.disclaimer")} {t("report.illustrativeNote")}
+        {t("brand.disclaimer")} {t("promo.advisory")} {t("report.illustrativeNote")}
       </span>
     </p>
   );
@@ -216,8 +217,15 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
   });
 
   const issues = useMemo(
-    () => sortIssues(toIssueViews(findings, rules, lang, bundle.frameUrls)),
-    [findings, rules, lang, bundle.frameUrls],
+    () =>
+      sortIssues(
+        toIssueViews(findings, rules, lang, bundle.frameUrls, {
+          rulesById: bundle.rulesById,
+          sources: bundle.sources,
+          previousVersionNo: sub.version_no ? sub.version_no - 1 : null,
+        }),
+      ),
+    [findings, rules, lang, bundle.frameUrls, bundle.rulesById, bundle.sources, sub.version_no],
   );
   const { violations, warnings } = countBySeverity(findings);
   const status = sub.overall_status ?? "ready";
@@ -369,7 +377,7 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
       )}
       <StatusBand
         tone={tone}
-        title={t(`status.${status}`)}
+        title={`${t("report2.resultPrefix")} ${t(`status.${status}`)}`}
         summary={summary}
         facts={facts}
         actions={
@@ -405,6 +413,8 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
             </Button>
           </p>
         )}
+
+      <CoverageBanner bundle={bundle} />
 
       {status === "ready" && <ReadyComparison bundle={bundle} />}
 
@@ -478,6 +488,8 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
           )}
         </section>
       </div>
+
+      <RuleOutcomes bundle={bundle} />
 
       <Disclaimer className="border-t border-border pt-5" />
 

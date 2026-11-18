@@ -3,7 +3,9 @@ import { expect, test, tr } from "./fixtures";
 test("dashboard filters update the URL and list", async ({ signedIn: page, lang }) => {
   await page.goto("/dashboard");
   await expect(page.getByText("مراجعة عطر العود")).toBeVisible();
-  await page.getByRole("tab", { name: tr(lang, "جاهز للنشر", "Ready to publish") }).click();
+  await page
+    .getByRole("tab", { name: tr(lang, "لا ملاحظات آلية", "No automated findings") })
+    .click();
   await expect(page).toHaveURL(/status=ready/);
   await expect(page.getByText("تغريدة إطلاق التطبيق")).toBeVisible();
   await expect(page.getByText("مراجعة عطر العود")).toHaveCount(0);

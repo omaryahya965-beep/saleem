@@ -34,6 +34,9 @@ class DisabledProvider implements TranscriptionProvider, AnalysisProvider {
   analyze(): never {
     throw new ProviderError(`${this.name} provider is not enabled (no API key configured)`, false);
   }
+  analyzeV2(): never {
+    throw new ProviderError(`${this.name} provider is not enabled (no API key configured)`, false);
+  }
 }
 
 function requireKey(env: Env, key: string): string {

@@ -10,7 +10,11 @@
 // Progress, errors, models, prompt/rulebook versions, durations, tokens and cost are stored.
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
-import { mergeAndFilterFindings } from "../_shared/pipeline/merge.ts";
+import { evaluate, legacyFindingType, type MergedFinding } from "../_shared/pipeline/evaluate.ts";
+import { buildContext, extractTexts, type PackRow, type ProductRow, type PromotionRow } from "../_shared/pipeline/context.ts";
+import { ocrToOnScreen, type ModelOutputV2 } from "../_shared/pipeline/schema-v2.ts";
+import { matchCarryForward, type PrevFinding } from "../_shared/pipeline/carry.ts";
+import { selectRules } from "../_shared/rules/applicability.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { isRateLimited, rateLimitFromEnv, RATE_WINDOW_MS } from "../_shared/pipeline/rate-limit.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
@@ -19,7 +23,7 @@ import { ProviderError } from "../_shared/providers/types.ts";
 import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
 import { decideAudioMode, filterSegments, shouldTranscribe, type AudioMode, type AudioProbe } from "../_shared/rules/speech.ts";
-import type { Finding, OnScreenText, RuleRecord, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
+import type { AnalysisContext, Finding, OnScreenText, RuleRecord, RuleRow, SubmissionData, TranscriptSegment } from "../_shared/types.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { evidencePath, pixelateRgba } from "../_shared/media/blur.ts";
 import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
@@ -107,7 +111,100 @@ async function notifyUser(db: Db, sub: SubmissionData & { user_id: string; title
   }
 }
 
-async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, runId: string) {
+// ---------------------------------------------------------------------------------------------
+// v2 helpers: context, rule rows, legacy model output, carry-forward
+// ---------------------------------------------------------------------------------------------
+type SubV2 = SubmissionData & { user_id: string; parent_id?: string | null; promotion_id?: string | null; org_id?: string | null; version_no?: number | null };
+
+/** Builds the AnalysisContext from the promotion, its product, org settings and pack settings. */
+async function loadContext(db: Db, sub: SubV2): Promise<AnalysisContext> {
+  const { data: promotion } = sub.promotion_id
+    ? await db.from("promotions").select("*").eq("id", sub.promotion_id).maybeSingle()
+    : { data: null };
+  const orgId = (promotion?.org_id as string | null) ?? sub.org_id ?? null;
+  const [productRes, settingsRes, packsRes, orgPacksRes] = await Promise.all([
+    promotion?.product_id ? db.from("products").select("*").eq("id", promotion.product_id).maybeSingle() : Promise.resolve({ data: null }),
+    orgId ? db.from("org_settings").select("sector, brand_aliases").eq("org_id", orgId).maybeSingle() : Promise.resolve({ data: null }),
+    db.from("rule_packs").select("code, default_sectors, enabled_by_default, always_enabled"),
+    orgId ? db.from("org_rule_packs").select("pack_code, enabled, include_draft_rules").eq("org_id", orgId) : Promise.resolve({ data: [] }),
+  ]);
+  return buildContext({
+    submission: sub,
+    promotion: (promotion as PromotionRow | null) ?? null,
+    product: (productRes.data as ProductRow | null) ?? null,
+    orgSettings: (settingsRes.data as { sector: string | null; brand_aliases: string[] } | null) ?? null,
+    packs: (packsRes.data ?? []) as PackRow[],
+    orgPacks: (orgPacksRes.data ?? []) as { pack_code: string; enabled: boolean; include_draft_rules: boolean }[],
+  });
+}
+
+function toRuleRow(r: Record<string, unknown>, sources: Map<string, string>): RuleRow {
+  const source = (r.regulatory_source_id as string | null) ?? null;
+  return {
+    id: r.id as string,
+    code: r.code as string,
+    category: r.category as string,
+    pack: (r.pack as string | null) ?? null,
+    regulatory_source_id: source,
+    source_status: source ? sources.get(source) ?? null : null,
+    article_ref: (r.article_ref as string | null) ?? null,
+    title_ar: r.title_ar as string,
+    title_en: r.title_en as string,
+    summary_ar: (r.summary_ar as string | null) ?? (r.description_ar as string | null) ?? null,
+    summary_en: (r.summary_en as string | null) ?? (r.description_en as string | null) ?? null,
+    // Rows without a v2 kind (older releases) behave as today: evaluated by both the checks and the model.
+    check_kind: ((r.check_kind as RuleRow["check_kind"]) ?? "hybrid"),
+    deterministic_check: (r.deterministic_check as string | null) ?? null,
+    finding_type_on_fail: (r.finding_type_on_fail as RuleRow["finding_type_on_fail"]) ?? null,
+    default_severity: r.default_severity as RuleRow["default_severity"],
+    applicability: (r.applicability as RuleRow["applicability"]) ?? {},
+    content_triggers: (r.content_triggers as string[]) ?? [],
+    llm_instructions: (r.llm_instructions as string) ?? "",
+    review_state: ((r.review_state as RuleRow["review_state"]) ?? "active"),
+  };
+}
+
+/** A resumed run whose model step produced schema v1: keep its findings, typed like the v1 checks. */
+function fromV1Output(findings: Finding[]): ModelOutputV2 | null {
+  if (!findings.length) return null;
+  return {
+    schema_version: 2,
+    classification: { is_advertisement: "unclear", language: "mixed", detected_product_type: null },
+    signals: [],
+    ocr: [],
+    rule_results: [],
+    findings: findings.map((f) => ({
+      rule_code: f.rule_code,
+      finding_type: legacyFindingType(f.rule_code),
+      severity: f.severity,
+      confidence: f.confidence,
+      source: "llm" as const,
+      evidence: { modality: f.evidence_type === "transcript" ? "speech" : f.evidence_type === "frame" ? "on_screen_text" : f.evidence_type === "caption" ? "caption" : "metadata", quote: f.evidence_text ?? "", t_start: f.t_start, t_end: f.t_end },
+      explanation_ar: f.explanation_ar,
+      explanation_en: f.explanation_en,
+      suggested_fix_ar: f.fix_ar,
+      suggested_fix_en: f.fix_en,
+    })),
+  };
+}
+
+/** Links new findings to the previous version's and resolves the ones that disappeared (§11). */
+async function carryForwardFindings(db: Db, submissionId: string, previousId: string, runId: string, ids: string[], next: MergedFinding[]) {
+  const { data: prevRun } = await db.from("analysis_runs").select("id").eq("submission_id", previousId).eq("status", "done")
+    .order("started_at", { ascending: false }).limit(1).maybeSingle();
+  if (!prevRun) return;
+  const { data: prev } = await db.from("findings").select("id, rule_id, rule_code, finding_type, evidence_text, t_start, status").eq("run_id", prevRun.id);
+  const res = matchCarryForward((prev ?? []) as PrevFinding[], next.map((f) => ({ rule_id: f.rule_id, rule_code: f.rule_code, finding_type: f.finding_type, quote: f.evidence.quote, t_start: f.evidence.t_start })));
+  await Promise.all([
+    ...res.carriedFrom.map((p, i) => (p ? db.from("findings").update({ carried_from_finding_id: p }).eq("id", ids[i]!) : null)).filter(Boolean),
+    res.resolved.length
+      ? db.from("findings").update({ status: "resolved", resolved_in_submission_id: submissionId }).in("id", res.resolved)
+      : null,
+  ]);
+  log("carry_forward", { submission_id: submissionId, run_id: runId, carried: res.carriedFrom.filter(Boolean).length, resolved: res.resolved.length, reappeared_after_decision: res.previousDecisions.length });
+}
+
+async function runPipeline(db: Db, sub: SubV2, runId: string) {
   const cfg = config(env);
   const folder = `${sub.user_id}/${sub.id}`;
   const durations: Record<string, number> = {};
@@ -137,6 +234,9 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       db.from("frames").select("id", { count: "exact", head: true }).eq("submission_id", sub.id),
     ]);
     if (rulesErr) throw rulesErr;
+    const ctx = await loadContext(db, sub);
+    const sources = new Map(((await db.from("regulatory_sources").select("id, status")).data ?? []).map((s) => [s.id as string, s.status as string]));
+    const ruleRows = ((rulesData ?? []) as Record<string, unknown>[]).map((r) => toRuleRow(r, sources));
     const [, signedRes] = await Promise.all([
       frames.length && !frameRows
         ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path })))
@@ -145,7 +245,7 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
         ? db.storage.from("media").createSignedUrls(frames.map((f) => f.path), 900)
         : Promise.resolve({ data: [] }),
     ]);
-    return { rules: (rulesData ?? []) as RuleRecord[], frames, signed: (signedRes?.data ?? []) as { signedUrl?: string | null }[] };
+    return { rules: (rulesData ?? []) as RuleRecord[], ruleRows, ctx, frames, signed: (signedRes?.data ?? []) as { signedUrl?: string | null }[] };
   });
   prepared.catch(() => {}); // awaited below; avoids an unhandled rejection while transcription runs
 
@@ -207,18 +307,24 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
   (sub as SubmissionData).audio_mode = audioMode;
   await assertNotCancelled(db, sub.id);
 
-  // ---- 2. Frames + vision/reasoning model -----------------------------------------------
-  const [, { rules, frames, signed }] = await Promise.all([
+  // ---- 2. Frames + vision/reasoning model (v2: context + applicable rules only) -------------
+  const [, { ruleRows, ctx, frames, signed }] = await Promise.all([
     setProgress(db, sub.id, { status: "analyzing", current_step: "llm", progress: 40 }),
     prepared,
   ]);
-  const validCodes = new Set(rules.map((r) => r.code));
+  const selection = selectRules(ctx, ruleRows);
 
-  let llmFindings: Finding[] = [];
+  let modelOutput: ModelOutputV2 | null = null;
+  let modelStatus: "ok" | "invalid" | "failed" = "ok";
   let onScreen: OnScreenText[] = [];
+  let framesAnalyzed = 0;
+  let batchesFailed = Number(outputs.batches_failed ?? 0);
   if (outputs.llm_done) {
-    llmFindings = (outputs.llm_findings as Finding[]) ?? [];
+    // Resumed run: reuse the stored model output (v2), or map a v1 output from an older run (§7.7).
+    modelOutput = (outputs.llm_v2 as ModelOutputV2 | undefined) ?? fromV1Output((outputs.llm_findings as Finding[]) ?? []);
+    modelStatus = (outputs.llm_status as typeof modelStatus | undefined) ?? (modelOutput ? "ok" : "invalid");
     onScreen = (runRow?.on_screen_text as OnScreenText[]) ?? [];
+    framesAnalyzed = Number(runRow?.frames_count ?? 0);
   } else {
     const frameInputs = frames
       .map((f, i) => ({ t: f.t, url: signed[i]?.signedUrl ?? "" }))
@@ -229,12 +335,17 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       onScreen = ((prev?.on_screen_text as OnScreenText[]) ?? []);
     }
     const analysis = await timed("llm", () =>
-      analysisProvider(env).analyze({ submission: sub, segments, rules, frames: frameInputs, duration: sub.duration_seconds ?? null }),
+      analysisProvider(env).analyzeV2({ submission: sub, ctx, segments, rules: selection.applicable, frames: frameInputs, duration: sub.duration_seconds ?? null }),
     );
-    llmFindings = analysis.findings;
-    onScreen = analysis.on_screen_text;
+    modelOutput = analysis.output;
+    batchesFailed = analysis.batchesFailed;
+    modelStatus = !analysis.output ? "invalid" : "ok";
+    framesAnalyzed = analysis.batchesFailed ? Math.max(0, frameInputs.length - analysis.batchesFailed * 32) : frameInputs.length;
+    if (analysis.output) onScreen = [...onScreen, ...ocrToOnScreen(analysis.output.ocr)];
     outputs.llm_done = true;
-    outputs.llm_findings = llmFindings;
+    outputs.llm_v2 = modelOutput;
+    outputs.llm_status = modelStatus;
+    outputs.batches_failed = batchesFailed;
     outputs.llm_attempts = analysis.attempts;
     const saved = saveRun({
       llm_model: analysis.model,
@@ -242,10 +353,10 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
       raw_llm_output: analysis.raw,
       token_usage: analysis.usage,
       on_screen_text: onScreen,
-      frames_count: frameInputs.length,
+      frames_count: framesAnalyzed,
       step_outputs: outputs,
+      context_snapshot: ctx,
     });
-    // Store on-screen text on the nearest frame rows (for the report and audits).
     // On-screen text on the nearest frame rows (report + audits): all at once, alongside the run save.
     await timed("ocr_store", () =>
       Promise.all([
@@ -255,15 +366,30 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     );
   }
   await assertNotCancelled(db, sub.id);
+  const llmFindings = modelOutput?.findings ?? [];
 
-  // ---- 3. Deterministic checks ---------------------------------------------------------
-  // Deterministic checks take ~1 ms, so there is no separate 85 % write.
-  const det = await timed("deterministic", async () => runDeterministicChecks(sub, segments, onScreen, { audioMode }));
-
-  // ---- 4. Merge + persist ----------------------------------------------------------------
-  const merged = mergeAndFilterFindings([...det.findings, ...llmFindings], validCodes);
+  // ---- 3. Rule engine v2: checks, product facts, merge, rule checks, coverage ---------------
+  const det = runDeterministicChecks(sub, segments, onScreen, { audioMode });
+  const result = await timed("deterministic", async () =>
+    evaluate({
+      ctx,
+      rules: ruleRows,
+      texts: extractTexts(sub, segments, onScreen),
+      legacy: { submission: sub, segments, onScreen, audioMode },
+      model: modelOutput,
+      modelStatus,
+      media: {
+        transcriptionFailed: Boolean(outputs.transcription_failed),
+        framesTotal: sub.kind === "text" ? 0 : frames.length,
+        framesAnalyzed,
+        batchesFailed,
+      },
+    }),
+  );
+  const merged = { mergedFindings: result.findings, overallStatus: result.overallStatus, dropped: result.dropped };
   if (merged.dropped.unknownRule.length) log("dropped_unknown_rules", { submission_id: sub.id, codes: merged.dropped.unknownRule });
 
+  // ---- 4. Persist ------------------------------------------------------------------------
   const [, { data: frameIndex }] = await timed("progress_95", () =>
     Promise.all([
       setProgress(db, sub.id, { current_step: "merge", progress: 95 }),
@@ -274,33 +400,64 @@ async function runPipeline(db: Db, sub: SubmissionData & { user_id: string }, ru
     if (t == null || !frameIndex?.length) return null;
     return frameIndex.reduce((a, b) => (Math.abs(Number(b.t_seconds) - t) < Math.abs(Number(a.t_seconds) - t) ? b : a)).id;
   };
+  const evidenceTypeOf = (m: string) => (m === "speech" ? "transcript" : m === "on_screen_text" || m === "visual" ? "frame" : m === "caption" ? "caption" : "metadata");
+  const frameOf = (f: MergedFinding) => (evidenceTypeOf(f.evidence.modality) === "frame" ? nearestFrame(f.evidence.t_start) : null);
 
-  const evidenceIds = [...new Set(merged.mergedFindings.map((f) => (f.evidence_type === "frame" ? nearestFrame(f.evidence_frame_t ?? f.t_start) : null)).filter((x): x is string => Boolean(x)))];
+  const evidenceIds = [...new Set(merged.mergedFindings.map(frameOf).filter((x): x is string => Boolean(x)))];
   // Blur runs alongside the findings writes; it finishes before "done" so thumbnails are never missing or unblurred.
   const blurred = timed("blur", () => blurEvidenceFrames(db, folder, evidenceIds));
-  await timed("findings_delete", async () => await db.from("findings").delete().eq("run_id", runId));
+  await timed("findings_delete", async () => {
+    await db.from("rule_checks").delete().eq("run_id", runId);
+    await db.from("findings").delete().eq("run_id", runId);
+  });
+  let insertedIds: string[] = [];
   if (merged.mergedFindings.length) await timed("findings_insert", async () => {
-    const { error } = await db.from("findings").insert(
+    const { data, error } = await db.from("findings").insert(
       merged.mergedFindings.map((f) => ({
         run_id: runId,
         submission_id: sub.id,
         rule_code: f.rule_code,
+        rule_id: f.rule_id,
+        finding_type: f.finding_type,
         severity: f.severity,
-        t_start: f.t_start,
-        t_end: f.t_end,
-        evidence_type: f.evidence_type,
-        evidence_text: f.evidence_text,
-        evidence_frame_id: f.evidence_type === "frame" ? nearestFrame(f.evidence_frame_t ?? f.t_start) : null,
+        t_start: f.evidence.t_start,
+        t_end: f.evidence.t_end,
+        evidence_type: evidenceTypeOf(f.evidence.modality),
+        evidence_text: f.evidence.quote || null,
+        evidence_frame_id: frameOf(f),
+        location: { modality: f.evidence.modality, t_start: f.evidence.t_start, t_end: f.evidence.t_end, frame_ref: f.evidence.frame_ref ?? null, page: f.evidence.page ?? null },
         explanation_ar: f.explanation_ar,
         explanation_en: f.explanation_en,
-        fix_ar: f.fix_ar,
-        fix_en: f.fix_en,
+        missing_information_ar: f.missing_information_ar ?? null,
+        fix_ar: f.suggested_fix_ar,
+        fix_en: f.suggested_fix_en ?? null,
         confidence: f.confidence,
-        source: f.source,
+        source: f.source === "llm" ? "llm" : "deterministic",
+        citation: f.citation,
+        rule_draft: f.rule_draft,
       })),
-    );
+    ).select("id");
     if (error) throw error;
+    insertedIds = (data ?? []).map((r) => r.id as string);
   });
+  await timed("rule_checks", async () => {
+    const realRule = (id: string) => /^[0-9a-f-]{36}$/i.test(id);
+    const rows = result.ruleChecks.filter((c) => realRule(c.rule_id)).map((c) => ({
+      run_id: runId,
+      submission_id: sub.id,
+      rule_id: c.rule_id,
+      outcome: c.outcome,
+      reason_code: c.reason,
+      finding_ids: c.finding_indexes.map((i) => insertedIds[i]).filter(Boolean),
+    }));
+    if (rows.length) {
+      const { error } = await db.from("rule_checks").insert(rows);
+      if (error) throw error;
+    }
+    await saveRun({ coverage: result.coverage, context_snapshot: ctx });
+  });
+  // Carry-forward against the previous version (Phase 4 compare view reads it).
+  if (sub.parent_id && insertedIds.length) await timed("carry_forward", () => carryForwardFindings(db, sub.id, sub.parent_id!, runId, insertedIds, merged.mergedFindings));
 
   const [, , usageRes] = await Promise.all([
     blurred,

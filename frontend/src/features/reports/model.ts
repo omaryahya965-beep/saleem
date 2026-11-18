@@ -1,6 +1,6 @@
 import type { IssueView } from "@/components/ui";
 import type { Lang, TKey } from "@/i18n";
-import type { Finding, Rule } from "@/lib/api/data";
+import type { Finding, RegulatorySource, Rule, RuleCheck } from "@/lib/api/data";
 
 /** Maps DB findings + rules to the localized view model used by IssueCard and the timeline. */
 export function toIssueViews(
@@ -8,9 +8,14 @@ export function toIssueViews(
   rules: Map<string, Rule>,
   lang: Lang,
   frameUrls: Map<string, string> = new Map(),
+  v2?: {
+    rulesById: Map<string, Rule>;
+    sources: Map<string, RegulatorySource>;
+    previousVersionNo?: number | null;
+  },
 ): IssueView[] {
   return findings.map((f) => {
-    const rule = rules.get(f.rule_code);
+    const rule = (f.rule_id && v2?.rulesById.get(f.rule_id)) || rules.get(f.rule_code);
     const explanation =
       (lang === "en" ? f.explanation_en : f.explanation_ar) || f.explanation_ar || f.explanation_en;
     const ruleTitle = rule ? (lang === "en" ? rule.title_en : rule.title_ar) : f.rule_code;
@@ -27,8 +32,65 @@ export function toIssueViews(
       evidence: f.evidence_text,
       frameUrl: f.evidence_frame_id ? (frameUrls.get(f.evidence_frame_id) ?? null) : null,
       fix: ((lang === "en" ? f.fix_en : f.fix_ar) || f.fix_ar || f.fix_en) ?? "",
+      ...(v2 ? { v2: issueV2(f, rule, v2) } : {}),
     };
   });
+}
+
+function issueV2(
+  f: Finding,
+  rule: Rule | undefined,
+  v2: { sources: Map<string, RegulatorySource>; previousVersionNo?: number | null },
+): IssueView["v2"] {
+  const citation = (f.citation ?? {}) as {
+    article_ref?: string | null;
+    source_id?: string | null;
+    pack?: string | null;
+  };
+  const sourceId = citation.source_id ?? rule?.regulatory_source_id ?? null;
+  const pack = citation.pack ?? rule?.pack ?? null;
+  return {
+    findingType: f.finding_type,
+    draftRule: f.rule_draft,
+    articleRef: citation.article_ref ?? rule?.article_ref ?? null,
+    verification:
+      pack === "sa-system"
+        ? "internal"
+        : sourceId
+          ? (v2.sources.get(sourceId)?.verification ?? null)
+          : null,
+    missingInformation: f.missing_information_ar,
+    carriedFromVersion: f.carried_from_finding_id ? (v2.previousVersionNo ?? null) : null,
+  };
+}
+
+/** i18n key for a rule-check reason code (e.g. "context:product_type" → report2.reason.context_product_type). */
+export function reasonKey(reason: string | null): { key: TKey; signal?: string } {
+  if (!reason) return { key: "report2.reason.unknown" };
+  if (reason.startsWith("trigger_absent:"))
+    return { key: "report2.reason.trigger_absent", signal: reason.slice(15) };
+  return { key: `report2.reason.${reason.replace(/:/g, "_")}` as TKey };
+}
+
+export interface CoverageView {
+  status: "complete" | "partial";
+  items: { modality: string; state: string }[];
+}
+
+/** Coverage items that explain a partial result (failed or missing modalities). */
+export function coverageGaps(c: CoverageView | null): CoverageView["items"] {
+  if (!c) return [];
+  const bad =
+    /^(transcription_failed|failed|invalid|batch_failed|pack_not_available|draft_product)/;
+  return c.items.filter(
+    (i) => bad.test(i.state) || (i.modality === "frames" && /^analyzed:0\//.test(i.state)),
+  );
+}
+
+export function outcomeCounts(checks: Pick<RuleCheck, "outcome">[]) {
+  const out = { passed: 0, failed: 0, not_applicable: 0, unable_to_verify: 0 };
+  for (const c of checks) if (c.outcome in out) out[c.outcome as keyof typeof out]++;
+  return out;
 }
 
 /** Timed issues first (by time), then whole-clip issues; violations before warnings at equal time. */

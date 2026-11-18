@@ -65,7 +65,9 @@ export type Database = {
           asr_model: string | null;
           asr_provider: string | null;
           audio_mode: string | null;
+          context_snapshot: Json | null;
           cost_usd: number | null;
+          coverage: Json | null;
           durations_ms: Json;
           error: string | null;
           finished_at: string | null;
@@ -76,8 +78,8 @@ export type Database = {
           on_screen_text: Json;
           prompt_version: string | null;
           raw_llm_output: Json | null;
-          rulebook_version: string | null;
           rulebook_version_id: string | null;
+          rulebook_version: string | null;
           started_at: string;
           status: string;
           step_outputs: Json;
@@ -88,7 +90,9 @@ export type Database = {
           asr_model?: string | null;
           asr_provider?: string | null;
           audio_mode?: string | null;
+          context_snapshot?: Json | null;
           cost_usd?: number | null;
+          coverage?: Json | null;
           durations_ms?: Json;
           error?: string | null;
           finished_at?: string | null;
@@ -99,8 +103,8 @@ export type Database = {
           on_screen_text?: Json;
           prompt_version?: string | null;
           raw_llm_output?: Json | null;
-          rulebook_version?: string | null;
           rulebook_version_id?: string | null;
+          rulebook_version?: string | null;
           started_at?: string;
           status?: string;
           step_outputs?: Json;
@@ -111,7 +115,9 @@ export type Database = {
           asr_model?: string | null;
           asr_provider?: string | null;
           audio_mode?: string | null;
+          context_snapshot?: Json | null;
           cost_usd?: number | null;
+          coverage?: Json | null;
           durations_ms?: Json;
           error?: string | null;
           finished_at?: string | null;
@@ -122,8 +128,8 @@ export type Database = {
           on_screen_text?: Json;
           prompt_version?: string | null;
           raw_llm_output?: Json | null;
-          rulebook_version?: string | null;
           rulebook_version_id?: string | null;
+          rulebook_version?: string | null;
           started_at?: string;
           status?: string;
           step_outputs?: Json;
@@ -243,18 +249,21 @@ export type Database = {
         Row: {
           content_hash: string;
           generated_at: string;
+          hash_version: number;
           report_hash: string | null;
           submission_id: string;
         };
         Insert: {
           content_hash: string;
           generated_at?: string;
+          hash_version?: number;
           report_hash?: string | null;
           submission_id: string;
         };
         Update: {
           content_hash?: string;
           generated_at?: string;
+          hash_version?: number;
           report_hash?: string | null;
           submission_id?: string;
         };
@@ -389,55 +398,82 @@ export type Database = {
       };
       findings: {
         Row: {
+          carried_from_finding_id: string | null;
+          citation: Json | null;
           confidence: number;
           evidence_frame_id: string | null;
           evidence_text: string | null;
           evidence_type: Database["public"]["Enums"]["evidence_type"];
           explanation_ar: string | null;
           explanation_en: string | null;
+          finding_type: string | null;
           fix_ar: string | null;
           fix_en: string | null;
           id: string;
+          location: Json | null;
+          missing_information_ar: string | null;
+          resolved_in_submission_id: string | null;
           rule_code: string;
+          rule_draft: boolean;
+          rule_id: string | null;
           run_id: string;
           severity: Database["public"]["Enums"]["severity"];
           source: Database["public"]["Enums"]["finding_source"];
+          status: string;
           submission_id: string;
           t_end: number | null;
           t_start: number | null;
         };
         Insert: {
+          carried_from_finding_id?: string | null;
+          citation?: Json | null;
           confidence?: number;
           evidence_frame_id?: string | null;
           evidence_text?: string | null;
           evidence_type: Database["public"]["Enums"]["evidence_type"];
           explanation_ar?: string | null;
           explanation_en?: string | null;
+          finding_type?: string | null;
           fix_ar?: string | null;
           fix_en?: string | null;
           id?: string;
+          location?: Json | null;
+          missing_information_ar?: string | null;
+          resolved_in_submission_id?: string | null;
           rule_code: string;
+          rule_draft?: boolean;
+          rule_id?: string | null;
           run_id: string;
           severity: Database["public"]["Enums"]["severity"];
           source: Database["public"]["Enums"]["finding_source"];
+          status?: string;
           submission_id: string;
           t_end?: number | null;
           t_start?: number | null;
         };
         Update: {
+          carried_from_finding_id?: string | null;
+          citation?: Json | null;
           confidence?: number;
           evidence_frame_id?: string | null;
           evidence_text?: string | null;
           evidence_type?: Database["public"]["Enums"]["evidence_type"];
           explanation_ar?: string | null;
           explanation_en?: string | null;
+          finding_type?: string | null;
           fix_ar?: string | null;
           fix_en?: string | null;
           id?: string;
+          location?: Json | null;
+          missing_information_ar?: string | null;
+          resolved_in_submission_id?: string | null;
           rule_code?: string;
+          rule_draft?: boolean;
+          rule_id?: string | null;
           run_id?: string;
           severity?: Database["public"]["Enums"]["severity"];
           source?: Database["public"]["Enums"]["finding_source"];
+          status?: string;
           submission_id?: string;
           t_end?: number | null;
           t_start?: number | null;
@@ -623,6 +659,33 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      org_rule_packs: {
+        Row: {
+          enabled: boolean;
+          include_draft_rules: boolean;
+          org_id: string;
+          pack_code: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          enabled?: boolean;
+          include_draft_rules?: boolean;
+          org_id: string;
+          pack_code: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          enabled?: boolean;
+          include_draft_rules?: boolean;
+          org_id?: string;
+          pack_code?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
       };
       org_settings: {
         Row: {
@@ -920,6 +983,114 @@ export type Database = {
         };
         Relationships: [];
       };
+      regulatory_sources: {
+        Row: {
+          authority: string;
+          id: string;
+          identifiers: string | null;
+          notes: string | null;
+          status: string;
+          title_ar: string;
+          title_en: string | null;
+          url: string;
+          verification: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          authority: string;
+          id: string;
+          identifiers?: string | null;
+          notes?: string | null;
+          status: string;
+          title_ar: string;
+          title_en?: string | null;
+          url: string;
+          verification: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          authority?: string;
+          id?: string;
+          identifiers?: string | null;
+          notes?: string | null;
+          status?: string;
+          title_ar?: string;
+          title_en?: string | null;
+          url?: string;
+          verification?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [];
+      };
+      rule_checks: {
+        Row: {
+          created_at: string;
+          finding_ids: string[];
+          id: number;
+          outcome: string;
+          reason_code: string | null;
+          rule_id: string;
+          run_id: string;
+          submission_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          finding_ids?: string[];
+          id?: number;
+          outcome: string;
+          reason_code?: string | null;
+          rule_id: string;
+          run_id: string;
+          submission_id: string;
+        };
+        Update: {
+          created_at?: string;
+          finding_ids?: string[];
+          id?: number;
+          outcome?: string;
+          reason_code?: string | null;
+          rule_id?: string;
+          run_id?: string;
+          submission_id?: string;
+        };
+        Relationships: [];
+      };
+      rule_packs: {
+        Row: {
+          always_enabled: boolean;
+          authority: string;
+          code: string;
+          default_sectors: string[];
+          description_ar: string | null;
+          enabled_by_default: boolean;
+          name_ar: string;
+          name_en: string;
+        };
+        Insert: {
+          always_enabled?: boolean;
+          authority: string;
+          code: string;
+          default_sectors?: string[];
+          description_ar?: string | null;
+          enabled_by_default?: boolean;
+          name_ar: string;
+          name_en: string;
+        };
+        Update: {
+          always_enabled?: boolean;
+          authority?: string;
+          code?: string;
+          default_sectors?: string[];
+          description_ar?: string | null;
+          enabled_by_default?: boolean;
+          name_ar?: string;
+          name_en?: string;
+        };
+        Relationships: [];
+      };
       rulebook_versions: {
         Row: {
           changelog: string | null;
@@ -961,65 +1132,116 @@ export type Database = {
       };
       rules: {
         Row: {
+          additional_citations: Json;
+          applicability: Json;
           applies_to_categories: Database["public"]["Enums"]["product_category"][];
+          article_ref: string | null;
           category: Database["public"]["Enums"]["rule_category"];
+          change_reason: string | null;
+          check_kind: string | null;
           check_type: Database["public"]["Enums"]["check_type"];
           code: string;
+          content_triggers: string[];
           default_severity: Database["public"]["Enums"]["severity"];
           description_ar: string;
           description_en: string;
+          deterministic_check: string | null;
+          finding_type_on_fail: string | null;
           id: string;
           is_active: boolean;
+          legal_reviewed_at: string | null;
+          legal_reviewed_by: string | null;
           legal_status: string;
           llm_instructions: string;
+          official_text_ar: string | null;
+          pack: string | null;
+          regulatory_source_id: string | null;
+          review_state: string;
           rulebook_version_id: string;
           source_date: string | null;
-          source_name: string;
           source_name_en: string | null;
+          source_name: string;
           source_url: string;
           source_verified: boolean;
+          summary_ar: string | null;
+          summary_en: string | null;
+          supersedes_rule_id: string | null;
           title_ar: string;
           title_en: string;
         };
         Insert: {
+          additional_citations?: Json;
+          applicability?: Json;
           applies_to_categories?: Database["public"]["Enums"]["product_category"][];
+          article_ref?: string | null;
           category: Database["public"]["Enums"]["rule_category"];
+          change_reason?: string | null;
+          check_kind?: string | null;
           check_type: Database["public"]["Enums"]["check_type"];
           code: string;
+          content_triggers?: string[];
           default_severity: Database["public"]["Enums"]["severity"];
           description_ar: string;
           description_en: string;
+          deterministic_check?: string | null;
+          finding_type_on_fail?: string | null;
           id?: string;
           is_active?: boolean;
+          legal_reviewed_at?: string | null;
+          legal_reviewed_by?: string | null;
           legal_status?: string;
           llm_instructions: string;
+          official_text_ar?: string | null;
+          pack?: string | null;
+          regulatory_source_id?: string | null;
+          review_state?: string;
           rulebook_version_id: string;
           source_date?: string | null;
-          source_name: string;
           source_name_en?: string | null;
+          source_name: string;
           source_url: string;
           source_verified?: boolean;
+          summary_ar?: string | null;
+          summary_en?: string | null;
+          supersedes_rule_id?: string | null;
           title_ar: string;
           title_en: string;
         };
         Update: {
+          additional_citations?: Json;
+          applicability?: Json;
           applies_to_categories?: Database["public"]["Enums"]["product_category"][];
+          article_ref?: string | null;
           category?: Database["public"]["Enums"]["rule_category"];
+          change_reason?: string | null;
+          check_kind?: string | null;
           check_type?: Database["public"]["Enums"]["check_type"];
           code?: string;
+          content_triggers?: string[];
           default_severity?: Database["public"]["Enums"]["severity"];
           description_ar?: string;
           description_en?: string;
+          deterministic_check?: string | null;
+          finding_type_on_fail?: string | null;
           id?: string;
           is_active?: boolean;
+          legal_reviewed_at?: string | null;
+          legal_reviewed_by?: string | null;
           legal_status?: string;
           llm_instructions?: string;
+          official_text_ar?: string | null;
+          pack?: string | null;
+          regulatory_source_id?: string | null;
+          review_state?: string;
           rulebook_version_id?: string;
           source_date?: string | null;
-          source_name?: string;
           source_name_en?: string | null;
+          source_name?: string;
           source_url?: string;
           source_verified?: boolean;
+          summary_ar?: string | null;
+          summary_en?: string | null;
+          supersedes_rule_id?: string | null;
           title_ar?: string;
           title_en?: string;
         };
@@ -1317,6 +1539,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_rule_review_state: {
+        Args: {
+          _rule: string;
+          _state: string;
+          _reason: string;
+          _official_text_ar?: string | null;
+          _reviewer?: string | null;
+        };
+        Returns: undefined;
+      };
+      set_org_rule_pack: {
+        Args: { _org: string; _pack: string; _enabled: boolean; _include_drafts: boolean };
+        Returns: undefined;
+      };
       can_read_promotion: { Args: { _pid: string }; Returns: boolean };
       archive_product: { Args: { _id: string }; Returns: undefined };
       approve_product: { Args: { _id: string }; Returns: undefined };

@@ -5,12 +5,15 @@ import { classifyProviderError } from "./errors.ts";
 import type { ScoredSegment } from "../rules/speech.ts";
 import { ANALYSIS_SCHEMA, SchemaError, parseModelJson, validateAnalysis, type AnalysisOutput } from "../pipeline/schema.ts";
 import type { TokenUsage, TranscriptSegment } from "../types.ts";
-import { SYSTEM_PROMPT, buildUserPrompt } from "./prompt.ts";
+import { SYSTEM_PROMPT, SYSTEM_PROMPT_V2, buildUserPrompt, buildUserPromptV2 } from "./prompt.ts";
+import { ANALYSIS_SCHEMA_V2, mergeBatches, validateAnalysisV2, type ModelOutputV2 } from "../pipeline/schema-v2.ts";
 import {
   ProviderError,
   type AnalysisProvider,
   type AnalysisRequest,
   type AnalysisResult,
+  type AnalysisRequestV2,
+  type AnalysisResultV2,
   type TranscriptionProvider,
   type TranscriptionResult,
 } from "./types.ts";
@@ -233,6 +236,76 @@ export class OpenAIAnalysis implements AnalysisProvider {
       result.findings.push(...out.parsed.findings);
       result.on_screen_text.push(...out.parsed.on_screen_text);
     }
+    return result;
+  }
+
+  // -------------------------------------------------------------------------------- v2
+  private async callOnceV2(req: AnalysisRequestV2, frames: AnalysisRequestV2["frames"], batch: { index: number; total: number }, usage: TokenUsage): Promise<{ json: unknown; parsed: ModelOutputV2 }> {
+    const content: unknown[] = [
+      { type: "input_text", text: buildUserPromptV2(req.submission, req.ctx, req.segments, req.rules, frames.map((f) => f.t), batch) },
+      ...frames.map((f) => ({ type: "input_image", image_url: f.url, detail: "low" })),
+    ];
+    const body = {
+      model: this.model,
+      instructions: SYSTEM_PROMPT_V2,
+      input: [{ role: "user", content }],
+      ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}),
+      text: { format: { type: "json_schema", name: "saleem_analysis_v2", strict: true, schema: ANALYSIS_SCHEMA_V2 } },
+      max_output_tokens: 16_000,
+      store: false,
+    };
+    const res = await fetchWithTimeout(
+      `${API}/responses`,
+      { method: "POST", headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify(body) },
+      140_000,
+    );
+    if (res.status === 400 && this.reasoningEffort) {
+      const text = await res.clone().text();
+      if (text.includes("reasoning")) {
+        this.reasoningEffort = null;
+        return this.callOnceV2(req, frames, batch, usage);
+      }
+    }
+    if (!res.ok) await fail(res, `analysis (${this.model})`);
+    const data = (await res.json()) as ResponsesOutput;
+    usage.input_tokens += data.usage?.input_tokens ?? 0;
+    usage.output_tokens += data.usage?.output_tokens ?? 0;
+    usage.cached_input_tokens = (usage.cached_input_tokens ?? 0) + (data.usage?.input_tokens_details?.cached_tokens ?? 0);
+    if (data.status === "incomplete") throw new SchemaError(`incomplete response: ${data.incomplete_details?.reason ?? "unknown"}`);
+    const json = parseModelJson(outputText(data));
+    return { json, parsed: validateAnalysisV2(json, req.duration) };
+  }
+
+  /**
+   * v2: same batching (32 frames) and retries. An output that stays invalid after one retry marks that
+   * batch failed instead of failing the check; transport errors still throw (the run can be retried).
+   */
+  async analyzeV2(req: AnalysisRequestV2): Promise<AnalysisResultV2> {
+    const usage: TokenUsage = { input_tokens: 0, output_tokens: 0, cached_input_tokens: 0 };
+    const batches: AnalysisRequestV2["frames"][] = [];
+    for (let i = 0; i < req.frames.length; i += FRAMES_PER_BATCH) batches.push(req.frames.slice(i, i + FRAMES_PER_BATCH));
+    if (batches.length === 0) batches.push([]);
+    const outputs: ModelOutputV2[] = [];
+    const result: AnalysisResultV2 = { output: null, batchesFailed: 0, batches: batches.length, provider: this.name, model: this.model, usage, raw: [], attempts: 0 };
+    for (const [index, frames] of batches.entries()) {
+      let out: { json: unknown; parsed: ModelOutputV2 } | null = null;
+      for (let attempt = 0; attempt < 2 && !out; attempt++) {
+        try {
+          result.attempts++;
+          out = await withRetry(() => this.callOnceV2(req, frames, { index, total: batches.length }, usage));
+        } catch (e) {
+          if (!(e instanceof SchemaError)) throw e;
+          console.warn(JSON.stringify({ event: "schema_v2_invalid", batch: index, attempt, reason: e.message }));
+        }
+      }
+      if (!out) {
+        result.batchesFailed++;
+        continue;
+      }
+      result.raw.push(out.json);
+      outputs.push(out.parsed);
+    }
+    result.output = outputs.length ? mergeBatches(outputs) : null;
     return result;
   }
 }

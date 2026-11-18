@@ -58,7 +58,7 @@ test("ready report shows what was fixed vs the previous version", async ({ page,
   await page.goto(`/checks/${DEMO_READY}`);
   await appReady(page);
   await expect(page.locator("#report-status")).toHaveText(
-    tr(lang, "جاهز للنشر", "Ready to publish"),
+    tr(lang, "لا ملاحظات آلية", "No automated findings"),
   );
   await expect(
     page.getByRole("heading", { name: tr(lang, "ما تم إصلاحه", "What you fixed") }),

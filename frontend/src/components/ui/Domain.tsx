@@ -7,7 +7,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { formatClock, useI18n } from "@/i18n";
+import { formatClock, useI18n, type TKey } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Dialog } from "./Overlays";
 import { Badge, StatusChip } from "./Status";
@@ -30,6 +30,19 @@ export interface IssueView {
   /** Signed URL of the evidence frame; always a server-side blurred copy (privacy). */
   frameUrl?: string | null;
   fix: string;
+  /** Rule engine v2 details; absent for views that do not show them. */
+  v2?: IssueV2;
+}
+
+export interface IssueV2 {
+  /** null for findings stored before the v2 engine (shown with the legacy label). */
+  findingType: string | null;
+  draftRule: boolean;
+  articleRef: string | null;
+  /** official_text_opened | official_status_unconfirmed | secondary_only | internal */
+  verification: string | null;
+  missingInformation: string | null;
+  carriedFromVersion: number | null;
 }
 
 interface IssueCardProps {
@@ -92,6 +105,19 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
             >
               {hasTime ? formatClock(issue.time) : t("issue.noTime")}
             </span>
+            {issue.v2 && (
+              <Badge>
+                {issue.v2.findingType
+                  ? t(`findingType.${issue.v2.findingType}` as TKey)
+                  : t("findingType.legacy")}
+              </Badge>
+            )}
+            {issue.v2?.draftRule && <Badge variant="neutral">{t("findingType.rule_draft")}</Badge>}
+            {issue.v2?.carriedFromVersion && (
+              <Badge variant="neutral">
+                {t("findingType.carried", { n: issue.v2.carriedFromVersion })}
+              </Badge>
+            )}
           </span>
           <span className="text-lg leading-snug font-bold text-fg">{issue.title}</span>
         </span>
@@ -114,6 +140,27 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
             <span>{issue.sourceName}</span>
           )}
         </p>
+        {issue.v2 && (issue.v2.articleRef || issue.v2.verification) && (
+          <p
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted"
+            data-testid="citation"
+          >
+            {issue.v2.articleRef && (
+              <span>
+                {t("findingType.article")} <bdi>{issue.v2.articleRef}</bdi>
+              </span>
+            )}
+            {issue.v2.verification && (
+              <Badge>{t(`findingType.verification.${issue.v2.verification}` as TKey)}</Badge>
+            )}
+          </p>
+        )}
+        {issue.v2?.missingInformation && (
+          <p className="text-sm text-fg">
+            <span className="font-bold">{t("findingType.missing")}: </span>
+            {issue.v2.missingInformation}
+          </p>
+        )}
         {(issue.evidence || issue.frameUrl) && (
           <div className="flex items-start gap-3 rounded-md bg-sunken p-3 text-sm">
             {issue.frameUrl ? (

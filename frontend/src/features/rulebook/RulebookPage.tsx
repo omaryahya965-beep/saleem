@@ -16,6 +16,7 @@ import {
 } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
+import { RulePacks } from "./RulePacks";
 import type { Rule } from "@/lib/api/data";
 
 const CATS = ["mawthooq", "content", "ai", "commerce"] as const;
@@ -146,6 +147,7 @@ export function RulebookPage() {
           </section>
         ))
       )}
+      {book.data && <RulePacks rules={book.data.rules} />}
     </Page>
   );
 }

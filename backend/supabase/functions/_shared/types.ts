@@ -1,5 +1,6 @@
 // Shared pipeline types. Pure TypeScript (no Deno/Node APIs) so they run in Edge Functions and Vitest.
 
+import type { ProductKeyFacts } from "./products/key-facts.ts";
 export type Severity = "violation" | "warning";
 export type EvidenceType = "transcript" | "frame" | "caption" | "metadata";
 export type FindingSource = "deterministic" | "llm";
@@ -81,4 +82,118 @@ export interface TokenUsage {
   input_tokens: number;
   output_tokens: number;
   cached_input_tokens?: number;
+}
+
+// ---------------------------------------------------------------------------------------------
+// v2 rule engine (Phase 2). See docs/saleem-v2/04_AI_PIPELINE.md.
+// ---------------------------------------------------------------------------------------------
+
+export type FindingType = "confirmed_mismatch" | "potential_risk" | "missing_required" | "needs_evidence" | "unable_to_verify";
+export type RuleOutcome = "passed" | "failed" | "not_applicable" | "unable_to_verify";
+export type Modality = "speech" | "on_screen_text" | "caption" | "visual" | "pdf_text" | "metadata";
+export type CheckKind = "deterministic" | "llm" | "hybrid" | "workflow";
+export type ReviewState = "draft" | "legal_review" | "active" | "archived";
+
+/** rules.applicability — all present keys must match (AND); a missing key or ["*"] means any. */
+export interface Applicability {
+  sectors?: string[];
+  regulators?: string[];
+  product_types?: string[];
+  communication_types?: string[];
+  channels?: string[];
+  distribution?: string[];
+  audiences_exclude?: string[];
+  requires_product?: boolean;
+  any_of?: Applicability[];
+}
+
+/** A rule row of the active release, joined with its source status (for guideline capping). */
+export interface RuleRow {
+  id: string;
+  code: string;
+  category: string;
+  pack: string | null;
+  regulatory_source_id: string | null;
+  source_status?: string | null;
+  article_ref: string | null;
+  title_ar: string;
+  title_en: string;
+  summary_ar: string | null;
+  summary_en: string | null;
+  check_kind: CheckKind | null;
+  deterministic_check: string | null;
+  finding_type_on_fail: FindingType | null;
+  default_severity: Severity;
+  applicability: Applicability;
+  content_triggers: string[];
+  llm_instructions: string;
+  review_state: ReviewState;
+}
+
+export interface AnalysisContext {
+  submissionId: string;
+  promotionId: string | null;
+  versionNo: number | null;
+  orgId: string | null;
+  sector: string | null;
+  communicationType: "financial_promotion" | "general_commercial" | "creator_sponsored" | "internal";
+  channels: string[];
+  distribution: "owned" | "paid_media" | "influencer" | null;
+  creatorLicenseNo: string | null;
+  audience: string[];
+  market: string;
+  isPaid: boolean | null;
+  caption: string | null;
+  product: null | {
+    id: string;
+    nameAr: string;
+    nameEn: string | null;
+    aliases: string[];
+    sector: string;
+    productType: string;
+    regulator: string;
+    currency: string;
+    status: "draft" | "approved" | "archived";
+    keyFacts: ProductKeyFacts;
+  };
+  brandAliases: string[];
+  enabledPacks: { code: string; includeDrafts: boolean }[];
+  kind: "video" | "image" | "text" | "pdf";
+}
+
+/** One piece of ad text with where it came from. `norm` = normalizeArabic(text). */
+export interface ExtractedText {
+  modality: Modality;
+  text: string;
+  norm: string;
+  t_start: number | null;
+  t_end: number | null;
+  frame_ref?: string | null;
+  page?: number | null;
+}
+
+export interface FindingEvidence {
+  modality: Modality;
+  quote: string;
+  t_start: number | null;
+  t_end: number | null;
+  frame_ref?: string | null;
+  page?: number | null;
+}
+
+/** A finding before it is attached to its rule row (merge v2 adds rule id, citation and caps). */
+export interface DraftFinding {
+  rule_code: string;
+  finding_type: FindingType;
+  severity: Severity;
+  confidence: number;
+  source: "deterministic" | "llm" | "facts";
+  evidence: FindingEvidence;
+  explanation_ar: string;
+  explanation_en: string;
+  missing_information_ar?: string | null;
+  suggested_fix_ar: string;
+  suggested_fix_en?: string;
+  /** Extra citation data, e.g. the approved and stated values of a confirmed mismatch. */
+  values?: Record<string, unknown>;
 }

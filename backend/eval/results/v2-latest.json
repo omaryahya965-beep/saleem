@@ -1,0 +1,310 @@
+{
+  "summary": {
+    "engine": "v2",
+    "mode": "deterministic+product-facts+recorded-model-output",
+    "cases": 24,
+    "date": "2026-11-17",
+    "precision": 1,
+    "recall": 1,
+    "citation_accuracy": 1,
+    "applicability_accuracy": 1,
+    "unable_to_verify_rate": 0.0036036036036036037,
+    "true_positives": 19,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "ms_total": 16
+  },
+  "cases": [
+    {
+      "case": "fin-01-pass",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "ready",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-02-missing-apr",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-03-apr-mismatch",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|confirmed_mismatch"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|confirmed_mismatch"
+      ],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-04-claim",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-05-1|needs_evidence"
+      ],
+      "expected": [
+        "SAMA-ADV-05-1|needs_evidence"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-05-current-account",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "ready",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-06-dialect-free",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-5|confirmed_mismatch"
+      ],
+      "expected": [
+        "SAMA-ADV-03-5|confirmed_mismatch"
+      ],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-07-ocr-supervision",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "ready",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-08-no-supervision",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-9|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-03-9|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-09-flat-rate",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|potential_risk"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|potential_risk"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-10-free-no-target",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-07|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-07|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-11-fx-missing",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-5|missing_required",
+        "SAMA-ADV-06|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-06|missing_required",
+        "SAMA-ADV-03-5|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-12-fx-ok",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-5|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-03-5|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-13-offer-no-dates",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-04|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-04|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-14-offer-dates",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "ready",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-15-sama-misuse",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-05-3|potential_risk"
+      ],
+      "expected": [
+        "SAMA-ADV-05-3|potential_risk"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-16-abbreviation",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-7|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-03-7|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-17-injection",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|missing_required",
+        "SYS-INJECTION|potential_risk"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|missing_required",
+        "SYS-INJECTION|potential_risk"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-18-draft-product",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [
+        "SAMA-ADV-03-5:product_not_approved",
+        "SAMA-ADV-03-8:product_not_approved"
+      ],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-19-drafts-off",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "ready",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-20-influencer-no-licence",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-13|needs_evidence"
+      ],
+      "expected": [
+        "SAMA-ADV-13|needs_evidence"
+      ],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-21-term-out-of-range",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|confirmed_mismatch"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|confirmed_mismatch"
+      ],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-22-real-estate-qualifier",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-8|missing_required"
+      ],
+      "expected": [
+        "SAMA-ADV-03-8|missing_required"
+      ],
+      "unable": [],
+      "overall": "review",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-23-general-commercial",
+      "ok": true,
+      "produced": [],
+      "expected": [],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    },
+    {
+      "case": "fin-24-fee-mismatch",
+      "ok": true,
+      "produced": [
+        "SAMA-ADV-03-5|confirmed_mismatch"
+      ],
+      "expected": [
+        "SAMA-ADV-03-5|confirmed_mismatch"
+      ],
+      "unable": [],
+      "overall": "needs_fixes",
+      "coverage": "complete"
+    }
+  ]
+}

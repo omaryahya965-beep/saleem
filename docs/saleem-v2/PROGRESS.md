@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: 2 (Rule engine)
+- Phase: 3 (Review)
 - Task: discovery + plan
-- Last commit: Phase 1 report (tag `v2-phase-1`)
-- Next step: read `phases/phase-2-rule-engine.md`, `02_SAUDI_RULES.md`, `03_DATA_MODEL.md` M3–M4, `04_AI_PIPELINE.md`; write `progress/phase-2-plan.md`.
+- Last commit: Phase 2 report (tag `v2-phase-2`)
+- Next step: read `phases/phase-3-review.md`, `03_DATA_MODEL.md` M5–M6, `05_UX_SPEC.md` §2.4/§6.4–6.6; write `progress/phase-3-plan.md`.
 
 ## Status
 
@@ -18,7 +18,7 @@
 |---|---|---|---|---|
 | 0 Baseline | done (with not-run checks) | v2/full-run · v2-phase-0 | progress/phase-0-report.md | 2026-11-17 |
 | 1 Promotions | done (with not-run checks) | v2/full-run · v2-phase-1 | progress/phase-1-report.md | 2026-11-18 |
-| 2 Rule engine | not started | – | – | – |
+| 2 Rule engine | done (with not-run checks) | v2/full-run · v2-phase-2 | progress/phase-2-report.md | 2026-11-18 |
 | 3 Review | not started | – | – | – |
 | 4 Collaboration + PDF | not started | – | – | – |
 | 5 Libraries + dashboard | not started | – | – | – |
@@ -50,15 +50,19 @@ checks) · blocked.
 - D76: no network calls to the hosted project during this run (eval offline, public e2e not run).
 - D84: personal creators and org reviewers keep the old upload form; only org owners/admins/creators see the ad-context step.
 - D80: deleting an organisation keeps its promotions as personal ones (org_id set to null).
+- D92: Mawthooq creator rules no longer apply to a bank's own-channel financial promotions (they still apply to creators, agencies and influencer distribution).
+- D95: the automated result labels changed from «جاهز للنشر» to «لا ملاحظات آلية» (and similar) on every screen.
+- All SAMA/CMA rules are drafts; financial orgs see them only after opting in to the preview.
 
 ## Not run (environment) — run these before deploying
 
 - `npx supabase start --workdir backend && npx supabase db reset --workdir backend`
 - `npx supabase test db --workdir backend`
+- A real analysis with the model (prompt v2 / schema v2 were only exercised with recorded output): `npm --workspace backend run smoke`, then one text, one image and one video check
 - Isolation + DB tests: set `SUPABASE_LOCAL_URL`, `SUPABASE_LOCAL_ANON_KEY`, `SUPABASE_LOCAL_SERVICE_ROLE_KEY` (from `npx supabase status --workdir backend`), then `npm --workspace backend test`
 - `npm --workspace frontend run e2e` against a local stack (the public spec needs demo data)
 - On a copy of production after the Phase 1 migration: `select count(*) from submissions where promotion_id is null` → 0
 
 ## Decisions this programme (also in docs/DECISIONS.md)
 
-- D67–D77 (Phase 0), D78–D87 (Phase 1).
+- D67–D77 (Phase 0), D78–D87 (Phase 1), D88–D103 (Phase 2).

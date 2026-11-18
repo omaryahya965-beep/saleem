@@ -63,3 +63,9 @@ insert into public.compliance_logs (submission_id, content_hash) values
 ('d0000000-0000-0000-0000-000000000001', 'c1a9e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1'),
 ('d0000000-0000-0000-0000-000000000002', 'e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9')
 on conflict (submission_id) do nothing;
+
+-- 8. v2 rulebook release (copies the v1 rules above into 2026.11-v2 and activates it; idempotent, D89)
+select public.v2_publish_rulebook();
+
+-- 9. Seal demo compliance logs that a fresh database created after the sealing migration ran (v1 input).
+update public.compliance_logs set report_hash = public.compute_report_hash(submission_id) where report_hash is null;

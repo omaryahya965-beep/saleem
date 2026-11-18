@@ -218,3 +218,38 @@ Format: decision — why — alternatives considered.
 - **D87. Offline e2e** — `scripts/mock-auth.mjs` prefers `process.env.VITE_SUPABASE_URL` and, when the backend is
   unreachable, answers un-mocked REST calls like RLS would (`[]` / PGRST116). Behaviour with a reachable backend is
   unchanged.
+
+## v2 programme — Phase 2 (rule engine)
+- **D88. The v2 check kind is `rules.check_kind`** (`deterministic|llm|hybrid|workflow`) — `rules.check_type` already
+  exists as the legacy enum (`audio|visual|text|metadata|hybrid`) and stays untouched.
+- **D89. Release `2026.11-v2` is built by `v2_publish_rulebook()`**, called by the M3 migration and again at the end of
+  seed.sql (on a fresh database the v1 rules only exist after the seed). It activates the release only while v1 is the
+  active one, so it never overrides a later admin release. `create_rulebook_draft` now copies the v2 columns.
+- **D90. The engine is a pure module (`_shared/pipeline/evaluate.ts`)** so Vitest runs cases 1–7 and 15 end to end with a
+  recorded model output; `analyze/index.ts` only gathers inputs and persists results.
+- **D91. Deterministic checks live in one registry file** (`_shared/rules/checks/index.ts`) instead of one file per key —
+  16 short functions share helpers and messages; each key has its own tests.
+- **D92. Mawthooq rules (MAW-01..04) apply to creator/general content or influencer distribution** (rule
+  `applicability`), per 02_SAUDI_RULES §3 "default for creators, agencies, any influencer distribution". Personal and
+  agency promotions keep today's behaviour; a bank's own-channel financial promotion no longer gets creator findings.
+- **D93. AI-01 is not edited**; findings from rules whose source is a `guideline` (SDAIA) are capped at warning at merge time.
+- **D94. New runs type the v1 creator-check findings** (MAW-01, AI-01 → missing_required; MAW-02..04 → needs_evidence;
+  others → potential_risk). Stored legacy rows keep `finding_type = null` and show «ملاحظة (إصدار سابق من المحرك)».
+- **D95. Overall-status labels changed to the advisory wording** («لا ملاحظات آلية / ملاحظات للمراجعة / ملاحظات تستلزم
+  التعديل», prefixed «الفحص الآلي:») — «جاهز للنشر» implied that SALEEM clears an ad for publication (master §2.1 rule 3).
+  Two e2e assertions updated in the same commit.
+- **D96. Weak-evidence downgrade (violation → warning below 0.7) applies to every model finding**, not only creator rules.
+- **D97. CNT-01..06 have no `regulatory_source_id`** — their source (GCAM content rules) is not in the verified source list;
+  they keep their stored source name and link.
+- **D98. An approved product with `fees: []` passes the fee-disclosure check**; unknown fees (key absent) still require
+  disclosure.
+- **D99. Schema v2 deviations:** OCR and evidence carry `t` seconds (frames are matched by time, as today) instead of a
+  `frame_ref`; the optional `region` is omitted (strict structured output requires every field).
+- **D100. A model batch that stays invalid after one retry makes coverage partial** (its rules `unable_to_verify`,
+  `model_output_invalid`) instead of failing the check; transport errors still fail the run so it can be retried.
+- **D101. Any `confirmed_mismatch` makes the automated result `needs_fixes`, even under a draft rule** (04 §10 literal);
+  the finding itself stays capped at warning and labelled as a draft rule.
+- **D102. Report hash v2 is versioned per log** (`compliance_logs.hash_version`); logs sealed before keep verifying
+  with the v1 input. Fresh databases seal the demo logs at the end of seed.sql.
+- **D103. Eval v2 uses recorded model output** (no live model, D76); its metrics are on invented, self-labelled cases
+  and must not be quoted as real-world accuracy.

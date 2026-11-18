@@ -1,5 +1,6 @@
-import type { RuleRecord, SubmissionData, TokenUsage, TranscriptSegment } from "../types.ts";
+import type { AnalysisContext, RuleRecord, RuleRow, SubmissionData, TokenUsage, TranscriptSegment } from "../types.ts";
 import type { AnalysisOutput } from "../pipeline/schema.ts";
+import type { ModelOutputV2 } from "../pipeline/schema-v2.ts";
 import type { ProviderErrorInfo } from "./errors.ts";
 import type { ScoredSegment } from "../rules/speech.ts";
 
@@ -45,6 +46,30 @@ export interface TranscriptionProvider {
 export interface AnalysisProvider {
   readonly name: string;
   analyze(req: AnalysisRequest): Promise<AnalysisResult>;
+  analyzeV2(req: AnalysisRequestV2): Promise<AnalysisResultV2>;
+}
+
+/** v2 request: context + only the applicable rules (the provider sends the model-evaluated ones). */
+export interface AnalysisRequestV2 {
+  submission: SubmissionData;
+  ctx: AnalysisContext;
+  segments: TranscriptSegment[];
+  rules: RuleRow[];
+  frames: FrameInput[];
+  duration: number | null;
+}
+
+export interface AnalysisResultV2 {
+  /** Merged output of the batches that validated; null when none did. */
+  output: ModelOutputV2 | null;
+  /** Batches whose output stayed invalid after one retry (coverage becomes partial). */
+  batchesFailed: number;
+  batches: number;
+  provider: string;
+  model: string;
+  usage: TokenUsage;
+  raw: unknown[];
+  attempts: number;
 }
 
 export class ProviderError extends Error {

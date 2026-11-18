@@ -269,7 +269,7 @@ export function LogPage({ id }: { id: string }) {
 
         <footer className="mt-10 border-t border-line pt-4 text-xs leading-relaxed text-muted">
           <p>
-            {t("brand.disclaimer")} {t("report.illustrativeNote")}
+            {t("brand.disclaimer")} {t("promo.advisory")} {t("report.illustrativeNote")}
           </p>
           <p className="mt-1">
             {t("log.generatedAt", { date: formatDate(log?.generated_at ?? sub.analyzed_at, true) })}{" "}

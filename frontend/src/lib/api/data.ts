@@ -137,7 +137,16 @@ export interface ReportBundle {
   mediaUrl: string | null;
   /** Signed URLs of evidence frames, by frame id. */
   frameUrls: Map<string, string>;
+  /** v2: one outcome per rule considered in the latest run (empty for runs before the v2 engine). */
+  ruleChecks: RuleCheck[];
+  /** v2: rules of the active release by id (findings and rule checks point at rule ids). */
+  rulesById: Map<string, Rule>;
+  /** v2: regulatory sources by id (verification badge). */
+  sources: Map<string, RegulatorySource>;
 }
+
+export type RuleCheck = Tables["rule_checks"]["Row"];
+export type RegulatorySource = Tables["regulatory_sources"]["Row"];
 
 async function latestRunWithFindings(submissionId: string) {
   const { data: runs, error } = await supabase
@@ -160,20 +169,30 @@ async function latestRunWithFindings(submissionId: string) {
 
 export async function fetchReport(id: string): Promise<ReportBundle> {
   // One parallel round: Supabase RTT dominates, so nothing here waits on the submission row.
-  const [submission, { run, findings }, transcriptRes, rulebook, logRes, framesRes] =
-    await Promise.all([
-      fetchSubmission(id),
-      latestRunWithFindings(id),
-      supabase.from("transcripts").select("*").eq("submission_id", id).maybeSingle(),
-      fetchRulebook(),
-      supabase.from("compliance_logs").select("*").eq("submission_id", id).maybeSingle(),
-      supabase
-        .from("frames")
-        .select("id, image_path")
-        .eq("submission_id", id)
-        // Only server-blurred copies are ever shown (frames may show people, including minors).
-        .eq("blurred", true),
-    ]);
+  const [
+    submission,
+    { run, findings },
+    transcriptRes,
+    rulebook,
+    logRes,
+    framesRes,
+    checksRes,
+    sourcesRes,
+  ] = await Promise.all([
+    fetchSubmission(id),
+    latestRunWithFindings(id),
+    supabase.from("transcripts").select("*").eq("submission_id", id).maybeSingle(),
+    fetchRulebook(),
+    supabase.from("compliance_logs").select("*").eq("submission_id", id).maybeSingle(),
+    supabase
+      .from("frames")
+      .select("id, image_path")
+      .eq("submission_id", id)
+      // Only server-blurred copies are ever shown (frames may show people, including minors).
+      .eq("blurred", true),
+    supabase.from("rule_checks").select("*").eq("submission_id", id),
+    supabase.from("regulatory_sources").select("*"),
+  ]);
 
   let parent: Submission | null = null;
   let parentFindings: Finding[] = [];
@@ -239,6 +258,9 @@ export async function fetchReport(id: string): Promise<ReportBundle> {
     log: logRes.data ?? null,
     mediaUrl,
     frameUrls,
+    ruleChecks: (checksRes.data ?? []).filter((c) => c.run_id === run?.id),
+    rulesById: new Map(rulebook.rules.map((r) => [r.id, r])),
+    sources: new Map((sourcesRes.data ?? []).map((x) => [x.id, x])),
   };
 }
 
