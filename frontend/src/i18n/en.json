@@ -59,7 +59,8 @@
     "audit": "Audit log",
     "claims": "Claims library",
     "disclaimers": "Required disclaimers",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "ask": "Ask Saleem"
   },
   "status": {
     "ready": "No automated findings",
@@ -1366,7 +1367,16 @@
       "invalid_event": "Invalid event.",
       "edit_required": "Edit the draft before approving it.",
       "invalid_code": "The code starts with INT- followed by capital letters or digits.",
-      "text_required": "Text is required."
+      "text_required": "Text is required.",
+      "not_uploader": "Only the uploader can self-approve.",
+      "no_matching_rule": "No self-approval rule applies to you.",
+      "has_findings": "There are automated findings.",
+      "findings_unanswered": "Answer every automated finding first.",
+      "high_risk_pack": "Rules from a high-risk pack apply.",
+      "invalid_ai_requirement": "Invalid requirement.",
+      "people_required": "Choose a role or a person.",
+      "invalid_url": "The URL must start with https://",
+      "invalid_expiry": "Validity is 1 to 365 days."
     },
     "decision": {
       "approve": "Approve",
@@ -1463,7 +1473,8 @@
         "lifecycle_taken_down": "Take-down recorded",
         "withdrawal_requested": "Withdrawal request recorded",
         "rereview_due": "Due for re-review",
-        "rereviewed": "Re-reviewed"
+        "rereviewed": "Re-reviewed",
+        "self_approved": "Self-approved"
       }
     },
     "audit": {
@@ -1669,7 +1680,17 @@
     "analytics": "Analytics",
     "analyticsHint": "Review metrics from events and sealed decisions only: SLA compliance, first-time approval, times, reasons and workload.",
     "internal_rules": "Internal policies (brand guideline)",
-    "internal_rulesHint": "Rules drafted by Saleem from your brand guideline; an owner or admin edits and approves each before it runs. Labelled «Internal policy»."
+    "internal_rulesHint": "Rules drafted by Saleem from your brand guideline; an owner or admin edits and approves each before it runs. Labelled «Internal policy».",
+    "self_approval": "Self-approval",
+    "self_approvalHint": "The uploader approves their own promotion under org rules (channel, market, role, AI requirement). Recorded as «Self-approval».",
+    "api": "API and webhooks",
+    "apiHint": "Read keys for other systems (promotions, findings, decisions) and signed webhook notifications.",
+    "notifications_chat": "Slack and Teams notifications",
+    "notifications_chatHint": "One line with a link when an analysis completes, a promotion is submitted or decided. Finding text is never sent.",
+    "ask_saleem": "Ask Saleem",
+    "ask_saleemHint": "A read-only assistant: answers about the rules, promotions and findings you can open, with links. It changes nothing.",
+    "readability_hint": "Readability hint",
+    "readability_hintHint": "Points out very long sentences and dense footnotes. A hint only, never a compliance finding."
   },
   "flows": {
     "title": "Approval flow",
@@ -1882,6 +1903,88 @@
       "model_draft": "Model draft",
       "heuristic_draft": "From guideline sentences",
       "manual": "Manual"
+    }
+  },
+  "selfApproval": {
+    "action": "Self-approve",
+    "note": "The decision is recorded under your name, marked «Self-approval». Conditional self-approval is not available.",
+    "done": "Self-approval recorded",
+    "rulesTitle": "Self-approval rules",
+    "rulesSubtitle": "Who may approve their own promotion, where, and with what AI-findings requirement. Re-checked on every approval.",
+    "name": "Rule name",
+    "aiLabel": "AI findings requirement",
+    "roles": "Roles",
+    "ai": {
+      "no_findings": "No automated findings",
+      "all_answered": "All automated findings answered"
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "keys": "API keys",
+    "keysHint": "Read-only in this release. A key is shown once, has scopes and an expiry, and can be revoked. Limit: 60 requests per minute.",
+    "keyName": "Key name",
+    "days": "Valid for (days)",
+    "createKey": "Create key",
+    "expires": "expires",
+    "revoke": "Revoke",
+    "revoked": "Revoked",
+    "hooks": "Outgoing notifications",
+    "kindLabel": "Type",
+    "url": "URL",
+    "addHook": "Add",
+    "copySecret": "Copy signing secret",
+    "secretCopied": "Signing secret copied",
+    "kind": {
+      "webhook": "Webhook",
+      "slack": "Slack",
+      "teams": "Teams"
+    },
+    "event": {
+      "analysis_completed": "Analysis completed",
+      "review_submitted": "Submitted for review",
+      "review_decided": "Decision made"
+    },
+    "delivery": {
+      "pending": "Pending",
+      "delivered": "Delivered",
+      "failed": "Failed"
+    }
+  },
+  "ask": {
+    "title": "Ask Saleem",
+    "subtitle": "Answers only from the rules, promotions and findings you can open, with links to the sources. No legal advice; it approves nothing.",
+    "offTitle": "The assistant is not enabled",
+    "offBody": "The workspace owner or admin enables it in «Advanced workflows».",
+    "question": "Your question",
+    "send": "Ask",
+    "failed": "Could not answer. Try again.",
+    "modelNote": "The model phrased this only from the numbered sources. Check them before relying on it.",
+    "noModelNote": "No model configured: these are the search results as they are."
+  },
+  "readability": {
+    "title": "Readability",
+    "note": "A hint for the writer only, not a compliance finding.",
+    "none": "No very long sentences or dense footnotes.",
+    "long": "Very long sentence ({n} words):",
+    "dense": "Dense footnotes ({n}):"
+  },
+  "calibration": {
+    "title": "Rule calibration",
+    "subtitle": "How reviewers respond to each rule's findings. Notes are suggestions a person reviews and publishes as a new version; rules are never edited automatically.",
+    "adminOnly": "This page is for platform admins only.",
+    "addNote": "Suggest",
+    "noteFor": "Suggestion for {code}",
+    "noteHint": "e.g. extend synonyms, clarify the instruction.",
+    "noteSaved": "Suggestion saved",
+    "col": {
+      "rule": "Rule",
+      "findings": "Findings",
+      "reviewed": "Reviewed",
+      "agreement": "Reviewer agreement",
+      "dismissRate": "Dismiss rate",
+      "reasons": "Top dismiss reasons",
+      "notes": "Suggestions"
     }
   }
 }

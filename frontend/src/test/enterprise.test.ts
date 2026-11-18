@@ -25,3 +25,17 @@ describe("flowLive", () => {
     expect(flowLive([])).toBe(false);
   });
 });
+
+describe("readability hints (advisory only)", () => {
+  it("flags very long sentences and dense footnotes, nothing for short copy", async () => {
+    const { readabilityHints } = await import("@/features/enterprise/readability");
+    expect(readabilityHints("تمويل شخصي بمعدل 3.5%. قدّم الآن.")).toEqual([]);
+    const long = Array.from({ length: 40 }, (_, i) => `كلمة${i}`).join(" ");
+    expect(readabilityHints(long).map((h) => h.kind)).toEqual(["long_sentence"]);
+    expect(
+      readabilityHints("عرض خاص* حتى نهاية الشهر** بدون رسوم*** تطبق الشروط والأحكام").map(
+        (h) => h.kind,
+      ),
+    ).toContain("dense_footnotes");
+  });
+});

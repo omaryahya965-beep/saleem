@@ -1,0 +1,20 @@
+-- Rollback of 20261118070200_v2_api_webhooks.sql.
+select cron.unschedule(jobid) from cron.job where jobname = 'saleem-webhooks';
+drop function if exists public.invoke_webhooks_deliver();
+drop function if exists public.webhook_attempt(bigint, boolean, integer, text);
+drop trigger if exists submissions_webhooks on public.submissions;
+drop function if exists public.submissions_webhooks();
+drop trigger if exists review_events_webhooks on public.review_events;
+drop function if exists public.review_events_webhooks();
+drop function if exists public.enqueue_webhook(uuid, text, jsonb);
+drop function if exists public.set_webhook_active(uuid, boolean);
+drop function if exists public.webhook_secret(uuid);
+drop function if exists public.save_webhook_endpoint(uuid, text, text, text[]);
+drop function if exists public.api_key_check(text, integer);
+drop function if exists public.revoke_api_key(uuid);
+drop function if exists public.create_api_key(uuid, text, text[], integer);
+drop function if exists public.api_hash(text);
+drop table if exists public.webhook_deliveries;
+drop table if exists public.webhook_endpoints;
+drop table if exists public.api_rate;
+drop table if exists public.api_keys;

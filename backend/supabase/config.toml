@@ -433,3 +433,15 @@ verify_jwt = true
 # internal-rules-draft: owner/admin only (checked with the caller's JWT via can_manage_internal_rules).
 [functions.internal-rules-draft]
 verify_jwt = true
+
+# api: public API v1, authenticated with org API keys (not user JWTs); checked by api_key_check.
+[functions.api]
+verify_jwt = false
+
+# webhooks-deliver: called by pg_cron; verifies x-cron-secret against the vault.
+[functions.webhooks-deliver]
+verify_jwt = false
+
+# ask: read-only assistant; every read uses the caller's JWT (RLS).
+[functions.ask]
+verify_jwt = true

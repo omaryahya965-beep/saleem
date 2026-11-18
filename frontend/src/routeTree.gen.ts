@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as StyleguideRouteImport } from './routes/styleguide'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/_app/analytics'
+import { Route as AppAskRouteImport } from './routes/_app/ask'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppClaimsRouteImport } from './routes/_app/claims'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
@@ -27,6 +28,7 @@ import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppSampleRouteImport } from './routes/_app/sample'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
+import { Route as AppAdminCalibrationRouteImport } from './routes/_app/admin/calibration'
 import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
 import { Route as AppAdminMetricsRouteImport } from './routes/_app/admin/metrics'
 import { Route as AppAdminRulesRouteImport } from './routes/_app/admin/rules'
@@ -62,6 +64,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAskRoute = AppAskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditRoute = AppAuditRouteImport.update({
@@ -132,6 +139,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppSignupRoute = AppSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminCalibrationRoute = AppAdminCalibrationRouteImport.update({
+  id: '/admin/calibration',
+  path: '/admin/calibration',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminEvalRoute = AppAdminEvalRouteImport.update({
@@ -224,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/styleguide': typeof StyleguideRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/ask': typeof AppAskRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -238,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/sample': typeof AppSampleRoute
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
+  '/admin/calibration': typeof AppAdminCalibrationRoute
   '/admin/eval': typeof AppAdminEvalRoute
   '/admin/metrics': typeof AppAdminMetricsRoute
   '/admin/rules': typeof AppAdminRulesRoute
@@ -259,6 +273,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/styleguide': typeof StyleguideRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/ask': typeof AppAskRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -274,6 +289,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/': typeof AppIndexRoute
+  '/admin/calibration': typeof AppAdminCalibrationRoute
   '/admin/eval': typeof AppAdminEvalRoute
   '/admin/metrics': typeof AppAdminMetricsRoute
   '/admin/rules': typeof AppAdminRulesRoute
@@ -297,6 +313,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/styleguide': typeof StyleguideRoute
   '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/ask': typeof AppAskRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/claims': typeof AppClaimsRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -312,6 +329,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signup': typeof AppSignupRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/calibration': typeof AppAdminCalibrationRoute
   '/_app/admin/eval': typeof AppAdminEvalRoute
   '/_app/admin/metrics': typeof AppAdminMetricsRoute
   '/_app/admin/rules': typeof AppAdminRulesRoute
@@ -336,6 +354,7 @@ export interface FileRouteTypes {
     | '/'
     | '/styleguide'
     | '/analytics'
+    | '/ask'
     | '/audit'
     | '/claims'
     | '/dashboard'
@@ -350,6 +369,7 @@ export interface FileRouteTypes {
     | '/sample'
     | '/settings'
     | '/signup'
+    | '/admin/calibration'
     | '/admin/eval'
     | '/admin/metrics'
     | '/admin/rules'
@@ -371,6 +391,7 @@ export interface FileRouteTypes {
   to:
     | '/styleguide'
     | '/analytics'
+    | '/ask'
     | '/audit'
     | '/claims'
     | '/dashboard'
@@ -386,6 +407,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/'
+    | '/admin/calibration'
     | '/admin/eval'
     | '/admin/metrics'
     | '/admin/rules'
@@ -408,6 +430,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/styleguide'
     | '/_app/analytics'
+    | '/_app/ask'
     | '/_app/audit'
     | '/_app/claims'
     | '/_app/dashboard'
@@ -423,6 +446,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/signup'
     | '/_app/'
+    | '/_app/admin/calibration'
     | '/_app/admin/eval'
     | '/_app/admin/metrics'
     | '/_app/admin/rules'
@@ -475,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ask': {
+      id: '/_app/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AppAskRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/audit': {
@@ -573,6 +604,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof AppSignupRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/calibration': {
+      id: '/_app/admin/calibration'
+      path: '/admin/calibration'
+      fullPath: '/admin/calibration'
+      preLoaderRoute: typeof AppAdminCalibrationRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/eval': {
@@ -699,6 +737,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppAskRoute: typeof AppAskRoute
   AppAuditRoute: typeof AppAuditRoute
   AppClaimsRoute: typeof AppClaimsRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -714,6 +753,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignupRoute: typeof AppSignupRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminCalibrationRoute: typeof AppAdminCalibrationRoute
   AppAdminEvalRoute: typeof AppAdminEvalRoute
   AppAdminMetricsRoute: typeof AppAdminMetricsRoute
   AppAdminRulesRoute: typeof AppAdminRulesRoute
@@ -735,6 +775,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppAskRoute: AppAskRoute,
   AppAuditRoute: AppAuditRoute,
   AppClaimsRoute: AppClaimsRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -750,6 +791,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSignupRoute: AppSignupRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminCalibrationRoute: AppAdminCalibrationRoute,
   AppAdminEvalRoute: AppAdminEvalRoute,
   AppAdminMetricsRoute: AppAdminMetricsRoute,
   AppAdminRulesRoute: AppAdminRulesRoute,

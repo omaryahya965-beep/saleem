@@ -33,6 +33,8 @@ import { PresetsCard } from "@/features/enterprise/PresetsCard";
 import { RiskAcceptorsCard } from "@/features/enterprise/RiskPanel";
 import { PartnersCard } from "@/features/enterprise/PartnersCard";
 import { InternalRulesCard } from "@/features/enterprise/InternalRulesCard";
+import { SelfApprovalRulesCard } from "@/features/enterprise/SelfApproval";
+import { IntegrationsCard } from "@/features/enterprise/IntegrationsCard";
 import {
   acceptInvite,
   createCampaign,
@@ -552,6 +554,8 @@ export function OrgPage({ id }: { id: string }) {
       {manager && <RiskAcceptorsCard orgId={id} />}
       {manager && <PartnersCard orgId={id} />}
       {manager && <InternalRulesCard orgId={id} />}
+      {manager && <SelfApprovalRulesCard orgId={id} />}
+      {manager && <IntegrationsCard orgId={id} />}
     </Page>
   );
 }

@@ -23,6 +23,7 @@ import {
   BadgeCheck,
   FileCheck2,
   BarChart3,
+  MessageCircleQuestion,
 } from "lucide-react";
 import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -165,6 +166,15 @@ function AccountMenu() {
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild>
             <Link
+              to="/ask"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <MessageCircleQuestion aria-hidden="true" className="size-4" />
+              {t("nav.ask")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
               to="/audit"
               className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
             >
@@ -191,6 +201,15 @@ function AccountMenu() {
                 >
                   <BookCheck aria-hidden="true" className="size-4" />
                   {t("nav.rulesAdmin")}
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link
+                  to="/admin/calibration"
+                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+                >
+                  <BarChart3 aria-hidden="true" className="size-4" />
+                  {t("calibration.title")}
                 </Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item asChild>

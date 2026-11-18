@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: 7 (Later, P3)
-- Task: discovery + plan
-- Last commit: Phase 6 report (tag `v2-phase-6`)
-- Next step: read `phases/phase-7-*.md`; build items 1, 2, 3 (Slack/Teams only), 4, 6, 7 behind flags; item 5 = CMA/insurance packs as drafts with a legal checklist.
+- Phase: done (Phases 0–7)
+- Task: final report written
+- Last commit: Phase 7 report (tag `v2-phase-7`)
+- Next step: the user verifies locally (FINAL_REPORT §4), legal review of the draft rules, then deploys (runbook §5).
 
 ## Status
 
@@ -23,7 +23,7 @@
 | 4 Collaboration + PDF | done (with not-run checks) | v2/full-run · v2-phase-4 | progress/phase-4-report.md | 2026-11-18 |
 | 5 Libraries + dashboard | done (with not-run checks) | v2/full-run · v2-phase-5 | progress/phase-5-report.md | 2026-11-18 |
 | 6 Enterprise (P2) | done (with not-run checks; 6.3 external reviewer and 6.4 carousel not built) | v2/full-run · v2-phase-6 | progress/phase-6-report.md | 2026-11-18 |
-| 7 Expansion (P3) | not started | – | – | – |
+| 7 Expansion (P3) | done (with not-run checks; API v1 read-only) | v2/full-run · v2-phase-7 | progress/phase-7-report.md | 2026-11-18 |
 
 Status values: not started · planning · waiting for "go" · in progress · done · done (with not-run
 checks) · blocked.
@@ -62,6 +62,8 @@ checks) · blocked.
 - D128: carousel analysis not built (variations + batch only).
 - D129: a Thursday/Friday regulator notice is due Sunday; org holidays only editable in SQL.
 - D131: without a model key, internal-rule drafts come from the guideline's directive sentences (marked).
+- D133: the public API is read-only in this release (no write / analysis trigger).
+- D132: self-approval blocked packs are set in SQL only.
 
 ## Not run (environment) — run these before deploying
 

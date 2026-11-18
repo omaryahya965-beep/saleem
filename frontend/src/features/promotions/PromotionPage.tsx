@@ -47,6 +47,7 @@ import { CompareTab } from "@/features/collab/CompareTab";
 import { LinkedClaims } from "@/features/libraries/LinkedClaims";
 import { VariationsCard } from "@/features/enterprise/VariationsCard";
 import { LifecyclePanel } from "@/features/enterprise/LifecyclePanel";
+import { ReadabilityPanel } from "@/features/enterprise/ReadabilityPanel";
 
 export function PromotionPage({ id, v }: { id: string; v?: number }) {
   const { t } = useI18n();
@@ -253,6 +254,9 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
           </div>
           <div className="mt-4">
             <LifecyclePanel promotion={p} orgRole={role ?? null} isOwner={isOwner} />
+          </div>
+          <div className="mt-4">
+            <ReadabilityPanel promotion={p} />
           </div>
         </Page>
       </TabsContent>

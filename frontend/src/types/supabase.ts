@@ -153,6 +153,48 @@ export type Database = {
           },
         ];
       };
+      api_keys: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          expires_at: string;
+          id: string;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at: string | null;
+          name: string;
+          org_id: string;
+          revoked_at: string | null;
+          scopes: string[];
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          expires_at: string;
+          id?: string;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at?: string | null;
+          name: string;
+          org_id: string;
+          revoked_at?: string | null;
+          scopes: string[];
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string;
+          id?: string;
+          key_hash?: string;
+          key_prefix?: string;
+          last_used_at?: string | null;
+          name?: string;
+          org_id?: string;
+          revoked_at?: string | null;
+          scopes?: string[];
+        };
+        Relationships: [];
+      };
       approval_preset_steps: {
         Row: {
           id: string;
@@ -297,6 +339,30 @@ export type Database = {
           org_id?: string;
           text_ar?: string;
           title?: string;
+        };
+        Relationships: [];
+      };
+      calibration_notes: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          note: string;
+          rule_code: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note: string;
+          rule_code: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note?: string;
+          rule_code?: string;
         };
         Relationships: [];
       };
@@ -1140,6 +1206,7 @@ export type Database = {
           require_uploader_responses: boolean;
           review_sla_business_days: number;
           sector: string | null;
+          self_approval_blocked_packs: string[];
           updated_at: string;
           updated_by: string | null;
           weekend_days: number[];
@@ -1155,6 +1222,7 @@ export type Database = {
           require_uploader_responses?: boolean;
           review_sla_business_days?: number;
           sector?: string | null;
+          self_approval_blocked_packs?: string[];
           updated_at?: string;
           updated_by?: string | null;
           weekend_days?: number[];
@@ -1170,6 +1238,7 @@ export type Database = {
           require_uploader_responses?: boolean;
           review_sla_business_days?: number;
           sector?: string | null;
+          self_approval_blocked_packs?: string[];
           updated_at?: string;
           updated_by?: string | null;
           weekend_days?: number[];
@@ -2062,6 +2131,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      self_approval_rules: {
+        Row: {
+          active: boolean;
+          ai_requirement: string;
+          channels: string[];
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          markets: string[];
+          name: string;
+          org_id: string;
+          product_types: string[];
+          roles: Database["public"]["Enums"]["org_role"][];
+          user_ids: string[];
+        };
+        Insert: {
+          active?: boolean;
+          ai_requirement?: string;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          markets?: string[];
+          name: string;
+          org_id: string;
+          product_types?: string[];
+          roles?: Database["public"]["Enums"]["org_role"][];
+          user_ids?: string[];
+        };
+        Update: {
+          active?: boolean;
+          ai_requirement?: string;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          markets?: string[];
+          name?: string;
+          org_id?: string;
+          product_types?: string[];
+          roles?: Database["public"]["Enums"]["org_role"][];
+          user_ids?: string[];
+        };
+        Relationships: [];
+      };
       share_links: {
         Row: {
           created_at: string;
@@ -2380,11 +2494,119 @@ export type Database = {
         };
         Relationships: [];
       };
+      webhook_deliveries: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          delivered_at: string | null;
+          endpoint_id: string;
+          event: string;
+          id: number;
+          last_error: string | null;
+          last_status_code: number | null;
+          next_attempt_at: string;
+          payload: Json;
+          status: string;
+        };
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          delivered_at?: string | null;
+          endpoint_id: string;
+          event: string;
+          id?: number;
+          last_error?: string | null;
+          last_status_code?: number | null;
+          next_attempt_at?: string;
+          payload: Json;
+          status?: string;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          delivered_at?: string | null;
+          endpoint_id?: string;
+          event?: string;
+          id?: number;
+          last_error?: string | null;
+          last_status_code?: number | null;
+          next_attempt_at?: string;
+          payload?: Json;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      webhook_endpoints: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string | null;
+          events: string[];
+          id: string;
+          kind: string;
+          org_id: string;
+          secret: string;
+          url: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          events: string[];
+          id?: string;
+          kind: string;
+          org_id: string;
+          secret: string;
+          url: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          events?: string[];
+          id?: string;
+          kind?: string;
+          org_id?: string;
+          secret?: string;
+          url?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      add_calibration_note: { Args: { _rule_code: string; _note: string }; Returns: string };
+      calibration_report: { Args: { _from: string; _to: string }; Returns: Json };
+      set_webhook_active: { Args: { _id: string; _active: boolean }; Returns: undefined };
+      webhook_secret: { Args: { _id: string }; Returns: string };
+      save_webhook_endpoint: {
+        Args: { _org: string; _kind: string; _url: string; _events: string[] };
+        Returns: string;
+      };
+      revoke_api_key: { Args: { _id: string }; Returns: undefined };
+      create_api_key: {
+        Args: { _org: string; _name: string; _scopes: string[]; _days?: number };
+        Returns: string;
+      };
+      self_approve: { Args: { _pid: string; _comment?: string | null }; Returns: string };
+      can_self_approve: { Args: { _pid: string }; Returns: Json };
+      save_self_approval_rule: {
+        Args: {
+          _org: string;
+          _id: string | null;
+          _name: string;
+          _channels: string[];
+          _product_types: string[];
+          _markets: string[];
+          _roles: Database["public"]["Enums"]["org_role"][];
+          _users: string[];
+          _ai: string;
+          _active: boolean;
+        };
+        Returns: string;
+      };
       archive_internal_rule: { Args: { _id: string }; Returns: undefined };
       approve_internal_rule: { Args: { _id: string }; Returns: undefined };
       save_internal_rule: {

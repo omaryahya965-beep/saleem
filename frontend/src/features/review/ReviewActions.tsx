@@ -7,6 +7,7 @@ import { usePreflightText } from "./model";
 import { FlowPanel, SubmitFlowSection } from "@/features/enterprise/FlowPanel";
 import { RiskPanel } from "@/features/enterprise/RiskPanel";
 import { RereviewAction } from "@/features/enterprise/LifecyclePanel";
+import { SelfApproveAction } from "@/features/enterprise/SelfApproval";
 import { fk, flowLive, submitWithCarry, usePreview, useSteps } from "@/lib/api/flows";
 import { pk, type Promotion, type VersionSummary } from "@/lib/api/promotions";
 import {
@@ -183,6 +184,7 @@ export function ReviewActions({
       )}
       {buttons.length > 0 && <div className="flex flex-wrap gap-2">{buttons}</div>}
       <RereviewAction promotion={p} canAct={isReviewer && !uploadedIt} onDone={refresh} />
+      <SelfApproveAction promotion={p} uploadedIt={uploadedIt} onDone={refresh} />
       <RiskPanel
         promotion={p}
         me={me.userId}

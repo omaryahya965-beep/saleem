@@ -27,6 +27,11 @@ export const FEATURE_FLAGS = [
   "lifecycle",
   "analytics",
   "internal_rules",
+  "self_approval",
+  "api",
+  "notifications_chat",
+  "ask_saleem",
+  "readability_hint",
 ] as const;
 export type FeatureFlag = (typeof FEATURE_FLAGS)[number];
 
@@ -334,3 +339,47 @@ export async function fetchMetrics(org: string, from: string, to: string, filter
 }
 /** "0.6667" → "67%". */
 export const pct = (x: number) => `${Math.round((x || 0) * 100)}%`;
+
+// ---------------------------------------------------------------- 7.1 self-approval
+export type SelfApprovalRule = Database["public"]["Tables"]["self_approval_rules"]["Row"];
+export const canSelfApprove = async (pid: string) => {
+  const j = (check(await supabase.rpc("can_self_approve", { _pid: pid })) ?? {}) as {
+    ok?: boolean;
+    reasons?: string[];
+  };
+  return { ok: Boolean(j.ok), reasons: j.reasons ?? [] };
+};
+export async function selfApprove(pid: string, comment: string) {
+  check(await supabase.rpc("self_approve", { _pid: pid, _comment: comment.trim() || null }));
+  notifyReview(pid);
+}
+export const useSelfApprovalRules = (org: string) =>
+  useQuery({
+    queryKey: ["self-approval-rules", org],
+    queryFn: async () =>
+      check(
+        await supabase
+          .from("self_approval_rules")
+          .select("*")
+          .eq("org_id", org)
+          .order("created_at"),
+      ) as SelfApprovalRule[],
+  });
+export const saveSelfApprovalRule = async (
+  org: string,
+  i: { name: string; channels: string[]; markets: string[]; roles: string[]; ai: string },
+) =>
+  check(
+    await supabase.rpc("save_self_approval_rule", {
+      _org: org,
+      _id: null,
+      _name: i.name,
+      _channels: i.channels,
+      _product_types: [],
+      _markets: i.markets,
+      _roles: i.roles as SelfApprovalRule["roles"],
+      _users: [],
+      _ai: i.ai,
+      _active: true,
+    }),
+  );

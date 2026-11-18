@@ -329,3 +329,22 @@ Format: decision — why — alternatives considered.
   Without a key, drafts come from directive sentences and are marked `heuristic_draft`. A person must edit each
   draft before approval. `INT-*` rule ids are prefixed `internal:`, so they are never stored as rulebook ids and
   get no `rule_checks` rows.
+
+## v2 programme — Phase 7 (expansion, P3; every item behind an org flag, off by default)
+- **D132. Self-approval** works only from `pending_review` (the uploader submits first, so the submission event is
+  recorded). The decision is a sealed `approve` with `actor_role = 'self_approval'` and the comment prefix
+  «اعتماد ذاتي». Blocked packs (`org_settings.self_approval_blocked_packs`) can only be set in SQL for now. The UI
+  offers roles, channels and market; product types and named users go through the RPC only.
+- **D133. Public API v1 is read-only.** Creating promotions or versions and triggering analysis are not built:
+  `analyze` accepts only user JWTs, and adding a server-to-server path would change a P0 guarantee. The scopes
+  `promotions:write` and `analysis:run` are reserved, and the UI does not offer them.
+- **D134. Delivery:** pg_cron `saleem-webhooks` runs every minute and calls `webhooks-deliver`, reusing the vault
+  secrets `project_url` and `cleanup_cron_secret`; it does nothing when the queue is empty. Webhook signing secrets
+  stay in the database (service role, or the owner/admin `webhook_secret` RPC). Chat messages never carry finding
+  text.
+- **D135. Ask SALEEM** uses keyword retrieval (no embeddings, no `pg_trgm`). The model only rephrases from the
+  numbered sources, using the configured provider and model.
+- **D136. Readability thresholds:** more than 35 words per sentence; dense footnotes means 3 or more markers, or a
+  footnote block over 60 words. Only the caption and text are checked.
+- **D137. Calibration** uses the last reviewer response per finding and dates by the start of the analysis run.
+  Notes are plain text, with no rule edits.
