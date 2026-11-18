@@ -21,6 +21,7 @@ import { useIsAdmin } from "@/lib/api/roles";
 import { useOrgSettings } from "@/lib/api/promotions";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { AppSidebar, NAV_ICONS, NavDrawer, isActive } from "./AppSidebar";
+import { DemoBanner } from "./DemoBanner";
 import { buildNav, primaryMobile, type NavGroup } from "./navModel";
 const NotificationsBell = lazy(() =>
   import("./Notifications").then((m) => ({ default: m.NotificationsBell })),
@@ -90,10 +91,10 @@ function AccountMenu({ picker }: { picker: Picker }) {
             <p dir="ltr" className="truncate text-xs text-fg-muted rtl:text-end">
               {user.email}
             </p>
-            {active && (
+            {/* Partners cannot read the organisation row: show their role even without its name. */}
+            {(active || picker.role) && (
               <p className="mt-1 text-xs text-fg-muted">
-                {active.name}
-                {picker.role && ` · ${t(`org.roles.${picker.role}` as TKey)}`}
+                {[active?.name, picker.role && t(`org.roles.${picker.role}` as TKey)].filter(Boolean).join(" · ")}
               </p>
             )}
           </div>
@@ -254,6 +255,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         }
         mobileActionBar={<div data-slot ref={setSlot} />}
       >
+        {signedIn && <DemoBanner />}
         {children}
       </AppShell>
     </ActionBarContext.Provider>

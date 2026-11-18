@@ -14,6 +14,7 @@
     "test:backend": "npm --workspace=backend run test",
     "test": "npm --workspace=frontend run test && npm --workspace=backend run test",
     "verify:backend": "npm --workspace=backend run verify",
-    "demo:seed": "node scripts/demo-env.mjs npx tsx backend/scripts/demo-seed.ts"
+    "demo:seed": "node scripts/demo-env.mjs npx tsx backend/scripts/demo-seed.ts",
+    "demo:reset": "node scripts/demo-env.mjs npx tsx backend/scripts/demo-seed.ts --reset"
   }
 }

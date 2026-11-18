@@ -25,15 +25,19 @@ if (!["127.0.0.1", "localhost"].includes(host) && process.env.DEMO_ALLOW_REMOTE 
 
 export const ORG_NAME = "بنك سليم التجريبي";
 /** Personas. `role` is the real org role; the login page shows the ones with `login: true`. */
+/** One persona per real org role (lib/permissions.ts ORG_ROLES). Emails must match the demo-login broker allow-list. */
 export const PERSONAS = [
-  { key: "admin", email: "admin@demo.saleem.app", name: "مدير المنظمة", role: "owner", login: true },
-  { key: "lead", email: "lead@demo.saleem.app", name: "قائد الالتزام", role: "compliance_lead", login: true },
-  { key: "reviewer", email: "reviewer@demo.saleem.app", name: "مراجع الالتزام", role: "reviewer", login: false },
-  { key: "legal", email: "legal@demo.saleem.app", name: "القانوني", role: "legal", login: false },
-  { key: "marketer", email: "marketer@demo.saleem.app", name: "المسوّق", role: "creator", login: true },
-  { key: "partner", email: "partner@demo.saleem.app", name: "وكالة شريكة", role: "external_uploader", login: true },
-  { key: "viewer", email: "viewer@demo.saleem.app", name: "المدقق", role: "viewer", login: true },
+  { key: "owner", email: "owner@demo.saleem.app", name: "مالك المساحة", role: "owner" },
+  { key: "admin", email: "orgadmin@demo.saleem.app", name: "مدير المنظمة", role: "admin" },
+  { key: "lead", email: "lead@demo.saleem.app", name: "قائد الالتزام", role: "compliance_lead" },
+  { key: "reviewer", email: "reviewer@demo.saleem.app", name: "مراجع الالتزام", role: "reviewer" },
+  { key: "legal", email: "legal@demo.saleem.app", name: "القانوني", role: "legal" },
+  { key: "marketer", email: "marketer@demo.saleem.app", name: "المسوّق", role: "creator" },
+  { key: "partner", email: "partner@demo.saleem.app", name: "وكالة شريكة", role: "external_uploader" },
+  { key: "extreviewer", email: "extreviewer@demo.saleem.app", name: "مراجع خارجي", role: "external_reviewer" },
+  { key: "viewer", email: "viewer@demo.saleem.app", name: "المدقق", role: "viewer" },
 ] as const;
+const P = (k: string) => PERSONAS.find((p) => p.key === k)!;
 
 const credFile = path.join(root, "demo/.demo-credentials.json");
 const password =
@@ -50,11 +54,11 @@ async function ensureUser(p: (typeof PERSONAS)[number]): Promise<string> {
   const list = ok(await admin.auth.admin.listUsers({ perPage: 1000 }), "listUsers");
   const found = list.users.find((u) => u.email?.toLowerCase() === p.email);
   if (found) {
-    ok(await admin.auth.admin.updateUserById(found.id, { password, email_confirm: true, user_metadata: { display_name: p.name } }), "updateUser");
+    ok(await admin.auth.admin.updateUserById(found.id, { password, email_confirm: true, user_metadata: { display_name: p.name }, app_metadata: { demo: true } }), "updateUser");
     return found.id;
   }
   const created = ok(
-    await admin.auth.admin.createUser({ email: p.email, password, email_confirm: true, user_metadata: { display_name: p.name } }),
+    await admin.auth.admin.createUser({ email: p.email, password, email_confirm: true, user_metadata: { display_name: p.name }, app_metadata: { demo: true } }),
     "createUser",
   );
   return created.user!.id;
@@ -73,10 +77,18 @@ async function main() {
   const plan = ok(await admin.from("plans").select("id").order("monthly_checks", { ascending: false }).limit(1).single(), "plan");
   ok(await admin.from("profiles").update({ plan_id: plan.id }).in("id", Object.values(ids)), "profiles.plan");
 
-  const owner = await as(PERSONAS[0].email);
-  // Organisation: reuse the demo org if it already exists for this owner.
-  const existing = ok(await admin.from("organizations").select("id").eq("name", ORG_NAME).eq("created_by", ids.admin!).maybeSingle(), "org lookup");
-  const orgId = existing?.id ?? (ok(await owner.rpc("create_organization", { _name: ORG_NAME }), "create_organization") as string);
+  const owner = await as(P("owner").email);
+  // --reset: rebuild the sandbox from scratch (only the registered sandbox org of the demo owner is deleted).
+  const existing = ok(await admin.from("organizations").select("id").eq("name", ORG_NAME).eq("created_by", ids.owner!).maybeSingle(), "org lookup");
+  if (existing && process.argv.includes("--reset")) {
+    const reg = ok(await admin.from("demo_sandbox_orgs").select("org_id").eq("org_id", existing.id).maybeSingle(), "sandbox lookup");
+    if (!reg) throw new Error("refusing to delete an organisation that is not a registered demo sandbox");
+    ok(await admin.from("organizations").delete().eq("id", existing.id), "reset sandbox");
+  }
+  const kept = existing && !process.argv.includes("--reset") ? existing.id : null;
+  const orgId = kept ?? (ok(await owner.rpc("create_organization", { _name: ORG_NAME }), "create_organization") as string);
+  // Registered as a sandbox: the demo-login broker only signs in users confined to sandbox orgs.
+  ok(await admin.from("demo_sandbox_orgs").upsert({ org_id: orgId }), "register sandbox");
 
   ok(
     await owner
@@ -125,20 +137,22 @@ async function main() {
       }),
       "partner link",
     ) as string;
-    ok(await (await as(PERSONAS[5].email)).rpc("partner_join", { _token: token, _accept_terms: true }), "partner_join");
+    ok(await (await as(P("partner").email)).rpc("partner_join", { _token: token, _accept_terms: true }), "partner_join");
     ok(await owner.rpc("decide_partner_access", { _org: orgId, _user: ids.partner!, _approve: true }), "partner access");
     fs.mkdirSync(path.dirname(credFile), { recursive: true });
     fs.writeFileSync(path.join(root, "demo/.demo-partner-link"), token);
   }
 
   // Sample ads by the marketer, created exactly like the app does (promotion row + text version).
-  const marketer = await as(PERSONAS[4].email);
+  const marketer = await as(P("marketer").email);
   const ads = [
     { title: "تمويل سليم — عرض الصيف", text: "تمويل سليم الشخصي بمعدل نسبة سنوي 3.9% فقط! قدّم الآن واحصل على الموافقة خلال دقائق." },
     {
       title: "تمويل سليم — إعلان مكتمل",
       text: "تمويل سليم الشخصي من بنك سليم التجريبي. معدل النسبة السنوي 4.5% ثابت لمدة من 6 إلى 60 شهراً. تطبق الشروط والأحكام. بنك سليم خاضع لإشراف البنك المركزي السعودي.",
     },
+    { title: "بطاقة سليم الائتمانية — بلا رسوم", text: "بطاقة سليم الائتمانية بلا رسوم سنوية! استمتع بأفضل المزايا في السوق." },
+    { title: "استرداد نقدي 10% — عرض محدود", text: "استرداد نقدي 10% على مشترياتك بالبطاقة. العرض لفترة محدودة. تطبق الشروط والأحكام." },
   ];
   const created: string[] = [];
   for (const ad of ads) {
@@ -193,9 +207,37 @@ async function main() {
     }
   }
 
+  // Real review journey through the app's RPCs, only on analysed versions (needs DEMO_ANALYZE=1 and served
+  // functions). Analysis that failed (e.g. no valid model key) is submitted with the app's explicit acknowledgement.
+  const journey: Record<string, string> = {};
+  const lead = await as(P("lead").email);
+  const reviewer = await as(P("reviewer").email);
+  const reviewerId = ids.reviewer!;
+  const step = async (title: string, target: "pending" | "changes" | "approved") => {
+    const p = ok(await admin.from("promotions").select("id, review_status, current_version_id").eq("org_id", orgId).eq("title", title).single(), "promo");
+    const v = ok(await admin.from("submissions").select("status").eq("id", p.current_version_id!).single(), "version");
+    if (!["done", "failed"].includes(v.status)) return (journey[title] = `skipped: analysis ${v.status}`);
+    if (p.review_status !== "draft") return (journey[title] = `kept: ${p.review_status}`);
+    ok(await marketer.rpc("submit_promotion", { _pid: p.id, _note: "جاهز للمراجعة", _ack_failed: v.status === "failed" }), "submit");
+    if (target !== "pending") {
+      ok(await lead.rpc("assign_reviewer", { _pid: p.id, _user: reviewerId }), "assign");
+      ok(await reviewer.rpc("open_review", { _pid: p.id }), "open");
+      ok(
+        await reviewer.rpc("decide_promotion", target === "approved"
+          ? { _pid: p.id, _decision: "approve", _comment: "مطابق (بيانات تجريبية)" }
+          : { _pid: p.id, _decision: "request_changes", _reason_other: "المعدل المعلن لا يطابق بيانات المنتج المعتمدة" }),
+        "decide",
+      );
+    }
+    journey[title] = target;
+  };
+  await step("تمويل سليم — عرض الصيف", "changes");
+  await step("تمويل سليم — إعلان مكتمل", "approved");
+  await step("بطاقة سليم الائتمانية — بلا رسوم", "pending");
+
   fs.mkdirSync(path.dirname(credFile), { recursive: true });
   fs.writeFileSync(credFile, JSON.stringify({ note: "Local demo only. Never commit.", password, org_id: orgId, users: PERSONAS.map((p) => p.email) }, null, 2));
-  console.log(JSON.stringify({ org_id: orgId, personas: PERSONAS.map((p) => `${p.key}:${p.role}`), ads: created.length, analysis: analysed, credentials: "demo/.demo-credentials.json" }, null, 2));
+  console.log(JSON.stringify({ org_id: orgId, personas: PERSONAS.map((p) => `${p.key}:${p.role}`), ads: created.length, analysis: analysed, journey, credentials: "demo/.demo-credentials.json" }, null, 2));
 }
 
 await main();

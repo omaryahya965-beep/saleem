@@ -66,7 +66,7 @@ const statusOf = async (pid: string) =>
 describe.skipIf(!enabled)("real workflows (local stack, demo org)", () => {
   let marketer: SupabaseClient, lead: SupabaseClient, reviewer: SupabaseClient, ownerC: SupabaseClient, viewer: SupabaseClient;
   beforeAll(async () => {
-    [marketer, lead, reviewer, ownerC, viewer] = await Promise.all(["marketer", "lead", "reviewer", "admin", "viewer"].map(as));
+    [marketer, lead, reviewer, ownerC, viewer] = await Promise.all(["marketer", "lead", "reviewer", "owner", "viewer"].map(as));
   }, 60_000);
 
   let ad: Awaited<ReturnType<typeof newAd>>;

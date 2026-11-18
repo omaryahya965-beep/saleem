@@ -476,31 +476,19 @@
       "generic": "We couldn't complete that. Please try again."
     },
     "demo": {
-      "title": "Try SALEEM as a role",
-      "badge": "Demo data",
-      "hint": "The isolated «SALEEM Demo Bank» workspace. Each role sees only what its permissions allow.",
-      "persona": {
-        "marketer": {
-          "name": "Marketer",
-          "desc": "Uploads promotions, fixes findings, submits for review"
-        },
-        "lead": {
-          "name": "Compliance lead",
-          "desc": "Assigns reviews, decides, manages company rules"
-        },
-        "admin": {
-          "name": "Org admin",
-          "desc": "Members, roles, settings and features"
-        },
-        "partner": {
-          "name": "Partner agency",
-          "desc": "Submits for its client and sees only its own submissions"
-        },
-        "viewer": {
-          "name": "Auditor",
-          "desc": "Full read access for audit, no changes"
-        }
-      }
+      "title": "Try SALEEM by role",
+      "hint": "Enter as any role in one click, in the isolated «SALEEM Demo Bank» workspace.",
+      "explore": "Explore demo accounts",
+      "dialogHint": "Each role sees only what its real permissions allow. No email or password needed.",
+      "enter": "Enter as this role",
+      "fictional": "Fictional demo data only: «SALEEM Demo Bank» is not a real customer.",
+      "error": {
+        "rate_limited": "Too many attempts from this device. Try again shortly.",
+        "demo_disabled": "The demo is not enabled in this environment.",
+        "demo_not_seeded": "The demo data is not set up yet.",
+        "generic": "Could not start the demo session. Try again."
+      },
+      "banner": "Demo session — fictional «SALEEM Demo Bank» data; ends automatically after two hours."
     }
   },
   "settings": {

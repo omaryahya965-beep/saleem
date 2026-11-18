@@ -4,24 +4,33 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 const sb = () => import("@/lib/supabase").then((m) => m.supabase);
 
 /**
- * Demo personas (seeded by `npm run demo:seed` into the isolated org «بنك سليم التجريبي»). Shown on the sign-in page
- * ONLY in a demo build: VITE_DEMO_MODE=true AND VITE_DEMO_PASSWORD set at build time (git-ignored .env.local). A
- * production build has neither, so no shared credential is ever shipped. No password is hard-coded here.
+ * One-click demo (all nine roles). No credential is in the client: the `demo-login` edge function (enabled only by
+ * the SERVER secret DEMO_MODE=true in a demo environment) returns a one-time token that is exchanged for a session.
+ * VITE_DEMO_LOGIN only shows the UI; it is not a secret and grants nothing by itself.
  */
-const DEMO_PASSWORD = (import.meta.env["VITE_DEMO_PASSWORD"] as string | undefined) ?? "";
-export const DEMO_LOGINS =
-  import.meta.env["VITE_DEMO_MODE"] === "true" && DEMO_PASSWORD.length >= 8;
+export const DEMO_LOGINS = import.meta.env["VITE_DEMO_LOGIN"] === "true";
 export const DEMO_PERSONAS = [
-  { key: "marketer", email: "marketer@demo.saleem.app" },
-  { key: "lead", email: "lead@demo.saleem.app" },
-  { key: "admin", email: "admin@demo.saleem.app" },
-  { key: "partner", email: "partner@demo.saleem.app" },
-  { key: "viewer", email: "viewer@demo.saleem.app" },
+  "creator",
+  "reviewer",
+  "compliance_lead",
+  "legal",
+  "admin",
+  "owner",
+  "external_uploader",
+  "external_reviewer",
+  "viewer",
 ] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number];
-export async function signInAsPersona(p: DemoPersona) {
-  if (!DEMO_LOGINS) throw new Error("demo logins are disabled in this build");
-  await signIn(p.email, DEMO_PASSWORD);
+export async function signInAsPersona(persona: DemoPersona) {
+  const client = await sb();
+  const { data, error } = await client.functions.invoke("demo-login", { body: { persona } });
+  if (error || !data?.token_hash)
+    throw new Error((data as { error?: string } | null)?.error ?? error?.message ?? "demo_failed");
+  const { error: otpErr } = await client.auth.verifyOtp({
+    type: "magiclink",
+    token_hash: data.token_hash as string,
+  });
+  if (otpErr) throw otpErr;
 }
 
 interface AuthState {

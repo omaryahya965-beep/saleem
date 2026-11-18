@@ -8,14 +8,12 @@ import {
   sendPasswordReset,
   signIn,
   DEMO_LOGINS,
-  DEMO_PERSONAS,
-  signInAsPersona,
-  type DemoPersona,
   signUp,
   updatePassword,
   type AuthErrorKey,
 } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
+import { DemoRolePicker } from "./DemoRolePicker";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -102,19 +100,6 @@ export function LoginPage() {
     }
   };
 
-  const onPersona = async (p: DemoPersona) => {
-    setBusy(p.email);
-    setError(null);
-    try {
-      await signInAsPersona(p);
-      done();
-    } catch {
-      setError("demoUnavailable");
-    } finally {
-      setBusy(null);
-    }
-  };
-
   return (
     <AuthLayout
       title={t("auth.signInTitle")}
@@ -157,50 +142,7 @@ export function LoginPage() {
           {t("auth.signIn")}
         </Button>
       </form>
-      {DEMO_LOGINS && (
-        <section
-          aria-labelledby="demo-personas"
-          data-testid="demo-personas"
-          className="flex flex-col gap-2 border-t border-border pt-4"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="demo-personas" className="text-sm font-bold">
-              {t("auth.demo.title")}
-            </h2>
-            <span className="rounded-full bg-amber-bg px-2 py-0.5 text-xs text-amber-text">
-              {t("auth.demo.badge")}
-            </span>
-          </div>
-          <p className="text-xs text-fg-muted">{t("auth.demo.hint")}</p>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {DEMO_PERSONAS.map((p) => (
-              <li key={p.key}>
-                <button
-                  type="button"
-                  onClick={() => void onPersona(p)}
-                  disabled={busy !== null}
-                  data-testid={`persona-${p.key}`}
-                  className="flex h-full w-full items-start gap-2 rounded-md border border-border px-3 py-2 text-start transition-colors hover:border-green focus-visible:ring-2 focus-visible:ring-green disabled:opacity-60"
-                >
-                  {busy === p.email ? (
-                    <Spinner className="mt-0.5 text-green" />
-                  ) : (
-                    <PlayCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-green" />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-fg">
-                      {t(`auth.demo.persona.${p.key}.name` as TKey)}
-                    </span>
-                    <span className="block text-xs text-fg-muted">
-                      {t(`auth.demo.persona.${p.key}.desc` as TKey)}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {DEMO_LOGINS && <DemoRolePicker onSignedIn={done} />}
     </AuthLayout>
   );
 }

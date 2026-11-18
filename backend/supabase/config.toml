@@ -445,3 +445,7 @@ verify_jwt = false
 # ask: read-only assistant; every read uses the caller's JWT (RLS).
 [functions.ask]
 verify_jwt = true
+
+[functions.demo-login]
+# Public by design (signed-out visitors start a demo); refuses unless DEMO_MODE=true is a server secret.
+verify_jwt = false

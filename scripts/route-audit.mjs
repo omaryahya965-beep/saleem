@@ -11,7 +11,7 @@ const ROUTES = [
   "/org", `/org/${org_id}`, "/roles", "/features", "/analytics", "/audit", "/ask", "/archive", "/settings",
   "/admin/metrics",
 ];
-const PERSONAS = ["admin", "lead", "reviewer", "legal", "marketer", "partner", "viewer"];
+const PERSONAS = ["owner", "orgadmin", "lead", "reviewer", "legal", "marketer", "partner", "extreviewer", "viewer"];
 
 const browser = await chromium.launch();
 const report = [];
