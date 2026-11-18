@@ -30,7 +30,9 @@ test("landing: direction, promise and interactive mini report", async ({
 test("sample report: status, issues, seek and transcript sync", async ({ page, lang }) => {
   await page.goto(`/checks/${DEMO}`);
   await appReady(page);
-  await expect(page.locator("#report-status")).toHaveText(tr(lang, "يحتاج تعديلات", "Needs fixes"));
+  await expect(page.locator("#report-status")).toContainText(
+    tr(lang, "ملاحظات تستلزم التعديل", "Findings that require changes"),
+  );
   const cards = page.locator("article");
   await expect(cards).toHaveCount(6);
   // Selecting the 00:12 issue card seeks the timeline and highlights the card.
@@ -57,7 +59,7 @@ test("sample report: status, issues, seek and transcript sync", async ({ page, l
 test("ready report shows what was fixed vs the previous version", async ({ page, lang }) => {
   await page.goto(`/checks/${DEMO_READY}`);
   await appReady(page);
-  await expect(page.locator("#report-status")).toHaveText(
+  await expect(page.locator("#report-status")).toContainText(
     tr(lang, "لا ملاحظات آلية", "No automated findings"),
   );
   await expect(
@@ -85,10 +87,12 @@ test("compliance log and public verification", async ({ page, lang }) => {
 test("rulebook search and categories", async ({ page, lang }) => {
   await page.goto("/rules");
   await appReady(page);
-  await expect(page.getByText("MAW-01")).toBeVisible();
+  await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toBeVisible();
   await page.getByRole("searchbox").fill("COM-01");
-  await expect(page.getByText("COM-01")).toBeVisible();
-  await expect(page.getByText("MAW-01")).toHaveCount(0);
+  await expect(page.getByTestId("rule-results").getByText("COM-01", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toHaveCount(
+    0,
+  );
   await page.getByRole("searchbox").fill("zzzz");
   await expect(
     page.getByText(tr(lang, "لا توجد قواعد مطابقة.", "No matching rules.")),

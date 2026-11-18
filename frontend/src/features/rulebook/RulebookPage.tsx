@@ -123,29 +123,31 @@ export function RulebookPage() {
       ) : groups.length === 0 ? (
         <EmptyState icon={<SearchX />} title={t("rulebook.noResults")} />
       ) : (
-        groups.map((g) => (
-          <section key={g.cat} aria-labelledby={`cat-${g.cat}`} className="flex flex-col gap-2">
-            <h2 id={`cat-${g.cat}`} className="text-lg font-bold">
-              {t(`ruleCategories.${g.cat}`)}
-            </h2>
-            <Card className="py-1 sm:py-1">
-              {g.rules.map((r) => (
-                <RuleRow
-                  key={r.code}
-                  code={r.code}
-                  title={lang === "en" ? r.title_en : r.title_ar}
-                  description={lang === "en" ? r.description_en : r.description_ar}
-                  sourceName={(lang === "en" ? r.source_name_en : null) || r.source_name}
-                  sourceUrl={r.source_url || null}
-                  version={version}
-                  severity={r.default_severity}
-                  illustrative={illustrative}
-                  illustrativeLabel={t("rulebook.illustrativeShort")}
-                />
-              ))}
-            </Card>
-          </section>
-        ))
+        <div data-testid="rule-results" className="flex flex-col gap-6">
+          {groups.map((g) => (
+            <section key={g.cat} aria-labelledby={`cat-${g.cat}`} className="flex flex-col gap-2">
+              <h2 id={`cat-${g.cat}`} className="text-lg font-bold">
+                {t(`ruleCategories.${g.cat}`)}
+              </h2>
+              <Card className="py-1 sm:py-1">
+                {g.rules.map((r) => (
+                  <RuleRow
+                    key={r.code}
+                    code={r.code}
+                    title={lang === "en" ? r.title_en : r.title_ar}
+                    description={lang === "en" ? r.description_en : r.description_ar}
+                    sourceName={(lang === "en" ? r.source_name_en : null) || r.source_name}
+                    sourceUrl={r.source_url || null}
+                    version={version}
+                    severity={r.default_severity}
+                    illustrative={illustrative}
+                    illustrativeLabel={t("rulebook.illustrativeShort")}
+                  />
+                ))}
+              </Card>
+            </section>
+          ))}
+        </div>
       )}
       {book.data && <RulePacks rules={book.data.rules} />}
     </Page>

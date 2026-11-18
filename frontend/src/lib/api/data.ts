@@ -46,13 +46,19 @@ function fail(error: { message: string; code?: string } | null, fallback = "unkn
 // Rules
 // ---------------------------------------------------------------------------
 export async function fetchRulebook(): Promise<{ version: RulebookVersion | null; rules: Rule[] }> {
-  const [{ data: versions, error: vErr }, { data: rules, error: rErr }] = await Promise.all([
-    supabase.from("rulebook_versions").select("*").eq("is_active", true).limit(1),
-    supabase.from("rules").select("*").eq("is_active", true).order("code"),
-  ]);
+  const { data: versions, error: vErr } = await supabase
+    .from("rulebook_versions")
+    .select("*")
+    .eq("is_active", true)
+    .limit(1);
   if (vErr) fail(vErr);
+  const version = versions?.[0] ?? null;
+  // Only the active release: older releases keep rows with the same codes.
+  let q = supabase.from("rules").select("*").eq("is_active", true).order("code");
+  if (version) q = q.eq("rulebook_version_id", version.id);
+  const { data: rules, error: rErr } = await q;
   if (rErr) fail(rErr);
-  return { version: versions?.[0] ?? null, rules: rules ?? [] };
+  return { version, rules: rules ?? [] };
 }
 
 // ---------------------------------------------------------------------------
