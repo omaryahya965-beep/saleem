@@ -442,3 +442,21 @@ Format: decision — why — alternatives considered.
   available per user in Supabase.
 - **D160. Live site:** production runs the v1 build and schema. Analyses fail because the production AI key is
   invalid. The earlier "missing v2 migrations" hypothesis is withdrawn.
+
+## Gemini only, PR #1 merge (2026-11-19)
+
+- **D161. Gemini is the only AI provider.** `providers/openai.ts` was removed; `LLM_PROVIDER`,
+  `TRANSCRIPTION_PROVIDER` and `OPENAI_API_KEY` are no longer read, so an old secret cannot route analyses to
+  OpenAI, and there is no fallback. Configuration: `GEMINI_API_KEY` (required, server-side only) and
+  `GEMINI_MODEL` (default `gemini-3.8-flash`). Historical runs keep `llm_provider='openai'` (not rewritten).
+  Google errors are classified precisely (400 `API_KEY_INVALID` → invalid key; per-minute 429 → busy/retry;
+  quota 429 → quota, no retry). Transcription media rejected by Gemini marks `transcription_failed`
+  (partial coverage), never "no audio". Frames: identical consecutive frames are sent once with their
+  on-screen duration; frames are packed by a 12 MiB inline budget instead of fixed batches of 16.
+- **D162. PR #1 merged by history, not by copy.** `feature/gemini-integration` (e2f9c18) was merged into
+  `integrate/pr-1-gemini` with a real merge commit (resolved to the v2 tree; per-file notes in the commit), so
+  GitHub marks PR #1 merged when that branch reaches `master`. From the PR we also took the active-release
+  rulebook filter and per-run versioned rule references in reports. PR #1 contains no API key.
+- **D163. The "invalid key" error on the live site** («مفتاح مزوّد التحليل غير صالح. أبلغ فريق سَليم.») comes
+  from the v1 build on `master`, which defaults to OpenAI; the OpenAI key is expired (D157). The fix is deploying
+  this branch with `GEMINI_API_KEY` set as a Supabase secret, which needs separate release approval.
