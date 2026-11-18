@@ -20,7 +20,7 @@ function readEnv() {
     ));
   }
   for (const name of ["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"])
-    if (process.env[name] !== undefined) values[name] = process.env[name];
+    if (process.env[name]) values[name] = process.env[name];
   return values;
 }
 
@@ -47,7 +47,8 @@ export const MOCK_SUBMISSIONS = [
 export async function installMockAuth(context, { empty = false } = {}) {
   const env = readEnv();
   // An explicit VITE_SUPABASE_URL (e.g. an offline build) wins over backend/.env.
-  const url = process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const rawUrl = process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const url = (rawUrl && rawUrl.startsWith("http")) ? rawUrl : "https://demo.supabase.co";
   const ref = new URL(url).hostname.split(".")[0];
   const session = {
     access_token: fakeJwt(), token_type: "bearer", expires_in: 3600, expires_at: Math.floor(now / 1000) + 3600, refresh_token: "mock-refresh",
