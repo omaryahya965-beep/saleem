@@ -19,7 +19,9 @@ function parse(file: string): Record<string, string> {
 
 /** process.env > backend/.env > supabase/functions/.env */
 export function loadEnv(): (k: string) => string | undefined {
-  const merged = { ...parse(path.resolve(here, "../supabase/functions/.env")), ...parse(path.resolve(here, "../.env")) };
+  // An empty value (e.g. `GEMINI_API_KEY=` in backend/.env) must not shadow a real one from functions/.env.
+  const nonEmpty = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== ""));
+  const merged = { ...nonEmpty(parse(path.resolve(here, "../supabase/functions/.env"))), ...nonEmpty(parse(path.resolve(here, "../.env"))) };
   fs.mkdirSync(path.resolve(here, "results"), { recursive: true });
   return (k) => process.env[k] || merged[k] || undefined;
 }
