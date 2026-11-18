@@ -12,7 +12,6 @@ const ROUTES = [
   "/admin/metrics",
 ];
 const PERSONAS = ["admin", "lead", "reviewer", "legal", "marketer", "partner", "viewer"];
-const ERROR_TEXT = /تعذّر|حدث خطأ|غير متاح|الخادم|Something went wrong|failed to/i;
 
 const browser = await chromium.launch();
 const report = [];
@@ -38,6 +37,13 @@ for (const who of PERSONAS) {
   await page.locator('input[type="password"]').fill(password);
   await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 20000 }).catch(() => issues.push({ route: "/login", kind: "login_failed" }));
+  // Navigation as this persona sees it (sidebar entries and account menu items), once it has settled.
+  await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+  const nav = await page.locator("[data-testid=app-sidebar] a").evaluateAll((as) => as.map((a) => a.dataset.testid.replace("nav-", "")));
+  await page.getByTestId("account-menu").click();
+  const menu = await page.locator("[data-testid=account-menu-content] [role=menuitem]").allInnerTexts();
+  await page.keyboard.press("Escape");
+  issues.push({ route: "(nav)", kind: "info", text: `sidebar=[${nav.join(",")}] account=[${menu.map((m) => m.trim()).join(" | ")}]` });
   for (const r of ROUTES) {
     current = r;
     await page.goto(`${base}${r}`);
@@ -46,8 +52,9 @@ for (const who of PERSONAS) {
     const main = (await page.locator("main").innerText().catch(() => "")).trim();
     if (!main) issues.push({ route: r, kind: "empty_main" });
     const alert = await page.locator('[role="alert"]').allInnerTexts().catch(() => []);
-    const errLine = main.split("\n").find((l) => ERROR_TEXT.test(l));
-    if (alert.length || errLine) issues.push({ route: r, kind: "error_state", text: (alert.join(" | ") || errLine || "").slice(0, 160) });
+    const kinds = await page.locator("[data-testid^=error-]").evaluateAll((els) => els.map((e) => e.dataset.testid));
+    if (alert.length || kinds.length)
+      issues.push({ route: r, kind: "error_state", text: `${kinds.join(",")} ${alert.join(" | ")}`.slice(0, 160) });
   }
   report.push({ who, issues });
   await ctx.close();

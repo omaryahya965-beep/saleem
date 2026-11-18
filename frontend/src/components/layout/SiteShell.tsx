@@ -2,35 +2,26 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Activity,
-  Archive,
-  BookCheck,
   Building2,
-  FilePlus2,
-  FlaskConical,
-  Scale,
+  Check,
   Home,
-  LayoutList,
   LogIn,
   LogOut,
-  Megaphone,
-  Inbox,
-  ScrollText,
-  Package,
+  Menu,
+  Scale,
   Settings,
   ShieldCheck,
-  UserRound,
-  BadgeCheck,
-  FileCheck2,
-  BarChart3,
-  MessageCircleQuestion,
 } from "lucide-react";
 import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AppShell, Brand, LanguageToggle, type NavItem } from "@/components/ui";
-import { useI18n } from "@/i18n";
+import { useI18n, type TKey } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
 import { useIsAdmin } from "@/lib/api/roles";
+import { useOrgSettings } from "@/lib/api/promotions";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
+import { AppSidebar, NAV_ICONS, NavDrawer, isActive } from "./AppSidebar";
+import { buildNav, primaryMobile, type NavGroup } from "./navModel";
 const NotificationsBell = lazy(() =>
   import("./Notifications").then((m) => ({ default: m.NotificationsBell })),
 );
@@ -51,10 +42,15 @@ export function MobileActionBar({ children }: { children: ReactNode }) {
   );
 }
 
-function AccountMenu() {
+const itemClass =
+  "flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken [&_svg]:size-4";
+
+type Picker = ReturnType<typeof useOrgPicker>;
+
+/** Account menu: who you are, the active organisation (switcher), personal settings, terms and sign out only. */
+function AccountMenu({ picker }: { picker: Picker }) {
   const { t } = useI18n();
   const { user } = useAuth();
-  const isAdmin = useIsAdmin(user?.id).data === true;
   const navigate = useNavigate();
   const qc = useQueryClient();
   if (!user) {
@@ -67,12 +63,15 @@ function AccountMenu() {
       </Link>
     );
   }
-  const initial =
-    (user.user_metadata?.["display_name"] as string | undefined)?.[0] ?? user.email?.[0] ?? "?";
+  const name = user.user_metadata?.["display_name"] as string | undefined;
+  const initial = name?.[0] ?? user.email?.[0] ?? "?";
+  const orgs = picker.orgs.data ?? [];
+  const active = orgs.find((o) => o.id === picker.orgId);
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label={t("nav.account")}
+        data-testid="account-menu"
         className="grid size-11 place-items-center rounded-full hover:bg-line/60"
       >
         <span className="grid size-9 place-items-center rounded-full bg-ink text-sm font-bold text-paper uppercase">
@@ -83,180 +82,53 @@ function AccountMenu() {
         <DropdownMenu.Content
           align="end"
           sideOffset={6}
-          className="z-50 min-w-56 rounded-md border border-border bg-surface p-1.5 shadow-overlay animate-[fade-in_150ms_ease-out]"
+          data-testid="account-menu-content"
+          className="z-50 min-w-64 rounded-md border border-border bg-surface p-1.5 shadow-overlay animate-[fade-in_150ms_ease-out]"
         >
           <div className="px-3 py-2">
-            <p className="text-xs text-fg-muted">{t("nav.signedInAs")}</p>
-            <p dir="ltr" className="truncate text-sm font-medium text-fg rtl:text-end">
+            {name && <p className="text-sm font-medium text-fg">{name}</p>}
+            <p dir="ltr" className="truncate text-xs text-fg-muted rtl:text-end">
               {user.email}
             </p>
+            {active && (
+              <p className="mt-1 text-xs text-fg-muted">
+                {active.name}
+                {picker.role && ` · ${t(`org.roles.${picker.role}` as TKey)}`}
+              </p>
+            )}
           </div>
-          <DropdownMenu.Separator className="my-1 h-px bg-border" />
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/settings"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Settings aria-hidden="true" className="size-4" />
-              {t("nav.settings")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/archive"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Archive aria-hidden="true" className="size-4" />
-              {t("nav.archive")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/org"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Building2 aria-hidden="true" className="size-4" />
-              {t("nav.workspace")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/products"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Package aria-hidden="true" className="size-4" />
-              {t("nav.products")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/queue"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Inbox aria-hidden="true" className="size-4" />
-              {t("nav.queue")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/features"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Settings aria-hidden="true" className="size-4" />
-              {t("nav.features")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/roles"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <ShieldCheck aria-hidden="true" className="size-4" />
-              {t("nav.roles")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/company-rules"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <ScrollText aria-hidden="true" className="size-4" />
-              {t("nav.companyRules")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/claims"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <BadgeCheck aria-hidden="true" className="size-4" />
-              {t("nav.claims")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/disclaimers"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <FileCheck2 aria-hidden="true" className="size-4" />
-              {t("nav.disclaimers")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/analytics"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <BarChart3 aria-hidden="true" className="size-4" />
-              {t("nav.analytics")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/ask"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <MessageCircleQuestion aria-hidden="true" className="size-4" />
-              {t("nav.ask")}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              to="/audit"
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <ScrollText aria-hidden="true" className="size-4" />
-              {t("nav.audit")}
-            </Link>
-          </DropdownMenu.Item>
-          {isAdmin && (
+          {orgs.length > 1 && (
             <>
               <DropdownMenu.Separator className="my-1 h-px bg-border" />
-              <DropdownMenu.Item asChild>
-                <Link
-                  to="/admin/eval"
-                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+              <DropdownMenu.Label className="px-3 py-1 text-xs text-fg-muted">
+                {t("appNav.switchOrg")}
+              </DropdownMenu.Label>
+              {orgs.map((o) => (
+                <DropdownMenu.Item
+                  key={o.id}
+                  onSelect={() => picker.setOrgId(o.id)}
+                  className={itemClass}
                 >
-                  <FlaskConical aria-hidden="true" className="size-4" />
-                  {t("nav.evalNav")}
-                </Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item asChild>
-                <Link
-                  to="/admin/rules"
-                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-                >
-                  <BookCheck aria-hidden="true" className="size-4" />
-                  {t("nav.rulesAdmin")}
-                </Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item asChild>
-                <Link
-                  to="/admin/calibration"
-                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-                >
-                  <BarChart3 aria-hidden="true" className="size-4" />
-                  {t("calibration.title")}
-                </Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item asChild>
-                <Link
-                  to="/admin/metrics"
-                  className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-                >
-                  <Activity aria-hidden="true" className="size-4" />
-                  {t("nav.metricsNav")}
-                </Link>
-              </DropdownMenu.Item>
+                  {o.id === picker.orgId ? (
+                    <Check aria-hidden="true" />
+                  ) : (
+                    <Building2 aria-hidden="true" />
+                  )}
+                  <span className="truncate">{o.name}</span>
+                </DropdownMenu.Item>
+              ))}
             </>
           )}
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
           <DropdownMenu.Item asChild>
-            <Link
-              to="/legal/$doc"
-              params={{ doc: "privacy" }}
-              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
-            >
-              <Scale aria-hidden="true" className="size-4" />
+            <Link to="/settings" className={itemClass}>
+              <Settings aria-hidden="true" />
+              {t("appNav.personalSettings")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link to="/legal/$doc" params={{ doc: "privacy" }} className={itemClass}>
+              <Scale aria-hidden="true" />
               {t("nav.legal")}
             </Link>
           </DropdownMenu.Item>
@@ -267,9 +139,9 @@ function AccountMenu() {
               qc.clear();
               void navigate({ to: "/" });
             }}
-            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm text-red outline-none data-[highlighted]:bg-red-bg"
+            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-sm text-red outline-none data-[highlighted]:bg-red-bg [&_svg]:size-4"
           >
-            <LogOut aria-hidden="true" className="size-4 flip-rtl" />
+            <LogOut aria-hidden="true" className="flip-rtl" />
             {t("nav.signOut")}
           </DropdownMenu.Item>
         </DropdownMenu.Content>
@@ -278,12 +150,28 @@ function AccountMenu() {
   );
 }
 
-/** Site chrome for every page: signed-in product nav, or marketing nav when signed out. */
+/** Navigation groups for the signed-in user: active organisation role + its feature flags + platform admin. */
+function useAppNav(picker: Picker): NavGroup[] {
+  const { user } = useAuth();
+  const platformAdmin = useIsAdmin(user?.id).data === true;
+  const settings = useOrgSettings(picker.orgId || null);
+  const features = (settings.data?.features ?? {}) as Record<string, unknown>;
+  const flags = Object.fromEntries(Object.entries(features).map(([k, v]) => [k, v === true]));
+  // Until memberships load, the role is unknown: show nothing rather than the personal-account menu.
+  if (picker.orgs.isPending || picker.mine.isPending || (picker.orgId && settings.isPending))
+    return [];
+  return buildNav({ role: picker.role, orgId: picker.orgId || null, flags, platformAdmin });
+}
+
+/** Site chrome: signed-in app (sidebar + slim account menu) or the marketing nav when signed out. */
 export function SiteShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { user, ready } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const picker = useOrgPicker();
+  const groups = useAppNav(picker);
+  const signedIn = ready && Boolean(user);
 
   const link =
     (to: string) => (p: { className: string; children: ReactNode; "aria-current"?: "page" }) => (
@@ -292,64 +180,56 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </Link>
     );
 
-  const items: (Omit<NavItem, "render"> & { to: string })[] = user
-    ? [
-        {
-          key: "dashboard",
-          to: "/dashboard",
-          label: t("nav.dashboard"),
-          icon: <LayoutList />,
-          active: pathname.startsWith("/dashboard"),
-        },
-        {
-          key: "promotions",
-          to: "/promotions",
-          label: t("nav.promotions"),
-          icon: <Megaphone />,
-          active: pathname.startsWith("/promotions") || pathname.startsWith("/checks"),
-        },
-        {
-          key: "new",
-          to: "/new",
-          label: t("nav.newCheck"),
-          icon: <FilePlus2 />,
-          active: pathname.startsWith("/new"),
-        },
-        {
-          key: "rules",
-          to: "/rules",
-          label: t("nav.rulebook"),
-          icon: <ShieldCheck />,
-          active: pathname.startsWith("/rules"),
-        },
-        {
-          key: "settings",
-          to: "/settings",
-          label: t("nav.settings"),
-          icon: <Settings />,
-          active: pathname.startsWith("/settings"),
-        },
-      ]
-    : [
-        { key: "home", to: "/", label: t("nav.home"), icon: <Home />, active: pathname === "/" },
-        {
-          key: "rules",
-          to: "/rules",
-          label: t("nav.rulebook"),
-          icon: <ShieldCheck />,
-          active: pathname.startsWith("/rules"),
-        },
-        {
-          key: "login",
-          to: "/login",
-          label: t("nav.signIn"),
-          icon: user ? <UserRound /> : <LogIn />,
-          active: pathname.startsWith("/login"),
-          mobileOnly: true,
-        },
-      ];
-
-  const nav: NavItem[] = items.map((i) => ({ ...i, render: link(i.to) }));
+  const appNav: NavItem[] = [
+    ...primaryMobile(groups).map((i) => ({
+      key: i.key,
+      label: t(`appNav.item.${i.key}` as TKey),
+      icon: NAV_ICONS[i.key],
+      active: isActive(i, pathname),
+      render: link(i.to),
+    })),
+    {
+      key: "menu",
+      label: t("appNav.menu"),
+      icon: <Menu />,
+      active: false,
+      render: (p) => (
+        <NavDrawer
+          groups={groups}
+          pathname={pathname}
+          trigger={
+            <button type="button" className={p.className} data-testid="nav-menu">
+              {p.children}
+            </button>
+          }
+        />
+      ),
+    },
+  ];
+  const publicNav: NavItem[] = [
+    {
+      key: "home",
+      label: t("nav.home"),
+      icon: <Home />,
+      active: pathname === "/",
+      render: link("/"),
+    },
+    {
+      key: "rules",
+      label: t("nav.rulebook"),
+      icon: <ShieldCheck />,
+      active: pathname.startsWith("/rules"),
+      render: link("/rules"),
+    },
+    {
+      key: "login",
+      label: t("nav.signIn"),
+      icon: <LogIn />,
+      active: pathname.startsWith("/login"),
+      mobileOnly: true,
+      render: link("/login"),
+    },
+  ];
 
   return (
     <ActionBarContext.Provider value={slot}>
@@ -359,16 +239,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Brand />
           </Link>
         }
-        nav={ready ? nav : []}
+        nav={!ready ? [] : signedIn ? appNav : publicNav}
+        sidebar={signedIn ? <AppSidebar groups={groups} pathname={pathname} /> : undefined}
         actions={
           <>
             <LanguageToggle />
-            {ready && user && (
+            {signedIn && (
               <Suspense fallback={<span className="size-11" />}>
                 <NotificationsBell />
               </Suspense>
             )}
-            {ready && <AccountMenu />}
+            {ready && <AccountMenu picker={picker} />}
           </>
         }
         mobileActionBar={<div data-slot ref={setSlot} />}

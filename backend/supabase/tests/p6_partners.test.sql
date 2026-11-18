@@ -88,7 +88,9 @@ begin
   -- Isolation: nothing else of the org is readable.
   if exists (select 1 from public.promotions where id = '48000000-0000-0000-0000-0000000000ff') then raise exception 'reads internal promotion'; end if;
   if exists (select 1 from public.products where org_id = '28000000-0000-0000-0000-000000000001') then raise exception 'reads products'; end if;
-  if exists (select 1 from public.org_members where org_id = '28000000-0000-0000-0000-000000000001') then raise exception 'reads members'; end if;
+  -- Own membership row only (role for navigation); never the other members (UX pass, own-membership policy).
+  if exists (select 1 from public.org_members where org_id = '28000000-0000-0000-0000-000000000001' and user_id <> auth.uid()) then raise exception 'reads members'; end if;
+  if not exists (select 1 from public.org_members where org_id = '28000000-0000-0000-0000-000000000001' and user_id = auth.uid()) then raise exception 'cannot read own membership'; end if;
   if exists (select 1 from public.org_settings where org_id = '28000000-0000-0000-0000-000000000001') then raise exception 'reads settings'; end if;
   if exists (select 1 from public.organizations where id = '28000000-0000-0000-0000-000000000001') then raise exception 'reads org'; end if;
   if exists (select 1 from public.partner_links) then raise exception 'reads links'; end if;

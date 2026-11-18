@@ -3,16 +3,26 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 // Loaded lazily so the first paint never waits for the Supabase client bundle.
 const sb = () => import("@/lib/supabase").then((m) => m.supabase);
 
-export const DEMO_EMAIL = "demo@saleem.app";
-export const DEMO_PASSWORD = "demo123456";
-
-/** Pre-launch test accounts shown on the sign-in page (set VITE_SHOW_TEST_ACCOUNTS=false to hide). */
-export const SHOW_TEST_ACCOUNTS = import.meta.env["VITE_SHOW_TEST_ACCOUNTS"] !== "false";
-export const TEST_ACCOUNTS = [
-  { email: DEMO_EMAIL, password: DEMO_PASSWORD, label: "auth.testCreator" },
-  { email: "agency@saleem.app", password: "agency123456", label: "auth.testAgency" },
-  { email: "admin@saleem.app", password: "admin123456", label: "auth.testAdmin" },
+/**
+ * Demo personas (seeded by `npm run demo:seed` into the isolated org «بنك سليم التجريبي»). Shown on the sign-in page
+ * ONLY in a demo build: VITE_DEMO_MODE=true AND VITE_DEMO_PASSWORD set at build time (git-ignored .env.local). A
+ * production build has neither, so no shared credential is ever shipped. No password is hard-coded here.
+ */
+const DEMO_PASSWORD = (import.meta.env["VITE_DEMO_PASSWORD"] as string | undefined) ?? "";
+export const DEMO_LOGINS =
+  import.meta.env["VITE_DEMO_MODE"] === "true" && DEMO_PASSWORD.length >= 8;
+export const DEMO_PERSONAS = [
+  { key: "marketer", email: "marketer@demo.saleem.app" },
+  { key: "lead", email: "lead@demo.saleem.app" },
+  { key: "admin", email: "admin@demo.saleem.app" },
+  { key: "partner", email: "partner@demo.saleem.app" },
+  { key: "viewer", email: "viewer@demo.saleem.app" },
 ] as const;
+export type DemoPersona = (typeof DEMO_PERSONAS)[number];
+export async function signInAsPersona(p: DemoPersona) {
+  if (!DEMO_LOGINS) throw new Error("demo logins are disabled in this build");
+  await signIn(p.email, DEMO_PASSWORD);
+}
 
 interface AuthState {
   session: Session | null;
@@ -79,16 +89,6 @@ export function authErrorKey(err: unknown): AuthErrorKey {
 export async function signIn(email: string, password: string) {
   const { error } = await (await sb()).auth.signInWithPassword({ email, password });
   if (error) throw error;
-}
-
-export async function signInDemo() {
-  const { error } = await (
-    await sb()
-  ).auth.signInWithPassword({
-    email: DEMO_EMAIL,
-    password: DEMO_PASSWORD,
-  });
-  if (error) throw Object.assign(new Error(error.message), { demo: true });
 }
 
 export async function signUp(email: string, password: string, displayName: string) {

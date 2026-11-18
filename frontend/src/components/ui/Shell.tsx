@@ -72,6 +72,8 @@ interface AppShellProps {
   children: ReactNode;
   /** Hide the bottom nav (e.g. signed-out marketing pages). */
   hideMobileNav?: boolean;
+  /** Signed-in app navigation: a sidebar on desktop (replaces the top nav); `nav` is then the mobile bottom bar. */
+  sidebar?: ReactNode;
 }
 
 /**
@@ -85,6 +87,7 @@ export function AppShell({
   mobileActionBar,
   children,
   hideMobileNav,
+  sidebar,
 }: AppShellProps) {
   const { t } = useI18n();
   return (
@@ -96,9 +99,17 @@ export function AppShell({
         {t("common.skipToContent")}
       </a>
       <header className="no-print sticky top-0 z-40 border-b border-border bg-paper/92 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-6 px-4 sm:px-8">
+        <div
+          className={cn(
+            "mx-auto flex h-16 items-center gap-6 px-4 sm:px-8",
+            !sidebar && "max-w-[1200px]",
+          )}
+        >
           {brand}
-          <nav aria-label={t("nav.mainNav")} className="hidden h-full items-stretch gap-1 md:flex">
+          <nav
+            aria-label={t("nav.mainNav")}
+            className={cn("hidden h-full items-stretch gap-1", !sidebar && "md:flex")}
+          >
             {nav
               .filter((i) => !i.mobileOnly)
               .map((item) => (
@@ -119,13 +130,20 @@ export function AppShell({
         </div>
       </header>
 
-      <main
-        id="main"
-        tabIndex={-1}
-        className={cn("flex-1 outline-none", !hideMobileNav && "pb-24 md:pb-0")}
-      >
-        {children}
-      </main>
+      <div className="flex flex-1">
+        {sidebar && (
+          <aside className="no-print sticky top-16 hidden h-[calc(100dvh-4rem)] shrink-0 overflow-y-auto border-e border-border md:block">
+            {sidebar}
+          </aside>
+        )}
+        <main
+          id="main"
+          tabIndex={-1}
+          className={cn("min-w-0 flex-1 outline-none", !hideMobileNav && "pb-24 md:pb-0")}
+        >
+          {children}
+        </main>
+      </div>
 
       {!hideMobileNav && (
         <div className="no-print fixed inset-x-0 bottom-0 z-40 md:hidden">

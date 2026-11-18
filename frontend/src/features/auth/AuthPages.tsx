@@ -2,13 +2,15 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { MailCheck, PlayCircle } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Brand, Button, Card, Field, Input, Spinner, toast } from "@/components/ui";
-import { useI18n } from "@/i18n";
+import { useI18n, type TKey } from "@/i18n";
 import {
   authErrorKey,
   sendPasswordReset,
   signIn,
-  TEST_ACCOUNTS,
-  SHOW_TEST_ACCOUNTS,
+  DEMO_LOGINS,
+  DEMO_PERSONAS,
+  signInAsPersona,
+  type DemoPersona,
   signUp,
   updatePassword,
   type AuthErrorKey,
@@ -100,13 +102,11 @@ export function LoginPage() {
     }
   };
 
-  const onTestAccount = async (acc: (typeof TEST_ACCOUNTS)[number]) => {
-    setBusy(acc.email);
+  const onPersona = async (p: DemoPersona) => {
+    setBusy(p.email);
     setError(null);
-    setEmail(acc.email);
-    setPassword(acc.password);
     try {
-      await signIn(acc.email, acc.password);
+      await signInAsPersona(p);
       done();
     } catch {
       setError("demoUnavailable");
@@ -157,38 +157,42 @@ export function LoginPage() {
           {t("auth.signIn")}
         </Button>
       </form>
-      <div className="flex items-center gap-3 text-sm text-fg-muted" aria-hidden="true">
-        <span className="h-px flex-1 bg-border" />
-        {t("auth.or")}
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      {SHOW_TEST_ACCOUNTS && (
-        <section aria-labelledby="test-accounts" className="flex flex-col gap-2">
-          <h2 id="test-accounts" className="text-sm font-bold">
-            {t("auth.testAccounts")}
-          </h2>
-          <p className="text-xs text-fg-muted">{t("auth.testAccountsHint")}</p>
-          <ul className="flex flex-col gap-2">
-            {TEST_ACCOUNTS.map((acc) => (
-              <li key={acc.email}>
+      {DEMO_LOGINS && (
+        <section
+          aria-labelledby="demo-personas"
+          data-testid="demo-personas"
+          className="flex flex-col gap-2 border-t border-border pt-4"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="demo-personas" className="text-sm font-bold">
+              {t("auth.demo.title")}
+            </h2>
+            <span className="rounded-full bg-amber-bg px-2 py-0.5 text-xs text-amber-text">
+              {t("auth.demo.badge")}
+            </span>
+          </div>
+          <p className="text-xs text-fg-muted">{t("auth.demo.hint")}</p>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {DEMO_PERSONAS.map((p) => (
+              <li key={p.key}>
                 <button
                   type="button"
-                  onClick={() => void onTestAccount(acc)}
+                  onClick={() => void onPersona(p)}
                   disabled={busy !== null}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-md border border-border bg-sunken px-3 py-2 text-start transition-colors hover:border-green disabled:opacity-60"
+                  data-testid={`persona-${p.key}`}
+                  className="flex h-full w-full items-start gap-2 rounded-md border border-border px-3 py-2 text-start transition-colors hover:border-green focus-visible:ring-2 focus-visible:ring-green disabled:opacity-60"
                 >
-                  {busy === acc.email ? (
-                    <Spinner className="text-green" />
+                  {busy === p.email ? (
+                    <Spinner className="mt-0.5 text-green" />
                   ) : (
-                    <PlayCircle aria-hidden="true" className="size-5 shrink-0 text-green" />
+                    <PlayCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-green" />
                   )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-fg">{t(acc.label)}</span>
-                    <span
-                      dir="ltr"
-                      className="block truncate font-mono text-xs text-fg-muted rtl:text-end"
-                    >
-                      {acc.email} · {acc.password}
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-fg">
+                      {t(`auth.demo.persona.${p.key}.name` as TKey)}
+                    </span>
+                    <span className="block text-xs text-fg-muted">
+                      {t(`auth.demo.persona.${p.key}.desc` as TKey)}
                     </span>
                   </span>
                 </button>

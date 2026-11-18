@@ -38,7 +38,7 @@ export function CompanyRulesPage() {
   const picker = useOrgPicker();
   const role = picker.role as OrgRole | null;
   const settings = useOrgSettings(picker.orgId);
-  const on = flagOn(settings.data, "internal_rules");
+  const on = flagOn(settings.data?.features, "internal_rules");
   return (
     <Page className="flex flex-col gap-6">
       <PageHeader title={t("companyRules.title")} description={t("companyRules.subtitle")} />

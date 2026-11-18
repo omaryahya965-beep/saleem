@@ -10,7 +10,8 @@ const SHORTCUTS: Record<string, Shortcut> = {
   new: { key: "new", to: "/new", action: "create_promotion" },
   promotions: { key: "promotions", to: "/promotions", action: "view_promotions" },
   queue: { key: "queue", to: "/queue", action: "decide_review" },
-  legal: { key: "legal", to: "/legal", action: "legal_opinion" },
+  // Legal escalations are answered from the review queue («محالة إليّ»).
+  legal: { key: "legal", to: "/queue", action: "legal_opinion" },
   analytics: { key: "analytics", to: "/analytics", action: "view_analytics" },
   rules: { key: "rules", to: "/rules", action: "manage_rule_packs" },
   features: { key: "features", to: "/features", action: "manage_settings" },
@@ -36,7 +37,8 @@ export function RoleHome() {
   const role = picker.role as OrgRole | null;
   if (!picker.orgs.data?.length || !role) return null;
   const first = ORDER[role] ?? [];
-  const keys = [...first, ...Object.keys(SHORTCUTS).filter((k) => !first.includes(k))];
+  // Only the role's own tasks: everything else is in the sidebar (no wall of disabled cards).
+  const keys = first.filter((k) => cell(role, SHORTCUTS[k]!.action) !== "no");
   return (
     <Card className="flex flex-col gap-3" data-testid="role-home">
       <div className="flex flex-wrap items-center justify-between gap-2">

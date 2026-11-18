@@ -103,6 +103,20 @@ export async function fetchMyOrgs(): Promise<(Organization & { org_members: OrgM
     await supabase.from("organizations").select("*, org_members(*)").order("created_at"),
   ) as never;
 }
+/** The caller's own memberships (readable even by external partners, who cannot read the organisation). */
+export async function fetchMyMemberships(): Promise<
+  { org_id: string; role: string; access_status: string }[]
+> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return [];
+  return check(
+    await supabase
+      .from("org_members")
+      .select("org_id, role, access_status")
+      .eq("user_id", u.user.id),
+  );
+}
+
 export async function fetchOrg(id: string) {
   const [org, members, invites, campaigns, subs] = await Promise.all([
     supabase.from("organizations").select("*").eq("id", id).single(),

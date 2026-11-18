@@ -490,11 +490,33 @@
       "demoUnavailable": "The demo account isn't enabled on this server yet. You can still view the sample report without signing in.",
       "generic": "We couldn't complete that. Please try again."
     },
-    "testAccounts": "Test accounts",
-    "testAccountsHint": "Tap an account to sign in directly.",
-    "testCreator": "Creator (Creator plan)",
-    "testAgency": "Agency (Agency plan + sample workspace)",
-    "testAdmin": "Admin (evaluation, rulebook and metrics)"
+    "demo": {
+      "title": "Try SALEEM as a role",
+      "badge": "Demo data",
+      "hint": "The isolated «SALEEM Demo Bank» workspace. Each role sees only what its permissions allow.",
+      "persona": {
+        "marketer": {
+          "name": "Marketer",
+          "desc": "Uploads promotions, fixes findings, submits for review"
+        },
+        "lead": {
+          "name": "Compliance lead",
+          "desc": "Assigns reviews, decides, manages company rules"
+        },
+        "admin": {
+          "name": "Org admin",
+          "desc": "Members, roles, settings and features"
+        },
+        "partner": {
+          "name": "Partner agency",
+          "desc": "Submits for its client and sees only its own submissions"
+        },
+        "viewer": {
+          "name": "Auditor",
+          "desc": "Full read access for audit, no changes"
+        }
+      }
+    }
   },
   "settings": {
     "title": "Settings",
@@ -2141,6 +2163,42 @@
       "unavailable": "Can't try: no model key is configured on the server.",
       "unable_to_verify": "Unable to verify: the model returned no valid result.",
       "failed": "The trial failed. Try again."
+    }
+  },
+  "appNav": {
+    "menu": "Menu",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "switchOrg": "Switch workspace",
+    "personalSettings": "My settings",
+    "group": {
+      "work": "Work",
+      "compliance": "Compliance",
+      "organization": "Organization",
+      "support": "Help",
+      "platform": "Platform admin"
+    },
+    "item": {
+      "dashboard": "Overview",
+      "promotions": "Promotions",
+      "new": "New promotion",
+      "queue": "Review queue",
+      "archive": "Checks archive",
+      "rules": "Regulatory rulebook",
+      "companyRules": "Company rules",
+      "claims": "Approved claims",
+      "disclaimers": "Required disclosures",
+      "products": "Products",
+      "team": "Team & workspace",
+      "roles": "Roles & permissions",
+      "features": "Features",
+      "analytics": "Analytics",
+      "audit": "Audit log",
+      "ask": "Ask SALEEM",
+      "adminMetrics": "Platform metrics",
+      "adminRules": "Rule releases",
+      "adminEval": "Engine evaluation",
+      "adminCalibration": "Calibration"
     }
   }
 }
