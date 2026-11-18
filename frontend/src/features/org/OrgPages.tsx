@@ -29,6 +29,7 @@ import { useUsage } from "@/features/settings/UsageMeter";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { OrgSettingsCard } from "./OrgSettingsCard";
+import { OrgRolesConfigCard } from "@/features/roles/OrgRolesConfigCard";
 import { FeatureFlagsCard } from "@/features/enterprise/FeatureFlagsCard";
 import { PresetsCard } from "@/features/enterprise/PresetsCard";
 import { RiskAcceptorsCard } from "@/features/enterprise/RiskPanel";
@@ -573,6 +574,7 @@ export function OrgPage({ id }: { id: string }) {
         )}
       </Tabs>
       <OrgSettingsCard orgId={id} canEdit={manager} />
+      {manager && <OrgRolesConfigCard orgId={id} myRole={myRole} />}
       {manager && <FeatureFlagsCard orgId={id} />}
       {manager && <PresetsCard orgId={id} />}
       {manager && <RiskAcceptorsCard orgId={id} />}

@@ -109,22 +109,32 @@ export function PresetsCard({ orgId }: { orgId: string }) {
       <CardTitle>{t("flows.presetsTitle")}</CardTitle>
       <p className="text-sm text-fg-muted">{t("flows.presetsSubtitle")}</p>
       <ul className="flex flex-col gap-2 text-sm">
-        {(presets.data ?? []).map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center gap-2">
-            <strong dir="auto">{p.name}</strong>
-            <Badge>{t(`flows.mode.${p.mode}` as TKey)}</Badge>
-            {p.is_default && <Badge variant="green">{t("flows.default")}</Badge>}
-            <span className="text-fg-muted">
-              {t("flows.stepsCount", { n: p.approval_preset_steps.length })}
-            </span>
-            <Button size="sm" variant="secondary" onClick={() => edit(p)}>
-              {t("products.edit")}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => archive.mutate(p.id)}>
-              {t("flows.archive")}
-            </Button>
-          </li>
-        ))}
+        {(presets.data ?? []).map((p) => {
+          const hasDisabledRole = p.approval_preset_steps.some(
+            (s) => s.role && !enabledRoles.includes(s.role),
+          );
+          return (
+            <li key={p.id} className="flex flex-wrap items-center gap-2">
+              <strong dir="auto">{p.name}</strong>
+              <Badge>{t(`flows.mode.${p.mode}` as TKey)}</Badge>
+              {p.is_default && <Badge variant="green">{t("flows.default")}</Badge>}
+              <span className="text-fg-muted">
+                {t("flows.stepsCount", { n: p.approval_preset_steps.length })}
+              </span>
+              {hasDisabledRole && (
+                <Badge variant="neutral">
+                  {t("rolesConfig.disabledBadge")}
+                </Badge>
+              )}
+              <Button size="sm" variant="secondary" onClick={() => edit(p)}>
+                {t("products.edit")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => archive.mutate(p.id)}>
+                {t("flows.archive")}
+              </Button>
+            </li>
+          );
+        })}
       </ul>
       {!editing && (
         <Button
@@ -184,11 +194,15 @@ export function PresetsCard({ orgId }: { orgId: string }) {
                     onChange={(e) => setStep(i, { role: e.target.value || null, user_ids: [] })}
                   >
                     <option value="">—</option>
-                    {availableStepRoles.map((r) => (
-                      <option key={r} value={r}>
-                        {t(`org.roles.${r}` as TKey)}
-                      </option>
-                    ))}
+                    {Array.from(new Set([...availableStepRoles, ...(s.role ? [s.role] : [])])).map((r) => {
+                      const isRoleDisabled = !enabledRoles.includes(r);
+                      return (
+                        <option key={r} value={r}>
+                          {t(`org.roles.${r}` as TKey)}
+                          {isRoleDisabled ? ` (${t("rolesConfig.disabledBadge")})` : ""}
+                        </option>
+                      );
+                    })}
                   </Select>
                 </Field>
                 <Field label={t("flows.stepUser")}>
