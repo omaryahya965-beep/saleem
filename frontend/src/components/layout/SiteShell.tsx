@@ -94,7 +94,9 @@ function AccountMenu({ picker }: { picker: Picker }) {
             {/* Partners cannot read the organisation row: show their role even without its name. */}
             {(active || picker.role) && (
               <p className="mt-1 text-xs text-fg-muted">
-                {[active?.name, picker.role && t(`org.roles.${picker.role}` as TKey)].filter(Boolean).join(" · ")}
+                {[active?.name, picker.role && t(`org.roles.${picker.role}` as TKey)]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             )}
           </div>

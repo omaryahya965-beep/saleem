@@ -423,3 +423,22 @@ Format: decision — why — alternatives considered.
   waiting for data. Traces show a 39.8 s HTML response and a REST call that never returned, with drive C at under
   1 GB free. Added a router pending state, so a slow navigation shows a loading page instead of the old page.
   Timeouts were not loosened.
+
+## PR #1, rules verification, secure demo, live audit (2026-11-18)
+
+- **D156. PR #1** (`feature/gemini-integration`, by ahmad daghra, 3 commits, based on pre-v2 master) was
+  integrated on `integrate/pr-1-gemini`, not merged as-is. The PR implemented only the v1 `analyze()`; we added
+  `GeminiAnalysis.analyzeV2` using the v2 prompt, schema and validator. The PR's v1 `review_reasons` notices were not
+  taken, because v2 coverage and `unable_to_verify` cover them. Its local `saleem-local` scripts were not taken,
+  because `demo:seed` supersedes them.
+- **D157. AI keys:** the local OpenAI key returns 401 `expired_secret_key`. There is no Gemini key anywhere locally.
+  Live AI analysis is NOT VERIFIED.
+- **D158. SAMA/CMA verified against the official texts** (`SAMA_CMA_VERIFIED_MAPPING.md`): 44 verified equivalent,
+  9 no match, and 1 superseded by the official text (CMA-CMI-35-RETAIL omits Art 35's suitability exception).
+  Everything stays pending; no status was changed.
+- **D159. Demo:** a server-side broker (`demo-login`), enabled only by the server secret `DEMO_MODE`. It issues
+  one-time magic-link tokens only to allow-listed personas confined to registered sandbox orgs. `VITE_DEMO_PASSWORD`
+  was removed. The 2-hour session expiry is enforced client-side; server-side per-user session timeboxes are not
+  available per user in Supabase.
+- **D160. Live site:** production runs the v1 build and schema. Analyses fail because the production AI key is
+  invalid. The earlier "missing v2 migrations" hypothesis is withdrawn.
