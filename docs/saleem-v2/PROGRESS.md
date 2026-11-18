@@ -9,7 +9,7 @@
 
 - Phase: 8 (steps 1–6, 8 and 10 done; step 7 blocked on the demo video; step 9 deploy not started)
 - Task: Gemini-only provider and PR #1 merge done on `integrate/pr-1-gemini` (D161–D163); live Gemini not verified (no `GEMINI_API_KEY` anywhere)
-- Last commit: PR #1 merge + Gemini-only on `integrate/pr-1-gemini`
+- Last commit: E2E fixes (115e0df): public tests use the real local backend, faithful offline fallbacks, 48/48
 - Next step: the user supplies a Gemini key (in `backend/supabase/functions/.env`) for real-AI tests; push + PR to `master`; deploy needs release approval. Still open: SAMA/CMA mapping approval, demo video.
 
 ## Status
