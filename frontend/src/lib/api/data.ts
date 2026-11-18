@@ -54,7 +54,11 @@ export async function fetchRulebook(): Promise<{ version: RulebookVersion | null
   const version = versions?.[0] ?? null;
 
   try {
-    const { data: dbRules, error: rErr } = await supabase.from("rules").select("*").order("code");
+    // Only the active release's rules: an archived version keeps its rows (same codes) for history
+    // (from PR #1, ahmad daghra).
+    let rulesQuery = supabase.from("rules").select("*");
+    if (version) rulesQuery = rulesQuery.eq("rulebook_version_id", version.id);
+    const { data: dbRules, error: rErr } = await rulesQuery.order("code");
 
     if (!rErr && dbRules && dbRules.length >= 150) {
       return { version, rules: dbRules };
