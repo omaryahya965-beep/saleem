@@ -16,6 +16,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app/analytics'
 import { Route as AppAskRouteImport } from './routes/_app/ask'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppClaimsRouteImport } from './routes/_app/claims'
+import { Route as AppCompanyRulesRouteImport } from './routes/_app/company-rules'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDisclaimersRouteImport } from './routes/_app/disclaimers'
 import { Route as AppFeaturesRouteImport } from './routes/_app/features'
@@ -81,6 +82,11 @@ const AppAuditRoute = AppAuditRouteImport.update({
 const AppClaimsRoute = AppClaimsRouteImport.update({
   id: '/claims',
   path: '/claims',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCompanyRulesRoute = AppCompanyRulesRouteImport.update({
+  id: '/company-rules',
+  path: '/company-rules',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -251,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/ask': typeof AppAskRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
+  '/company-rules': typeof AppCompanyRulesRoute
   '/dashboard': typeof AppDashboardRoute
   '/disclaimers': typeof AppDisclaimersRoute
   '/features': typeof AppFeaturesRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/ask': typeof AppAskRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
+  '/company-rules': typeof AppCompanyRulesRoute
   '/dashboard': typeof AppDashboardRoute
   '/disclaimers': typeof AppDisclaimersRoute
   '/features': typeof AppFeaturesRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/_app/ask': typeof AppAskRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/claims': typeof AppClaimsRoute
+  '/_app/company-rules': typeof AppCompanyRulesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disclaimers': typeof AppDisclaimersRoute
   '/_app/features': typeof AppFeaturesRoute
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/audit'
     | '/claims'
+    | '/company-rules'
     | '/dashboard'
     | '/disclaimers'
     | '/features'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/audit'
     | '/claims'
+    | '/company-rules'
     | '/dashboard'
     | '/disclaimers'
     | '/features'
@@ -455,6 +466,7 @@ export interface FileRouteTypes {
     | '/_app/ask'
     | '/_app/audit'
     | '/_app/claims'
+    | '/_app/company-rules'
     | '/_app/dashboard'
     | '/_app/disclaimers'
     | '/_app/features'
@@ -544,6 +556,13 @@ declare module '@tanstack/react-router' {
       path: '/claims'
       fullPath: '/claims'
       preLoaderRoute: typeof AppClaimsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/company-rules': {
+      id: '/_app/company-rules'
+      path: '/company-rules'
+      fullPath: '/company-rules'
+      preLoaderRoute: typeof AppCompanyRulesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -778,6 +797,7 @@ interface AppRouteChildren {
   AppAskRoute: typeof AppAskRoute
   AppAuditRoute: typeof AppAuditRoute
   AppClaimsRoute: typeof AppClaimsRoute
+  AppCompanyRulesRoute: typeof AppCompanyRulesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisclaimersRoute: typeof AppDisclaimersRoute
   AppFeaturesRoute: typeof AppFeaturesRoute
@@ -818,6 +838,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAskRoute: AppAskRoute,
   AppAuditRoute: AppAuditRoute,
   AppClaimsRoute: AppClaimsRoute,
+  AppCompanyRulesRoute: AppCompanyRulesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisclaimersRoute: AppDisclaimersRoute,
   AppFeaturesRoute: AppFeaturesRoute,

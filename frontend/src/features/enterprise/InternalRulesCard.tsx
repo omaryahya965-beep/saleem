@@ -27,6 +27,7 @@ import {
   type InternalRule,
 } from "@/lib/api/internalRules";
 import { useOrgSettings } from "@/lib/api/promotions";
+import { useAuth } from "@/lib/api/auth";
 
 type Edit = {
   id: string | null;
@@ -39,6 +40,7 @@ type Edit = {
 /** Brand guidelines → drafted internal rules → a person edits and approves each (Phase 6.7). «سياسة داخلية». */
 export function InternalRulesCard({ orgId }: { orgId: string }) {
   const { t } = useI18n();
+  const { user } = useAuth();
   const qc = useQueryClient();
   const settings = useOrgSettings(orgId);
   const rules = useInternalRules(orgId);
@@ -146,6 +148,8 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
                 {t(`internalRules.status.${r.status}` as TKey)}
               </Badge>
               <Badge variant="outline">{t(`internalRules.source.${r.source}` as TKey)}</Badge>
+              <Badge variant="outline">{t("companyRules.version", { n: r.version })}</Badge>
+              <Badge variant="neutral">{t("companyRules.internalPolicy")}</Badge>
             </div>
             <p className="text-fg-muted" dir="auto">
               {r.instruction_ar}
@@ -157,7 +161,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               {r.status === "draft" && (
                 <Button
                   size="sm"
-                  disabled={!r.edited_by}
+                  disabled={!r.edited_by || r.edited_by === user?.id}
                   loading={approve.isPending}
                   onClick={() => approve.mutate(r.id)}
                 >
@@ -166,6 +170,11 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               )}
               {r.status === "draft" && !r.edited_by && (
                 <span className="text-xs text-fg-muted">{t("internalRules.editFirst")}</span>
+              )}
+              {r.status === "draft" && r.edited_by && r.edited_by === user?.id && (
+                <span className="text-xs text-fg-muted" data-testid="author-cannot-approve">
+                  {t("companyRules.authorCannotApprove")}
+                </span>
               )}
               <Button size="sm" variant="ghost" onClick={() => archive.mutate(r.id)}>
                 {t("flows.archive")}

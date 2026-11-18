@@ -585,6 +585,52 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
   log("pipeline_done", { submission_id: sub.id, status: merged.overallStatus, findings: merged.mergedFindings.length, cost_usd: cost, durations });
 }
 
+/**
+ * «جرّب القاعدة» (Phase 8.6): run one company rule (draft or active) on an already-analysed submission of the same
+ * organisation, without saving anything. Text only — the stored transcript, caption and the last run's on-screen
+ * text — so no frames are re-sent (token cost). Only members who may manage company rules can call it.
+ */
+async function tryRule(db: SupabaseClient, userId: string, input: Record<string, unknown>): Promise<Response> {
+  const ruleId = typeof input.rule_id === "string" ? input.rule_id : null;
+  const submissionId = typeof input.submission_id === "string" ? input.submission_id : null;
+  if (!ruleId || !submissionId) return json({ error: "rule_id and submission_id are required" }, 400);
+  const { data: rule } = await db.from("internal_rules").select("id, org_id, code, title_ar, instruction_ar, severity, status").eq("id", ruleId).maybeSingle();
+  if (!rule) return json({ error: "not found" }, 404);
+  const { data: member } = await db.from("org_members").select("role").eq("org_id", rule.org_id).eq("user_id", userId).eq("access_status", "active").maybeSingle();
+  const { data: cell } = member ? await db.rpc("org_role_can", { _role: member.role, _action: "manage_company_rules" }) : { data: "no" };
+  if (cell !== "yes") return json({ error: "forbidden" }, 403);
+  const { data: sub } = await db.from("submissions").select("*").eq("id", submissionId).maybeSingle();
+  if (!sub || sub.is_demo || sub.status !== "done") return json({ error: "not found" }, 404);
+  const { data: promo } = sub.promotion_id ? await db.from("promotions").select("org_id").eq("id", sub.promotion_id).maybeSingle() : { data: null };
+  if (((promo?.org_id as string | null) ?? sub.org_id) !== rule.org_id) return json({ error: "not found" }, 404);
+  if (!env("OPENAI_API_KEY") && config(env).llmProvider === "openai") return json({ status: "unavailable", reason: "no_model_key" }, 200);
+
+  const [ctx, transcript, lastRun] = await Promise.all([
+    loadContext(db, sub),
+    db.from("transcripts").select("segments").eq("submission_id", sub.id).maybeSingle(),
+    db.from("analysis_runs").select("on_screen_text").eq("submission_id", sub.id).eq("status", "done").order("started_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const segments: TranscriptSegment[] = [
+    ...(((transcript.data?.segments as TranscriptSegment[]) ?? [])),
+    ...(((lastRun.data?.on_screen_text as OnScreenText[]) ?? []).map((o) => ({ start: o.t, end: o.t, text: `[نص على الشاشة] ${o.text}` }))),
+  ];
+  const rules = internalRuleRows([{ ...(rule as InternalRule), status: "active" }]);
+  try {
+    const res = await analysisProvider(env).analyzeV2({ submission: sub, ctx, segments, rules, frames: [], duration: sub.duration_seconds ?? null });
+    const out = res.output;
+    log("try_rule", { rule_id: rule.id, submission_id: sub.id, ok: Boolean(out), tokens: res.usage });
+    if (!out) return json({ status: "unable_to_verify" }, 200);
+    return json({
+      status: "done",
+      result: out.rule_results.find((r) => r.rule_code === rule.code) ?? null,
+      findings: out.findings.filter((f) => f.rule_code === rule.code),
+    }, 200);
+  } catch (e) {
+    log("try_rule_failed", { rule_id: rule.id, error: (e as Error).message.slice(0, 300) });
+    return json({ status: "failed", error: errorMessageFor(e) }, 200);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
@@ -599,6 +645,7 @@ Deno.serve(async (req: Request) => {
   const userId = auth.user.id;
 
   const body = await req.json().catch(() => ({}));
+  if (body && typeof body.try_rule === "object") return await tryRule(db, userId, body.try_rule);
   const submissionId = typeof body.submission_id === "string" ? body.submission_id : null;
   if (!submissionId) return json({ error: "submission_id is required" }, 400);
 

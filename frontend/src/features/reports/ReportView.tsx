@@ -16,7 +16,7 @@ import {
   Upload,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MobileActionBar } from "@/components/layout/SiteShell";
 import {
   Badge,
@@ -194,7 +194,7 @@ function ReadyComparison({ bundle }: { bundle: ReportBundle }) {
   );
 }
 
-export function ReportView({ bundle }: { bundle: ReportBundle }) {
+export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?: number }) {
   const { t, tn, lang, formatDate } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -242,6 +242,22 @@ export function ReportView({ bundle }: { bundle: ReportBundle }) {
     setTime(tt);
     if (videoRef.current) videoRef.current.currentTime = tt;
   }, []);
+  // Opened from a finding link (?t=seconds): jump the player there once the media is ready.
+  useEffect(() => {
+    if (startAt == null) return;
+    setTime(startAt);
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.readyState >= 1) {
+      v.currentTime = startAt;
+      return;
+    }
+    {
+      const go = () => (v.currentTime = startAt);
+      v.addEventListener("loadedmetadata", go, { once: true });
+      return () => v.removeEventListener("loadedmetadata", go);
+    }
+  }, [startAt]);
 
   const selectIssue = useCallback(
     (id: string, scroll: boolean) => {

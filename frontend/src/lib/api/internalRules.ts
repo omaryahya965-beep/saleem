@@ -76,3 +76,74 @@ export const approveInternalRule = async (id: string) => {
 export const archiveInternalRule = async (id: string) => {
   check(await supabase.rpc("archive_internal_rule", { _id: id }));
 };
+
+// --- Phase 8.6: versions and «جرّب القاعدة».
+export type InternalRuleVersion = Tables["internal_rule_versions"]["Row"];
+export const useRuleVersions = (org: string) =>
+  useQuery({
+    queryKey: ["internal-rule-versions", org],
+    enabled: Boolean(org),
+    queryFn: async () =>
+      check(
+        await supabase
+          .from("internal_rule_versions")
+          .select("*")
+          .eq("org_id", org)
+          .order("version", { ascending: false }),
+      ) as InternalRuleVersion[],
+  });
+
+/** Analysed versions in the organisation a rule can be tried on (latest first). */
+export const useTryTargets = (org: string) =>
+  useQuery({
+    queryKey: ["try-targets", org],
+    enabled: Boolean(org),
+    queryFn: async () => {
+      const promos = check(
+        await supabase
+          .from("promotions")
+          .select("id, title, current_version_id")
+          .eq("org_id", org)
+          .not("current_version_id", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(30),
+      );
+      const ids = promos.map((p) => p.current_version_id!).filter(Boolean);
+      if (!ids.length) return [];
+      const subs = check(
+        await supabase
+          .from("submissions")
+          .select("id, version_no, status, kind")
+          .in("id", ids)
+          .eq("status", "done"),
+      );
+      return subs.map((s) => ({
+        submissionId: s.id,
+        versionNo: s.version_no,
+        kind: s.kind,
+        promotionId: promos.find((p) => p.current_version_id === s.id)!.id,
+        title: promos.find((p) => p.current_version_id === s.id)!.title,
+      }));
+    },
+  });
+
+export interface TryFinding {
+  rule_code: string;
+  severity: string;
+  finding_type: string;
+  explanation_ar: string;
+  suggested_fix_ar: string | null;
+  evidence: { modality: string; quote: string; t_start: number | null; t_end: number | null };
+}
+export type TryResult =
+  | { status: "done"; result: { outcome: string; reason: string } | null; findings: TryFinding[] }
+  | { status: "unavailable" | "unable_to_verify" | "failed"; error?: string };
+
+/** Runs one company rule on an analysed version without saving anything (the analyze function, text only). */
+export async function tryRule(ruleId: string, submissionId: string): Promise<TryResult> {
+  const { data, error } = await supabase.functions.invoke("analyze", {
+    body: { try_rule: { rule_id: ruleId, submission_id: submissionId } },
+  });
+  if (error) throw new ApiError(error.message);
+  return data as TryResult;
+}

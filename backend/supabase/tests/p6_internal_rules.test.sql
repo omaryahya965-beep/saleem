@@ -58,6 +58,11 @@ do $$ begin
   perform pg_temp.expect_error($q$select public.save_internal_rule('2c000000-0000-0000-0000-000000000001', null, 'SAMA-1', 'x', 'y', 'warning')$q$, 'code:invalid_code');
 end $$;
 reset role;
+-- Phase 8: versions. The first approval wrote version 1; the edit above started version 2 (draft).
+do $$ begin
+  if (select version from public.internal_rules where id = '5c000000-0000-0000-0000-000000000001') <> 2 then raise exception 'edit did not start version 2'; end if;
+  if (select count(*) from public.internal_rule_versions where rule_id = '5c000000-0000-0000-0000-000000000001' and version = 1) <> 1 then raise exception 'v1 snapshot missing'; end if;
+end $$;
 
 select pass('p6 internal rules');
 select * from finish();

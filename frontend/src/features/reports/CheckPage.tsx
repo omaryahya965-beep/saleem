@@ -47,7 +47,7 @@ export function NotFoundReport() {
 }
 
 /** /checks/$id — shows live processing until the pipeline is done, then the report. */
-export function CheckPage({ id }: { id: string }) {
+export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
   const { t } = useI18n();
   const status = useSubmissionStatus(id);
   const done = status.data?.status === "done";
@@ -87,5 +87,5 @@ export function CheckPage({ id }: { id: string }) {
         />
       </Page>
     );
-  return <ReportView bundle={report.data} />;
+  return <ReportView bundle={report.data} startAt={startAt} />;
 }

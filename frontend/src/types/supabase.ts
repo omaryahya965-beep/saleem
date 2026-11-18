@@ -946,6 +946,25 @@ export type Database = {
           },
         ];
       };
+      internal_rule_versions: {
+        Row: {
+          approved_at: string;
+          approved_by: string;
+          code: string;
+          edited_at: string | null;
+          edited_by: string | null;
+          id: string;
+          instruction_ar: string;
+          org_id: string;
+          rule_id: string;
+          severity: string;
+          title_ar: string;
+          version: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       internal_rules: {
         Row: {
           approved_at: string | null;
@@ -962,6 +981,7 @@ export type Database = {
           source: string;
           status: string;
           title_ar: string;
+          version: number;
         };
         Insert: {
           approved_at?: string | null;
@@ -978,6 +998,7 @@ export type Database = {
           source: string;
           status?: string;
           title_ar: string;
+          version?: number;
         };
         Update: {
           approved_at?: string | null;
@@ -994,6 +1015,7 @@ export type Database = {
           source?: string;
           status?: string;
           title_ar?: string;
+          version?: number;
         };
         Relationships: [];
       };

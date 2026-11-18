@@ -37,7 +37,7 @@ returns text language sql stable security definer set search_path = '' as $$
 $$;
 
 revoke all on function public.org_role_can(public.org_role, text), public.org_can(uuid, text) from public, anon;
-grant execute on function public.org_role_can(public.org_role, text), public.org_can(uuid, text) to authenticated;
+grant execute on function public.org_role_can(public.org_role, text), public.org_can(uuid, text) to authenticated, service_role;
 
 -- Company rules: the author (last editor) cannot approve their own rule; another owner, admin or compliance lead does.
 create or replace function public.approve_internal_rule(_id uuid)

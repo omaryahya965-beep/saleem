@@ -49,7 +49,7 @@ import { VariationsCard } from "@/features/enterprise/VariationsCard";
 import { LifecyclePanel } from "@/features/enterprise/LifecyclePanel";
 import { ReadabilityPanel } from "@/features/enterprise/ReadabilityPanel";
 
-export function PromotionPage({ id, v }: { id: string; v?: number }) {
+export function PromotionPage({ id, v, t: startAt }: { id: string; v?: number; t?: number }) {
   const { t } = useI18n();
   const promo = usePromotion(id);
   if (promo.isPending)
@@ -86,10 +86,18 @@ export function PromotionPage({ id, v }: { id: string; v?: number }) {
       </Page>
     );
   }
-  return <PromotionView bundle={promo.data} v={v} />;
+  return <PromotionView bundle={promo.data} v={v} startAt={startAt} />;
 }
 
-function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
+function PromotionView({
+  bundle,
+  v,
+  startAt,
+}: {
+  bundle: PromotionBundle;
+  v?: number;
+  startAt?: number;
+}) {
   const { t, lang } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -197,7 +205,7 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
       </Page>
 
       <TabsContent value="findings">
-        {version ? <CheckPage key={version.id} id={version.id} /> : null}
+        {version ? <CheckPage key={version.id} id={version.id} startAt={startAt} /> : null}
         {version && version.id === versions.at(-1)?.id && (
           <ResponsesPanel
             promotion={p}

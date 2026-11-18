@@ -62,7 +62,8 @@
     "analytics": "Analytics",
     "ask": "Ask Saleem",
     "features": "Features",
-    "roles": "Roles & permissions"
+    "roles": "Roles & permissions",
+    "companyRules": "Company rules"
   },
   "status": {
     "ready": "No automated findings",
@@ -2058,6 +2059,32 @@
       "rules": "Rules and packs",
       "features": "Features",
       "roles": "Roles & permissions"
+    }
+  },
+  "companyRules": {
+    "title": "Company rules",
+    "subtitle": "Your organisation's internal policies, checked alongside the applicable rule packs. Every rule is versioned and is never approved by its author.",
+    "internalPolicy": "Internal policy",
+    "version": "Version {n}",
+    "versionShort": "V{n}",
+    "managersOnly": "Company rules are written by the owner, an org admin or a compliance lead.",
+    "flagOff": "The internal-policies feature is off for this workspace. Turn it on from Features.",
+    "authorCannotApprove": "The author cannot approve their own rule. Another owner, admin or compliance lead approves it.",
+    "tryTitle": "Try the rule",
+    "tryHint": "Run one rule (even a draft) on an already-checked promotion to see what it would find before approving it. Only text is sent (speech, on-screen text, description); nothing is saved.",
+    "rule": "Rule",
+    "target": "Promotion (latest checked version)",
+    "tryRun": "Try",
+    "noTargets": "No checked promotions in this workspace yet.",
+    "tryPassed": "The rule found nothing in this promotion",
+    "tryNotSaved": "Trial only: no finding was saved and the promotion's report is unchanged.",
+    "jumpTo": "Open the promotion at {time}",
+    "history": "Approved versions",
+    "approvedAt": "Approved {date}",
+    "tryStatus": {
+      "unavailable": "Can't try: no model key is configured on the server.",
+      "unable_to_verify": "Unable to verify: the model returned no valid result.",
+      "failed": "The trial failed. Try again."
     }
   }
 }
