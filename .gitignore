@@ -67,3 +67,6 @@ frontend/playwright-report/
 .env*
 
 .claude/settings.local.json
+# Local demo credentials (demo:seed) — never commit
+demo/.demo-credentials.json
+demo/.demo-partner-link

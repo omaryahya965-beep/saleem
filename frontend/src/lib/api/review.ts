@@ -28,7 +28,7 @@ function check<T>(res: {
   data: T;
   error: { message: string; code?: string } | null;
 }): NonNullable<T> {
-  if (res.error) throw Object.assign(new ApiError(res.error.message), { sqlCode: res.error.code });
+  if (res.error) throw Object.assign(ApiError.from(res.error), { sqlCode: res.error.code });
   return res.data as NonNullable<T>;
 }
 

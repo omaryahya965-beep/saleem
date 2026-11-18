@@ -37,9 +37,9 @@ export { ApiError };
 
 function fail(error: { message: string; code?: string } | null, fallback = "unknown"): never {
   const msg = error?.message ?? fallback;
-  if (error?.code === "PGRST116") throw new ApiError(msg, "not_found");
-  if (/fetch|network/i.test(msg)) throw new ApiError(msg, "network");
-  throw new ApiError(msg);
+  if (/fetch|network/i.test(msg))
+    throw ApiError.from({ message: msg, code: error?.code }, "network");
+  throw ApiError.from({ message: msg, code: error?.code });
 }
 
 // ---------------------------------------------------------------------------

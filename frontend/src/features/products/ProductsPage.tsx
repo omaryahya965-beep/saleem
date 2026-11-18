@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Package, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
@@ -68,10 +69,9 @@ export function ProductsPage() {
   if (orgs.isError)
     return (
       <Page narrow>
-        <ErrorState
+        <ApiErrorState
           title={t("products.title")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={orgs.error}
           onRetry={() => void orgs.refetch()}
         />
       </Page>
@@ -161,10 +161,9 @@ function ProductList({ orgId, canManage }: { orgId: string; canManage: boolean }
       {products.isPending ? (
         <Skeleton className="h-24 w-full rounded-lg" />
       ) : products.isError ? (
-        <ErrorState
+        <ApiErrorState
           title={t("products.title")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={products.error}
           onRetry={() => void products.refetch()}
         />
       ) : products.data.length === 0 ? (

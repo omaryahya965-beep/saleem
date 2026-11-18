@@ -14,7 +14,7 @@ export type AutoApply = Tables["preset_auto_apply"]["Row"];
 export type ReviewStep = Tables["promotion_review_steps"]["Row"];
 
 function check<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
-  if (res.error) throw new ApiError(res.error.message);
+  if (res.error) throw ApiError.from(res.error);
   return res.data as NonNullable<T>;
 }
 

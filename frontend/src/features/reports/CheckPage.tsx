@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { FileQuestion } from "lucide-react";
 import { useEffect } from "react";
 import { Button, Card, EmptyState, ErrorState, Page, Skeleton } from "@/components/ui";
@@ -65,10 +66,9 @@ export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
       return <NotFoundReport />;
     return (
       <Page narrow>
-        <ErrorState
+        <ApiErrorState
           title={t("report.loadErrorTitle")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={status.error}
           onRetry={() => void status.refetch()}
         />
       </Page>
@@ -79,10 +79,9 @@ export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
   if (report.isError)
     return (
       <Page narrow>
-        <ErrorState
+        <ApiErrorState
           title={t("report.loadErrorTitle")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={report.error}
           onRetry={() => void report.refetch()}
         />
       </Page>

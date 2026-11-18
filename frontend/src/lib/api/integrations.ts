@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { ApiError } from "./data";
 
 function check<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
-  if (res.error) throw new ApiError(res.error.message);
+  if (res.error) throw ApiError.from(res.error);
   return res.data as NonNullable<T>;
 }
 

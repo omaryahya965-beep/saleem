@@ -1,4 +1,5 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { RoleHome } from "@/features/roles/RoleHome";
 import {
   ChevronLeft,
@@ -223,10 +224,9 @@ export function DashboardPage() {
       </div>
 
       {list.isError ? (
-        <ErrorState
+        <ApiErrorState
           title={t("dashboard.loadError")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={list.error}
           onRetry={() => void list.refetch()}
         />
       ) : list.isPending ? (

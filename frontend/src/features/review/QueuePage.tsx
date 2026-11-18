@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { useQuery } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
 import { useState } from "react";
@@ -61,10 +62,9 @@ export function QueuePage() {
       {queue.isPending ? (
         <Skeleton className="h-32 w-full rounded-lg" />
       ) : queue.isError ? (
-        <ErrorState
+        <ApiErrorState
           title={t("review.queue.title")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={queue.error}
           onRetry={() => void queue.refetch()}
         />
       ) : items.length === 0 ? (

@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useErrorText } from "@/components/feedback/ApiErrorState";
 import { ShieldCheck, ShieldAlert } from "lucide-react";
 import { Badge, Button, Card, CardTitle, Skeleton } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
@@ -16,6 +17,7 @@ export function HistoryPanel({
   versions: VersionSummary[];
 }) {
   const { t, lang } = useI18n();
+  const errText = useErrorText();
   const history = useQuery({
     queryKey: rk.history(p.id),
     queryFn: () =>
@@ -26,7 +28,12 @@ export function HistoryPanel({
   });
   const verify = useMutation({ mutationFn: () => verifyChain(p.id) });
   if (history.isPending) return <Skeleton className="h-40 w-full rounded-lg" />;
-  if (history.isError) return <p className="text-sm text-red">{t("errors.network")}</p>;
+  if (history.isError)
+    return (
+      <p className="text-sm text-red" role="alert">
+        {errText(history.error)}
+      </p>
+    );
   const { events, decisions, shareReviews } = history.data;
   const decisionById = new Map(decisions.map((d) => [d.id, d]));
   return (

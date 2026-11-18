@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
-import { ApiError } from "@/lib/api/errors";
+import { classifyError } from "@/lib/api/errors";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
@@ -8,7 +8,8 @@ export const getRouter = () => {
     defaultOptions: {
       queries: {
         // Don't retry definitive answers (missing rows, RLS denials); retry transient failures twice.
-        retry: (count, err) => !(err instanceof ApiError && err.code === "not_found") && count < 2,
+        // (classified: only network and server errors are worth retrying; 4xx, RLS and schema errors are not).
+        retry: (count, err) => ["network", "server"].includes(classifyError(err)) && count < 2,
         refetchOnWindowFocus: false,
       },
     },

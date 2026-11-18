@@ -1,4 +1,5 @@
 import { Link, useSearch } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { Megaphone, Plus, SearchX } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -151,10 +152,9 @@ export function PromotionsListPage() {
           ))}
         </div>
       ) : list.isError ? (
-        <ErrorState
+        <ApiErrorState
           title={t("promo.loadError")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={list.error}
           onRetry={() => void list.refetch()}
         />
       ) : list.data.length === 0 ? (

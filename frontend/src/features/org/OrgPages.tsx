@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, ChevronLeft, Copy, Megaphone, Plus, UserPlus, Users, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
@@ -283,9 +284,9 @@ export function OrgPage({ id }: { id: string }) {
   if (q.isError)
     return (
       <Page narrow>
-        <ErrorState
+        <ApiErrorState
           title={t("org.loadError")}
-          retryLabel={t("common.retry")}
+          error={q.error}
           onRetry={() => void q.refetch()}
         />
       </Page>

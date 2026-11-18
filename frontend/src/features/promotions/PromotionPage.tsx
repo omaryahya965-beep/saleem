@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileQuestion, RefreshCw, Upload } from "lucide-react";
 import { useState } from "react";
@@ -77,10 +78,9 @@ export function PromotionPage({ id, v, t: startAt }: { id: string; v?: number; t
       );
     return (
       <Page narrow>
-        <ErrorState
+        <ApiErrorState
           title={t("promo.notFoundTitle")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={promo.error}
           onRetry={() => void promo.refetch()}
         />
       </Page>

@@ -10,7 +10,7 @@ export type OrgRulePack = Tables["org_rule_packs"]["Row"];
 export type Source = Tables["regulatory_sources"]["Row"];
 
 function check<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
-  if (res.error) throw new ApiError(res.error.message);
+  if (res.error) throw ApiError.from(res.error);
   return res.data as NonNullable<T>;
 }
 

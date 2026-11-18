@@ -13,7 +13,7 @@ export type Substantiation =
   { kind: "url"; url: string; title?: string } | { kind: "file"; path: string; name: string };
 
 function check<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
-  if (res.error) throw new ApiError(res.error.message);
+  if (res.error) throw ApiError.from(res.error);
   return res.data as NonNullable<T>;
 }
 

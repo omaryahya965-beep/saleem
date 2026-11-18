@@ -117,7 +117,43 @@
     "notFoundBody": "The page may have moved, or the link is incorrect.",
     "goHome": "Back to home",
     "pageFailedTitle": "This page didn't load",
-    "pageFailedBody": "Something went wrong while loading. You can try again."
+    "pageFailedBody": "Something went wrong while loading. You can try again.",
+    "signInAgain": "Sign in again",
+    "backToDashboard": "Back to the dashboard",
+    "kind": {
+      "network": {
+        "title": "Can't reach the server",
+        "body": "The server didn't respond. Check your connection and try again."
+      },
+      "unauthorized": {
+        "title": "Session ended",
+        "body": "Your session expired or you're signed out. Sign in again to continue."
+      },
+      "forbidden": {
+        "title": "You don't have access",
+        "body": "Your role in this workspace doesn't allow this action or data. Ask an org admin to change your role if you need it."
+      },
+      "not_found": {
+        "title": "Not found",
+        "body": "We couldn't find it, or it isn't available to you."
+      },
+      "schema": {
+        "title": "The server needs an update",
+        "body": "The database is older than this version of the app (a table or function is missing). Ask the platform admin to apply the updates."
+      },
+      "provider": {
+        "title": "Analysis service not configured",
+        "body": "The AI provider isn't configured or its key is invalid on the server. No findings were created."
+      },
+      "invalid": {
+        "title": "Invalid request",
+        "body": "Some data is missing or incorrect. Check it and try again."
+      },
+      "server": {
+        "title": "Server error",
+        "body": "Something unexpected happened on the server. Try again shortly."
+      }
+    }
   },
   "timeline": {
     "label": "Issue timeline",

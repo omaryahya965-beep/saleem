@@ -1,4 +1,5 @@
 import { Info, Search, SearchX } from "lucide-react";
+import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { useMemo, useState } from "react";
 import {
   Badge,
@@ -102,10 +103,9 @@ export function RulebookPage() {
       </div>
 
       {book.isError ? (
-        <ErrorState
+        <ApiErrorState
           title={t("rulebook.loadError")}
-          body={t("errors.network")}
-          retryLabel={t("common.retry")}
+          error={book.error}
           onRetry={() => void book.refetch()}
         />
       ) : book.isPending ? (

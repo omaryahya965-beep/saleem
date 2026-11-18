@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useErrorText } from "@/components/feedback/ApiErrorState";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
 import { useState } from "react";
@@ -24,6 +25,7 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 /** /analytics — review metrics computed from events and sealed decisions (Phase 6.6). */
 export function AnalyticsPage() {
   const { t, lang } = useI18n();
+  const errText = useErrorText();
   const picker = useOrgPicker();
   const settings = useOrgSettings(picker.orgId || null);
   const products = useProducts(picker.orgId || null);
@@ -108,7 +110,9 @@ export function AnalyticsPage() {
           {m.isPending ? (
             <Skeleton className="h-48 w-full" />
           ) : !m.data ? (
-            <p className="text-sm text-red">{t("errors.network")}</p>
+            <p className="text-sm text-red" role="alert">
+              {errText(m.error)}
+            </p>
           ) : (
             <>
               <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="metrics">
