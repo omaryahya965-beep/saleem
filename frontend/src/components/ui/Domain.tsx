@@ -38,6 +38,8 @@ export interface IssueV2 {
   /** null for findings stored before the v2 engine (shown with the legacy label). */
   findingType: string | null;
   draftRule: boolean;
+  /** Organisation brand-guideline rule (Phase 6.7): «سياسة داخلية», not regulation. */
+  internalPolicy?: boolean;
   articleRef: string | null;
   /** official_text_opened | official_status_unconfirmed | secondary_only | internal */
   verification: string | null;
@@ -113,6 +115,9 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
               </Badge>
             )}
             {issue.v2?.draftRule && <Badge variant="neutral">{t("findingType.rule_draft")}</Badge>}
+            {issue.v2?.internalPolicy && (
+              <Badge variant="outline">{t("findingType.internal_policy")}</Badge>
+            )}
             {issue.v2?.carriedFromVersion && (
               <Badge variant="neutral">
                 {t("findingType.carried", { n: issue.v2.carriedFromVersion })}

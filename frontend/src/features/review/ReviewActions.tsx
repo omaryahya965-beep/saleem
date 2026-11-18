@@ -4,6 +4,10 @@ import { useState } from "react";
 import { Button, Checkbox, Dialog, Field, Input, Select, Textarea, toast } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { usePreflightText } from "./model";
+import { FlowPanel, SubmitFlowSection } from "@/features/enterprise/FlowPanel";
+import { RiskPanel } from "@/features/enterprise/RiskPanel";
+import { RereviewAction } from "@/features/enterprise/LifecyclePanel";
+import { fk, flowLive, submitWithCarry, usePreview, useSteps } from "@/lib/api/flows";
 import { pk, type Promotion, type VersionSummary } from "@/lib/api/promotions";
 import {
   archivePromotion,
@@ -69,7 +73,11 @@ export function ReviewActions({
     void qc.invalidateQueries({ queryKey: pk.promotion(p.id) });
     void qc.invalidateQueries({ queryKey: rk.history(p.id) });
     void qc.invalidateQueries({ queryKey: rk.queue });
+    void qc.invalidateQueries({ queryKey: fk.steps(p.id) });
+    void qc.invalidateQueries({ queryKey: fk.preview(p.id) });
   };
+  const steps = useSteps(p.id);
+  const live = flowLive(steps.data ?? []);
   const onError = (e: unknown) => toast.error(errText(e));
   const isUploaderSide = me.isOwner || ["owner", "admin", "creator"].includes(me.orgRole ?? "");
   const isReviewer = ["owner", "admin", "reviewer"].includes(me.orgRole ?? "");
@@ -119,7 +127,7 @@ export function ReviewActions({
         {t("review.openReview")}
       </Button>,
     );
-  if (isReviewer && !uploadedIt && s === "in_review") {
+  if (isReviewer && !uploadedIt && s === "in_review" && !live) {
     buttons.push(
       <Button
         key="decide"
@@ -174,9 +182,25 @@ export function ReviewActions({
         <p className="text-sm font-medium text-amber-text">{t("review.escalatedToYou")}</p>
       )}
       {buttons.length > 0 && <div className="flex flex-wrap gap-2">{buttons}</div>}
-      {isReviewer && !uploadedIt && s === "in_review" && decidePre.data && !decidePre.data.ok && (
-        <Reasons reasons={decidePre.data.reasons} />
-      )}
+      <RereviewAction promotion={p} canAct={isReviewer && !uploadedIt} onDone={refresh} />
+      <RiskPanel
+        promotion={p}
+        me={me.userId}
+        isUploader={me.isOwner || uploadedIt}
+        onDone={refresh}
+      />
+      {(steps.data ?? []).length > 0 &&
+        ["pending_review", "in_review", "approved", "changes_requested", "rejected"].includes(
+          s,
+        ) && (
+          <FlowPanel promotion={p} steps={steps.data ?? []} orgRole={me.orgRole} onDone={refresh} />
+        )}
+      {isReviewer &&
+        !uploadedIt &&
+        s === "in_review" &&
+        !live &&
+        decidePre.data &&
+        !decidePre.data.ok && <Reasons reasons={decidePre.data.reasons} />}
       {uploadedIt && isReviewer && ["pending_review", "in_review"].includes(s) && (
         <p className="text-sm text-fg-muted">{t("review.preflight.separation_of_duties")}</p>
       )}
@@ -277,13 +301,16 @@ function SubmitDialog({
   const { t } = useI18n();
   const [note, setNote] = useState("");
   const [ack, setAck] = useState(false);
+  const [carry, setCarry] = useState<number[]>([]);
+  const flows = usePreview(p.id).data?.enabled === true;
   const errText = usePreflightText();
   const pre = useQuery({
     queryKey: ["can-submit", p.id, note.trim().length > 0, ack],
     queryFn: () => canSubmit(p.id, note, ack),
   });
   const submit = useMutation({
-    mutationFn: () => submitPromotion(p.id, note, ack),
+    mutationFn: () =>
+      flows ? submitWithCarry(p.id, note, ack, carry) : submitPromotion(p.id, note, ack),
     onSuccess: () => {
       toast.success(t("review.submittedToast"));
       onDone();
@@ -327,6 +354,7 @@ function SubmitDialog({
             onChange={(e) => setAck(e.target.checked)}
           />
         )}
+        <SubmitFlowSection pid={p.id} carry={carry} setCarry={setCarry} />
         {pre.data && <Reasons reasons={pre.data.reasons} />}
       </div>
     </Dialog>

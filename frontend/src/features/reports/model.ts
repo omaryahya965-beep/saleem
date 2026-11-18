@@ -46,12 +46,14 @@ function issueV2(
     article_ref?: string | null;
     source_id?: string | null;
     pack?: string | null;
+    internal_policy?: boolean;
   };
   const sourceId = citation.source_id ?? rule?.regulatory_source_id ?? null;
   const pack = citation.pack ?? rule?.pack ?? null;
   return {
     findingType: f.finding_type,
     draftRule: f.rule_draft,
+    internalPolicy: citation.internal_policy === true || f.rule_code.startsWith("INT-"),
     articleRef: citation.article_ref ?? rule?.article_ref ?? null,
     verification:
       pack === "sa-system"

@@ -45,6 +45,8 @@ import { HistoryPanel } from "@/features/review/HistoryPanel";
 import { CommentsPanel } from "@/features/collab/CommentsPanel";
 import { CompareTab } from "@/features/collab/CompareTab";
 import { LinkedClaims } from "@/features/libraries/LinkedClaims";
+import { VariationsCard } from "@/features/enterprise/VariationsCard";
+import { LifecyclePanel } from "@/features/enterprise/LifecyclePanel";
 
 export function PromotionPage({ id, v }: { id: string; v?: number }) {
   const { t } = useI18n();
@@ -245,6 +247,12 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
                 (isOwner || ["owner", "admin", "reviewer", "creator"].includes(role ?? ""))
               }
             />
+          </div>
+          <div className="mt-4">
+            <VariationsCard promotion={p} canEdit={canEdit} />
+          </div>
+          <div className="mt-4">
+            <LifecyclePanel promotion={p} orgRole={role ?? null} isOwner={isOwner} />
           </div>
         </Page>
       </TabsContent>

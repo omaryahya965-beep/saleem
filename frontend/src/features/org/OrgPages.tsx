@@ -28,6 +28,11 @@ import { useUsage } from "@/features/settings/UsageMeter";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { OrgSettingsCard } from "./OrgSettingsCard";
+import { FeatureFlagsCard } from "@/features/enterprise/FeatureFlagsCard";
+import { PresetsCard } from "@/features/enterprise/PresetsCard";
+import { RiskAcceptorsCard } from "@/features/enterprise/RiskPanel";
+import { PartnersCard } from "@/features/enterprise/PartnersCard";
+import { InternalRulesCard } from "@/features/enterprise/InternalRulesCard";
 import {
   acceptInvite,
   createCampaign,
@@ -542,6 +547,11 @@ export function OrgPage({ id }: { id: string }) {
         )}
       </Tabs>
       <OrgSettingsCard orgId={id} canEdit={manager} />
+      {manager && <FeatureFlagsCard orgId={id} />}
+      {manager && <PresetsCard orgId={id} />}
+      {manager && <RiskAcceptorsCard orgId={id} />}
+      {manager && <PartnersCard orgId={id} />}
+      {manager && <InternalRulesCard orgId={id} />}
     </Page>
   );
 }

@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: 6 (Enterprise, P2)
+- Phase: 7 (Later, P3)
 - Task: discovery + plan
-- Last commit: Phase 5 report (tag `v2-phase-5`)
-- Next step: read `phases/phase-6-enterprise.md`; write `progress/phase-6-plan.md`; every item behind a flag, off by default.
+- Last commit: Phase 6 report (tag `v2-phase-6`)
+- Next step: read `phases/phase-7-*.md`; build items 1, 2, 3 (Slack/Teams only), 4, 6, 7 behind flags; item 5 = CMA/insurance packs as drafts with a legal checklist.
 
 ## Status
 
@@ -22,7 +22,7 @@
 | 3 Review | done (with not-run checks) | v2/full-run · v2-phase-3 | progress/phase-3-report.md | 2026-11-18 |
 | 4 Collaboration + PDF | done (with not-run checks) | v2/full-run · v2-phase-4 | progress/phase-4-report.md | 2026-11-18 |
 | 5 Libraries + dashboard | done (with not-run checks) | v2/full-run · v2-phase-5 | progress/phase-5-report.md | 2026-11-18 |
-| 6 Enterprise (P2) | not started | – | – | – |
+| 6 Enterprise (P2) | done (with not-run checks; 6.3 external reviewer and 6.4 carousel not built) | v2/full-run · v2-phase-6 | progress/phase-6-report.md | 2026-11-18 |
 | 7 Expansion (P3) | not started | – | – | – |
 
 Status values: not started · planning · waiting for "go" · in progress · done · done (with not-run
@@ -58,6 +58,10 @@ checks) · blocked.
 - D109: media of submitted/approved org versions is kept (no 24 h deletion); personal media still goes after 24 h.
 - D121: saved views only on the promotions list for now (queue and claims scopes exist in the table, not in the UI).
 - D122: the two disclaimer templates are proposals; nothing applies until an org adopts its own wording after legal review.
+- D127: partner analyses use the partner's own plan quota; external_reviewer not built.
+- D128: carousel analysis not built (variations + batch only).
+- D129: a Thursday/Friday regulator notice is due Sunday; org holidays only editable in SQL.
+- D131: without a model key, internal-rule drafts come from the guideline's directive sentences (marked).
 
 ## Not run (environment) — run these before deploying
 

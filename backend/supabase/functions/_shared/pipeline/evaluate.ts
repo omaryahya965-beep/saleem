@@ -219,6 +219,8 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
       citation: {
         rule_code: rule.code, rule_id: rule.id, source_id: rule.regulatory_source_id, article_ref: rule.article_ref,
         review_state: rule.review_state, pack: rule.pack, ...(f.values ? { values: f.values } : {}),
+        // Organisation brand-guideline rules (Phase 6.7) are labelled «سياسة داخلية», never as regulation.
+        ...(rule.category === "internal" ? { internal_policy: true } : {}),
         // Claim fields at top level: the database resolves findings by citation->>'claim_key'.
         ...(f.rule_code === "SYS-CLAIMS" && f.values
           ? { claim_class: f.values["claim_class"], claim_id: f.values["claim_id"], claim_key: f.values["claim_key"], claim_version: f.values["claim_version"] }

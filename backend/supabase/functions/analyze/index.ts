@@ -29,6 +29,7 @@ import { corsHeaders, json, log } from "../_shared/http.ts";
 import { evidencePath, pixelateRgba } from "../_shared/media/blur.ts";
 import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
 import { checkEmail, emailProvider } from "../_shared/notify.ts";
+import { internalRuleRows, rulebookId, type InternalRule } from "../_shared/rules/internal.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
@@ -147,6 +148,15 @@ async function analysisEvent(db: Db, sub: { id: string; promotion_id?: string | 
 }
 
 /** Org libraries for the claims/disclaimers checks and rule overrides (Phase 5). Personal promotions: none. */
+/** Active internal rules of the org, only when features.internal_rules is on. */
+async function loadInternalRules(db: Db, orgId: string | null): Promise<InternalRule[]> {
+  if (!orgId) return [];
+  const { data: settings } = await db.from("org_settings").select("features").eq("org_id", orgId).maybeSingle();
+  if ((settings?.features as Record<string, unknown> | null)?.["internal_rules"] !== true) return [];
+  const { data } = await db.from("internal_rules").select("id, code, title_ar, instruction_ar, severity, status").eq("org_id", orgId).eq("status", "active");
+  return (data ?? []) as InternalRule[];
+}
+
 async function loadLibrary(db: Db, orgId: string | null, promotionId: string | null) {
   if (!orgId) return { claims: [], disclaimers: [], linkedClaimIds: [], overrides: [] };
   const [claims, disclaimers, links, overrides] = await Promise.all([
@@ -284,6 +294,8 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
     const ctx = await loadContext(db, sub);
     const sources = new Map(((await db.from("regulatory_sources").select("id, status")).data ?? []).map((s) => [s.id as string, s.status as string]));
     const ruleRows = ((rulesData ?? []) as Record<string, unknown>[]).map((r) => toRuleRow(r, sources));
+    // Phase 6.7: the organisation's approved internal-policy rules (INT-*), when the feature is on.
+    ruleRows.push(...internalRuleRows(await loadInternalRules(db, ctx.orgId)));
     const [, signedRes] = await Promise.all([
       frames.length && !frameRows
         ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path, ...(sub.kind === "pdf" ? { page_no: f.t } : {}) })))
@@ -483,7 +495,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
         run_id: runId,
         submission_id: sub.id,
         rule_code: f.rule_code,
-        rule_id: f.rule_id,
+        rule_id: rulebookId(f.rule_id),
         finding_type: f.finding_type,
         severity: f.severity,
         t_start: f.evidence.t_start,

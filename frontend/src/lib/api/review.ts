@@ -149,13 +149,14 @@ export async function fetchMembers(orgId: string) {
   return check(
     await supabase
       .from("org_members")
-      .select("user_id, role, display_name, email")
+      .select("user_id, role, display_name, email, can_accept_risk")
       .eq("org_id", orgId),
   ) as {
     user_id: string;
     role: string;
     display_name: string | null;
     email: string | null;
+    can_accept_risk: boolean;
   }[];
 }
 
@@ -195,7 +196,12 @@ export async function fetchHistory(pid: string, versionIds: string[]): Promise<H
   };
 }
 
-export const QUEUE_STATUSES = ["pending_review", "in_review", "escalated"] as const;
+export const QUEUE_STATUSES = [
+  "pending_review",
+  "in_review",
+  "escalated",
+  "due_for_rereview",
+] as const;
 export async function fetchQueue(): Promise<Promotion[]> {
   return check(
     await supabase

@@ -153,6 +153,72 @@ export type Database = {
           },
         ];
       };
+      approval_preset_steps: {
+        Row: {
+          id: string;
+          label_ar: string;
+          position: number;
+          preset_id: string;
+          role: Database["public"]["Enums"]["org_role"] | null;
+          user_ids: string[];
+        };
+        Insert: {
+          id?: string;
+          label_ar: string;
+          position: number;
+          preset_id: string;
+          role?: Database["public"]["Enums"]["org_role"] | null;
+          user_ids?: string[];
+        };
+        Update: {
+          id?: string;
+          label_ar?: string;
+          position?: number;
+          preset_id?: string;
+          role?: Database["public"]["Enums"]["org_role"] | null;
+          user_ids?: string[];
+        };
+        Relationships: [];
+      };
+      approval_presets: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_default: boolean;
+          mode: string;
+          name: string;
+          org_id: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_default?: boolean;
+          mode: string;
+          name: string;
+          org_id: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_default?: boolean;
+          mode?: string;
+          name?: string;
+          org_id?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       audit_events: {
         Row: {
           action: string;
@@ -201,6 +267,36 @@ export type Database = {
           id?: string;
           name?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      brand_guidelines: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          file_path: string | null;
+          id: string;
+          org_id: string;
+          text_ar: string;
+          title: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          file_path?: string | null;
+          id?: string;
+          org_id: string;
+          text_ar: string;
+          title: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          file_path?: string | null;
+          id?: string;
+          org_id?: string;
+          text_ar?: string;
+          title?: string;
         };
         Relationships: [];
       };
@@ -741,6 +837,7 @@ export type Database = {
       };
       frames: {
         Row: {
+          asset_id: string | null;
           blurred: boolean;
           id: string;
           image_path: string | null;
@@ -751,6 +848,7 @@ export type Database = {
           text_source: string | null;
         };
         Insert: {
+          asset_id?: string | null;
           blurred?: boolean;
           id?: string;
           image_path?: string | null;
@@ -761,6 +859,7 @@ export type Database = {
           text_source?: string | null;
         };
         Update: {
+          asset_id?: string | null;
           blurred?: boolean;
           id?: string;
           image_path?: string | null;
@@ -779,6 +878,57 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      internal_rules: {
+        Row: {
+          approved_at: string | null;
+          approved_by: string | null;
+          code: string;
+          created_at: string;
+          edited_at: string | null;
+          edited_by: string | null;
+          guideline_id: string | null;
+          id: string;
+          instruction_ar: string;
+          org_id: string;
+          severity: string;
+          source: string;
+          status: string;
+          title_ar: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          code: string;
+          created_at?: string;
+          edited_at?: string | null;
+          edited_by?: string | null;
+          guideline_id?: string | null;
+          id?: string;
+          instruction_ar: string;
+          org_id: string;
+          severity?: string;
+          source: string;
+          status?: string;
+          title_ar: string;
+        };
+        Update: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          code?: string;
+          created_at?: string;
+          edited_at?: string | null;
+          edited_by?: string | null;
+          guideline_id?: string | null;
+          id?: string;
+          instruction_ar?: string;
+          org_id?: string;
+          severity?: string;
+          source?: string;
+          status?: string;
+          title_ar?: string;
+        };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -873,27 +1023,39 @@ export type Database = {
       };
       org_members: {
         Row: {
+          access_status: string;
+          can_accept_risk: boolean;
           created_at: string;
           display_name: string | null;
           email: string | null;
           org_id: string;
+          partner_link_id: string | null;
           role: Database["public"]["Enums"]["org_role"];
+          terms_accepted_at: string | null;
           user_id: string;
         };
         Insert: {
+          access_status?: string;
+          can_accept_risk?: boolean;
           created_at?: string;
           display_name?: string | null;
           email?: string | null;
           org_id: string;
+          partner_link_id?: string | null;
           role: Database["public"]["Enums"]["org_role"];
+          terms_accepted_at?: string | null;
           user_id: string;
         };
         Update: {
+          access_status?: string;
+          can_accept_risk?: boolean;
           created_at?: string;
           display_name?: string | null;
           email?: string | null;
           org_id?: string;
+          partner_link_id?: string | null;
           role?: Database["public"]["Enums"]["org_role"];
+          terms_accepted_at?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -969,6 +1131,7 @@ export type Database = {
       org_settings: {
         Row: {
           brand_aliases: string[];
+          business_holidays: string[];
           features: Json;
           hide_comments_from_external: boolean;
           media_retention: Json;
@@ -983,6 +1146,7 @@ export type Database = {
         };
         Insert: {
           brand_aliases?: string[];
+          business_holidays?: string[];
           features?: Json;
           hide_comments_from_external?: boolean;
           media_retention?: Json;
@@ -997,6 +1161,7 @@ export type Database = {
         };
         Update: {
           brand_aliases?: string[];
+          business_holidays?: string[];
           features?: Json;
           hide_comments_from_external?: boolean;
           media_retention?: Json;
@@ -1032,6 +1197,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      partner_links: {
+        Row: {
+          active: boolean;
+          allowed_channels: string[];
+          allowed_product_ids: string[];
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          intro_ar: string | null;
+          label: string;
+          org_id: string;
+          terms_ar: string;
+          token_hash: string;
+        };
+        Insert: {
+          active?: boolean;
+          allowed_channels?: string[];
+          allowed_product_ids?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          intro_ar?: string | null;
+          label: string;
+          org_id: string;
+          terms_ar: string;
+          token_hash: string;
+        };
+        Update: {
+          active?: boolean;
+          allowed_channels?: string[];
+          allowed_product_ids?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          intro_ar?: string | null;
+          label?: string;
+          org_id?: string;
+          terms_ar?: string;
+          token_hash?: string;
+        };
+        Relationships: [];
+      };
       plans: {
         Row: {
           id: string;
@@ -1062,6 +1269,30 @@ export type Database = {
           name_en?: string;
           orgs_allowed?: boolean;
           sort?: number;
+        };
+        Relationships: [];
+      };
+      preset_auto_apply: {
+        Row: {
+          id: string;
+          market: string;
+          org_id: string;
+          preset_id: string;
+          product_type: string | null;
+        };
+        Insert: {
+          id?: string;
+          market: string;
+          org_id: string;
+          preset_id: string;
+          product_type?: string | null;
+        };
+        Update: {
+          id?: string;
+          market?: string;
+          org_id?: string;
+          preset_id?: string;
+          product_type?: string | null;
         };
         Relationships: [];
       };
@@ -1193,6 +1424,66 @@ export type Database = {
         };
         Relationships: [];
       };
+      promotion_review_steps: {
+        Row: {
+          assignee_ids: string[];
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_id: string | null;
+          flow_no: number;
+          fresh_required: boolean;
+          id: string;
+          label_ar: string;
+          mode: string;
+          preset_id: string | null;
+          preset_version: number;
+          promotion_id: string;
+          role: Database["public"]["Enums"]["org_role"] | null;
+          status: string;
+          step_no: number;
+          submission_id: string;
+        };
+        Insert: {
+          assignee_ids?: string[];
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_id?: string | null;
+          flow_no: number;
+          fresh_required?: boolean;
+          id?: string;
+          label_ar: string;
+          mode: string;
+          preset_id?: string | null;
+          preset_version: number;
+          promotion_id: string;
+          role?: Database["public"]["Enums"]["org_role"] | null;
+          status: string;
+          step_no: number;
+          submission_id: string;
+        };
+        Update: {
+          assignee_ids?: string[];
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_id?: string | null;
+          flow_no?: number;
+          fresh_required?: boolean;
+          id?: string;
+          label_ar?: string;
+          mode?: string;
+          preset_id?: string | null;
+          preset_version?: number;
+          promotion_id?: string;
+          role?: Database["public"]["Enums"]["org_role"] | null;
+          status?: string;
+          step_no?: number;
+          submission_id?: string;
+        };
+        Relationships: [];
+      };
       promotions: {
         Row: {
           approved_at: string | null;
@@ -1209,21 +1500,33 @@ export type Database = {
           deadline_at: string | null;
           distribution: string | null;
           escalated_to: string | null;
+          evergreen: boolean;
           first_decision_at: string | null;
           id: string;
           is_demo: boolean;
           is_paid: boolean | null;
           market: string;
+          next_review_at: string | null;
           org_id: string | null;
           owner_id: string | null;
           product_id: string | null;
+          published_at: string | null;
+          regulator_notice_at: string | null;
           review_status: Database["public"]["Enums"]["promotion_review_status"];
           reviewer_notes: string | null;
+          risk_acceptor_id: string | null;
+          risk_from_status: Database["public"]["Enums"]["promotion_review_status"] | null;
           sector: string | null;
           submitted_at: string | null;
           tags: string[];
+          taken_down_at: string | null;
           title: string;
           updated_at: string;
+          upload_type: string;
+          variation_group_id: string | null;
+          withdrawal_due_at: string | null;
+          withdrawal_reason: string | null;
+          withdrawn_at: string | null;
         };
         Insert: {
           approved_at?: string | null;
@@ -1240,21 +1543,33 @@ export type Database = {
           deadline_at?: string | null;
           distribution?: string | null;
           escalated_to?: string | null;
+          evergreen?: boolean;
           first_decision_at?: string | null;
           id?: string;
           is_demo?: boolean;
           is_paid?: boolean | null;
           market?: string;
+          next_review_at?: string | null;
           org_id?: string | null;
           owner_id?: string | null;
           product_id?: string | null;
+          published_at?: string | null;
+          regulator_notice_at?: string | null;
           review_status?: Database["public"]["Enums"]["promotion_review_status"];
           reviewer_notes?: string | null;
+          risk_acceptor_id?: string | null;
+          risk_from_status?: Database["public"]["Enums"]["promotion_review_status"] | null;
           sector?: string | null;
           submitted_at?: string | null;
           tags?: string[];
+          taken_down_at?: string | null;
           title: string;
           updated_at?: string;
+          upload_type?: string;
+          variation_group_id?: string | null;
+          withdrawal_due_at?: string | null;
+          withdrawal_reason?: string | null;
+          withdrawn_at?: string | null;
         };
         Update: {
           approved_at?: string | null;
@@ -1271,21 +1586,33 @@ export type Database = {
           deadline_at?: string | null;
           distribution?: string | null;
           escalated_to?: string | null;
+          evergreen?: boolean;
           first_decision_at?: string | null;
           id?: string;
           is_demo?: boolean;
           is_paid?: boolean | null;
           market?: string;
+          next_review_at?: string | null;
           org_id?: string | null;
           owner_id?: string | null;
           product_id?: string | null;
+          published_at?: string | null;
+          regulator_notice_at?: string | null;
           review_status?: Database["public"]["Enums"]["promotion_review_status"];
           reviewer_notes?: string | null;
+          risk_acceptor_id?: string | null;
+          risk_from_status?: Database["public"]["Enums"]["promotion_review_status"] | null;
           sector?: string | null;
           submitted_at?: string | null;
           tags?: string[];
+          taken_down_at?: string | null;
           title?: string;
           updated_at?: string;
+          upload_type?: string;
+          variation_group_id?: string | null;
+          withdrawal_due_at?: string | null;
+          withdrawal_reason?: string | null;
+          withdrawn_at?: string | null;
         };
         Relationships: [];
       };
@@ -1385,6 +1712,7 @@ export type Database = {
           reason_ids: string[];
           reason_other: string | null;
           rulebook_version_id: string | null;
+          step_id: string | null;
           submission_id: string;
           to_status: Database["public"]["Enums"]["promotion_review_status"];
         };
@@ -1405,6 +1733,7 @@ export type Database = {
           reason_ids?: string[];
           reason_other?: string | null;
           rulebook_version_id?: string | null;
+          step_id?: string | null;
           submission_id: string;
           to_status: Database["public"]["Enums"]["promotion_review_status"];
         };
@@ -1425,6 +1754,7 @@ export type Database = {
           reason_ids?: string[];
           reason_other?: string | null;
           rulebook_version_id?: string | null;
+          step_id?: string | null;
           submission_id?: string;
           to_status?: Database["public"]["Enums"]["promotion_review_status"];
         };
@@ -1815,6 +2145,45 @@ export type Database = {
           },
         ];
       };
+      submission_assets: {
+        Row: {
+          duration_s: number | null;
+          file_path: string;
+          height: number | null;
+          id: string;
+          kind: string;
+          page_count: number | null;
+          position: number;
+          sha256: string;
+          submission_id: string;
+          width: number | null;
+        };
+        Insert: {
+          duration_s?: number | null;
+          file_path: string;
+          height?: number | null;
+          id?: string;
+          kind: string;
+          page_count?: number | null;
+          position: number;
+          sha256: string;
+          submission_id: string;
+          width?: number | null;
+        };
+        Update: {
+          duration_s?: number | null;
+          file_path?: string;
+          height?: number | null;
+          id?: string;
+          kind?: string;
+          page_count?: number | null;
+          position?: number;
+          sha256?: string;
+          submission_id?: string;
+          width?: number | null;
+        };
+        Relationships: [];
+      };
       submissions: {
         Row: {
           ai_used: boolean;
@@ -2016,6 +2385,138 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      archive_internal_rule: { Args: { _id: string }; Returns: undefined };
+      approve_internal_rule: { Args: { _id: string }; Returns: undefined };
+      save_internal_rule: {
+        Args: {
+          _org: string;
+          _id: string | null;
+          _code: string;
+          _title: string;
+          _instruction: string;
+          _severity: string;
+        };
+        Returns: string;
+      };
+      save_brand_guideline: {
+        Args: { _org: string; _title: string; _text: string; _file?: string | null };
+        Returns: string;
+      };
+      can_manage_internal_rules: { Args: { _org: string }; Returns: boolean };
+      business_days_between: {
+        Args: { _from: string; _to: string; _weekend?: number[] };
+        Returns: number;
+      };
+      org_metrics: {
+        Args: { _org: string; _from: string; _to: string; _filters?: Json };
+        Returns: Json;
+      };
+      complete_rereview: {
+        Args: {
+          _pid: string;
+          _still_valid: boolean;
+          _next_review: string | null;
+          _comment: string | null;
+        };
+        Returns: string;
+      };
+      mark_withdrawn: { Args: { _pid: string; _reason: string }; Returns: undefined };
+      request_withdrawal: {
+        Args: { _pid: string; _notice_at: string; _reason: string };
+        Returns: string;
+      };
+      record_lifecycle: {
+        Args: { _pid: string; _event: string; _at: string | null };
+        Returns: undefined;
+      };
+      set_evergreen: {
+        Args: { _pid: string; _evergreen: boolean; _next_review: string | null };
+        Returns: undefined;
+      };
+      saudi_business_day_after: { Args: { _at: string; _holidays?: string[] }; Returns: string };
+      submit_variations: { Args: { _group: string; _note?: string | null }; Returns: Json };
+      create_variation: { Args: { _pid: string; _title: string }; Returns: string };
+      decide_partner_access: {
+        Args: { _org: string; _user: string; _approve: boolean };
+        Returns: undefined;
+      };
+      partner_create_promotion: {
+        Args: {
+          _token: string;
+          _title: string;
+          _product: string | null;
+          _channels: string[];
+          _communication_type: Database["public"]["Enums"]["communication_type"];
+        };
+        Returns: string;
+      };
+      partner_join: { Args: { _token: string; _accept_terms: boolean }; Returns: string };
+      partner_link_info: { Args: { _token: string }; Returns: Json };
+      set_partner_link_active: { Args: { _id: string; _active: boolean }; Returns: undefined };
+      create_partner_link: {
+        Args: {
+          _org: string;
+          _label: string;
+          _products: string[];
+          _channels: string[];
+          _intro: string | null;
+          _terms: string;
+        };
+        Returns: string;
+      };
+      is_external_member: { Args: { _org: string }; Returns: boolean };
+      decide_risk: { Args: { _pid: string; _accept: boolean; _reason: string }; Returns: string };
+      request_risk_acceptance: {
+        Args: { _pid: string; _acceptor: string; _reason: string };
+        Returns: undefined;
+      };
+      set_risk_acceptor: {
+        Args: { _org: string; _user: string; _on: boolean };
+        Returns: undefined;
+      };
+      preset_preview: { Args: { _pid: string }; Returns: Json };
+      set_preset_auto_apply: {
+        Args: {
+          _org: string;
+          _market: string;
+          _product_type: string | null;
+          _preset: string | null;
+        };
+        Returns: undefined;
+      };
+      archive_approval_preset: { Args: { _id: string }; Returns: undefined };
+      save_approval_preset: {
+        Args: {
+          _org: string;
+          _id: string | null;
+          _name: string;
+          _mode: string;
+          _is_default: boolean;
+          _steps: Json;
+        };
+        Returns: string;
+      };
+      replace_review_flow: { Args: { _pid: string; _preset: string }; Returns: number };
+      decide_promotion_step: {
+        Args: {
+          _pid: string;
+          _step: string;
+          _decision: string;
+          _reason_ids?: string[];
+          _reason_other?: string | null;
+          _comment?: string | null;
+          _fresh_review?: boolean;
+        };
+        Returns: string;
+      };
+      can_act_on_step: { Args: { _step: string }; Returns: Json };
+      submit_promotion_carry: {
+        Args: { _pid: string; _note?: string | null; _ack_failed?: boolean; _carry?: number[] };
+        Returns: undefined;
+      };
+      flow_is_live: { Args: { _pid: string }; Returns: boolean };
+      current_flow_no: { Args: { _pid: string }; Returns: number };
+      org_feature: { Args: { _org: string; _key: string }; Returns: boolean };
       archive_rule_override: { Args: { _id: string }; Returns: undefined };
       set_rule_override: {
         Args: { _org: string; _rule_code: string; _patch: Json; _reason: string };
@@ -2231,12 +2732,22 @@ export type Database = {
         | "rejected"
         | "escalated"
         | "withdrawn"
-        | "archived";
+        | "archived"
+        | "reviewing_risk"
+        | "risk_accepted"
+        | "due_for_rereview";
       app_role: "admin" | "user";
       check_type: "audio" | "visual" | "text" | "metadata" | "hybrid";
       evidence_type: "transcript" | "frame" | "caption" | "metadata";
       finding_source: "deterministic" | "llm";
-      org_role: "owner" | "admin" | "reviewer" | "creator" | "legal";
+      org_role:
+        | "owner"
+        | "admin"
+        | "reviewer"
+        | "creator"
+        | "legal"
+        | "external_uploader"
+        | "external_reviewer";
       overall_status: "ready" | "needs_fixes" | "review";
       pipeline_step: "transcribe" | "deterministic" | "llm" | "merge" | "done";
       platform: "snapchat" | "tiktok" | "instagram" | "x" | "youtube";
@@ -2386,12 +2897,23 @@ export const Constants = {
         "escalated",
         "withdrawn",
         "archived",
+        "reviewing_risk",
+        "risk_accepted",
+        "due_for_rereview",
       ],
       app_role: ["admin", "user"],
       check_type: ["audio", "visual", "text", "metadata", "hybrid"],
       evidence_type: ["transcript", "frame", "caption", "metadata"],
       finding_source: ["deterministic", "llm"],
-      org_role: ["owner", "admin", "reviewer", "creator", "legal"],
+      org_role: [
+        "owner",
+        "admin",
+        "reviewer",
+        "creator",
+        "legal",
+        "external_uploader",
+        "external_reviewer",
+      ],
       overall_status: ["ready", "needs_fixes", "review"],
       pipeline_step: ["transcribe", "deterministic", "llm", "merge", "done"],
       platform: ["snapchat", "tiktok", "instagram", "x", "youtube"],

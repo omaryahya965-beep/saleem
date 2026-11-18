@@ -429,3 +429,7 @@ verify_jwt = true
 
 [functions.review-notify]
 verify_jwt = true
+
+# internal-rules-draft: owner/admin only (checked with the caller's JWT via can_manage_internal_rules).
+[functions.internal-rules-draft]
+verify_jwt = true

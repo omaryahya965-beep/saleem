@@ -22,6 +22,7 @@ import {
   UserRound,
   BadgeCheck,
   FileCheck2,
+  BarChart3,
 } from "lucide-react";
 import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -151,6 +152,15 @@ function AccountMenu() {
             >
               <FileCheck2 aria-hidden="true" className="size-4" />
               {t("nav.disclaimers")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/analytics"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <BarChart3 aria-hidden="true" className="size-4" />
+              {t("nav.analytics")}
             </Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild>

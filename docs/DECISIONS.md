@@ -300,3 +300,32 @@ Format: decision — why — alternatives considered.
   the UI). This is a conservative default, to confirm.
 - **D122. Disclaimer templates are platform proposals** («صيغة مقترحة — راجعها قانونياً»). They apply only after an
   org adopts them as its own active disclaimer.
+
+## v2 programme — Phase 6 (enterprise workflows, P2; every feature behind an org flag, off by default)
+- **D123. Step decisions use a new RPC, `decide_promotion_step(_pid, _step, …)`**, not a `step_id` parameter on
+  `decide_promotion`. An overload with defaults would make existing calls ambiguous. While a flow is live,
+  `can_decide` returns `multi_level_flow`, and escalation is blocked.
+- **D124. Multi-level details:** a submitter cannot carry every step forward, so at least one is reviewed again.
+  Carried steps count for the "two steps, same person" rule. Editing a preset bumps its version, and that blocks
+  carry-forward. Replacing a live flow marks its approved and carried steps as discarded (`skipped`); their sealed
+  decisions stay in the chain.
+- **D125. A flag is on only when it is exactly `true`** (`org_feature`). The flags card lists only built features.
+- **D126. Risk acceptance:** acceptors are chosen by owners/admins from owner/admin/reviewer/legal members. The
+  decision is sealed with `actor_role = 'risk_acceptor'`. Acceptance never sets `approved_at` or
+  `approved_version_id`, and analytics excludes it.
+- **D127. Partners:** `is_org_member(org)` without a role list now excludes `external_*` roles (deny by default).
+  Partner analyses count against the partner's own plan quota. A new version is inserted with `org_id = null`,
+  and the attach trigger sets the promotion's workspace. Partners see comments unless the org hides them.
+  `external_reviewer` and the share-link migration are **not built**: the role exists and grants nothing.
+- **D128. Carousel analysis is not built.** Variations and batch cover the other upload types. The carousel schema
+  exists, so it needs no further migration.
+- **D129. Saudi business day:** the next Sun–Thu date that is not an org holiday, at the same Riyadh time, so a
+  notice on Thursday or Friday is due on Sunday. `business_holidays` can only be edited in SQL for now. The UI
+  shows the date as a deadline, never as legal advice.
+- **D130. Analytics:** durations are in hours. Early requests include deadlines already past at submission. First
+  response is the earliest of a reviewer response to a finding, a comment by someone other than the owner, or a
+  decision. Bars are plain CSS (no chart dependency).
+- **D131. Internal rules:** drafting uses the configured analysis provider and model (no new model or provider).
+  Without a key, drafts come from directive sentences and are marked `heuristic_draft`. A person must edit each
+  draft before approval. `INT-*` rule ids are prefixed `internal:`, so they are never stored as rulebook ids and
+  get no `rule_checks` rows.

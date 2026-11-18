@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as StyleguideRouteImport } from './routes/styleguide'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAnalyticsRouteImport } from './routes/_app/analytics'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppClaimsRouteImport } from './routes/_app/claims'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
@@ -35,6 +36,7 @@ import { Route as AppChecksIdRouteImport } from './routes/_app/checks.$id'
 import { Route as AppInviteTokenRouteImport } from './routes/_app/invite/$token'
 import { Route as AppLegalDocRouteImport } from './routes/_app/legal/$doc'
 import { Route as AppOrgIndexRouteImport } from './routes/_app/org/index'
+import { Route as AppPartnerTokenRouteImport } from './routes/_app/partner.$token'
 import { Route as AppPromotionsIndexRouteImport } from './routes/_app/promotions/index'
 import { Route as AppPromotionsIdRouteImport } from './routes/_app/promotions/$id'
 import { Route as AppShareTokenRouteImport } from './routes/_app/share/$token'
@@ -55,6 +57,11 @@ const StyleguideRoute = StyleguideRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditRoute = AppAuditRouteImport.update({
@@ -172,6 +179,11 @@ const AppOrgIndexRoute = AppOrgIndexRouteImport.update({
   path: '/org/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPartnerTokenRoute = AppPartnerTokenRouteImport.update({
+  id: '/partner/$token',
+  path: '/partner/$token',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPromotionsIndexRoute = AppPromotionsIndexRouteImport.update({
   id: '/promotions/',
   path: '/promotions/',
@@ -211,6 +223,7 @@ const AppOrgIdCampaignsCidRoute = AppOrgIdCampaignsCidRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/styleguide': typeof StyleguideRoute
+  '/analytics': typeof AppAnalyticsRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -232,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/checks/$id': typeof AppChecksIdRoute
   '/invite/$token': typeof AppInviteTokenRoute
   '/legal/$doc': typeof AppLegalDocRoute
+  '/partner/$token': typeof AppPartnerTokenRoute
   '/promotions/$id': typeof AppPromotionsIdRoute
   '/share/$token': typeof AppShareTokenRoute
   '/verify/$id': typeof AppVerifyIdRoute
@@ -244,6 +258,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/styleguide': typeof StyleguideRoute
+  '/analytics': typeof AppAnalyticsRoute
   '/audit': typeof AppAuditRoute
   '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -266,6 +281,7 @@ export interface FileRoutesByTo {
   '/checks/$id': typeof AppChecksIdRoute
   '/invite/$token': typeof AppInviteTokenRoute
   '/legal/$doc': typeof AppLegalDocRoute
+  '/partner/$token': typeof AppPartnerTokenRoute
   '/promotions/$id': typeof AppPromotionsIdRoute
   '/share/$token': typeof AppShareTokenRoute
   '/verify/$id': typeof AppVerifyIdRoute
@@ -280,6 +296,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/styleguide': typeof StyleguideRoute
+  '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/claims': typeof AppClaimsRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -302,6 +319,7 @@ export interface FileRoutesById {
   '/_app/checks/$id': typeof AppChecksIdRoute
   '/_app/invite/$token': typeof AppInviteTokenRoute
   '/_app/legal/$doc': typeof AppLegalDocRoute
+  '/_app/partner/$token': typeof AppPartnerTokenRoute
   '/_app/promotions/$id': typeof AppPromotionsIdRoute
   '/_app/share/$token': typeof AppShareTokenRoute
   '/_app/verify/$id': typeof AppVerifyIdRoute
@@ -317,6 +335,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/styleguide'
+    | '/analytics'
     | '/audit'
     | '/claims'
     | '/dashboard'
@@ -338,6 +357,7 @@ export interface FileRouteTypes {
     | '/checks/$id'
     | '/invite/$token'
     | '/legal/$doc'
+    | '/partner/$token'
     | '/promotions/$id'
     | '/share/$token'
     | '/verify/$id'
@@ -350,6 +370,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/styleguide'
+    | '/analytics'
     | '/audit'
     | '/claims'
     | '/dashboard'
@@ -372,6 +393,7 @@ export interface FileRouteTypes {
     | '/checks/$id'
     | '/invite/$token'
     | '/legal/$doc'
+    | '/partner/$token'
     | '/promotions/$id'
     | '/share/$token'
     | '/verify/$id'
@@ -385,6 +407,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/styleguide'
+    | '/_app/analytics'
     | '/_app/audit'
     | '/_app/claims'
     | '/_app/dashboard'
@@ -407,6 +430,7 @@ export interface FileRouteTypes {
     | '/_app/checks/$id'
     | '/_app/invite/$token'
     | '/_app/legal/$doc'
+    | '/_app/partner/$token'
     | '/_app/promotions/$id'
     | '/_app/share/$token'
     | '/_app/verify/$id'
@@ -444,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/audit': {
@@ -607,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/partner/$token': {
+      id: '/_app/partner/$token'
+      path: '/partner/$token'
+      fullPath: '/partner/$token'
+      preLoaderRoute: typeof AppPartnerTokenRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/promotions/': {
       id: '/_app/promotions/'
       path: '/promotions'
@@ -660,6 +698,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppAuditRoute: typeof AppAuditRoute
   AppClaimsRoute: typeof AppClaimsRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -682,6 +721,7 @@ interface AppRouteChildren {
   AppChecksIdRoute: typeof AppChecksIdRoute
   AppInviteTokenRoute: typeof AppInviteTokenRoute
   AppLegalDocRoute: typeof AppLegalDocRoute
+  AppPartnerTokenRoute: typeof AppPartnerTokenRoute
   AppPromotionsIdRoute: typeof AppPromotionsIdRoute
   AppShareTokenRoute: typeof AppShareTokenRoute
   AppVerifyIdRoute: typeof AppVerifyIdRoute
@@ -694,6 +734,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAnalyticsRoute: AppAnalyticsRoute,
   AppAuditRoute: AppAuditRoute,
   AppClaimsRoute: AppClaimsRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -716,6 +757,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChecksIdRoute: AppChecksIdRoute,
   AppInviteTokenRoute: AppInviteTokenRoute,
   AppLegalDocRoute: AppLegalDocRoute,
+  AppPartnerTokenRoute: AppPartnerTokenRoute,
   AppPromotionsIdRoute: AppPromotionsIdRoute,
   AppShareTokenRoute: AppShareTokenRoute,
   AppVerifyIdRoute: AppVerifyIdRoute,
