@@ -5,7 +5,8 @@ import type {
   Severity, SubmissionData, TranscriptSegment,
 } from "../types.ts";
 import { normalizeArabic } from "../rules/arabic.ts";
-import { applyTriggers, selectRules, type NotApplicable } from "../rules/applicability.ts";
+import { applyOverrides, applyTriggers, selectRules, type NotApplicable, type RuleOverride } from "../rules/applicability.ts";
+import { checkDisclaimers, matchClaims, type LibClaim, type LibDisclaimer } from "../claims/match.ts";
 import { CHECKS, type CheckResult } from "../rules/checks/index.ts";
 import { computeSignals } from "../rules/signals.ts";
 import { checkProductFacts, type FactsStatus } from "../rules/productFacts.ts";
@@ -37,6 +38,8 @@ export interface EvaluateInput {
   legacy: { submission: SubmissionData; segments: TranscriptSegment[]; onScreen: OnScreenText[]; audioMode: AudioMode | null };
   model: ModelOutputV2 | null;
   modelStatus: "ok" | "invalid" | "failed";
+  /** Org libraries (Phase 5): claims, disclaimers, claims linked to the promotion, rule overrides. */
+  library?: { claims: LibClaim[]; disclaimers: LibDisclaimer[]; linkedClaimIds: string[]; overrides: RuleOverride[] };
   media: {
     transcriptionFailed: boolean;
     framesTotal: number;
@@ -113,7 +116,20 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   const { ctx, texts, model } = input;
   const modelOk = input.modelStatus === "ok" && model !== null;
   const signals = computeSignals(texts, ctx, modelOk ? model!.signals : []);
-  const selection = applyTriggers(selectRules(ctx, input.rules), signals);
+  const lib = input.library ?? { claims: [], disclaimers: [], linkedClaimIds: [], overrides: [] };
+  const base = applyOverrides(applyTriggers(selectRules(ctx, input.rules), signals), ctx, lib.overrides);
+  // Library checks run only when the organisation has a library (SYS-CLAIMS needs approved claims).
+  const hasClaims = lib.claims.some((c) => c.status === "approved");
+  const hasDisclaimers = lib.disclaimers.length > 0;
+  const selection = {
+    applicable: base.applicable.filter((r) => (r.code !== "SYS-CLAIMS" || hasClaims) && (r.code !== "SYS-DISCLAIMERS" || hasDisclaimers)),
+    notApplicable: [
+      ...base.notApplicable,
+      ...base.applicable
+        .filter((r) => (r.code === "SYS-CLAIMS" && !hasClaims) || (r.code === "SYS-DISCLAIMERS" && !hasDisclaimers))
+        .map((rule) => ({ rule, reason: rule.code === "SYS-CLAIMS" ? "no_claims_library" : "no_disclaimers_library" })),
+    ],
+  };
   const applicable = new Map(selection.applicable.map((r) => [r.code, r]));
   const dropped = { unknownRule: [] as string[], duplicates: 0, downgraded: 0, superseded: 0 };
 
@@ -135,6 +151,10 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   candidates.push(...legacy.findings.map(fromLegacy).filter((f) => !(unreadablePdf && f.finding_type === "missing_required")));
 
   // ---- Product facts ----
+  if (applicable.has("SYS-CLAIMS"))
+    candidates.push(...matchClaims({ ctx, texts, claims: lib.claims, linkedClaimIds: lib.linkedClaimIds, modelQuotes: modelOk ? model!.claims_detected ?? [] : [] }));
+  if (applicable.has("SYS-DISCLAIMERS")) candidates.push(...checkDisclaimers(lib.disclaimers, ctx, texts, new Set(applicable.keys())));
+
   const facts = checkProductFacts(ctx, texts);
   candidates.push(...facts.findings);
 
@@ -199,6 +219,10 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
       citation: {
         rule_code: rule.code, rule_id: rule.id, source_id: rule.regulatory_source_id, article_ref: rule.article_ref,
         review_state: rule.review_state, pack: rule.pack, ...(f.values ? { values: f.values } : {}),
+        // Claim fields at top level: the database resolves findings by citation->>'claim_key'.
+        ...(f.rule_code === "SYS-CLAIMS" && f.values
+          ? { claim_class: f.values["claim_class"], claim_id: f.values["claim_id"], claim_key: f.values["claim_key"], claim_version: f.values["claim_version"] }
+          : {}),
       },
     };
   });

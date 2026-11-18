@@ -14,7 +14,8 @@ import { evaluate, legacyFindingType, type MergedFinding } from "../_shared/pipe
 import { buildContext, extractTexts, type PackRow, type ProductRow, type PromotionRow } from "../_shared/pipeline/context.ts";
 import { ocrToOnScreen, type ModelOutputV2 } from "../_shared/pipeline/schema-v2.ts";
 import { matchCarryForward, type PrevFinding } from "../_shared/pipeline/carry.ts";
-import { selectRules } from "../_shared/rules/applicability.ts";
+import { selectRules, type RuleOverride } from "../_shared/rules/applicability.ts";
+import type { LibClaim, LibDisclaimer } from "../_shared/claims/match.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { isRateLimited, rateLimitFromEnv, RATE_WINDOW_MS } from "../_shared/pipeline/rate-limit.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
@@ -143,6 +144,23 @@ async function analysisEvent(db: Db, sub: { id: string; promotion_id?: string | 
   if (!sub.promotion_id) return;
   const { error } = await db.from("review_events").insert({ org_id: sub.org_id ?? null, promotion_id: sub.promotion_id, submission_id: sub.id, event_type: type, payload });
   if (error) log("review_event_failed", { submission_id: sub.id, error: error.message });
+}
+
+/** Org libraries for the claims/disclaimers checks and rule overrides (Phase 5). Personal promotions: none. */
+async function loadLibrary(db: Db, orgId: string | null, promotionId: string | null) {
+  if (!orgId) return { claims: [], disclaimers: [], linkedClaimIds: [], overrides: [] };
+  const [claims, disclaimers, links, overrides] = await Promise.all([
+    db.from("claims").select("id, claim_key, version, name, text_ar, status, product_ids, channels, communication_types").eq("org_id", orgId).neq("status", "archived"),
+    db.from("disclaimers").select("id, name, text_ar, product_types, channels, communication_types, required_by_rule_codes, check_prominence").eq("org_id", orgId).eq("status", "active"),
+    promotionId ? db.from("promotion_claims").select("claim_id").eq("promotion_id", promotionId) : Promise.resolve({ data: [] }),
+    db.from("org_rule_overrides").select("rule_code, applicability_patch").eq("org_id", orgId).is("archived_at", null),
+  ]);
+  return {
+    claims: (claims.data ?? []) as LibClaim[],
+    disclaimers: (disclaimers.data ?? []) as LibDisclaimer[],
+    linkedClaimIds: ((links.data ?? []) as { claim_id: string }[]).map((l) => l.claim_id),
+    overrides: (overrides.data ?? []) as RuleOverride[],
+  };
 }
 
 /** Builds the AnalysisContext from the promotion, its product, org settings and pack settings. */
@@ -424,6 +442,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
       legacy: { submission: sub, segments, onScreen, audioMode },
       model: modelOutput,
       modelStatus,
+      library: await loadLibrary(db, ctx.orgId, sub.promotion_id ?? null),
       media: {
         transcriptionFailed: Boolean(outputs.transcription_failed),
         framesTotal: sub.kind === "text" ? 0 : frames.length,

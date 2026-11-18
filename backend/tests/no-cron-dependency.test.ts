@@ -46,7 +46,7 @@ describe("normal runs finish without the cron jobs", () => {
     for (const s of schedules) {
       expect(s.text, `${s.f}:${s.name}`).not.toMatch(/functions\/v1\/analyze/);
       expect(s.text, `${s.f}:${s.name}`).not.toMatch(/status\s*=\s*'done'/);
-      expect(["saleem-cleanup-media", "saleem-fail-stuck"], `unexpected cron job ${s.name}`).toContain(s.name);
+      expect(["saleem-cleanup-media", "saleem-fail-stuck", "saleem-claims-reminders"], `unexpected cron job ${s.name}`).toContain(s.name);
     }
   });
 

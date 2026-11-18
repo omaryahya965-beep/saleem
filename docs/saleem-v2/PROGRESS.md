@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: 5 (Libraries + dashboard)
+- Phase: 6 (Enterprise, P2)
 - Task: discovery + plan
-- Last commit: Phase 4 report (tag `v2-phase-4`)
-- Next step: read `phases/phase-5-libraries.md`, `03_DATA_MODEL.md` M8, `04_AI_PIPELINE.md` §6.4; write `progress/phase-5-plan.md`.
+- Last commit: Phase 5 report (tag `v2-phase-5`)
+- Next step: read `phases/phase-6-enterprise.md`; write `progress/phase-6-plan.md`; every item behind a flag, off by default.
 
 ## Status
 
@@ -21,7 +21,7 @@
 | 2 Rule engine | done (with not-run checks) | v2/full-run · v2-phase-2 | progress/phase-2-report.md | 2026-11-18 |
 | 3 Review | done (with not-run checks) | v2/full-run · v2-phase-3 | progress/phase-3-report.md | 2026-11-18 |
 | 4 Collaboration + PDF | done (with not-run checks) | v2/full-run · v2-phase-4 | progress/phase-4-report.md | 2026-11-18 |
-| 5 Libraries + dashboard | not started | – | – | – |
+| 5 Libraries + dashboard | done (with not-run checks) | v2/full-run · v2-phase-5 | progress/phase-5-report.md | 2026-11-18 |
 | 6 Enterprise (P2) | not started | – | – | – |
 | 7 Expansion (P3) | not started | – | – | – |
 
@@ -56,6 +56,8 @@ checks) · blocked.
 - D105: human review is for organisation promotions; personal creators keep the automated check only.
 - D118: `npm audit --omit=dev` reports pre-existing high advisories in build tooling (TanStack router plugin, Vite); upgrade them before relying on the CI audit step.
 - D109: media of submitted/approved org versions is kept (no 24 h deletion); personal media still goes after 24 h.
+- D121: saved views only on the promotions list for now (queue and claims scopes exist in the table, not in the UI).
+- D122: the two disclaimer templates are proposals; nothing applies until an org adopts its own wording after legal review.
 
 ## Not run (environment) — run these before deploying
 

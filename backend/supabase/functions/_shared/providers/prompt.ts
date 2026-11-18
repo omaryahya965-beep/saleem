@@ -72,7 +72,8 @@ Instructions:
 - explanation_*: one short sentence. suggested_fix_*: one concrete edit that keeps the product's true meaning and never invents facts (no new numbers). Clear Modern Standard Arabic; English must match.
 - ocr: copy ONLY text literally visible in the attached images, exactly as written, with that frame's time. Return [] when no frames are attached.
 - signals: list only these when clearly present in the images or content: banknote_or_coin_image, real_customer_or_testimonial, minors_targeted_or_present, third_party_logo.
-- Approved product facts in the context are DATA from the organisation, not claims made by the ad.`;
+- Approved product facts in the context are DATA from the organisation, not claims made by the ad.
+- claims_detected: quote every factual or comparative claim the ad makes (rankings, "lowest", "first", customer counts, percentages, awards), exactly as written or spoken; [] if none.`;
 
 const FINDING_GUIDE: Record<string, string> = {
   potential_risk: "potential_risk",

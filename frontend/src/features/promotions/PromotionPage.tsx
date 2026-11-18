@@ -44,6 +44,7 @@ import { ResponsesPanel } from "@/features/review/ResponsesPanel";
 import { HistoryPanel } from "@/features/review/HistoryPanel";
 import { CommentsPanel } from "@/features/collab/CommentsPanel";
 import { CompareTab } from "@/features/collab/CompareTab";
+import { LinkedClaims } from "@/features/libraries/LinkedClaims";
 
 export function PromotionPage({ id, v }: { id: string; v?: number }) {
   const { t } = useI18n();
@@ -235,6 +236,16 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
             canEdit={canEdit}
             currentVersion={versions.at(-1) ?? null}
           />
+          <div className="mt-4">
+            <LinkedClaims
+              promotion={p}
+              current={versions.at(-1) ?? null}
+              canLink={
+                !p.is_demo &&
+                (isOwner || ["owner", "admin", "reviewer", "creator"].includes(role ?? ""))
+              }
+            />
+          </div>
         </Page>
       </TabsContent>
     </Tabs>

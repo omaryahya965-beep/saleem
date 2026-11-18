@@ -8,7 +8,7 @@ do $$
 declare _v2 uuid := '22222222-2222-2222-2222-222222222222';
 begin
   if (select id from public.rulebook_versions where is_active) <> _v2 then raise exception 'v2 release not active'; end if;
-  if (select count(*) from public.rules where rulebook_version_id = _v2) <> 49 then raise exception 'unexpected rule count'; end if;
+  if (select count(*) from public.rules where rulebook_version_id = _v2) <> 51 then raise exception 'unexpected rule count'; end if;
   -- Every SAMA/CMA rule is a draft, unverified, without official text.
   if exists (select 1 from public.rules where (code like 'SAMA-%' or code like 'CMA-%')
              and (review_state <> 'draft' or source_verified or official_text_ar is not null)) then
@@ -20,7 +20,7 @@ begin
       and (a.llm_instructions <> b.llm_instructions or a.default_severity <> b.default_severity or b.review_state <> 'active')) then
     raise exception 'existing rule changed'; end if;
   if (select pack from public.rules where rulebook_version_id = _v2 and code = 'AI-01') <> 'sa-sdaia-ai' then raise exception 'AI-01 pack'; end if;
-  if public.v2_publish_rulebook() <> 49 then raise exception 'publish not idempotent'; end if;
+  if public.v2_publish_rulebook() <> 51 then raise exception 'publish not idempotent'; end if;
   -- Additional citation for finance companies.
   if (select additional_citations->0->>'source_id' from public.rules where rulebook_version_id = _v2 and code = 'SAMA-ADV-03-8') <> 'sama-fc-impl-art86' then
     raise exception 'additional citation missing'; end if;

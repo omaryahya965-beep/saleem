@@ -12,7 +12,7 @@ const OUTCOMES = ["passed", "failed", "unable_to_verify"] as const;
 export const ANALYSIS_SCHEMA_V2 = {
   type: "object",
   additionalProperties: false,
-  required: ["schema_version", "classification", "signals", "ocr", "rule_results", "findings"],
+  required: ["schema_version", "classification", "signals", "ocr", "claims_detected", "rule_results", "findings"],
   properties: {
     schema_version: { type: "integer", enum: [2] },
     classification: {
@@ -38,6 +38,11 @@ export const ANALYSIS_SCHEMA_V2 = {
         required: ["t", "page", "text"],
         properties: { t: { type: ["number", "null"] }, page: { type: ["integer", "null"] }, text: { type: "string" } },
       },
+    },
+    claims_detected: {
+      type: "array",
+      description: "Factual or comparative claims made by the ad (rankings, 'lowest', customer counts, percentages), quoted exactly.",
+      items: { type: "string" },
     },
     rule_results: {
       type: "array",
@@ -95,6 +100,8 @@ export interface ModelOutputV2 {
   ocr: { t: number | null; page: number | null; text: string }[];
   rule_results: ModelRuleResult[];
   findings: DraftFinding[];
+  /** Claim quotes for the claims library check (Phase 5); absent in older v2 outputs. */
+  claims_detected?: string[];
 }
 
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
@@ -173,6 +180,9 @@ export function validateAnalysisV2(raw: unknown, duration: number | null): Model
     ocr,
     rule_results,
     findings,
+    claims_detected: Array.isArray(raw.claims_detected)
+      ? (raw.claims_detected as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()).slice(0, 50)
+      : [],
   };
 }
 
@@ -197,5 +207,6 @@ export function mergeBatches(outputs: ModelOutputV2[]): ModelOutputV2 {
     ocr: outputs.flatMap((o) => o.ocr),
     rule_results: [...results.values()],
     findings: outputs.flatMap((o) => o.findings),
+    claims_detected: [...new Set(outputs.flatMap((o) => o.claims_detected ?? []))],
   };
 }

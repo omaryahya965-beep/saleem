@@ -97,3 +97,37 @@ export function enabledPacksFor(
   }
   return out;
 }
+
+/** Org override patch (narrow only): exclusions or disabling for one rule (M8 `org_rule_overrides`). */
+export interface RuleOverride {
+  rule_code: string;
+  applicability_patch: {
+    disabled?: boolean;
+    exclude_channels?: string[];
+    exclude_product_types?: string[];
+    exclude_communication_types?: string[];
+    exclude_audiences?: string[];
+  };
+}
+
+/** Applies org overrides after selection: they can only turn an applicable rule into not applicable. */
+export function applyOverrides(sel: Selection, ctx: AnalysisContext, overrides: RuleOverride[]): Selection {
+  if (!overrides.length) return sel;
+  const byCode = new Map(overrides.map((o) => [o.rule_code, o.applicability_patch]));
+  const applicable: RuleRow[] = [];
+  const notApplicable = [...sel.notApplicable];
+  for (const rule of sel.applicable) {
+    const p = byCode.get(rule.code);
+    const excluded =
+      p &&
+      !rule.code.startsWith("SYS-") &&
+      (p.disabled ||
+        (p.exclude_channels?.length && ctx.channels.length > 0 && ctx.channels.every((c) => p.exclude_channels!.includes(c))) ||
+        (p.exclude_product_types?.length && ctx.product && p.exclude_product_types.includes(ctx.product.productType)) ||
+        (p.exclude_communication_types?.length && p.exclude_communication_types.includes(ctx.communicationType)) ||
+        (p.exclude_audiences?.length && ctx.audience.some((a) => p.exclude_audiences!.includes(a))));
+    if (excluded) notApplicable.push({ rule, reason: "org_override" });
+    else applicable.push(rule);
+  }
+  return { applicable, notApplicable };
+}

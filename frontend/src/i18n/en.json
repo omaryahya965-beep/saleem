@@ -56,7 +56,9 @@
     "promotions": "Promotions",
     "products": "Products",
     "queue": "Review queue",
-    "audit": "Audit log"
+    "audit": "Audit log",
+    "claims": "Claims library",
+    "disclaimers": "Required disclaimers"
   },
   "status": {
     "ready": "No automated findings",
@@ -1196,7 +1198,10 @@
       "product_not_approved": "The product is not approved yet",
       "no_brand_aliases": "Brand names are not set in the settings",
       "coverage_no_text": "No text to check",
-      "unknown": "Unspecified reason"
+      "unknown": "Unspecified reason",
+      "org_override": "Excluded by your organisation",
+      "no_claims_library": "No approved claims in the library",
+      "no_disclaimers_library": "No approved disclaimers in the library"
     },
     "signal": {
       "mentions_free": "free / no fees",
@@ -1490,5 +1495,99 @@
     "fixed": "Fixed ({n})",
     "remaining": "Still present ({n})",
     "added": "New ({n})"
+  },
+  "claims": {
+    "title": "Approved claims library",
+    "subtitle": "Approved claims with their substantiation. Saleem compares ad text with them; it never approves a claim itself.",
+    "add": "New claim",
+    "addUrl": "Add link",
+    "approve": "Approve",
+    "approveNow": "Approve now (you have reviewer rights)",
+    "approvedFromFinding": "Claim added from the finding",
+    "creatorNote": "The claim goes to a reviewer for approval before it is used.",
+    "dueSoon": "{n} claims due for review soon",
+    "empty": "No claims yet",
+    "emptyBody": "Add the claims your team uses with their substantiation, then send them for approval.",
+    "expires": "Expires",
+    "factsUsed": "Product facts used in the check",
+    "noFactsUsed": "No product is linked to this promotion.",
+    "fromFinding": "Add this claim to the library",
+    "link": "Link",
+    "linkApproved": "Link an approved claim",
+    "linkedTitle": "Linked claims",
+    "noneLinked": "No linked claims.",
+    "unlink": "Unlink",
+    "name": "Short name",
+    "newVersion": "New version",
+    "nextReview": "Next review",
+    "noSubstantiation": "No substantiation attached.",
+    "products": "Products",
+    "reasonPrompt": "Give the reason (required)",
+    "saved": "Claim saved",
+    "sentForApproval": "Sent for approval",
+    "status": "Status",
+    "submit": "Send for approval",
+    "substantiation": "Substantiation",
+    "substantiationCount": "{n} items",
+    "textAr": "Claim text (Arabic)",
+    "textEn": "Claim text (English)",
+    "uploadFile": "Upload file",
+    "statusOpt": {
+      "draft": "Draft",
+      "pending_review": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "changes_requested": "Changes requested",
+      "expired": "Expired",
+      "archived": "Archived"
+    },
+    "linkSource": {
+      "manual": "Manual",
+      "auto": "Automatic",
+      "finding_fix": "From a finding"
+    }
+  },
+  "disclaimers": {
+    "title": "Required disclaimers",
+    "subtitle": "Approved disclaimer wording for your organisation. Saleem checks it is present in the promotions in scope.",
+    "add": "New disclaimer",
+    "adopt": "Adopt for my organisation",
+    "empty": "No disclaimers yet",
+    "onlyManagers": "Disclaimers are managed by the workspace owner or admin.",
+    "prominence": "Must be prominent",
+    "prominenceHint": "Must appear in a clear font, close to the claim.",
+    "requiredBy": "Required by",
+    "requiredByHint": "Rule codes or references, separated by commas",
+    "scopeHint": "Leave channels or types empty to cover all.",
+    "template": "Proposed wording",
+    "templateNote": "Proposed wording — have it legally reviewed before adopting it.",
+    "text": "Disclaimer text"
+  },
+  "overrides": {
+    "title": "Narrow rules for your organisation",
+    "subtitle": "Exclude channels from a rule, or disable it for your organisation, with a reason. This never changes the rule's logic and is recorded in the audit log.",
+    "rule": "Rule",
+    "reason": "Reason",
+    "disable": "Disable this rule for my organisation",
+    "excludeChannels": "Exclude channels",
+    "remove": "Remove",
+    "saved": "Override saved"
+  },
+  "views": {
+    "export": "Export CSV",
+    "name": "View name",
+    "namePlaceholder": "Save these filters as…",
+    "save": "Save view",
+    "saved": "View saved",
+    "shared": "Share with the organisation"
+  },
+  "summary": {
+    "changes_requested": "Changes requested from you",
+    "conditionally_approved": "Conditionally approved",
+    "assigned_to_me": "Assigned to me",
+    "unassigned": "Unassigned",
+    "overdue": "Overdue",
+    "escalated": "Escalated",
+    "claims_due": "Claims due for review"
   }
 }

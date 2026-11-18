@@ -13,7 +13,9 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as StyleguideRouteImport } from './routes/styleguide'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
+import { Route as AppClaimsRouteImport } from './routes/_app/claims'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppDisclaimersRouteImport } from './routes/_app/disclaimers'
 import { Route as AppForgotPasswordRouteImport } from './routes/_app/forgot-password'
 import { Route as AppLoginRouteImport } from './routes/_app/login'
 import { Route as AppNewRouteImport } from './routes/_app/new'
@@ -60,9 +62,19 @@ const AppAuditRoute = AppAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClaimsRoute = AppClaimsRouteImport.update({
+  id: '/claims',
+  path: '/claims',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDisclaimersRoute = AppDisclaimersRouteImport.update({
+  id: '/disclaimers',
+  path: '/disclaimers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppForgotPasswordRoute = AppForgotPasswordRouteImport.update({
@@ -200,7 +212,9 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/styleguide': typeof StyleguideRoute
   '/audit': typeof AppAuditRoute
+  '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/disclaimers': typeof AppDisclaimersRoute
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
@@ -231,7 +245,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/styleguide': typeof StyleguideRoute
   '/audit': typeof AppAuditRoute
+  '/claims': typeof AppClaimsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/disclaimers': typeof AppDisclaimersRoute
   '/forgot-password': typeof AppForgotPasswordRoute
   '/login': typeof AppLoginRoute
   '/new': typeof AppNewRoute
@@ -265,7 +281,9 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/styleguide': typeof StyleguideRoute
   '/_app/audit': typeof AppAuditRoute
+  '/_app/claims': typeof AppClaimsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/disclaimers': typeof AppDisclaimersRoute
   '/_app/forgot-password': typeof AppForgotPasswordRoute
   '/_app/login': typeof AppLoginRoute
   '/_app/new': typeof AppNewRoute
@@ -300,7 +318,9 @@ export interface FileRouteTypes {
     | '/'
     | '/styleguide'
     | '/audit'
+    | '/claims'
     | '/dashboard'
+    | '/disclaimers'
     | '/forgot-password'
     | '/login'
     | '/new'
@@ -331,7 +351,9 @@ export interface FileRouteTypes {
   to:
     | '/styleguide'
     | '/audit'
+    | '/claims'
     | '/dashboard'
+    | '/disclaimers'
     | '/forgot-password'
     | '/login'
     | '/new'
@@ -364,7 +386,9 @@ export interface FileRouteTypes {
     | '/_app'
     | '/styleguide'
     | '/_app/audit'
+    | '/_app/claims'
     | '/_app/dashboard'
+    | '/_app/disclaimers'
     | '/_app/forgot-password'
     | '/_app/login'
     | '/_app/new'
@@ -429,11 +453,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/claims': {
+      id: '/_app/claims'
+      path: '/claims'
+      fullPath: '/claims'
+      preLoaderRoute: typeof AppClaimsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/disclaimers': {
+      id: '/_app/disclaimers'
+      path: '/disclaimers'
+      fullPath: '/disclaimers'
+      preLoaderRoute: typeof AppDisclaimersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/forgot-password': {
@@ -623,7 +661,9 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAuditRoute: typeof AppAuditRoute
+  AppClaimsRoute: typeof AppClaimsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDisclaimersRoute: typeof AppDisclaimersRoute
   AppForgotPasswordRoute: typeof AppForgotPasswordRoute
   AppLoginRoute: typeof AppLoginRoute
   AppNewRoute: typeof AppNewRoute
@@ -655,7 +695,9 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAuditRoute: AppAuditRoute,
+  AppClaimsRoute: AppClaimsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDisclaimersRoute: AppDisclaimersRoute,
   AppForgotPasswordRoute: AppForgotPasswordRoute,
   AppLoginRoute: AppLoginRoute,
   AppNewRoute: AppNewRoute,

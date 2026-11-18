@@ -28,6 +28,7 @@ import {
 } from "@/components/ui";
 import { formatClock, useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
+import { WorkSummary } from "@/features/libraries/WorkSummary";
 import type { DashboardFilter, SubmissionListItem } from "@/lib/api/data";
 import { useSubmissions } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
@@ -179,6 +180,8 @@ export function DashboardPage() {
         description={t("dashboard.subtitle")}
         actions={newButton}
       />
+
+      <WorkSummary />
 
       <div className="flex flex-col gap-3">
         <label className="relative block max-w-md">

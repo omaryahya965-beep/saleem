@@ -14,6 +14,7 @@ import {
   type ResponseAction,
 } from "@/lib/api/review";
 import { usePreflightText } from "./model";
+import { ClaimFromFindingDialog } from "@/features/libraries/LinkedClaims";
 
 interface FindingRow {
   id: string;
@@ -22,6 +23,7 @@ interface FindingRow {
   status: string;
   explanation_ar: string | null;
   explanation_en: string | null;
+  evidence_text: string | null;
 }
 
 async function latestFindings(submissionId: string): Promise<FindingRow[]> {
@@ -35,7 +37,7 @@ async function latestFindings(submissionId: string): Promise<FindingRow[]> {
   if (!run) return [];
   const { data } = await supabase
     .from("findings")
-    .select("id, rule_code, finding_type, status, explanation_ar, explanation_en")
+    .select("id, rule_code, finding_type, status, explanation_ar, explanation_en, evidence_text")
     .eq("run_id", run.id)
     .order("rule_code");
   return (data ?? []) as FindingRow[];
@@ -72,6 +74,7 @@ export function ResponsesPanel({
   });
   const responses = useResponses(version.id);
   const [pending, setPending] = useState<{ finding: string; action: ResponseAction } | null>(null);
+  const [claimFix, setClaimFix] = useState<FindingRow | null>(null);
   const errText = usePreflightText();
   const uploader =
     (isOwner || ["owner", "admin", "creator"].includes(orgRole ?? "")) &&
@@ -119,6 +122,18 @@ export function ResponsesPanel({
                     {(lang === "en" ? f.explanation_en : f.explanation_ar) ?? ""}
                   </span>
                 </div>
+                {f.rule_code === "SYS-CLAIMS" &&
+                  f.status !== "resolved" &&
+                  ["owner", "admin", "reviewer", "creator"].includes(orgRole ?? "") && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="self-start"
+                      onClick={() => setClaimFix(f)}
+                    >
+                      {t("claims.fromFinding")}
+                    </Button>
+                  )}
                 {f.status !== "resolved" && actions.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {actions.map((a) => (
@@ -159,6 +174,15 @@ export function ResponsesPanel({
           })}
         </ul>
       </Card>
+      {claimFix && p.org_id && (
+        <ClaimFromFindingDialog
+          finding={claimFix}
+          orgId={p.org_id}
+          canApprove={["owner", "admin", "reviewer"].includes(orgRole ?? "")}
+          onClose={() => setClaimFix(null)}
+          onDone={() => void qc.invalidateQueries({ queryKey: ["latest-findings", version.id] })}
+        />
+      )}
       {pending && (
         <CommentDialog
           title={t(`review.responses.${pending.action}` as TKey)}

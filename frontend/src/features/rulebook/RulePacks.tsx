@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { applicabilityLines } from "./model";
+import { OverridesCard } from "@/features/libraries/OverridesCard";
 import { useAuth } from "@/lib/api/auth";
 import type { Rule } from "@/lib/api/data";
 import { fetchMyOrgs } from "@/lib/api/features";
@@ -341,6 +342,7 @@ export function RulePacks({ rules }: { rules: Rule[] }) {
           </Card>
         );
       })}
+      {orgManager && <OverridesCard rules={rules} />}
     </section>
   );
 }

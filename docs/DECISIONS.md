@@ -289,3 +289,14 @@ Format: decision — why — alternatives considered.
 - **D118. Pre-existing `npm audit --omit=dev` high findings** (TanStack router plugin, Vite, picomatch advisories) are
   not fixed in this run — upgrading build tooling is out of scope; `pdfjs-dist` adds none. The CI audit step fails
   until they are upgraded.
+
+## v2 programme — Phase 5 (libraries + dashboard)
+- **D119. No `pg_trgm`; claim matching runs in TypeScript** (`_shared/claims/match.ts`). It reuses the rule engine's
+  Arabic normalisation and number extraction. Similarity is the larger of trigram Jaccard and 0.85 × coverage of the
+  library claim; 0.6 means similar and 0.9 means the same claim.
+- **D120. Org overrides only narrow a rule** (exclude channels or disable it, with a reason, audited). `SYS-*` rules
+  are exempt, and an override never changes a rule's logic or severity.
+- **D121. Saved views ship on the promotions list only** (scopes `queue` and `claims` exist in the table, not yet in
+  the UI). This is a conservative default, to confirm.
+- **D122. Disclaimer templates are platform proposals** («صيغة مقترحة — راجعها قانونياً»). They apply only after an
+  org adopts them as its own active disclaimer.

@@ -245,6 +245,90 @@ export type Database = {
           },
         ];
       };
+      claims: {
+        Row: {
+          channels: string[];
+          claim_key: string;
+          communication_types: string[];
+          created_at: string;
+          created_by: string | null;
+          expires_at: string | null;
+          id: string;
+          name: string;
+          next_review_at: string | null;
+          normalized_text: string;
+          numbers: Json;
+          org_id: string;
+          product_ids: string[];
+          review_comment: string | null;
+          review_reason_ids: string[];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          source_finding_id: string | null;
+          status: string;
+          substantiation: Json;
+          supersedes_id: string | null;
+          text_ar: string;
+          text_en: string | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          channels?: string[];
+          claim_key?: string;
+          communication_types?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          name: string;
+          next_review_at?: string | null;
+          normalized_text?: string;
+          numbers?: Json;
+          org_id: string;
+          product_ids?: string[];
+          review_comment?: string | null;
+          review_reason_ids?: string[];
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          source_finding_id?: string | null;
+          status?: string;
+          substantiation?: Json;
+          supersedes_id?: string | null;
+          text_ar: string;
+          text_en?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          channels?: string[];
+          claim_key?: string;
+          communication_types?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          name?: string;
+          next_review_at?: string | null;
+          normalized_text?: string;
+          numbers?: Json;
+          org_id?: string;
+          product_ids?: string[];
+          review_comment?: string | null;
+          review_reason_ids?: string[];
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          source_finding_id?: string | null;
+          status?: string;
+          substantiation?: Json;
+          supersedes_id?: string | null;
+          text_ar?: string;
+          text_en?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       comments: {
         Row: {
           anchor: Json | null;
@@ -333,6 +417,69 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      disclaimers: {
+        Row: {
+          channels: string[];
+          check_prominence: boolean;
+          communication_types: string[];
+          created_at: string;
+          created_by: string | null;
+          disclaimer_key: string;
+          id: string;
+          is_template: boolean;
+          name: string;
+          normalized_text: string;
+          org_id: string | null;
+          product_types: string[];
+          required_by_rule_codes: string[];
+          status: string;
+          supersedes_id: string | null;
+          text_ar: string;
+          text_en: string | null;
+          version: number;
+        };
+        Insert: {
+          channels?: string[];
+          check_prominence?: boolean;
+          communication_types?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          disclaimer_key?: string;
+          id?: string;
+          is_template?: boolean;
+          name?: string;
+          normalized_text?: string;
+          org_id?: string | null;
+          product_types?: string[];
+          required_by_rule_codes?: string[];
+          status?: string;
+          supersedes_id?: string | null;
+          text_ar: string;
+          text_en?: string | null;
+          version?: number;
+        };
+        Update: {
+          channels?: string[];
+          check_prominence?: boolean;
+          communication_types?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          disclaimer_key?: string;
+          id?: string;
+          is_template?: boolean;
+          name?: string;
+          normalized_text?: string;
+          org_id?: string | null;
+          product_types?: string[];
+          required_by_rule_codes?: string[];
+          status?: string;
+          supersedes_id?: string | null;
+          text_ar?: string;
+          text_en?: string | null;
+          version?: number;
+        };
+        Relationships: [];
       };
       eval_cases: {
         Row: {
@@ -759,6 +906,39 @@ export type Database = {
           },
         ];
       };
+      org_rule_overrides: {
+        Row: {
+          applicability_patch: Json;
+          archived_at: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          org_id: string;
+          reason: string;
+          rule_code: string;
+        };
+        Insert: {
+          applicability_patch: Json;
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          org_id: string;
+          reason: string;
+          rule_code: string;
+        };
+        Update: {
+          applicability_patch?: Json;
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          org_id?: string;
+          reason?: string;
+          rule_code?: string;
+        };
+        Relationships: [];
+      };
       org_rule_packs: {
         Row: {
           enabled: boolean;
@@ -988,6 +1168,30 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      promotion_claims: {
+        Row: {
+          claim_id: string;
+          link_source: string;
+          linked_at: string;
+          linked_by: string | null;
+          promotion_id: string;
+        };
+        Insert: {
+          claim_id: string;
+          link_source: string;
+          linked_at?: string;
+          linked_by?: string | null;
+          promotion_id: string;
+        };
+        Update: {
+          claim_id?: string;
+          link_source?: string;
+          linked_at?: string;
+          linked_by?: string | null;
+          promotion_id?: string;
+        };
+        Relationships: [];
       };
       promotions: {
         Row: {
@@ -1495,6 +1699,39 @@ export type Database = {
           },
         ];
       };
+      saved_views: {
+        Row: {
+          created_at: string;
+          filters: Json;
+          id: string;
+          name: string;
+          org_id: string | null;
+          owner_id: string;
+          scope: string;
+          shared: boolean;
+        };
+        Insert: {
+          created_at?: string;
+          filters: Json;
+          id?: string;
+          name: string;
+          org_id?: string | null;
+          owner_id?: string;
+          scope: string;
+          shared?: boolean;
+        };
+        Update: {
+          created_at?: string;
+          filters?: Json;
+          id?: string;
+          name?: string;
+          org_id?: string | null;
+          owner_id?: string;
+          scope?: string;
+          shared?: boolean;
+        };
+        Relationships: [];
+      };
       share_links: {
         Row: {
           created_at: string;
@@ -1779,6 +2016,62 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      archive_rule_override: { Args: { _id: string }; Returns: undefined };
+      set_rule_override: {
+        Args: { _org: string; _rule_code: string; _patch: Json; _reason: string };
+        Returns: string;
+      };
+      save_disclaimer: {
+        Args: {
+          _id: string | null;
+          _org: string;
+          _name: string;
+          _text_ar: string;
+          _text_en: string | null;
+          _product_types: string[];
+          _channels: string[];
+          _communication_types: string[];
+          _required_by: string[];
+          _prominence: boolean;
+          _status: string;
+        };
+        Returns: string;
+      };
+      claim_extend_scope: { Args: { _claim: string; _pid: string }; Returns: string };
+      claim_add_from_finding: {
+        Args: {
+          _finding: string;
+          _name: string;
+          _text_ar: string;
+          _substantiation: Json;
+          _approve?: boolean;
+        };
+        Returns: string;
+      };
+      link_claim: { Args: { _pid: string; _claim: string; _link?: boolean }; Returns: undefined };
+      archive_claim: { Args: { _id: string }; Returns: undefined };
+      new_claim_version: { Args: { _id: string }; Returns: string };
+      review_claim: {
+        Args: { _id: string; _decision: string; _reason_ids?: string[]; _comment?: string | null };
+        Returns: undefined;
+      };
+      submit_claim: { Args: { _id: string }; Returns: undefined };
+      save_claim: {
+        Args: {
+          _id: string | null;
+          _org: string;
+          _name: string;
+          _text_ar: string;
+          _text_en: string | null;
+          _product_ids: string[];
+          _channels: string[];
+          _communication_types: string[];
+          _substantiation: Json;
+          _next_review: string | null;
+          _expires: string | null;
+        };
+        Returns: string;
+      };
       delete_comment: { Args: { _id: string }; Returns: undefined };
       resolve_comment: { Args: { _id: string; _resolved: boolean }; Returns: undefined };
       edit_comment: { Args: { _id: string; _body: string }; Returns: undefined };

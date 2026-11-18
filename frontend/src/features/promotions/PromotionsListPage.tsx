@@ -26,6 +26,8 @@ import {
   type ReviewStatus,
 } from "@/lib/api/promotions";
 import { resultOf } from "./model";
+import { SavedViewsBar } from "@/features/libraries/SavedViewsBar";
+import { promotionRows } from "@/features/libraries/model";
 
 export function PromotionsListPage() {
   const { t, lang } = useI18n();
@@ -62,6 +64,29 @@ export function PromotionsListPage() {
             <Link to="/new">{t("promo.newPromotion")}</Link>
           </Button>
         }
+      />
+
+      <SavedViewsBar
+        scope="promotions"
+        filters={filters as unknown as Record<string, unknown>}
+        apply={(f) => {
+          setStatus(
+            REVIEW_STATUSES.includes(f["status"] as ReviewStatus)
+              ? (f["status"] as ReviewStatus)
+              : "",
+          );
+          setProductId(typeof f["productId"] === "string" ? f["productId"] : "");
+          setChannel(typeof f["channel"] === "string" ? f["channel"] : "");
+          setCommunicationType(
+            typeof f["communicationType"] === "string"
+              ? (f["communicationType"] as CommunicationType | "")
+              : "",
+          );
+          setQ(typeof f["q"] === "string" ? f["q"] : "");
+        }}
+        orgId={(all.data ?? []).find((p) => p.org_id)?.org_id ?? null}
+        rows={() => promotionRows(list.data ?? [])}
+        fileName="saleem-promotions.csv"
       />
 
       <Card className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

@@ -20,6 +20,8 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  BadgeCheck,
+  FileCheck2,
 } from "lucide-react";
 import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -131,6 +133,24 @@ function AccountMenu() {
             >
               <Inbox aria-hidden="true" className="size-4" />
               {t("nav.queue")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/claims"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <BadgeCheck aria-hidden="true" className="size-4" />
+              {t("nav.claims")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              to="/disclaimers"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <FileCheck2 aria-hidden="true" className="size-4" />
+              {t("nav.disclaimers")}
             </Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild>
