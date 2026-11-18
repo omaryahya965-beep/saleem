@@ -14,6 +14,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      org_can: { Args: { _org: string; _action: string }; Returns: string };
       graphql: {
         Args: {
           extensions?: Json;
@@ -2969,7 +2970,9 @@ export type Database = {
         | "creator"
         | "legal"
         | "external_uploader"
-        | "external_reviewer";
+        | "external_reviewer"
+        | "compliance_lead"
+        | "viewer";
       overall_status: "ready" | "needs_fixes" | "review";
       pipeline_step: "transcribe" | "deterministic" | "llm" | "merge" | "done";
       platform: "snapchat" | "tiktok" | "instagram" | "x" | "youtube";
@@ -3135,6 +3138,8 @@ export const Constants = {
         "legal",
         "external_uploader",
         "external_reviewer",
+        "compliance_lead",
+        "viewer",
       ],
       overall_status: ["ready", "needs_fixes", "review"],
       pipeline_step: ["transcribe", "deterministic", "llm", "merge", "done"],

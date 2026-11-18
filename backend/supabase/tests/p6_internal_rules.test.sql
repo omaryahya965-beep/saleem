@@ -4,10 +4,12 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(1);
 
-insert into auth.users (id, email) values ('1c000000-0000-0000-0000-000000000001', 'ow@int.test'), ('1c000000-0000-0000-0000-000000000005', 'cr@int.test');
+insert into auth.users (id, email) values ('1c000000-0000-0000-0000-000000000001', 'ow@int.test'), ('1c000000-0000-0000-0000-000000000005', 'cr@int.test'),
+  ('1c000000-0000-0000-0000-000000000002', 'ad@int.test');
 insert into public.organizations (id, name, created_by) values ('2c000000-0000-0000-0000-000000000001', 'Int Bank', '1c000000-0000-0000-0000-000000000001');
 insert into public.org_members (org_id, user_id, role) values
   ('2c000000-0000-0000-0000-000000000001', '1c000000-0000-0000-0000-000000000001', 'owner'),
+  ('2c000000-0000-0000-0000-000000000001', '1c000000-0000-0000-0000-000000000002', 'admin'),
   ('2c000000-0000-0000-0000-000000000001', '1c000000-0000-0000-0000-000000000005', 'creator');
 insert into public.org_settings (org_id) values ('2c000000-0000-0000-0000-000000000001') on conflict (org_id) do nothing;
 -- A drafted rule as the drafting function writes it (service role).
@@ -45,7 +47,11 @@ do $$ begin
   perform pg_temp.expect_error($q$select public.approve_internal_rule('5c000000-0000-0000-0000-000000000001')$q$, 'code:edit_required');
   perform public.save_internal_rule('2c000000-0000-0000-0000-000000000001', '5c000000-0000-0000-0000-000000000001', 'int-logo', 'سلامة الشعار',
     'يجب ألا يظهر الشعار ممدوداً أو بألوان خارج الهوية', 'warning');
+  -- The author cannot approve their own rule (Phase 8): another owner/admin/lead does.
+  perform pg_temp.expect_error($q$select public.approve_internal_rule('5c000000-0000-0000-0000-000000000001')$q$, 'code:separation_of_duties');
+  perform set_config('request.jwt.claim.sub', '1c000000-0000-0000-0000-000000000002', true);
   perform public.approve_internal_rule('5c000000-0000-0000-0000-000000000001');
+  perform set_config('request.jwt.claim.sub', '1c000000-0000-0000-0000-000000000001', true);
   if (select status from public.internal_rules where id = '5c000000-0000-0000-0000-000000000001') <> 'active' then raise exception 'not active'; end if;
   perform public.save_internal_rule('2c000000-0000-0000-0000-000000000001', '5c000000-0000-0000-0000-000000000001', 'INT-LOGO', 'سلامة الشعار', 'نص معدّل', 'warning');
   if (select status from public.internal_rules where id = '5c000000-0000-0000-0000-000000000001') <> 'draft' then raise exception 'edit kept it active'; end if;

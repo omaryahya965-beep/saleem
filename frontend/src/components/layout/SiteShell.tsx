@@ -148,6 +148,15 @@ function AccountMenu() {
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild>
             <Link
+              to="/roles"
+              className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
+            >
+              <ShieldCheck aria-hidden="true" className="size-4" />
+              {t("nav.roles")}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
               to="/claims"
               className="flex h-11 items-center gap-2.5 rounded-sm px-3 text-sm outline-none data-[highlighted]:bg-sunken"
             >

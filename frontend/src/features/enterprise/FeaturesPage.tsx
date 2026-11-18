@@ -1,6 +1,7 @@
 import { Settings2 } from "lucide-react";
 import { EmptyState, Page, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n";
+import { can } from "@/lib/permissions";
 import { OrgSelect } from "@/features/libraries/OrgSelect";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { FeatureFlagsCard } from "./FeatureFlagsCard";
@@ -9,7 +10,7 @@ import { FeatureFlagsCard } from "./FeatureFlagsCard";
 export function FeaturesPage() {
   const { t } = useI18n();
   const picker = useOrgPicker();
-  const manager = ["owner", "admin"].includes(picker.role ?? "");
+  const manager = can(picker.role, "manage_settings");
   return (
     <Page className="flex flex-col gap-6">
       <PageHeader title={t("flags.pageTitle")} description={t("flags.subtitle")} />

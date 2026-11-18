@@ -1,4 +1,5 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { RoleHome } from "@/features/roles/RoleHome";
 import {
   ChevronLeft,
   FileImage,
@@ -181,6 +182,7 @@ export function DashboardPage() {
         actions={newButton}
       />
 
+      <RoleHome />
       <WorkSummary />
 
       <div className="flex flex-col gap-3">

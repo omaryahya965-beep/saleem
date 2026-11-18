@@ -49,7 +49,15 @@ import {
   type OrgRole,
 } from "@/lib/api/features";
 
-const ROLES: OrgRole[] = ["owner", "admin", "reviewer", "creator"];
+const ROLES: OrgRole[] = [
+  "owner",
+  "admin",
+  "compliance_lead",
+  "reviewer",
+  "legal",
+  "creator",
+  "viewer",
+];
 
 function useOrg(id: string) {
   return useQuery({ queryKey: ["org", id], queryFn: () => fetchOrg(id) });

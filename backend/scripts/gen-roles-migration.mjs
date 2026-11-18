@@ -1,0 +1,90 @@
+// Generates backend/supabase/migrations/20261118080400_v2_roles.sql (Phase 8, step 5) from the function and policy
+// definitions of a local database that has every earlier migration applied (`supabase db reset`). The output is a
+// plain, reviewable migration: each affected function and policy is restated with the new roles added.
+// Usage: node backend/scripts/gen-roles-migration.mjs   (needs the local stack: docker container supabase_db_saleem)
+//
+// Rules (mirrors frontend/src/lib/permissions.ts):
+//  - compliance_lead does everything a reviewer does: added to every org-role list that names owner, admin and
+//    reviewer together. A lone 'reviewer' literal is an actor_role tag, not an org role, and is left alone.
+//  - compliance_lead also manages assignment, rule packs, rule overrides and company rules (LEAD_ADMIN_FUNCTIONS).
+//  - viewer (auditor) reads everything internal members read, sees analytics, and writes nothing (it is in no
+//    write list). VIEWER_READ_FUNCTIONS / VIEWER_READ_POLICIES get 'viewer' added.
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const docker = process.env.DOCKER ?? "docker";
+const psql = (sql) =>
+  execFileSync(docker, ["exec", "-i", "supabase_db_saleem", "psql", "-U", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
+    input: sql,
+    encoding: "utf8",
+    maxBuffer: 64 << 20,
+  });
+
+const LEAD_ADMIN_FUNCTIONS = ["assign_reviewer", "set_org_rule_pack", "set_rule_override", "archive_rule_override", "can_manage_internal_rules"];
+const VIEWER_READ_FUNCTIONS = ["can_read_promotion", "can_read_submission", "org_metrics"];
+const VIEWER_READ_POLICIES = ["org media read", "org read submissions", "internal_rules_read"];
+
+const SEP = "\u001e";
+const fnRows = psql(
+  `select p.proname || '${SEP}' || pg_get_functiondef(p.oid) || '${SEP}${SEP}' from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prokind = 'f' order by p.proname, p.oid;`,
+).split(`${SEP}${SEP}\n`).filter((x) => x.trim());
+
+// A quoted org-role literal, optionally cast.
+const R = (r) => `'${r}'(?:::(?:public\\.)?org_role)?`;
+const LIST = new RegExp(`${R("owner")}\\s*,\\s*${R("admin")}\\s*,\\s*${R("reviewer")}`, "g");
+const OWNER_ADMIN = new RegExp(`${R("owner")}\\s*,\\s*${R("admin")}(?!\\s*,)`, "g");
+const cast = (m) => (m.includes("::public.org_role") ? "::public.org_role" : m.includes("::org_role") ? "::org_role" : "");
+
+const must = (s, re, rep) => {
+  if (!re.test(s)) throw new Error(`patch anchor not found: ${re}`);
+  return s.replace(re, rep);
+};
+const out = [];
+const changed = [];
+for (const row of fnRows) {
+  const [name, def] = row.split(SEP);
+  let d = def;
+  d = d.replace(LIST, (m) => `${m}, 'compliance_lead'${cast(m)}`);
+  if (LEAD_ADMIN_FUNCTIONS.includes(name)) d = d.replace(OWNER_ADMIN, (m) => `${m}, 'compliance_lead'${cast(m)}`);
+  if (VIEWER_READ_FUNCTIONS.includes(name)) d = d.replace(/'compliance_lead'((?:::(?:public\.)?org_role)?)/g, "'compliance_lead'$1, 'viewer'$1");
+  // Viewer is read-only: these two RPCs otherwise only require read access (or ownership) on their write path.
+  if (name === "add_comment") d = must(d, /(\n\s*if _kind = 'change_request')/, "\n  if _role = 'viewer' then raise exception 'code:read_only_role' using errcode = '42501'; end if;$1");
+  if (name === "can_submit") d = must(d, /if not \(p\.owner_id = auth\.uid\(\)/, "if _role = 'viewer' or not (p.owner_id = auth.uid()");
+  if (d !== def) {
+    out.push(d.trim() + ";\n");
+    changed.push(name);
+  }
+}
+
+const polRows = psql(
+  `select schemaname || '${SEP}' || tablename || '${SEP}' || policyname || '${SEP}' || cmd || '${SEP}' || array_to_string(roles, ',') || '${SEP}' ||
+          coalesce(qual, '') || '${SEP}' || coalesce(with_check, '') || '${SEP}${SEP}'
+   from pg_policies where schemaname in ('public', 'storage') order by 1;`,
+).split(`${SEP}${SEP}\n`).filter((x) => x.trim());
+const polChanged = [];
+for (const row of polRows) {
+  const [schema, table, name, cmd, roles, qual, check] = row.split(SEP);
+  const fix = (e) => {
+    let x = e.replace(LIST, (m) => `${m}, 'compliance_lead'${cast(m)}`);
+    if (VIEWER_READ_POLICIES.includes(name)) x = x.replace(/'compliance_lead'::org_role/g, "'compliance_lead'::org_role, 'viewer'::org_role");
+    return x;
+  };
+  const q2 = fix(qual), c2 = fix(check);
+  if (q2 === qual && c2 === check) continue;
+  polChanged.push(`${schema}.${table} / ${name}`);
+  const t = `${schema}.${table}`;
+  out.push(`drop policy if exists "${name}" on ${t};
+create policy "${name}" on ${t} for ${cmd} to ${roles}${q2 ? `\n  using (${q2})` : ""}${c2 ? `\n  with check (${c2})` : ""};\n`);
+}
+
+const header = `-- v2 Phase 8 (step 5): roles — compliance_lead and viewer join the org-role checks.
+-- GENERATED by backend/scripts/gen-roles-migration.mjs from the definitions in the earlier migrations — do not edit.
+-- Functions restated (${changed.length}): ${changed.join(", ")}
+-- Policies restated (${polChanged.length}): ${polChanged.join("; ")}
+`;
+fs.writeFileSync(path.join(root, "backend/supabase/migrations/20261118080400_v2_roles.sql"), header + "\n" + out.join("\n"));
+console.log(`functions ${changed.length}, policies ${polChanged.length}`);

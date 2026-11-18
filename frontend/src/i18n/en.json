@@ -61,7 +61,8 @@
     "disclaimers": "Required disclaimers",
     "analytics": "Analytics",
     "ask": "Ask Saleem",
-    "features": "Features"
+    "features": "Features",
+    "roles": "Roles & permissions"
   },
   "status": {
     "ready": "No automated findings",
@@ -595,15 +596,17 @@
     "yourRole": "Your role: {role}",
     "roles": {
       "owner": "Owner",
-      "admin": "Admin",
-      "reviewer": "Reviewer",
-      "creator": "Creator",
+      "admin": "Org admin",
+      "reviewer": "Compliance reviewer",
+      "creator": "Marketer (submitter)",
       "legal": "Legal",
-      "external_uploader": "External uploader",
-      "external_reviewer": "External reviewer"
+      "external_uploader": "External partner",
+      "external_reviewer": "External reviewer",
+      "compliance_lead": "Compliance lead",
+      "viewer": "Viewer / auditor"
     },
     "role": "Role",
-    "rolesHelp": "Owners and admins manage members and campaigns. Reviewers see every check. Creators see only their own checks.",
+    "rolesHelp": "Each role is described on the Roles & permissions page.",
     "sections": "Workspace sections",
     "overview": "Overview",
     "campaigns": "Campaigns",
@@ -1988,6 +1991,73 @@
       "dismissRate": "Dismiss rate",
       "reasons": "Top dismiss reasons",
       "notes": "Suggestions"
+    }
+  },
+  "rolesPage": {
+    "title": "Roles & permissions",
+    "subtitle": "What each role can do in the workspace. The server enforces the same matrix.",
+    "action": "Action",
+    "yes": "Allowed",
+    "no": "Not allowed",
+    "cond": "Conditional",
+    "conditions": "Conditions",
+    "manageMembers": "Invite members and change roles",
+    "membersOwnerAdmin": "Only the owner and org admins invite members and change roles.",
+    "serverNote": "The same matrix is enforced in the database (org_can, with a test per cell); every role change is written to the audit log.",
+    "riskNote": "Risk acceptor is a permission granted to an internal member (owner, admin, compliance lead, reviewer, legal), not a separate role. The owner or an org admin grants it.",
+    "actions": {
+      "view_promotions": "View promotions",
+      "create_promotion": "Create a promotion",
+      "submit_for_review": "Submit for review",
+      "request_changes_comment": "Change-request comment",
+      "comment": "Comment",
+      "decide_review": "Review decision",
+      "assign_reviewer": "Assign reviewer",
+      "escalate_legal": "Escalate to legal",
+      "legal_opinion": "Legal opinion",
+      "accept_risk": "Accept risk",
+      "manage_members": "Members and roles",
+      "manage_rule_packs": "Rule packs and overrides",
+      "manage_company_rules": "Write company rules",
+      "approve_company_rules": "Approve company rules",
+      "manage_products": "Products",
+      "manage_settings": "Settings, features, integrations",
+      "view_analytics": "Analytics"
+    },
+    "desc": {
+      "owner": "Owns the workspace: every permission, including granting owner.",
+      "admin": "Manages members, settings, products and features; reviews and approves.",
+      "compliance_lead": "Leads compliance: assigns reviews, manages rule packs and company rules, reviews and approves.",
+      "reviewer": "Reviews and decides promotions, never one they uploaded.",
+      "legal": "Answers legal escalations and reads promotions; does not approve.",
+      "creator": "Uploads promotions, answers findings, submits for review.",
+      "external_uploader": "Outside partner: uploads through a partner link and sees only their own submissions.",
+      "external_reviewer": "Outside reviewer: sees only what was shared with them.",
+      "viewer": "Reads everything for audit and changes nothing."
+    }
+  },
+  "roleHome": {
+    "notAllowed": "Not available to the «{role}» role. Ask an org admin to change your role if you need it.",
+    "title": {
+      "owner": "Your workspace — owner",
+      "admin": "Your workspace — org admin",
+      "compliance_lead": "Your workspace — compliance lead",
+      "reviewer": "Your workspace — compliance reviewer",
+      "legal": "Your workspace — legal",
+      "creator": "Your workspace — marketer",
+      "external_uploader": "Your workspace — external partner",
+      "external_reviewer": "Your workspace — external reviewer",
+      "viewer": "Your workspace — viewer / auditor"
+    },
+    "shortcut": {
+      "new": "New promotion",
+      "promotions": "Promotions",
+      "queue": "Review queue",
+      "legal": "Legal escalations",
+      "analytics": "Analytics",
+      "rules": "Rules and packs",
+      "features": "Features",
+      "roles": "Roles & permissions"
     }
   }
 }
