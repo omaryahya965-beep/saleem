@@ -46,8 +46,18 @@ export const DEMO_EMAILS: Record<DemoPersona, string> = {
 export async function signInAsPersona(persona: DemoPersona) {
   const client = await sb();
   const { data, error } = await client.functions.invoke("demo-login", { body: { persona } });
-  if (error || !data?.token_hash)
-    throw new Error((data as { error?: string } | null)?.error ?? error?.message ?? "demo_failed");
+  if (error || !data?.token_hash) {
+    let errorCode: string | undefined = (data as { error?: string } | null)?.error;
+    if (!errorCode && error && typeof error === "object" && "context" in error) {
+      try {
+        const body = await (error as { context: Response }).context.json();
+        errorCode = body?.error;
+      } catch {
+        // ignore context parse error
+      }
+    }
+    throw new Error(errorCode ?? error?.message ?? "demo_failed");
+  }
   const { error: otpErr } = await client.auth.verifyOtp({
     type: "magiclink",
     token_hash: data.token_hash as string,
