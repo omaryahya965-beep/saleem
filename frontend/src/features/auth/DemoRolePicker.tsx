@@ -12,7 +12,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { Button, Dialog, Spinner } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
-import { DEMO_PERSONAS, signInAsPersona, type DemoPersona } from "@/lib/api/auth";
+import { DEMO_EMAILS, DEMO_PERSONAS, signInAsPersona, type DemoPersona } from "@/lib/api/auth";
 
 const ICONS: Record<DemoPersona, ReactNode> = {
   creator: <Megaphone />,
@@ -80,22 +80,31 @@ export function DemoRolePicker({ onSignedIn }: { onSignedIn: () => void }) {
             {error}
           </p>
         )}
-        <ul className="grid gap-2 sm:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-3">
           {DEMO_PERSONAS.map((p) => (
             <li key={p}>
-              <div className="flex h-full flex-col gap-2 rounded-md border border-border p-3">
-                <span className="flex items-center gap-2 font-medium text-fg [&_svg]:size-4 [&_svg]:text-green">
-                  {ICONS[p]}
-                  {t(`org.roles.${p}` as TKey)}
-                </span>
-                <span className="flex-1 text-xs text-fg-muted">
-                  {t(`rolesPage.desc.${p}` as TKey)}
-                </span>
+              <div className="flex h-full flex-col justify-between gap-3 rounded-lg border border-border bg-card p-3.5 shadow-sm transition-colors hover:border-border-strong">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2 font-medium text-fg [&_svg]:size-4.5 [&_svg]:text-green">
+                    {ICONS[p]}
+                    <span className="font-semibold">{t(`org.roles.${p}` as TKey)}</span>
+                  </div>
+                  <span
+                    className="self-start rounded bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-fg-muted"
+                    dir="ltr"
+                  >
+                    {DEMO_EMAILS[p]}
+                  </span>
+                  <p className="mt-1 text-xs leading-relaxed text-fg-muted">
+                    {t(`rolesPage.desc.${p}` as TKey)}
+                  </p>
+                </div>
                 <Button
                   size="sm"
                   onClick={() => void enter(p)}
                   disabled={busy !== null}
                   data-testid={`demo-enter-${p}`}
+                  className="w-full mt-1"
                 >
                   {busy === p ? <Spinner /> : t("auth.demo.enter")}
                 </Button>

@@ -8,19 +8,33 @@ const sb = () => import("@/lib/supabase").then((m) => m.supabase);
  * the SERVER secret DEMO_MODE=true in a demo environment) returns a one-time token that is exchanged for a session.
  * VITE_DEMO_LOGIN only shows the UI; it is not a secret and grants nothing by itself.
  */
-export const DEMO_LOGINS = import.meta.env["VITE_DEMO_LOGIN"] === "true";
+export const DEMO_LOGINS =
+  import.meta.env["VITE_DEMO_LOGIN"] === "true" ||
+  import.meta.env["VITE_DEMO_LOGIN"] !== "false";
 export const DEMO_PERSONAS = [
-  "creator",
-  "reviewer",
-  "compliance_lead",
-  "legal",
-  "admin",
   "owner",
+  "admin",
+  "compliance_lead",
+  "reviewer",
+  "legal",
+  "creator",
   "external_uploader",
   "external_reviewer",
   "viewer",
 ] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number];
+
+export const DEMO_EMAILS: Record<DemoPersona, string> = {
+  owner: "owner@demo.saleem.app",
+  admin: "orgadmin@demo.saleem.app",
+  compliance_lead: "lead@demo.saleem.app",
+  reviewer: "reviewer@demo.saleem.app",
+  legal: "legal@demo.saleem.app",
+  creator: "marketer@demo.saleem.app",
+  external_uploader: "partner@demo.saleem.app",
+  external_reviewer: "extreviewer@demo.saleem.app",
+  viewer: "viewer@demo.saleem.app",
+};
 export async function signInAsPersona(persona: DemoPersona) {
   const client = await sb();
   const { data, error } = await client.functions.invoke("demo-login", { body: { persona } });

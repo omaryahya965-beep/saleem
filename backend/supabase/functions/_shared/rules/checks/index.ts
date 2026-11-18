@@ -304,15 +304,23 @@ const pastPerformanceWarning: DeterministicCheck = (rule, { texts }) =>
         fixEn: "Add “past performance does not guarantee future results” and the source of the figures.",
       }, find(texts, L.PAST_PERFORMANCE));
 
-const cmaNonRetailToRetail: DeterministicCheck = (rule, { ctx }) =>
-  ctx.audience.includes("general")
+const cmaNonRetailToRetail: DeterministicCheck = (rule, { ctx }) => {
+  // CMA CMI Article 35: advertisement of non-retail funds or derivatives to retail clients is restricted
+  // UNLESS the authorized person has verified product suitability.
+  const suitabilityDetermined = Boolean(
+    (ctx.product as { key_facts?: { suitability_determined?: boolean } } | undefined)?.key_facts?.suitability_determined
+  );
+  if (suitabilityDetermined) return PASSED;
+
+  return ctx.audience.includes("general")
     ? fail(finding(rule, "potential_risk", {
-        ar: "منتج غير موجّه للأفراد يُعلن لجمهور عام.",
-        en: "A non-retail product is advertised to a general audience.",
-        fixAr: "قصر الإعلان على العملاء المؤهلين وعدّل الجمهور المستهدف.",
-        fixEn: "Restrict the ad to eligible clients and change the audience.",
+        ar: "منتج غير موجّه للأفراد (صناديق خاصة أو مشتقات) يُعلن لجمهور عام دون التحقق من ملاءمة المنتج للعميل (المادة 35 من لائحة مؤسسات السوق المالية).",
+        en: "A non-retail product (private fund or derivative) is advertised to a general audience without establishing prior suitability (CMA CMI Art 35).",
+        fixAr: "قصر الإعلان على العملاء المؤهلين، أو إثبات التحقق من ملاءمة العميل قبل استهدافه.",
+        fixEn: "Restrict the ad to eligible clients or ensure client suitability is verified before targeting.",
       }))
     : PASSED;
+};
 
 const injectionAttempt: DeterministicCheck = (rule, { texts }) => {
   const at = find(texts, L.INJECTION);

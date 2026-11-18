@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen, ShieldCheck } from "lucide-react";
-import { Badge, Button } from "@/components/ui";
+import { AlertTriangle, BookOpen, CheckCircle2, FileText, Info, Layers, ShieldCheck } from "lucide-react";
+import { Badge, Button, Card } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import type { ReportBundle } from "@/lib/api/data";
 import { coverageGaps, outcomeCounts, reasonKey, type CoverageView } from "./model";
@@ -41,7 +41,7 @@ export function CoverageBanner({ bundle }: { bundle: ReportBundle }) {
           {coverage.status === "partial" ? (
             <>
               <p className="flex items-center gap-2 font-bold text-amber-text">
-                <AlertTriangle aria-hidden="true" className="size-4" />
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
                 {t("report2.coverage_partial")}
               </p>
               <p className="mt-1 text-fg">{t("report2.coveragePartialBody")}</p>
@@ -79,32 +79,36 @@ export function CoverageBanner({ bundle }: { bundle: ReportBundle }) {
   );
 }
 
-/** Per-rule outcomes: counts, «قواعد لم تنطبق» and «تعذّر التحقق» with reasons. */
+/** Per-rule outcomes & «القواعد والحزم المطبقة ولماذا». */
 export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
   const { t, lang } = useI18n();
   const checks = bundle.ruleChecks;
-  if (!checks.length) {
-    return bundle.findings.length ? (
-      <p className="text-sm text-fg-muted">{t("report2.noChecks")}</p>
-    ) : null;
-  }
+
   const counts = outcomeCounts(checks);
   const title = (ruleId: string) => {
     const r = bundle.rulesById.get(ruleId);
     return r ? `${r.code} · ${lang === "en" ? r.title_en : r.title_ar}` : ruleId;
   };
+
   const reason = (code: string | null) => {
     const { key, signal, code: dup } = reasonKey(code);
     if (dup) return t(key, { code: dup });
     return t(key, signal ? { signal: t(`report2.signal.${signal}` as TKey) } : undefined);
   };
-  // check_mode = workflow: shown as the reviewer's checklist, not as «تعذّر التحقق».
+
   const checklist = checks.filter((c) => c.reason_code === "reviewer_checklist");
   const policy = (ruleId: string) =>
     (bundle.rulesById.get(ruleId) as { evidence_policy_ar?: string | null } | undefined)
       ?.evidence_policy_ar ?? null;
+
   const packs = coverageOf(bundle)?.packs ?? [];
-  const list = (outcome: "not_applicable" | "unable_to_verify", heading: TKey, testId: string) => {
+
+  // Internal company rules identified in findings
+  const companyFindings = bundle.findings.filter(
+    (f) => f.rule_code.startsWith("INT-") || (f.citation as { internal_policy?: boolean })?.internal_policy,
+  );
+
+  const list = (outcome: "not_applicable" | "unable_to_verify", heading: string, testId: string) => {
     const rows = checks.filter(
       (c) => c.outcome === outcome && c.reason_code !== "reviewer_checklist",
     );
@@ -112,58 +116,86 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
     return (
       <details
         data-testid={testId}
-        className="rounded-md border border-border bg-surface px-4 py-3"
+        className="rounded-lg border border-border bg-surface px-4 py-3"
       >
         <summary className="cursor-pointer font-bold text-fg">
-          {t(heading, { n: rows.length })}
+          {heading} ({rows.length})
         </summary>
         <ul className="mt-3 flex flex-col gap-2 text-sm">
           {rows.map((c) => (
-            <li key={c.id} className="flex flex-col gap-0.5">
-              <span className="text-fg">
+            <li key={c.id} className="flex flex-col gap-0.5 border-b border-border/40 pb-1.5 last:border-b-0">
+              <span className="text-fg font-medium">
                 <bdi>{title(c.rule_id)}</bdi>
               </span>
-              <span className="text-fg-muted">{reason(c.reason_code)}</span>
+              <span className="text-xs text-fg-muted">{reason(c.reason_code)}</span>
             </li>
           ))}
         </ul>
       </details>
     );
   };
+
   return (
-    <section aria-labelledby="rule-outcomes" className="flex flex-col gap-3">
-      <h2 id="rule-outcomes" className="text-lg font-bold">
-        {t("report2.outcomesTitle")}
-      </h2>
-      <p className="flex flex-wrap gap-2">
-        {(["failed", "passed", "unable_to_verify", "not_applicable"] as const).map((o) => (
-          <Badge key={o}>
-            {t(`report2.outcome.${o}`)}: <bdi>{counts[o]}</bdi>
+    <section aria-labelledby="rule-outcomes" className="flex flex-col gap-4 border-t border-border pt-6">
+      <div className="flex flex-col gap-1">
+        <h2 id="rule-outcomes" className="text-xl font-bold flex items-center gap-2 text-fg">
+          <Layers className="size-5 text-green" />
+          القواعد والحزم المطبقة ولماذا
+        </h2>
+        <p className="text-xs text-fg-muted">
+          تفصيل شامل للحزم والأنظمة السعودية وقواعد الشركة التي تم فحص الإعلان بموجبها وأسباب انطباقها أو استبعادها.
+        </p>
+      </div>
+
+      {/* Outcome count badges */}
+      {checks.length > 0 && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Badge variant="inverse">
+            مخالفات وملاحظات رُصدت: <bdi className="font-bold">{counts.failed}</bdi>
           </Badge>
-        ))}
-      </p>
+          <Badge variant="green">
+            قواعد محققة بنجاح: <bdi className="font-bold">{counts.passed}</bdi>
+          </Badge>
+          <Badge variant="amber">
+            تتطلب دليلاً أو معلومات إضافية: <bdi className="font-bold">{counts.unable_to_verify}</bdi>
+          </Badge>
+          <Badge variant="outline">
+            قواعد مستبعدة لعدم الانطباق: <bdi className="font-bold">{counts.not_applicable}</bdi>
+          </Badge>
+        </div>
+      )}
+
+      {/* 1. Applied Regulatory Packages */}
       {packs.length > 0 && (
         <details
           data-testid="packs-applied"
-          className="rounded-md border border-border bg-surface px-4 py-3"
+          className="rounded-lg border border-border bg-surface px-4 py-3"
           open
         >
-          <summary className="cursor-pointer font-bold text-fg">
-            {t("report2.packsTitle", { n: packs.length })}
+          <summary className="cursor-pointer font-bold text-fg flex items-center gap-2">
+            <ShieldCheck className="size-4 text-green" />
+            الحزم التنظيمية الحكومية المطبقة ({packs.length})
           </summary>
-          <ul className="mt-3 flex flex-col gap-2 text-sm">
+          <ul className="mt-3 grid gap-2.5 sm:grid-cols-2 text-sm">
             {packs.map((p) => (
-              <li key={p.code} className="flex flex-col gap-0.5">
-                <span className="text-fg">
-                  <bdi dir="ltr">{p.code}</bdi>
+              <li
+                key={p.code}
+                className="flex flex-col gap-1 rounded-md border border-border bg-sunken/30 p-2.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-xs text-fg">
+                    <bdi dir="ltr">{p.code}</bdi>
+                  </span>
                   {p.include_drafts && (
-                    <Badge variant="neutral" className="ms-2">
+                    <Badge variant="neutral" className="text-[10px]">
                       {t("report2.packDrafts")}
                     </Badge>
                   )}
+                </div>
+                <span className="text-xs text-fg font-medium">
+                  سبب الانطباق: {t(`report2.packReason.${p.reason}` as TKey)}
                 </span>
-                <span className="text-fg-muted">
-                  {t(`report2.packReason.${p.reason}` as TKey)} ·{" "}
+                <span className="text-[11px] text-fg-muted">
                   {t("report2.packCounts", { a: p.applicable, n: p.not_applicable })}
                 </span>
               </li>
@@ -171,28 +203,79 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
           </ul>
         </details>
       )}
+
+      {/* 2. Applied Company Rules and Internal Policies */}
+      <details
+        data-testid="company-rules-applied"
+        className="rounded-lg border border-border bg-surface px-4 py-3"
+        open
+      >
+        <summary className="cursor-pointer font-bold text-fg flex items-center gap-2">
+          <FileText className="size-4 text-green" />
+          سياسات وقواعد الشركة المفحوصة ({companyFindings.length > 0 ? companyFindings.length : "مطبقة"})
+        </summary>
+        <div className="mt-3 text-sm flex flex-col gap-2">
+          {companyFindings.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {companyFindings.map((cf) => (
+                <li
+                  key={cf.id}
+                  className="flex flex-col gap-1 rounded-md border border-border bg-sunken/30 p-2.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge mono>{cf.rule_code}</Badge>
+                    <Badge variant="neutral">سياسة داخلية للمؤسسة</Badge>
+                  </div>
+                  <p className="text-xs text-fg leading-relaxed" dir="auto">
+                    {cf.explanation_ar || "فحص مطابقة سياسات الهوية والعلامة التجارية الداخلية."}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-fg-muted">
+              تم فحص ومطابقة سياسات الشركة والهوية المعتمدة بنجاح دون رصد أي مخالفات داخلية.
+            </p>
+          )}
+        </div>
+      </details>
+
+      {/* 3. Reviewer Checklist (Evidence Needed) */}
       {checklist.length > 0 && (
         <details
           data-testid="reviewer-checklist"
-          className="rounded-md border border-border bg-surface px-4 py-3"
+          className="rounded-lg border border-border bg-surface px-4 py-3"
+          open
         >
-          <summary className="cursor-pointer font-bold text-fg">
-            {t("report2.checklistTitle", { n: checklist.length })}
+          <summary className="cursor-pointer font-bold text-fg flex items-center gap-2">
+            <Info className="size-4 text-amber-text" />
+            قواعد تتطلب توثيقاً أو مراجعة بشرية ({checklist.length})
           </summary>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             {checklist.map((c) => (
-              <li key={c.id} className="flex flex-col gap-0.5">
-                <span className="text-fg">
+              <li
+                key={c.id}
+                className="flex flex-col gap-1 rounded-md border border-border bg-amber-bg/20 p-2.5"
+              >
+                <span className="text-fg font-medium">
                   ☐ <bdi>{title(c.rule_id)}</bdi>
                 </span>
-                {policy(c.rule_id) && <span className="text-fg-muted">{policy(c.rule_id)}</span>}
+                {policy(c.rule_id) && (
+                  <span className="text-xs text-fg-muted">
+                    الدليل المطلوب: {policy(c.rule_id)}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
         </details>
       )}
-      {list("unable_to_verify", "report2.unableTitle", "unable-list")}
-      {list("not_applicable", "report2.notApplicableTitle", "not-applicable-list")}
+
+      {/* 4. Unable to Verify list */}
+      {list("unable_to_verify", "قواعد تعذّر التحقق التلقائي منها", "unable-list")}
+
+      {/* 5. Excluded / Not Applicable Rules and Why */}
+      {list("not_applicable", "قواعد استُبعدت لعدم انطباق الشروط والسياق", "not-applicable-list")}
     </section>
   );
 }

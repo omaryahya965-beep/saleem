@@ -1,4 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   ExternalLink,
   FileText,
   Image as ImageIcon,
@@ -131,23 +133,39 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
         </span>
       </button>
       <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5 sm:pb-5">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fg-muted">
-          <Badge mono>{issue.ruleCode}</Badge>
-          <span className="text-fg">{issue.ruleTitle}</span>
-          {issue.sourceUrl ? (
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-fg-muted">
+          <Badge mono className="font-semibold">{issue.ruleCode}</Badge>
+          <span className="font-medium text-fg">{issue.ruleTitle}</span>
+          {issue.ruleCode.startsWith("INT-") ? (
+            <Link
+              to="/company-rules"
+              className="inline-flex items-center gap-1 text-xs text-green underline-offset-4 hover:underline"
+            >
+              <span>عرض في قواعد الشركة</span>
+              <ArrowLeft aria-hidden="true" className="size-3 rtl:rotate-0 ltr:rotate-180" />
+            </Link>
+          ) : (
+            <Link
+              to="/rules"
+              search={{ q: issue.ruleCode }}
+              className="inline-flex items-center gap-1 text-xs text-green underline-offset-4 hover:underline"
+            >
+              <span>عرض تفاصيل ومصدر القاعدة</span>
+              <ArrowLeft aria-hidden="true" className="size-3 rtl:rotate-0 ltr:rotate-180" />
+            </Link>
+          )}
+          {issue.sourceUrl && (
             <a
               href={issue.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-6 items-center gap-1 text-green underline-offset-4 hover:underline"
+              className="inline-flex min-h-6 items-center gap-1 text-xs text-fg-muted underline-offset-4 hover:underline"
             >
-              {issue.sourceName}
-              <ExternalLink aria-hidden="true" className="size-3.5" />
+              <span>({issue.sourceName})</span>
+              <ExternalLink aria-hidden="true" className="size-3" />
             </a>
-          ) : (
-            <span>{issue.sourceName}</span>
           )}
-        </p>
+        </div>
         {issue.v2 && (issue.v2.articleRef || issue.v2.verification) && (
           <p
             className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted"
