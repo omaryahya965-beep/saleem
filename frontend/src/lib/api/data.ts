@@ -338,7 +338,17 @@ ${input.textContent}`,
     const frames =
       input.kind === "video"
         ? await extractFrames(input.file, (done, total) => onStage?.("extracting", { done, total }))
-        : [await imageToFrame(input.file)].filter((f): f is NonNullable<typeof f> => f !== null);
+        : input.kind === "image"
+          ? [await imageToFrame(input.file)].filter((f): f is NonNullable<typeof f> => f !== null)
+          : [];
+    // PDF: every page (≤ 30) as a JPEG plus its text layer; the analysis reads pages without one.
+    const pdf =
+      input.kind === "pdf"
+        ? await (
+            await import("@/lib/pdf")
+          ).extractPdf(input.file, (done, total) => onStage?.("extracting", { done, total }))
+        : null;
+    if (pdf && !pdf.pages.length) throw new ApiError("empty pdf", "upload");
     const extraction = input.kind === "video" ? await extractAudioWithProbe(input.file) : null;
     const audio = extraction?.wav ?? null;
     audioProbe = extraction?.probe ?? null;
@@ -362,11 +372,28 @@ ${input.textContent}`,
       audioPath = `${folder}/audio.wav`;
       assets.push({ path: audioPath, blob: audio, type: "audio/wav" });
     }
+    if (pdf) {
+      for (const p of pdf.pages)
+        assets.push({
+          path: `${folder}/pages/${String(p.page).padStart(4, "0")}.jpg`,
+          blob: p.blob,
+          type: "image/jpeg",
+        });
+      assets.push({
+        path: `${folder}/pages/text.json`,
+        blob: new Blob([JSON.stringify(pdf.pages.map((p) => ({ page: p.page, text: p.text })))], {
+          type: "application/json",
+        }),
+        type: "application/json",
+      });
+    }
     if (input.poster) {
       thumbPath = `${folder}/thumb.jpg`;
       assets.push({ path: thumbPath, blob: input.poster, type: "image/jpeg" });
     } else if (input.kind === "image") {
       thumbPath = assets[0]?.path ?? filePath;
+    } else if (pdf) {
+      thumbPath = `${folder}/pages/0001.jpg`;
     }
     await uploadAll(assets);
   }

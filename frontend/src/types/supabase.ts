@@ -245,6 +245,63 @@ export type Database = {
           },
         ];
       };
+      comments: {
+        Row: {
+          anchor: Json | null;
+          author_id: string;
+          body: string;
+          carried_from_comment_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          edited_at: string | null;
+          id: string;
+          kind: string;
+          mentions: string[];
+          parent_id: string | null;
+          promotion_id: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          submission_id: string;
+          visibility: string;
+        };
+        Insert: {
+          anchor?: Json | null;
+          author_id?: string;
+          body: string;
+          carried_from_comment_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          edited_at?: string | null;
+          id?: string;
+          kind?: string;
+          mentions?: string[];
+          parent_id?: string | null;
+          promotion_id: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          submission_id: string;
+          visibility?: string;
+        };
+        Update: {
+          anchor?: Json | null;
+          author_id?: string;
+          body?: string;
+          carried_from_comment_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          edited_at?: string | null;
+          id?: string;
+          kind?: string;
+          mentions?: string[];
+          parent_id?: string | null;
+          promotion_id?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          submission_id?: string;
+          visibility?: string;
+        };
+        Relationships: [];
+      };
       compliance_logs: {
         Row: {
           content_hash: string;
@@ -541,24 +598,30 @@ export type Database = {
           id: string;
           image_path: string | null;
           ocr_text: string | null;
+          page_no: number | null;
           submission_id: string;
           t_seconds: number;
+          text_source: string | null;
         };
         Insert: {
           blurred?: boolean;
           id?: string;
           image_path?: string | null;
           ocr_text?: string | null;
+          page_no?: number | null;
           submission_id: string;
           t_seconds: number;
+          text_source?: string | null;
         };
         Update: {
           blurred?: boolean;
           id?: string;
           image_path?: string | null;
           ocr_text?: string | null;
+          page_no?: number | null;
           submission_id?: string;
           t_seconds?: number;
+          text_source?: string | null;
         };
         Relationships: [
           {
@@ -1716,6 +1779,21 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      delete_comment: { Args: { _id: string }; Returns: undefined };
+      resolve_comment: { Args: { _id: string; _resolved: boolean }; Returns: undefined };
+      edit_comment: { Args: { _id: string; _body: string }; Returns: undefined };
+      add_comment: {
+        Args: {
+          _pid: string;
+          _sid: string;
+          _body: string;
+          _anchor?: Json | null;
+          _parent?: string | null;
+          _kind?: string;
+          _mentions?: string[];
+        };
+        Returns: string;
+      };
       respond_finding: {
         Args: { _finding: string; _action: string; _comment?: string | null };
         Returns: string;
@@ -1872,7 +1950,7 @@ export type Database = {
       product_category: "food" | "health" | "beauty" | "finance" | "real_estate" | "other";
       rule_category: "mawthooq" | "content" | "ai" | "commerce";
       severity: "violation" | "warning";
-      submission_kind: "video" | "image" | "text";
+      submission_kind: "video" | "image" | "text" | "pdf";
       submission_status: "queued" | "extracting" | "transcribing" | "analyzing" | "done" | "failed";
     };
     CompositeTypes: {
@@ -2027,7 +2105,7 @@ export const Constants = {
       product_category: ["food", "health", "beauty", "finance", "real_estate", "other"],
       rule_category: ["mawthooq", "content", "ai", "commerce"],
       severity: ["violation", "warning"],
-      submission_kind: ["video", "image", "text"],
+      submission_kind: ["video", "image", "text", "pdf"],
       submission_status: ["queued", "extracting", "transcribing", "analyzing", "done", "failed"],
     },
   },

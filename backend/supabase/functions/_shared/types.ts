@@ -40,7 +40,7 @@ export interface SubmissionData {
   id: string;
   user_id?: string | null;
   is_demo: boolean;
-  kind: "video" | "image" | "text";
+  kind: "video" | "image" | "text" | "pdf";
   file_path?: string | null;
   audio_path?: string | null;
   text_content?: string | null;

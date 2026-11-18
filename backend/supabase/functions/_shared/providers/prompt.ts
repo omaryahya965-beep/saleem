@@ -113,7 +113,7 @@ Transcript (Saudi dialect, seconds):
 ${transcript}
 </ad_content>
 
-${frameTimes.length ? `Frames attached in order, at seconds: ${frameTimes.map((t) => t.toFixed(1)).join(", ")}${batch.total > 1 ? ` (batch ${batch.index + 1} of ${batch.total}; report only what these frames and the transcript show)` : ""}` : "No frames attached."}
+${sub.kind === "pdf" ? `PDF pages attached in order: ${frameTimes.join(", ")}. Use evidence.page and ocr.page for the page number; read pages that have no text layer.` : frameTimes.length ? `Frames attached in order, at seconds: ${frameTimes.map((t) => t.toFixed(1)).join(", ")}${batch.total > 1 ? ` (batch ${batch.index + 1} of ${batch.total}; report only what these frames and the transcript show)` : ""}` : "No frames attached."}
 
 Rules to evaluate:
 ${rulesList || "(none)"}

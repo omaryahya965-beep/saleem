@@ -265,6 +265,20 @@ describe("acceptance cases (mocked model)", () => {
     expect(r.coverage.status).toBe("partial");
     expect(r.overallStatus).not.toBe("ready");
   });
+  it("case 10 — scanned PDF with an unreadable page: no false missing findings, partial coverage, never «ready»", () => {
+    const s10 = { ...sub("", "text"), kind: "pdf" as const, text_content: null };
+    const pages = [{ page: 1, text: "تمويل شخصي المثال من بنك المثال" }];
+    const r = evaluate({
+      ctx: { ...ctxFor(), kind: "pdf" }, rules: RULES, texts: extractTexts(s10, [], [], pages),
+      legacy: { submission: s10, segments: [], onScreen: [], audioMode: null }, model: model(), modelStatus: "ok",
+      media: { transcriptionFailed: false, framesTotal: 2, framesAnalyzed: 2, batchesFailed: 0, pdf: { total: 2, textLayer: 1, ocrOnly: 0, unreadable: 1 } },
+    });
+    expect(r.findings.filter((f) => f.finding_type === "missing_required")).toEqual([]);
+    expect(check(r, "SAMA-ADV-03-9")).toMatchObject({ outcome: "unable_to_verify", reason: "coverage:pdf_pages" });
+    expect(r.coverage.status).toBe("partial");
+    expect(r.coverage.items).toContainEqual({ modality: "pdf_pages", state: "unreadable:1/2" });
+    expect(r.overallStatus).not.toBe("ready");
+  });
   it("every considered rule has exactly one rule check", () => {
     const r = run(PASS_AD);
     const seen = r.ruleChecks.map((c) => c.rule_code);

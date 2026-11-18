@@ -42,6 +42,8 @@ import { pickVersion, resultOf } from "./model";
 import { ReviewActions } from "@/features/review/ReviewActions";
 import { ResponsesPanel } from "@/features/review/ResponsesPanel";
 import { HistoryPanel } from "@/features/review/HistoryPanel";
+import { CommentsPanel } from "@/features/collab/CommentsPanel";
+import { CompareTab } from "@/features/collab/CompareTab";
 
 export function PromotionPage({ id, v }: { id: string; v?: number }) {
   const { t } = useI18n();
@@ -184,6 +186,8 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
         <TabsList label={t("promo.versions")}>
           <TabsTrigger value="findings">{t("promo.tabFindings")}</TabsTrigger>
           <TabsTrigger value="info">{t("promo.tabInfo")}</TabsTrigger>
+          <TabsTrigger value="comments">{t("promo.tabComments")}</TabsTrigger>
+          <TabsTrigger value="compare">{t("promo.tabCompare")}</TabsTrigger>
           <TabsTrigger value="history">{t("review.history.title")}</TabsTrigger>
         </TabsList>
       </Page>
@@ -199,6 +203,24 @@ function PromotionView({ bundle, v }: { bundle: PromotionBundle; v?: number }) {
             isOwner={isOwner}
           />
         )}
+      </TabsContent>
+      <TabsContent value="comments">
+        <Page narrow className="pt-6 sm:pt-6">
+          {version && (
+            <CommentsPanel
+              promotion={p}
+              version={version}
+              versions={versions}
+              orgRole={role ?? null}
+              userId={user?.id ?? null}
+            />
+          )}
+        </Page>
+      </TabsContent>
+      <TabsContent value="compare">
+        <Page className="pt-6 sm:pt-6">
+          <CompareTab versions={versions} />
+        </Page>
       </TabsContent>
       <TabsContent value="history">
         <Page narrow className="pt-6 sm:pt-6">

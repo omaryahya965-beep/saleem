@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: 4 (Collaboration + PDF)
+- Phase: 5 (Libraries + dashboard)
 - Task: discovery + plan
-- Last commit: Phase 3 report (tag `v2-phase-3`)
-- Next step: read `phases/phase-4-collaboration.md`, `03_DATA_MODEL.md` M7, `05_UX_SPEC.md` §2.2/§2.5; write `progress/phase-4-plan.md`.
+- Last commit: Phase 4 report (tag `v2-phase-4`)
+- Next step: read `phases/phase-5-libraries.md`, `03_DATA_MODEL.md` M8, `04_AI_PIPELINE.md` §6.4; write `progress/phase-5-plan.md`.
 
 ## Status
 
@@ -20,7 +20,7 @@
 | 1 Promotions | done (with not-run checks) | v2/full-run · v2-phase-1 | progress/phase-1-report.md | 2026-11-18 |
 | 2 Rule engine | done (with not-run checks) | v2/full-run · v2-phase-2 | progress/phase-2-report.md | 2026-11-18 |
 | 3 Review | done (with not-run checks) | v2/full-run · v2-phase-3 | progress/phase-3-report.md | 2026-11-18 |
-| 4 Collaboration + PDF | not started | – | – | – |
+| 4 Collaboration + PDF | done (with not-run checks) | v2/full-run · v2-phase-4 | progress/phase-4-report.md | 2026-11-18 |
 | 5 Libraries + dashboard | not started | – | – | – |
 | 6 Enterprise (P2) | not started | – | – | – |
 | 7 Expansion (P3) | not started | – | – | – |
@@ -54,6 +54,7 @@ checks) · blocked.
 - D95: the automated result labels changed from «جاهز للنشر» to «لا ملاحظات آلية» (and similar) on every screen.
 - All SAMA/CMA rules are drafts; financial orgs see them only after opting in to the preview.
 - D105: human review is for organisation promotions; personal creators keep the automated check only.
+- D118: `npm audit --omit=dev` reports pre-existing high advisories in build tooling (TanStack router plugin, Vite); upgrade them before relying on the CI audit step.
 - D109: media of submitted/approved org versions is kept (no 24 h deletion); personal media still goes after 24 h.
 
 ## Not run (environment) — run these before deploying
@@ -63,9 +64,10 @@ checks) · blocked.
 - A real analysis with the model (prompt v2 / schema v2 were only exercised with recorded output): `npm --workspace backend run smoke`, then one text, one image and one video check
 - Isolation + DB tests: set `SUPABASE_LOCAL_URL`, `SUPABASE_LOCAL_ANON_KEY`, `SUPABASE_LOCAL_SERVICE_ROLE_KEY` (from `npx supabase status --workdir backend`), then `npm --workspace backend test`
 - `npm --workspace frontend run e2e` against a local stack (the public spec needs demo data)
+- PDF upload in a real browser (text PDF and scanned PDF) and a Playwright journey for comments/compare
 - Playwright journey for the review path (submit → decide → certificate) against a local stack
 - On a copy of production after the Phase 1 migration: `select count(*) from submissions where promotion_id is null` → 0
 
 ## Decisions this programme (also in docs/DECISIONS.md)
 
-- D67–D77 (Phase 0), D78–D87 (Phase 1), D88–D103 (Phase 2), D104–D112 (Phase 3).
+- D67–D77 (Phase 0), D78–D87 (Phase 1), D88–D103 (Phase 2), D104–D112 (Phase 3), D113–D118 (Phase 4).

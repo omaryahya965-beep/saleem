@@ -78,6 +78,7 @@ export function extractTexts(
   sub: Pick<SubmissionData, "caption" | "kind" | "text_content">,
   segments: TranscriptSegment[],
   onScreen: OnScreenText[],
+  pdfPages: { page: number; text: string }[] = [],
 ): ExtractedText[] {
   const out: ExtractedText[] = [];
   const add = (modality: ExtractedText["modality"], text: string, t_start: number | null, t_end: number | null) => {
@@ -88,5 +89,9 @@ export function extractTexts(
   if (sub.kind === "text") add("caption", sub.text_content ?? "", null, null);
   for (const s of segments) add("speech", s.text, s.start, s.end);
   for (const o of onScreen) add("on_screen_text", o.text, o.t, o.t + 1);
+  for (const p of pdfPages) {
+    const clean = p.text.trim();
+    if (clean) out.push({ modality: "pdf_text", text: clean, norm: normalizeArabic(clean), t_start: null, t_end: null, page: p.page });
+  }
   return out;
 }

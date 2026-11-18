@@ -90,6 +90,28 @@ async function listFrames(db: Db, folder: string): Promise<{ t: number; path: st
     .slice(0, MAX_FRAMES);
 }
 
+/** PDF pages rendered in the browser: {folder}/pages/0001.jpg … (t = page number, at most 30 pages). */
+async function listPages(db: Db, folder: string): Promise<{ t: number; path: string }[]> {
+  const { data } = await db.storage.from("media").list(`${folder}/pages`, { limit: 100, sortBy: { column: "name", order: "asc" } });
+  return (data ?? [])
+    .filter((f) => /^\d{4}\.jpg$/.test(f.name))
+    .map((f) => ({ t: Number(f.name.slice(0, 4)), path: `${folder}/pages/${f.name}` }))
+    .sort((a, b) => a.t - b.t)
+    .slice(0, 30);
+}
+
+/** Text layer extracted in the browser ({folder}/pages/text.json: [{page, text}]). Empty when absent. */
+async function loadPdfText(db: Db, folder: string): Promise<{ page: number; text: string }[]> {
+  const { data } = await db.storage.from("media").download(`${folder}/pages/text.json`);
+  if (!data) return [];
+  try {
+    const rows = JSON.parse(await data.text()) as { page: number; text: string }[];
+    return Array.isArray(rows) ? rows.filter((r) => Number.isInteger(r.page) && typeof r.text === "string").slice(0, 30) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** In-app notification + email (respecting the profile's notify_email). Never throws. */
 async function notifyUser(db: Db, sub: SubmissionData & { user_id: string; title?: string | null }, ok: boolean, status: string | null) {
   try {
@@ -237,7 +259,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
     if (runRow?.rulebook_version_id) rulesQuery = rulesQuery.eq("rulebook_version_id", runRow.rulebook_version_id);
     const [{ data: rulesData, error: rulesErr }, frames, { count: frameRows }] = await Promise.all([
       rulesQuery,
-      sub.kind === "text" ? Promise.resolve([]) : listFrames(db, folder),
+      sub.kind === "text" ? Promise.resolve([]) : sub.kind === "pdf" ? listPages(db, folder) : listFrames(db, folder),
       db.from("frames").select("id", { count: "exact", head: true }).eq("submission_id", sub.id),
     ]);
     if (rulesErr) throw rulesErr;
@@ -246,7 +268,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
     const ruleRows = ((rulesData ?? []) as Record<string, unknown>[]).map((r) => toRuleRow(r, sources));
     const [, signedRes] = await Promise.all([
       frames.length && !frameRows
-        ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path })))
+        ? db.from("frames").insert(frames.map((f) => ({ submission_id: sub.id, t_seconds: f.t, image_path: f.path, ...(sub.kind === "pdf" ? { page_no: f.t } : {}) })))
         : Promise.resolve(null),
       frames.length && !outputs.llm_done
         ? db.storage.from("media").createSignedUrls(frames.map((f) => f.path), 900)
@@ -375,13 +397,30 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
   await assertNotCancelled(db, sub.id);
   const llmFindings = modelOutput?.findings ?? [];
 
+  // PDF: text layer per page, else the model's OCR of that page, else unreadable (coverage, case 10).
+  const pdfLayer = sub.kind === "pdf" ? await loadPdfText(db, folder) : [];
+  const pdfPageTexts: { page: number; text: string }[] = [];
+  const pdfStats = { total: frames.length, textLayer: 0, ocrOnly: 0, unreadable: 0 };
+  if (sub.kind === "pdf") {
+    for (const f of frames) {
+      const layer = pdfLayer.find((p) => p.page === f.t)?.text.trim() ?? "";
+      const ocr = (modelOutput?.ocr ?? []).filter((o) => o.page === f.t || o.t === f.t).map((o) => o.text).join("\n").trim();
+      if (layer) pdfStats.textLayer++;
+      else if (ocr) pdfStats.ocrOnly++;
+      else pdfStats.unreadable++;
+      if (layer || ocr) pdfPageTexts.push({ page: f.t, text: layer || ocr });
+      await db.from("frames").update({ ocr_text: layer || ocr || null, text_source: layer ? "text_layer" : ocr ? "model_ocr" : null })
+        .eq("submission_id", sub.id).eq("page_no", f.t);
+    }
+  }
+
   // ---- 3. Rule engine v2: checks, product facts, merge, rule checks, coverage ---------------
   const det = runDeterministicChecks(sub, segments, onScreen, { audioMode });
   const result = await timed("deterministic", async () =>
     evaluate({
       ctx,
       rules: ruleRows,
-      texts: extractTexts(sub, segments, onScreen),
+      texts: extractTexts(sub, segments, sub.kind === "pdf" ? [] : onScreen, pdfPageTexts),
       legacy: { submission: sub, segments, onScreen, audioMode },
       model: modelOutput,
       modelStatus,
@@ -390,6 +429,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
         framesTotal: sub.kind === "text" ? 0 : frames.length,
         framesAnalyzed,
         batchesFailed,
+        ...(sub.kind === "pdf" ? { pdf: pdfStats } : {}),
       },
     }),
   );

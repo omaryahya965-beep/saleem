@@ -95,7 +95,8 @@
   "kinds": {
     "video": "فيديو",
     "image": "صورة",
-    "text": "نص فقط"
+    "text": "نص فقط",
+    "pdf": "ملف PDF"
   },
   "units": {
     "mb": "م.ب",
@@ -141,7 +142,8 @@
     "errorDuration": "مدة المقطع {duration} تتجاوز الحد المسموح (90 ثانية).",
     "errorRead": "تعذّرت قراءة الملف. جرّب ملفاً آخر.",
     "duration": "المدة",
-    "size": "الحجم"
+    "size": "الحجم",
+    "hintPdf": "PDF حتى 25 م.ب. تُفحص أول 30 صفحة."
   },
   "styleguide": {
     "title": "دليل التصميم",
@@ -1010,7 +1012,9 @@
     "fieldUpdated": "آخر تحديث",
     "fieldSector": "القطاع",
     "fieldMarket": "السوق",
-    "personal": "مساحتي الشخصية"
+    "personal": "مساحتي الشخصية",
+    "tabComments": "التعليقات",
+    "tabCompare": "المقارنة"
   },
   "products": {
     "title": "المنتجات",
@@ -1457,5 +1461,58 @@
     "review_decided": "قرار على «{title}»",
     "review_escalated": "صُعّد إليك «{title}»",
     "review_legal_response": "ردّ القانوني على «{title}»"
+  },
+  "comments": {
+    "new": "تعليق جديد",
+    "reply": "رد",
+    "body": "التعليق",
+    "kind": "النوع",
+    "kindOpt": {
+      "general": "تعليق",
+      "change_request": "طلب تعديل",
+      "decision_note": "ملاحظة القرار",
+      "system": "نظام"
+    },
+    "atSecond": "عند الثانية",
+    "page": "الصفحة",
+    "pin": "تثبيت على المحتوى",
+    "pinHint": "انقر موضعاً في الصورة",
+    "mentions": "إشارة إلى",
+    "post": "إضافة التعليق",
+    "oldVersionReadOnly": "تعليقات الإصدارات السابقة للقراءة فقط.",
+    "filter": {
+      "open": "مفتوحة",
+      "resolved": "محلولة",
+      "mine": "تعليقاتي",
+      "change_request": "طلبات التعديل",
+      "all": "الكل"
+    },
+    "empty": "لا تعليقات بعد — حدّد موضعاً في الإعلان وأضف تعليقك.",
+    "resolve": "حلّ",
+    "reopen": "إعادة فتح",
+    "resolved": "محلول",
+    "locate": "أين؟",
+    "edit": "تعديل",
+    "edited": "عُدّل",
+    "deleted": "حُذف هذا التعليق.",
+    "previewAlt": "معاينة الإصدار",
+    "pdfPreviewNote": "المعاينة للصفحة الأولى؛ حدّد رقم الصفحة قبل التثبيت.",
+    "anchorVideo": "عند {t} ث",
+    "anchorPdf": "صفحة {page} · ({x}، {y})",
+    "anchorImage": "({x}، {y})",
+    "anchorText": "على النص: «{quote}»"
+  },
+  "compare": {
+    "from": "من الإصدار",
+    "to": "إلى الإصدار",
+    "needTwo": "المقارنة تحتاج إصدارين على الأقل.",
+    "noPreview": "لا توجد معاينة",
+    "noText": "لا نص في الإصدارين.",
+    "textTitle": "الوصف والنص",
+    "transcriptTitle": "الكلام المفرّغ",
+    "findingsTitle": "الملاحظات",
+    "fixed": "أُصلح ({n})",
+    "remaining": "بقي ({n})",
+    "added": "جديد ({n})"
   }
 }

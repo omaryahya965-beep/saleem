@@ -95,7 +95,8 @@
   "kinds": {
     "video": "Video",
     "image": "Image",
-    "text": "Text only"
+    "text": "Text only",
+    "pdf": "PDF file"
   },
   "units": {
     "mb": "MB",
@@ -141,7 +142,8 @@
     "errorDuration": "Clip length {duration} exceeds the 90-second limit.",
     "errorRead": "We couldn't read this file. Try another one.",
     "duration": "Duration",
-    "size": "Size"
+    "size": "Size",
+    "hintPdf": "PDF up to 25 MB. The first 30 pages are checked."
   },
   "styleguide": {
     "title": "Style guide",
@@ -986,7 +988,9 @@
     "fieldUpdated": "Updated",
     "fieldSector": "Sector",
     "fieldMarket": "Market",
-    "personal": "My personal space"
+    "personal": "My personal space",
+    "tabComments": "Comments",
+    "tabCompare": "Compare"
   },
   "products": {
     "title": "Products",
@@ -1433,5 +1437,58 @@
     "review_decided": "Decision on “{title}”",
     "review_escalated": "“{title}” was escalated to you",
     "review_legal_response": "Legal answered on “{title}”"
+  },
+  "comments": {
+    "new": "New comment",
+    "reply": "Reply",
+    "body": "Comment",
+    "kind": "Type",
+    "kindOpt": {
+      "general": "Comment",
+      "change_request": "Change request",
+      "decision_note": "Decision note",
+      "system": "System"
+    },
+    "atSecond": "At second",
+    "page": "Page",
+    "pin": "Pin on the content",
+    "pinHint": "Click a spot on the image",
+    "mentions": "Mention",
+    "post": "Add comment",
+    "oldVersionReadOnly": "Comments on earlier versions are read-only.",
+    "filter": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "mine": "Mine",
+      "change_request": "Change requests",
+      "all": "All"
+    },
+    "empty": "No comments yet — pick a spot in the ad and add your comment.",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "resolved": "Resolved",
+    "locate": "Where?",
+    "edit": "Edit",
+    "edited": "edited",
+    "deleted": "This comment was deleted.",
+    "previewAlt": "Version preview",
+    "pdfPreviewNote": "The preview shows the first page; set the page number before pinning.",
+    "anchorVideo": "At {t} s",
+    "anchorPdf": "Page {page} · ({x}, {y})",
+    "anchorImage": "({x}, {y})",
+    "anchorText": "On text: “{quote}”"
+  },
+  "compare": {
+    "from": "From version",
+    "to": "To version",
+    "needTwo": "Comparing needs at least two versions.",
+    "noPreview": "No preview",
+    "noText": "No text in either version.",
+    "textTitle": "Caption and text",
+    "transcriptTitle": "Transcript",
+    "findingsTitle": "Findings",
+    "fixed": "Fixed ({n})",
+    "remaining": "Still present ({n})",
+    "added": "New ({n})"
   }
 }

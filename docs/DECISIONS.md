@@ -275,3 +275,17 @@ Format: decision — why — alternatives considered.
   the report card component stays shared with the public demo and compliance log.
 - **D111. «طابور المراجعة» and «سجل التدقيق» are in the account menu** (header nav has no room on mobile, D79).
 - **D112. The check-finished email uses the advisory labels** (same reason as D95).
+
+## v2 programme — Phase 4 (collaboration + PDF)
+- **D113. `pdfjs-dist@4.10.38` added (pre-approved, master §2.2 rule 15)** — renders PDF pages and reads the text layer
+  in the browser; loaded on demand with its worker as a separate asset.
+- **D114. PDF pages are `frames` rows with `t_seconds = page_no = page number`** (`t_seconds` is NOT NULL); the text
+  layer is uploaded as `pages/text.json` (clients cannot write `frames`), `frames.text_source` says text layer vs model OCR.
+- **D115. Comments live in their own tab with a pin-able preview** (image / first PDF page with a page number / video
+  second / text) rather than inside the shared report media component; «أين؟» highlights the pin in that preview.
+- **D116. No `diff` dependency** — a tested LCS word diff (`features/collab/model.ts`) covers ad-length text.
+- **D117. A PDF with unreadable pages never produces deterministic `missing_required` findings**: those rules become
+  `unable_to_verify` (`coverage:pdf_pages`) and coverage is partial (case 10).
+- **D118. Pre-existing `npm audit --omit=dev` high findings** (TanStack router plugin, Vite, picomatch advisories) are
+  not fixed in this run — upgrading build tooling is out of scope; `pdfjs-dist` adds none. The CI audit step fails
+  until they are upgraded.

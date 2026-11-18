@@ -312,6 +312,7 @@ export function NewCheckPage() {
                     icon: <FileImage aria-hidden="true" />,
                   },
                   { value: "text", label: t("kinds.text"), icon: <FileText aria-hidden="true" /> },
+                  { value: "pdf", label: t("kinds.pdf"), icon: <FileText aria-hidden="true" /> },
                 ]}
               />
             </div>

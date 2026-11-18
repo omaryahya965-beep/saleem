@@ -21,7 +21,7 @@ const LEGACY_PACKS = new Set(["sa-gmedia-creators", "sa-sdaia-ai", "sa-mc-ecomme
 const FACT_RULES = new Set(["SAMA-ADV-03-5", "SAMA-ADV-03-8"]);
 
 export interface CoverageItem {
-  modality: "caption" | "audio" | "frames" | "on_screen_text" | "product_facts" | "model" | "rule_packs";
+  modality: "caption" | "audio" | "frames" | "on_screen_text" | "product_facts" | "model" | "rule_packs" | "pdf_pages";
   state: string;
 }
 export interface Coverage {
@@ -37,7 +37,14 @@ export interface EvaluateInput {
   legacy: { submission: SubmissionData; segments: TranscriptSegment[]; onScreen: OnScreenText[]; audioMode: AudioMode | null };
   model: ModelOutputV2 | null;
   modelStatus: "ok" | "invalid" | "failed";
-  media: { transcriptionFailed: boolean; framesTotal: number; framesAnalyzed: number; batchesFailed: number };
+  media: {
+    transcriptionFailed: boolean;
+    framesTotal: number;
+    framesAnalyzed: number;
+    batchesFailed: number;
+    /** PDF: pages, pages with a text layer, pages read only by the model, pages with no readable text. */
+    pdf?: { total: number; textLayer: number; ocrOnly: number; unreadable: number };
+  };
 }
 
 export interface MergedFinding extends DraftFinding {
@@ -113,15 +120,19 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   // ---- Deterministic registry (new rules) and the v1 checks (creator rules) ----
   const detResults = new Map<string, CheckResult>();
   const candidates: DraftFinding[] = [];
+  // A document with unreadable pages cannot prove that something is missing (case 10).
+  const unreadablePdf = (input.media.pdf?.unreadable ?? 0) > 0;
   for (const rule of selection.applicable) {
     const check = rule.deterministic_check ? CHECKS[rule.deterministic_check] : undefined;
     if (!check) continue;
-    const res = check(rule, { ctx, texts, signals });
+    let res = check(rule, { ctx, texts, signals });
+    if (unreadablePdf && res.outcome === "failed" && res.findings.every((f) => f.finding_type === "missing_required"))
+      res = { outcome: "unable_to_verify", reason: "coverage:pdf_pages" };
     detResults.set(rule.code, res);
     if (res.outcome === "failed") candidates.push(...res.findings);
   }
   const legacy = runDeterministicChecks(input.legacy.submission, input.legacy.segments, input.legacy.onScreen, { audioMode: input.legacy.audioMode });
-  candidates.push(...legacy.findings.map(fromLegacy));
+  candidates.push(...legacy.findings.map(fromLegacy).filter((f) => !(unreadablePdf && f.finding_type === "missing_required")));
 
   // ---- Product facts ----
   const facts = checkProductFacts(ctx, texts);
@@ -220,7 +231,11 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   items.push({ modality: "caption", state: (ctx.caption ?? input.legacy.submission.caption ?? "").trim() ? "present" : "absent" });
   if (kind === "video")
     items.push({ modality: "audio", state: input.media.transcriptionFailed ? "transcription_failed" : input.legacy.audioMode ?? "no_audio" });
-  if (kind === "video" || kind === "image") {
+  if (kind === "pdf" && input.media.pdf) {
+    const p = input.media.pdf;
+    items.push({ modality: "pdf_pages", state: p.unreadable ? `unreadable:${p.unreadable}/${p.total}` : `text_layer:${p.textLayer}/${p.total}` });
+  }
+  if (kind === "video" || kind === "image" || kind === "pdf") {
     items.push({ modality: "frames", state: input.media.batchesFailed ? `batch_failed:${input.media.batchesFailed}` : `analyzed:${input.media.framesAnalyzed}/${input.media.framesTotal}` });
     items.push({ modality: "on_screen_text", state: !modelOk ? "failed" : model!.ocr.length ? "read" : "none_found" });
   }
@@ -229,7 +244,7 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   const insurance = ctx.product?.regulator === "IA" || ctx.sector === "insurance";
   if (insurance && !input.rules.some((r) => r.pack === "sa-ia-insurance" && r.review_state !== "archived"))
     items.push({ modality: "rule_packs", state: "pack_not_available" });
-  const partial = input.media.transcriptionFailed || input.media.batchesFailed > 0 || !modelOk ||
+  const partial = input.media.transcriptionFailed || input.media.batchesFailed > 0 || !modelOk || unreadablePdf ||
     (kind !== "text" && input.media.framesTotal > 0 && input.media.framesAnalyzed === 0);
   const coverage: Coverage = { status: partial ? "partial" : "complete", items };
 

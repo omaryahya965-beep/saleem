@@ -6,6 +6,7 @@ export const MAX_VIDEO_SECONDS = 90;
 export const ACCEPT = {
   video: ["video/mp4", "video/quicktime", "video/webm"],
   image: ["image/jpeg", "image/png", "image/webp"],
+  pdf: ["application/pdf"],
 } as const;
 
 export type MediaKind = keyof typeof ACCEPT;
@@ -119,6 +120,21 @@ export async function inspectMedia(
   const basic = validateBasics(file, kind);
   if (basic) return { ok: false, error: basic };
 
+  if (kind === "pdf") {
+    // Pages are rendered at upload time (lib/pdf.ts); nothing to decode here.
+    return {
+      ok: true,
+      media: {
+        file,
+        kind,
+        bytes: file.size,
+        duration: null,
+        width: null,
+        height: null,
+        previewUrl: null,
+      },
+    };
+  }
   const url = URL.createObjectURL(file);
   try {
     if (kind === "image") {

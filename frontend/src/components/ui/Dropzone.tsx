@@ -156,7 +156,11 @@ export function Dropzone({ kind, value, onChange, className }: DropzoneProps) {
         </span>
         <span className="font-medium text-fg">{t("dropzone.title")}</span>
         <span id={`${id}-hint`} className="text-sm text-fg-muted">
-          {kind === "video" ? t("dropzone.hintVideo") : t("dropzone.hintImage")}
+          {kind === "video"
+            ? t("dropzone.hintVideo")
+            : kind === "pdf"
+              ? t("dropzone.hintPdf")
+              : t("dropzone.hintImage")}
         </span>
         <span className="mt-1 inline-flex h-9 items-center rounded-full border border-border-strong bg-surface px-4 text-sm font-medium text-fg">
           {t("dropzone.choose")}
