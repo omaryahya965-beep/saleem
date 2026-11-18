@@ -1,6 +1,6 @@
 // Email notification provider interface.
 // EMAIL_PROVIDER=console (default) logs the message; EMAIL_PROVIDER=resend sends via Resend
-// (needs RESEND_API_KEY and EMAIL_FROM; account setup documented in docs/OPERATIONS.md).
+// (needs RESEND_API_KEY and EMAIL_FROM; account setup: docs/saleem-v2/progress/FINAL_REPORT.md §5).
 
 import { log } from "./http.ts";
 

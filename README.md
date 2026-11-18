@@ -16,8 +16,6 @@
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![RTL](https://img.shields.io/badge/عربي_RTL_%2B_English-0b6e4f)
 
-<img src="docs/readme/landing.png" width="900" alt="الصفحة الرئيسية لسَليم" />
-
 </div>
 
 <div dir="rtl">
@@ -51,18 +49,6 @@ flowchart LR
 2. **سَليم يحلّل** الصوت واللقطات والنص في أقل من دقيقة تقريباً.
 3. **تقرأ التقرير**: الحالة العامة (جاهز / يحتاج مراجعة / يحتاج تعديلات)، ثم كل ملاحظة مع دليلها.
 4. **تعدّل وتعيد الفحص** حتى يصير المحتوى جاهزاً للنشر.
-
-## لقطات
-
-<table>
-<tr>
-<td width="68%"><img src="docs/readme/report.png" alt="تقرير الفحص" /><br/><sub>التقرير: الحالة، الملاحظات مع الدليل والتعديل، والمقطع بجانبها</sub></td>
-<td width="32%"><img src="docs/readme/mobile.png" alt="التقرير على الجوال" /><br/><sub>يعمل على الجوال</sub></td>
-</tr>
-<tr>
-<td colspan="2"><img src="docs/readme/log.png" alt="سجل الامتثال" /><br/><sub>سجل الامتثال المختوم</sub></td>
-</tr>
-</table>
 
 ## الخصوصية
 
@@ -113,7 +99,7 @@ npm run dev        # http://localhost:3000
 | `npm --workspace backend run eval` | قياس دقة التحليل على حالات معروفة |
 | `npm run seed:backend` | إنشاء حساب العرض التجريبي (`demo@saleem.app`) |
 
-**النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. التفاصيل في [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
+**النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. التفاصيل في [`FINAL_REPORT.md`](docs/saleem-v2/progress/FINAL_REPORT.md) §5.
 
 **أسرار Vault المطلوبة في قاعدة البيانات:** مهمة حذف الوسائط المجدولة (`saleem-cleanup-media`) تقرأ عنوان المشروع من سر Vault اسمه `project_url` (عنوان API للمشروع)، إضافةً إلى `cleanup_cron_secret` الذي تنشئه الـ migrations تلقائياً. أنشئه مرة واحدة من SQL Editor:
 `select vault.create_secret('<project API URL>', 'project_url');` — إن لم يوجد، تتخطى المهمة التشغيل وتسجّل ملاحظة بدل استدعاء مشروع خاطئ.
@@ -125,10 +111,9 @@ npm run dev        # http://localhost:3000
 
 <br/>
 
-- [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md): ما تم بناؤه، الأدلة، والمسائل المفتوحة
+- [`docs/saleem-v2/progress/FINAL_REPORT.md`](docs/saleem-v2/progress/FINAL_REPORT.md): ما تم بناؤه، والتحقق، ودليل النشر
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): كل قرار مع أسبابه والبدائل
-- [`docs/OPERATIONS.md`](docs/OPERATIONS.md): البيئات، الاستضافة، الأسرار، النسخ الاحتياطي
-- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md): الألوان، الخطوط، والمكونات
+- [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md): دليل المشروع للمطوّرين
 
 </details>
 

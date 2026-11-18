@@ -20,7 +20,7 @@
   - مساحات عمل للوكالات وحملات (campaigns)، وروابط مشاركة يوافق فيها البراند أو يرفض.
   - إدارة نسخ دليل القواعد، وصفحة تقييم الدقة (eval)، ومؤشرات للمشرف.
   - حذف الوسائط تلقائياً بعد 24 ساعة، وحذف الحساب بالكامل.
-- **ملاحظة مهمة:** النتائج **استرشادية** وليست موافقة رسمية. والقواعد «توضيحية بانتظار مراجعة قانونية» ([docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) البند 6 من «Open issues»).
+- **ملاحظة مهمة:** النتائج **استرشادية** وليست موافقة رسمية. والقواعد «توضيحية بانتظار مراجعة قانونية» ([docs/saleem-v2/progress/FINAL_REPORT.md](docs/saleem-v2/progress/FINAL_REPORT.md) البند 6 من «Open issues»).
 
 ---
 
@@ -130,7 +130,7 @@ saleem/
 
 - **لا يوجد خادم API خاص.** الواجهة تتعامل مع Supabase مباشرة، وRLS هو ما يحمي البيانات. المنطق الحساس موجود في Triggers ودوال RPC وEdge Functions.
 - **العمل الثقيل موزّع:** استخراج الإطارات والصوت يحدث **في المتصفح** ([frontend/src/lib/extract.ts](frontend/src/lib/extract.ts)). أما استدعاء النماذج فيحدث **في الخادم** فقط، فلا يصل مفتاح OpenAI إلى المتصفح.
-- **ملاحظة:** الملف [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) **قديم** ويذكر Anthropic وRealtime وملفات غير موجودة (`llm.ts` و`transcription.ts`). الملف [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) نفسه يقول إنه outdated. اعتمد على الكود.
+- **ملاحظة:** الملف docs/ARCHITECTURE.md (حُذف) **قديم** ويذكر Anthropic وRealtime وملفات غير موجودة (`llm.ts` و`transcription.ts`). الملف [docs/saleem-v2/progress/FINAL_REPORT.md](docs/saleem-v2/progress/FINAL_REPORT.md) نفسه يقول إنه outdated. اعتمد على الكود.
 
 ---
 
@@ -275,7 +275,7 @@ npm run dev                                      # http://localhost:3000
 
 ## 9. الحالة الحالية
 
-**مكتمل** (حسب [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) والكود): خط تحليل حقيقي، وتقرير، وإعادة فحص، وسجل مختوم، ومنظمات، ومشاركة، وإدارة القواعد، وتقييم، وإشعارات، وحصص، وحذف حساب، وCI، وE2E. لا توجد تعليقات `TODO` أو `FIXME` في الكود (بحثت بـ grep).
+**مكتمل** (حسب [docs/saleem-v2/progress/FINAL_REPORT.md](docs/saleem-v2/progress/FINAL_REPORT.md) والكود): خط تحليل حقيقي، وتقرير، وإعادة فحص، وسجل مختوم، ومنظمات، ومشاركة، وإدارة القواعد، وتقييم، وإشعارات، وحصص، وحذف حساب، وCI، وE2E. لا توجد تعليقات `TODO` أو `FIXME` في الكود (بحثت بـ grep).
 
 **غير مكتمل أو مفتوح** (من FINAL_REPORT، قسم Open issues):
 - أداء Lighthouse على الجوال حوالي 70.
@@ -285,7 +285,7 @@ npm run dev                                      # http://localhost:3000
 - CI لم يعمل على GitHub (لا يوجد remote).
 
 **عدم اتساق ونقاط خطرة لاحظتها:**
-1. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) قديم: يذكر Anthropic وRealtime وحالات `needs_review/needs_fix` بينما الكود يستخدم `ready/review/needs_fixes`، ويقول إن `rules.id` نص بينما هو uuid ويوجد عمود `code` منفصل، ويرتّب خطوات الـ pipeline بغير ترتيبها الفعلي (الفعلي: transcribe ثم llm ثم deterministic ثم merge).
+1. docs/ARCHITECTURE.md (حُذف) قديم: يذكر Anthropic وRealtime وحالات `needs_review/needs_fix` بينما الكود يستخدم `ready/review/needs_fixes`، ويقول إن `rules.id` نص بينما هو uuid ويوجد عمود `code` منفصل، ويرتّب خطوات الـ pipeline بغير ترتيبها الفعلي (الفعلي: transcribe ثم llm ثم deterministic ثم merge).
 2. وكذلك [roadmap.md](roadmap.md) كل مربعاته غير مؤشَّرة، وفيه أرقام قديمة (640px وغيرها).
 3. **جدول `ai_settings`** غير مستخدم: الجدول موجود، لكن الكود يقرأ النماذج من متغيرات البيئة فقط ([providers/index.ts](backend/supabase/functions/_shared/providers/index.ts)). هذا شبه dead schema.
 4. **Rate limit** في [analyze/index.ts:382](backend/supabase/functions/analyze/index.ts#L382) يعدّ الـ submissions **المنشأة** في الساعة، لا مرات التحليل، ويستخدم `>` لا `>=`، فيسمح فعلياً بـ 31.
@@ -347,7 +347,7 @@ npm run dev                                      # http://localhost:3000
 
 ## 12. ترتيب القراءة المقترح
 
-1. [README.md](README.md) ثم [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md)، وتجاهل ARCHITECTURE.md.
+1. [README.md](README.md) ثم [docs/saleem-v2/progress/FINAL_REPORT.md](docs/saleem-v2/progress/FINAL_REPORT.md)، وتجاهل ARCHITECTURE.md.
 2. [backend/supabase/seed.sql](backend/supabase/seed.sql) لتفهم القواعد الـ 12.
 3. [migrations/20261013000000_saleem_schema.sql](backend/supabase/migrations/20261013000000_saleem_schema.sql)، ثم بقية ملفات migrations بالترتيب.
 4. [_shared/types.ts](backend/supabase/functions/_shared/types.ts) ثم [analyze/index.ts](backend/supabase/functions/analyze/index.ts).
