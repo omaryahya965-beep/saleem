@@ -214,6 +214,8 @@
     "transcriptNoSpeech": "There is no speech in this clip."
   },
   "processing": {
+    "startFailedTitle": "The analysis could not start",
+    "startFailedBody": "The check has not started yet. Check your connection and try again.",
     "title": "Checking your content",
     "subtitle": "We're reviewing speech, visuals and caption against the rulebook. You can leave this page; the result will appear in My checks.",
     "progress": "{p}% complete",
@@ -835,7 +837,8 @@
     "provider_bad_request": "The analysis provider rejected the file (unsupported format or settings). Try another file or retry.",
     "provider_provider_down": "The analysis provider is temporarily unreachable. Try again shortly.",
     "provider_unknown": "Unexpected error from the analysis provider. Please retry.",
-    "pipeline_unexpected": "An unexpected error happened during the check. Please retry."
+    "pipeline_unexpected": "An unexpected error happened during the check. Please retry.",
+    "stuck_timeout": "The check stopped responding. Please retry."
   },
   "audioMode": {
     "label": "Audio",

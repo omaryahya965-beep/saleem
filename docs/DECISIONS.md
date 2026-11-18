@@ -164,3 +164,33 @@ Format: decision — why — alternatives considered.
   input (spoken claims/disclosure); instead everything independent of the transcript is prepared during transcription.
 - **D66. Blur completes before "done"** — the report never shows a missing or unblurred thumbnail; the blur runs in parallel
   with the findings writes so it costs ~4–5 s, not extra round trips. Status polling stays at 1.5 s while running.
+
+## v2 programme — Phase 0 (autonomous full run, 2026-11-17)
+- **D67. Pending deletion of the old `docs/` tree is not committed** — the working tree had every old doc
+  deleted (unstaged) before this run. Conservative: leave that change to the user; only `docs/DECISIONS.md` was
+  restored because the programme appends to it. Alt: commit the deletions (irreversible intent we can't confirm).
+- **D68. Review events get a dedicated `review_events` table (M5)** — `audit_events` is admin-read-only and has no
+  org scope; review history must be readable by org members under RLS and append-only. `audit_events` stays as is.
+- **D69. Database checks without Docker** — no Docker/Podman/psql here. `supabase db reset` and DB tests are marked
+  "not run". As a supplementary smoke check, migrations + seed + SQL tests are applied on PGlite (Postgres in WASM)
+  with stubs for auth/storage/vault/cron/net, installed in the session scratchpad, **not** a project dependency.
+  `deno check` runs via `npx --yes deno@2` (tool download, not a dependency).
+- **D70. Demo/test accounts stay visible unless `VITE_SHOW_TEST_ACCOUNTS=false`** — today's live sign-in page relies
+  on them; changing the default is a behaviour change. Recommendation for production: set it to `false`.
+- **D71. Fresh `db reset` fix** — `20261014040000_demo_pipeline_pair.sql` needs the active rulebook, which only seed.sql
+  created (seed runs after migrations), and seed.sql's `on conflict (code)` lost its unique constraint in
+  `20261014020000`. Added the idempotent `20261014035900_v2_p0_fresh_reset_rulebook.sql` (no-op on the hosted DB) and
+  changed seed to `on conflict (rulebook_version_id, code)`. Its timestamp precedes applied remote migrations, so
+  the next deploy needs `supabase db push --include-all`. Alt: edit the applied migration (forbidden).
+- **D72. Media-cleanup cron reads `project_url` from Vault** via `public.invoke_cleanup_media()`; missing secret →
+  the job logs a notice and does nothing (never calls a wrong project). `x-cron-secret` unchanged.
+- **D73. Rate limit = analysis runs started by the user in the last hour, blocked at `>= limit`**; resuming an
+  unfinished run is never limited. The 429 body (`rate_limited`) is unchanged for client compatibility.
+- **D74. "Analysis did not start" is detected client-side** (failed `analyze` invoke in this session, or `queued` with
+  no heartbeat after 30 s) and retried by re-invoking the idempotent function. No new server state.
+- **D75. Edge Functions import `supabase-js@2.117.3`** (frontend's resolved version); `deno check` green.
+- **D76. No network to the hosted project during this run** — eval gets `--offline` (rule codes from seed.sql); the
+  gate build uses a local placeholder `VITE_SUPABASE_URL`; the existing e2e suite reads hosted demo data, so it is
+  "not run". New e2e specs mock the network.
+- **D77. Database tests are pgTAP files in `backend/supabase/tests/`** (`npx supabase test db --workdir backend`), with
+  assertions in `DO` blocks so they also run in the PGlite smoke harness.

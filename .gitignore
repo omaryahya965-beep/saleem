@@ -65,3 +65,5 @@ frontend/playwright-report/
 
 .vercel
 .env*
+
+.claude/settings.local.json

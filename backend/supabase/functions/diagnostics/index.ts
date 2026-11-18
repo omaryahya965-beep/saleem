@@ -2,7 +2,7 @@
 // POST with an admin user's JWT. Returns ONLY non-secret facts: key present/length/prefix/whitespace,
 // HTTP status + error type for the models list, the configured models, and a 2-second transcription
 // through the production OpenAITranscription class (same multipart request as real checks).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { classifyProviderError } from "../_shared/providers/errors.ts";
 import { config } from "../_shared/providers/index.ts";

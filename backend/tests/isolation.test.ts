@@ -1,20 +1,27 @@
-// Live isolation tests against the hosted project (RLS + storage + function auth).
-// Requires two confirmed test accounts in backend/.env:
-//   TEST_USER_A_EMAIL / TEST_USER_A_PASSWORD, TEST_USER_B_EMAIL / TEST_USER_B_PASSWORD
-// Skipped automatically when they are missing. Creates one submission + one storage object
-// for user A and removes the storage object at the end.
+// Isolation tests (RLS + storage + function auth) between two users. Two modes:
+//  • local (preferred): a local Supabase stack, users created on the fly — see tests/helpers/local-db.ts
+//    (SUPABASE_LOCAL_URL / _ANON_KEY / _SERVICE_ROLE_KEY). Function checks also need
+//    `npx supabase functions serve --workdir backend` and SUPABASE_LOCAL_FUNCTIONS=1.
+//  • live: two confirmed accounts on the configured project in backend/.env
+//    (TEST_USER_A_EMAIL / _PASSWORD, TEST_USER_B_EMAIL / _PASSWORD).
+// Skipped when neither is configured. Creates one submission + one storage object for user A and
+// removes the storage object at the end.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadEnv } from "../eval/lib.ts";
+import { createUser, localDb } from "./helpers/local-db.ts";
 
 const env = loadEnv();
+const local = localDb();
 const url = env("VITE_SUPABASE_URL");
 const key = env("VITE_SUPABASE_PUBLISHABLE_KEY");
 const creds = {
   a: { email: env("TEST_USER_A_EMAIL"), password: env("TEST_USER_A_PASSWORD") },
   b: { email: env("TEST_USER_B_EMAIL"), password: env("TEST_USER_B_PASSWORD") },
 };
-const enabled = Boolean(url && key && creds.a.email && creds.a.password && creds.b.email && creds.b.password);
+const live = Boolean(url && key && creds.a.email && creds.a.password && creds.b.email && creds.b.password);
+const enabled = Boolean(local) || live;
+const functionsAvailable = !local || env("SUPABASE_LOCAL_FUNCTIONS") === "1";
 
 async function signIn(c: { email?: string; password?: string }): Promise<{ db: SupabaseClient; id: string }> {
   const db = createClient(url!, key!, { auth: { persistSession: false } });
@@ -23,15 +30,15 @@ async function signIn(c: { email?: string; password?: string }): Promise<{ db: S
   return { db, id: data.user.id };
 }
 
-describe.skipIf(!enabled)("isolation between two users (live)", () => {
+describe.skipIf(!enabled)(`isolation between two users (${local ? "local" : "live"})`, () => {
   let A: { db: SupabaseClient; id: string };
   let B: { db: SupabaseClient; id: string };
   const sid = crypto.randomUUID();
   let path = "";
 
   beforeAll(async () => {
-    A = await signIn(creds.a);
-    B = await signIn(creds.b);
+    A = local ? await createUser(local, "iso-a") : await signIn(creds.a);
+    B = local ? await createUser(local, "iso-b") : await signIn(creds.b);
     path = `${A.id}/${sid}/original.jpg`;
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
     const up = await A.db.storage.from("media").upload(path, new Blob([jpeg], { type: "image/jpeg" }));
@@ -85,7 +92,7 @@ describe.skipIf(!enabled)("isolation between two users (live)", () => {
     expect(up.error).not.toBeNull();
   });
 
-  it("analyze and cleanup-media reject other users", async () => {
+  it.skipIf(!functionsAvailable)("analyze and cleanup-media reject other users", async () => {
     const r1 = await B.db.functions.invoke("analyze", { body: { submission_id: sid } });
     expect(r1.error).not.toBeNull();
     const r2 = await B.db.functions.invoke("cleanup-media", { body: { submission_id: sid } });
@@ -98,8 +105,8 @@ describe.skipIf(!enabled)("isolation between two users (live)", () => {
   });
 });
 
-describe.runIf(!enabled)("isolation (live) — skipped", () => {
-  it("needs TEST_USER_A_* and TEST_USER_B_* in backend/.env", () => {
-    console.warn("[isolation] skipped: add two confirmed test accounts to backend/.env to run live RLS/storage tests");
+describe.runIf(!enabled)("isolation — skipped", () => {
+  it("needs a local Supabase (SUPABASE_LOCAL_*) or TEST_USER_A_*/TEST_USER_B_* in backend/.env", () => {
+    console.warn("[isolation] skipped: start local Supabase and set SUPABASE_LOCAL_* (see tests/helpers/local-db.ts)");
   });
 });

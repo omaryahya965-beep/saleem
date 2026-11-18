@@ -1,4 +1,5 @@
-// Evaluation harness.  npm run eval [-- --deterministic-only] [--case=<id>] [--upload]
+// Evaluation harness.  npm run eval [-- --deterministic-only] [--offline] [--case=<id>] [--upload]
+// --offline reads rule codes from supabase/seed.sql instead of the configured project (no network).
 //
 // Runs every case in eval/cases.json through the same pipeline modules as production
 // (deterministic checks + the configured vision/reasoning model, then merge) and reports
@@ -14,7 +15,7 @@ import { mergeAndFilterFindings } from "../supabase/functions/_shared/pipeline/m
 import { textCost } from "../supabase/functions/_shared/pipeline/cost.ts";
 import { PROMPT_VERSION } from "../supabase/functions/_shared/pipeline/schema.ts";
 import type { Finding, SubmissionData, TranscriptSegment } from "../supabase/functions/_shared/types.ts";
-import { loadEnv, loadRules } from "./lib.ts";
+import { loadEnv, loadRules, loadSeedRules } from "./lib.ts";
 
 interface Case {
   id: string;
@@ -33,7 +34,9 @@ const env = loadEnv();
 const cfg = config(env);
 
 const { cases } = JSON.parse(fs.readFileSync(path.join(here, "cases.json"), "utf8")) as { cases: Case[] };
-const rules = await loadRules(env);
+const offline = args.includes("--offline");
+if (offline && !detOnly) throw new Error("--offline needs --deterministic-only (the model path needs full rule rows)");
+const rules = offline ? loadSeedRules() : await loadRules(env);
 const ruleCodes = new Set(rules.map((r) => r.code));
 
 type RuleStats = { hits: number; misses: number; falseAlarms: number; tErrors: number[] };

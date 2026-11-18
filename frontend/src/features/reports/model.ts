@@ -71,6 +71,22 @@ export function shortHash(hash: string | null | undefined): string {
   return hash.length > 20 ? `${hash.slice(0, 10)}…${hash.slice(-8)}` : hash;
 }
 
+/** A queued check with no worker heartbeat after this long most likely never started. */
+export const START_STALL_MS = 30_000;
+
+/**
+ * True when the analysis did not start: the start request failed in this session, or the check is
+ * still `queued` with no heartbeat more than 30 s after it was created.
+ */
+export function analysisStartStalled(
+  sub: { status: string; heartbeat_at: string | null; created_at: string },
+  nowMs: number,
+  requestFailed: boolean,
+): boolean {
+  if (sub.status !== "queued" || sub.heartbeat_at) return false;
+  return requestFailed || nowMs - new Date(sub.created_at).getTime() > START_STALL_MS;
+}
+
 /**
  * Translates a stored pipeline error. New errors are stored as `code:<key>` tokens
  * (see backend/supabase/functions/_shared/providers/errors.ts); older rows hold plain text.

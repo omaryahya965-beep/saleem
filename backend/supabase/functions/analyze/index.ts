@@ -9,9 +9,10 @@
 //   4. merge        — validate rule codes, downgrade weak evidence, dedupe within 3 s, status
 // Progress, errors, models, prompt/rulebook versions, durations, tokens and cost are stored.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { mergeAndFilterFindings } from "../_shared/pipeline/merge.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
+import { isRateLimited, rateLimitFromEnv, RATE_WINDOW_MS } from "../_shared/pipeline/rate-limit.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
 import { analysisProvider, config, transcriptionProvider } from "../_shared/providers/index.ts";
 import { ProviderError } from "../_shared/providers/types.ts";
@@ -27,7 +28,7 @@ import { checkEmail, emailProvider } from "../_shared/notify.ts";
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
 const env = (k: string) => Deno.env.get(k);
-const RATE_LIMIT_PER_HOUR = Number(env("ANALYZE_RATE_LIMIT_PER_HOUR") ?? 30);
+const RATE_LIMIT_PER_HOUR = rateLimitFromEnv(env("ANALYZE_RATE_LIMIT_PER_HOUR"));
 const MAX_FRAMES = 62; // 1/s up to 60 + first/last
 const CANCELLED = "cancelled_by_user";
 
@@ -375,15 +376,21 @@ Deno.serve(async (req: Request) => {
   const fresh = sub.heartbeat_at && Date.now() - new Date(sub.heartbeat_at).getTime() < 45_000;
   if (fresh && !["queued", "failed"].includes(sub.status)) return json({ status: "running" }, 202);
 
-  // --- Rate limit: analyses started per user per hour.
-  const since = new Date(Date.now() - 3600_000).toISOString();
+  // --- Rate limit: analysis runs started by this user in the last hour (see rate-limit.ts).
+  const since = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
   // Independent lookups run together (each round trip is ~0.4 s).
   const [{ count }, { data: version }, latestRun] = await Promise.all([
-    db.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since),
+    db
+      .from("analysis_runs")
+      .select("id, submissions!inner(user_id)", { count: "exact", head: true })
+      .eq("submissions.user_id", userId)
+      .gte("started_at", since),
     db.from("rulebook_versions").select("id, version_label").eq("is_active", true).limit(1).maybeSingle(),
     db.from("analysis_runs").select("id, status").eq("submission_id", sub.id).order("started_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
-  if ((count ?? 0) > RATE_LIMIT_PER_HOUR) return json({ error: "rate_limited" }, 429);
+  // Resuming an unfinished run does not start a new one, so only new runs are rate limited.
+  const resuming = Boolean(latestRun.data && latestRun.data.status !== "done");
+  if (!resuming && isRateLimited(count ?? 0, RATE_LIMIT_PER_HOUR)) return json({ error: "rate_limited" }, 429);
 
   // --- Run row: reuse the latest unfinished run so steps resume.
   const cfg = config(env);

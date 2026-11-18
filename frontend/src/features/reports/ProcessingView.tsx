@@ -14,8 +14,14 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
-import { cancelSubmission, retrySubmission, type Submission } from "@/lib/api/data";
-import { pipelineErrorText } from "./model";
+import {
+  cancelSubmission,
+  retrySubmission,
+  startAnalysis,
+  startFailed,
+  type Submission,
+} from "@/lib/api/data";
+import { analysisStartStalled, pipelineErrorText } from "./model";
 import { qk } from "@/lib/api/hooks";
 
 const STEPS: { key: string; label: TKey }[] = [
@@ -78,6 +84,13 @@ export function ProcessingView({ submission: sub }: { submission: Submission }) 
       void refresh();
     },
     onError: () => toast.error(t("errors.generic")),
+  });
+
+  const stalled = !failed && analysisStartStalled(sub, now, startFailed(sub.id));
+  const restart = useMutation({
+    mutationFn: () => startAnalysis(sub.id),
+    onSuccess: () => void refresh(),
+    onError: () => toast.error(t("processing.startFailedTitle")),
   });
 
   const steps = STEPS.map((s, i) => {
@@ -151,6 +164,28 @@ export function ProcessingView({ submission: sub }: { submission: Submission }) 
             <p dir="auto" className="mt-1 break-words text-fg">
               {pipelineErrorText(sub.error_message, t)}
             </p>
+          </div>
+        )}
+
+        {stalled && (
+          <div
+            role="alert"
+            data-testid="start-failed"
+            className="flex flex-col gap-3 rounded-md border border-red/20 bg-red-bg/60 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="font-bold text-red">{t("processing.startFailedTitle")}</p>
+              <p className="mt-1 text-fg">{t("processing.startFailedBody")}</p>
+            </div>
+            {isOwner && (
+              <Button
+                icon={<RotateCcw />}
+                loading={restart.isPending}
+                onClick={() => restart.mutate()}
+              >
+                {t("processing.retry")}
+              </Button>
+            )}
           </div>
         )}
 

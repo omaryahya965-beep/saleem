@@ -91,6 +91,10 @@ describe("pipelineErrorText", () => {
     expect(pipelineErrorText("code:provider_insufficient_quota", tAr)).not.toContain("مفتاح");
     expect(pipelineErrorText("code:provider_model_not_found", tEn)).toMatch(/model/);
   });
+  it("translates the watchdog code (stuck_timeout)", () => {
+    expect(pipelineErrorText("code:stuck_timeout", tAr)).toContain("توقف الفحص");
+    expect(pipelineErrorText("code:stuck_timeout", tEn)).toMatch(/stopped responding/);
+  });
   it("keeps legacy plain-text messages and falls back for unknown codes", () => {
     expect(pipelineErrorText("رسالة قديمة", tAr)).toBe("رسالة قديمة");
     expect(pipelineErrorText("code:something_new", tEn)).toBe(

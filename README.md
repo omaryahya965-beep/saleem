@@ -115,6 +115,9 @@ npm run dev        # http://localhost:3000
 
 **النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. التفاصيل في [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
 
+**أسرار Vault المطلوبة في قاعدة البيانات:** مهمة حذف الوسائط المجدولة (`saleem-cleanup-media`) تقرأ عنوان المشروع من سر Vault اسمه `project_url` (عنوان API للمشروع)، إضافةً إلى `cleanup_cron_secret` الذي تنشئه الـ migrations تلقائياً. أنشئه مرة واحدة من SQL Editor:
+`select vault.create_secret('<project API URL>', 'project_url');` — إن لم يوجد، تتخطى المهمة التشغيل وتسجّل ملاحظة بدل استدعاء مشروع خاطئ.
+
 </details>
 
 <details>

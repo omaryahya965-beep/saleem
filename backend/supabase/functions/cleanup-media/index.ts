@@ -6,7 +6,7 @@
 //    more than 24 h ago, and orphaned uploads (no submission row) older than 24 h.
 // Deployed with verify_jwt = false because the cron caller has no JWT; both paths are verified here.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);

@@ -24,6 +24,18 @@ export function loadEnv(): (k: string) => string | undefined {
   return (k) => process.env[k] || merged[k] || undefined;
 }
 
+/**
+ * Rules from the local seed file (no network). Only the fields the deterministic path needs are
+ * parsed (code, category, titles); use it with --deterministic-only.
+ */
+export function loadSeedRules(): RuleRecord[] {
+  const sql = fs.readFileSync(path.resolve(here, "../supabase/seed.sql"), "utf8");
+  const re = /^\('([A-Z]+-[A-Z0-9-]+)',\s*'[0-9a-f-]+',\s*'(\w+)',\s*'((?:[^']|'')*)',\s*'((?:[^']|'')*)'/gm;
+  return [...sql.matchAll(re)].map(
+    (m) => ({ code: m[1], category: m[2], title_ar: m[3], title_en: m[4], is_active: true }) as unknown as RuleRecord,
+  );
+}
+
 /** Active rules from the hosted project (public read via RLS). */
 export async function loadRules(env: (k: string) => string | undefined): Promise<RuleRecord[]> {
   const url = env("VITE_SUPABASE_URL") ?? env("SUPABASE_URL");

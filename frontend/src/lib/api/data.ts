@@ -389,12 +389,33 @@ export async function retrySubmission(id: string): Promise<void> {
   await triggerAnalysis(id);
 }
 
-/** Starts (or resumes) the analysis pipeline. Uses the signed-in user's JWT. */
-export async function triggerAnalysis(submissionId: string): Promise<void> {
+/** Submissions whose last start request failed in this browser session (see `startFailed`). */
+const failedStarts = new Set<string>();
+
+/** True when the last request to start this submission's analysis failed in this session. */
+export const startFailed = (submissionId: string) => failedStarts.has(submissionId);
+
+/**
+ * Starts (or resumes) the analysis pipeline. Uses the signed-in user's JWT. Never throws: a failure
+ * is remembered so the processing page can offer a retry immediately.
+ */
+export async function triggerAnalysis(submissionId: string): Promise<boolean> {
   const { error } = await supabase.functions.invoke("analyze", {
     body: { submission_id: submissionId },
   });
-  if (error) console.warn("[analyze] invoke failed:", error.message);
+  if (error) {
+    failedStarts.add(submissionId);
+    console.warn("[analyze] invoke failed:", error.message);
+    return false;
+  }
+  failedStarts.delete(submissionId);
+  return true;
+}
+
+/** Re-invokes `analyze` for a submission that never started (the function is idempotent). */
+export async function startAnalysis(submissionId: string): Promise<void> {
+  if (!(await triggerAnalysis(submissionId)))
+    throw new ApiError("analyze invoke failed", "network");
 }
 
 export async function deleteMedia(submissionId: string): Promise<void> {

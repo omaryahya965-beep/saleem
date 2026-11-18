@@ -1,3 +1,5 @@
+> **هذا الملف قديم؛ المرجع الحالي PROJECT_GUIDE.md و docs/saleem-v2** (This file is stale; see PROJECT_GUIDE.md and docs/saleem-v2.)
+
 # SALEEM roadmap
 
 ## Phase 1

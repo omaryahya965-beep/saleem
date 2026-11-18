@@ -125,7 +125,11 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
                   aria-label={t("issue.enlargeFrame")}
                   className="shrink-0 cursor-zoom-in rounded-sm transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
-                  <img src={issue.frameUrl} alt={frameAlt} className="h-16 w-12 rounded-sm object-cover" />
+                  <img
+                    src={issue.frameUrl}
+                    alt={frameAlt}
+                    className="h-16 w-12 rounded-sm object-cover"
+                  />
                 </button>
                 <Dialog
                   open={frameOpen}
