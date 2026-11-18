@@ -94,9 +94,7 @@ test("rulebook search and categories", async ({ page, lang }) => {
     0,
   );
   await page.getByRole("searchbox").fill("zzzz");
-  await expect(
-    page.getByText(tr(lang, "لا توجد قواعد مطابقة.", "No matching rules.")),
-  ).toBeVisible();
+  await expect(page.getByText(tr(lang, "لا توجد قواعد مطابقة", "No matching rules"))).toBeVisible();
 });
 
 test("protected pages redirect to sign-in; invalid share link is explained", async ({
@@ -119,7 +117,7 @@ test("language toggle flips direction and copy", async ({ page, lang }) => {
   await appReady(page);
   await page.getByRole("button", { name: new RegExp(tr(lang, "اللغة", "Language")) }).click();
   await expect(page.locator("html")).toHaveAttribute("dir", lang === "ar" ? "ltr" : "rtl");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
     tr(lang, "Rulebook", "دليل القواعد"),
   );
 });

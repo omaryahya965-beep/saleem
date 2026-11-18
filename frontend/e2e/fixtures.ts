@@ -1,6 +1,6 @@
 import { test as base, expect, type Page } from "@playwright/test";
 // @ts-expect-error — plain ESM helper shared with the screenshot scripts
-import { installMockAuth } from "../../scripts/mock-auth.mjs";
+import { installMockAuth, installMockPublic } from "../../scripts/mock-auth.mjs";
 
 type Lang = "ar" | "en";
 
@@ -10,6 +10,7 @@ export const test = base.extend<{ lang: Lang; signedIn: Page; consoleErrors: str
     use(((info.project.metadata as { lang?: Lang }).lang ?? "ar") as Lang),
   context: async ({ context, lang }, use) => {
     await context.addInitScript((l) => localStorage.setItem("saleem-lang", l), lang);
+    await installMockPublic(context);
     await use(context);
   },
   consoleErrors: async ({ page }, use) => {

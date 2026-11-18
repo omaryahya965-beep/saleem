@@ -43,8 +43,161 @@ export const MOCK_SUBMISSIONS = [
   { ...base, id: "aaaaaaaa-0000-4000-8000-000000000005", kind: "video", title: "سنابات رحلة العلا", caption: "", platform: "snapchat", product_category: "other", duration_seconds: 84, status: "failed", progress: 40, current_step: "transcribe", overall_status: null, error_message: "تعذّر تفريغ الصوت: الملف لا يحتوي على مسار صوتي.", created_at: iso(60 * 72), analyzed_at: null },
 ];
 
+export const DEMO_SUBMISSIONS = [
+  {
+    ...base,
+    id: "d0000000-0000-0000-0000-000000000001",
+    is_demo: true,
+    kind: "video",
+    title: "إعلان شاي التنحيف – النسخة الأولى",
+    caption: "جربت شاي التنحيف الجديد 🔥 كود الخصم SALEEM20 الرابط في البايو",
+    platform: "snapchat",
+    product_category: "health",
+    duration_seconds: 42,
+    status: "done",
+    progress: 100,
+    current_step: "done",
+    overall_status: "needs_fixes",
+    created_at: iso(120),
+    analyzed_at: iso(120),
+  },
+  {
+    ...base,
+    id: "d0000000-0000-0000-0000-000000000002",
+    parent_id: "d0000000-0000-0000-0000-000000000001",
+    is_demo: true,
+    kind: "video",
+    title: "إعلان شاي الأعشاب – النسخة المعدّلة",
+    caption: "إعلان مدفوع بالتعاون مع متجر نخلة",
+    platform: "snapchat",
+    product_category: "health",
+    duration_seconds: 38,
+    status: "done",
+    progress: 100,
+    current_step: "done",
+    overall_status: "ready",
+    mawthooq_license_no: "MW-2026-48213",
+    has_written_contract: true,
+    ai_used: true,
+    created_at: iso(60),
+    analyzed_at: iso(60),
+  },
+];
+
+const DEMO_FINDINGS_1 = [
+  { id: "f1", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-01", severity: "violation", start_seconds: 0, end_seconds: 5, source: "transcript", quote: "لا توجد كلمة «إعلان»", reason_ar: "المحتوى ترويجي دون إفصاح", reason_en: "Promotional without disclosure", suggestion_ar: "ابدأ المقطع بعبارة إعلان مدفوع", suggestion_en: "Open with paid ad", confidence: 0.95 },
+  { id: "f2", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "COM-01", severity: "violation", start_seconds: 12, end_seconds: 24, source: "transcript", quote: "هذا الشاي ينحف", reason_ar: "ادعاء صحي مطلق", reason_en: "Absolute health claim", suggestion_ar: "احذف وعود الوزن", suggestion_en: "Remove weight claims", confidence: 0.90 },
+  { id: "f3", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "AI-01", severity: "violation", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "ذكاء اصطناعي دون إفصاح", reason_en: "AI without disclosure", suggestion_ar: "أضف معدل بالذكاء الاصطناعي", suggestion_en: "Add AI edited", confidence: 0.95 },
+  { id: "f4", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-03", severity: "warning", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "لا يوجد عقد مكتوب", reason_en: "No written contract", suggestion_ar: "وثق الاتفاق كتابيا", suggestion_en: "Put agreement in writing", confidence: 0.90 },
+  { id: "f5", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-04", severity: "warning", start_seconds: null, end_seconds: null, source: "metadata", quote: null, reason_ar: "لم يدخل رقم رخصة موثوق", reason_en: "No license number", suggestion_ar: "أدخل رخصة موثوق", suggestion_en: "Enter license", confidence: 0.80 },
+  { id: "f6", run_id: "a0000000-0000-0000-0000-000000000001", rule_code: "MAW-02", severity: "warning", start_seconds: 24, end_seconds: 33, source: "transcript", quote: "منتج تنحيف", reason_ar: "منتج صحي يحتاج ترخيص", reason_en: "Health product requires license", suggestion_ar: "تأكد من الترخيص", suggestion_en: "Confirm license", confidence: 0.60 },
+];
+
+const DEMO_TRANSCRIPT_1 = {
+  submission_id: "d0000000-0000-0000-0000-000000000001",
+  language: "ar",
+  text: "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد... هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية. استخدموا كود SALEEM20 والرابط في البايو، اطلبوا الحين.",
+  segments: [
+    { start: 0, end: 12, text: "هلا والله يا جماعة، اليوم بجرب لكم شاي جديد..." },
+    { start: 12, end: 24, text: "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع ومضمون بدون أعراض جانبية." },
+    { start: 24, end: 33, text: "استخدموا كود SALEEM20 والرابط في البايو، اطلبوا الحين." },
+    { start: 33, end: 42, text: "تنبيهات استرشادية وليست موافقة رسمية" },
+  ],
+};
+
+/** Adds REST mocks for public demo checks, reports, rulebook, and verification. */
+export async function installMockPublic(context) {
+  const json = (route, body, headers = {}) => route.fulfill({ status: 200, contentType: "application/json", headers, body: JSON.stringify(body) });
+  const allSubs = [...MOCK_SUBMISSIONS, ...DEMO_SUBMISSIONS];
+
+  await context.route("**/rest/v1/submissions**", async (route) => {
+    const u = new URL(route.request().url());
+    const idEq = u.searchParams.get("id")?.replace(/^eq\./, "");
+    if (idEq) {
+      const row = allSubs.find((s) => s.id === idEq);
+      if (!row) return route.fallback ? route.fallback() : route.continue();
+      return json(route, route.request().headers()["accept"]?.includes("vnd.pgrst.object") ? row : [row]);
+    }
+    const parentEq = u.searchParams.get("parent_id")?.replace(/^eq\./, "");
+    if (parentEq) {
+      const rows = allSubs.filter((s) => s.parent_id === parentEq);
+      return json(route, rows);
+    }
+    if (u.searchParams.get("is_demo") === "eq.true") {
+      return json(route, DEMO_SUBMISSIONS);
+    }
+    return route.fallback ? route.fallback() : route.continue();
+  });
+
+  await context.route("**/rest/v1/analysis_runs**", async (route) => {
+    const u = new URL(route.request().url());
+    const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
+    if (sid === "d0000000-0000-0000-0000-000000000001") {
+      return json(route, [{ id: "a0000000-0000-0000-0000-000000000001", submission_id: sid, prompt_version: "v1", llm_model: "gemini-2.0-flash", started_at: iso(120), completed_at: iso(120) }]);
+    }
+    if (sid === "d0000000-0000-0000-0000-000000000002") {
+      return json(route, [{ id: "a0000000-0000-0000-0000-000000000002", submission_id: sid, prompt_version: "v1", llm_model: "gemini-2.0-flash", started_at: iso(60), completed_at: iso(60) }]);
+    }
+    return json(route, []);
+  });
+
+  await context.route("**/rest/v1/findings**", async (route) => {
+    const u = new URL(route.request().url());
+    const rid = u.searchParams.get("run_id")?.replace(/^eq\./, "");
+    if (rid === "a0000000-0000-0000-0000-000000000001") {
+      return json(route, DEMO_FINDINGS_1);
+    }
+    return json(route, []);
+  });
+
+  await context.route("**/rest/v1/transcripts**", async (route) => {
+    const u = new URL(route.request().url());
+    const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
+    if (sid === "d0000000-0000-0000-0000-000000000001") {
+      return json(route, DEMO_TRANSCRIPT_1);
+    }
+    return json(route, { submission_id: sid, language: "ar", text: "", segments: [] });
+  });
+
+  await context.route("**/rest/v1/compliance_logs**", async (route) => {
+    const u = new URL(route.request().url());
+    const sid = u.searchParams.get("submission_id")?.replace(/^eq\./, "");
+    if (sid === "d0000000-0000-0000-0000-000000000002") {
+      return json(route, {
+        submission_id: sid,
+        content_hash: "e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9",
+        created_at: iso(60),
+      });
+    }
+    return route.fulfill({ status: 406, contentType: "application/json", body: JSON.stringify({ code: "PGRST116", message: "0 rows" }) });
+  });
+
+  await context.route("**/rest/v1/rpc/verify_compliance_log**", async (route) => {
+    const post = route.request().postDataJSON?.() ?? {};
+    if (post._sid === "d0000000-0000-0000-0000-000000000002") {
+      return json(route, {
+        valid: true,
+        content_hash: "e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9",
+        platform: "snapchat",
+        product_category: "health",
+        duration_seconds: 38,
+        created_at: iso(60),
+        analyzed_at: iso(60),
+        sealed_at: iso(60),
+        findings_count: 0,
+        overall_status: "ready",
+      });
+    }
+    return json(route, null);
+  });
+
+  await context.route("**/rest/v1/evidence_frames**", (route) => json(route, []));
+  await context.route("**/rest/v1/sources**", (route) => json(route, []));
+}
+
 /** Adds the fake session + REST mocks to a Playwright BrowserContext. */
 export async function installMockAuth(context, { empty = false } = {}) {
+  await installMockPublic(context);
   const env = readEnv();
   // An explicit VITE_SUPABASE_URL (e.g. an offline build) wins over backend/.env.
   const rawUrl = process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL;
