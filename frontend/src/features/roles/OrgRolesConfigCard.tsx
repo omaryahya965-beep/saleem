@@ -73,8 +73,7 @@ export function OrgRolesConfigCard({ orgId, myRole }: OrgRolesConfigCardProps) {
       const check = canDisableRole(role, members);
       if (!check.canDisable) {
         toast.error(
-          check.reason_ar ||
-            t("rolesConfig.hasMembersWarning", { n: check.memberCount }),
+          check.reason_ar || t("rolesConfig.hasMembersWarning", { n: check.memberCount }),
         );
         return;
       }
@@ -97,16 +96,12 @@ export function OrgRolesConfigCard({ orgId, myRole }: OrgRolesConfigCardProps) {
       <li
         key={role}
         className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-3.5 transition-colors ${
-          isEnabled
-            ? "border-border bg-card"
-            : "border-border/60 bg-sunken/25 opacity-75"
+          isEnabled ? "border-border bg-card" : "border-border/60 bg-sunken/25 opacity-75"
         }`}
       >
         <div className="flex flex-col gap-1 min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-sm text-fg">
-              {t(`org.roles.${role}` as TKey)}
-            </span>
+            <span className="font-semibold text-sm text-fg">{t(`org.roles.${role}` as TKey)}</span>
             {isImmutable ? (
               <Badge variant="neutral" className="text-[10px]">
                 {t("rolesConfig.immutableBadge")}
@@ -139,21 +134,19 @@ export function OrgRolesConfigCard({ orgId, myRole }: OrgRolesConfigCardProps) {
 
         <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
           {isManager ? (
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor={`switch-role-${role}`}
-                className="text-xs font-medium text-fg-muted cursor-pointer"
-              >
-                {isEnabled ? t("rolesConfig.enabledBadge") : t("rolesConfig.disabledBadge")}
-              </label>
-              <Switch
-                id={`switch-role-${role}`}
-                checked={isEnabled}
-                disabled={isImmutable || (!isEnabled ? false : !check.canDisable) || saveRoles.isPending}
-                onCheckedChange={(checked) => handleToggle(role, checked)}
-                aria-label={t(`org.roles.${role}` as TKey)}
-              />
-            </div>
+            <Switch
+              label={
+                <span className="text-xs font-medium text-fg-muted">
+                  {isEnabled ? t("rolesConfig.enabledBadge") : t("rolesConfig.disabledBadge")}
+                </span>
+              }
+              checked={isEnabled}
+              disabled={
+                isImmutable || (!isEnabled ? false : !check.canDisable) || saveRoles.isPending
+              }
+              onCheckedChange={(checked) => handleToggle(role, checked)}
+              aria-label={t(`org.roles.${role}` as TKey)}
+            />
           ) : (
             <Badge variant={isEnabled ? "green" : "neutral"}>
               {isEnabled ? t("rolesConfig.enabledBadge") : t("rolesConfig.disabledBadge")}

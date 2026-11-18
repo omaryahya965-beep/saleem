@@ -134,7 +134,9 @@ export function IssueCard({ issue, selected, onSelect, className }: IssueCardPro
       </button>
       <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5 sm:pb-5">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-fg-muted">
-          <Badge mono className="font-semibold">{issue.ruleCode}</Badge>
+          <Badge mono className="font-semibold">
+            {issue.ruleCode}
+          </Badge>
           <span className="font-medium text-fg">{issue.ruleTitle}</span>
           {issue.ruleCode.startsWith("INT-") ? (
             <Link

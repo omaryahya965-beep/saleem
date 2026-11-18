@@ -11,12 +11,7 @@ import {
 
 describe("roleConfig — organization role management and grouping", () => {
   it("divides the 9 roles into exactly 4 essential and 5 advanced roles", () => {
-    expect(ESSENTIAL_ROLES).toEqual([
-      "admin",
-      "creator",
-      "reviewer",
-      "external_uploader",
-    ]);
+    expect(ESSENTIAL_ROLES).toEqual(["admin", "creator", "reviewer", "external_uploader"]);
     expect(ADVANCED_ROLES).toEqual([
       "owner",
       "compliance_lead",

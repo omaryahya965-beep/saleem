@@ -121,11 +121,7 @@ export function PresetsCard({ orgId }: { orgId: string }) {
               <span className="text-fg-muted">
                 {t("flows.stepsCount", { n: p.approval_preset_steps.length })}
               </span>
-              {hasDisabledRole && (
-                <Badge variant="neutral">
-                  {t("rolesConfig.disabledBadge")}
-                </Badge>
-              )}
+              {hasDisabledRole && <Badge variant="neutral">{t("rolesConfig.disabledBadge")}</Badge>}
               <Button size="sm" variant="secondary" onClick={() => edit(p)}>
                 {t("products.edit")}
               </Button>
@@ -194,15 +190,17 @@ export function PresetsCard({ orgId }: { orgId: string }) {
                     onChange={(e) => setStep(i, { role: e.target.value || null, user_ids: [] })}
                   >
                     <option value="">—</option>
-                    {Array.from(new Set([...availableStepRoles, ...(s.role ? [s.role] : [])])).map((r) => {
-                      const isRoleDisabled = !enabledRoles.includes(r);
-                      return (
-                        <option key={r} value={r}>
-                          {t(`org.roles.${r}` as TKey)}
-                          {isRoleDisabled ? ` (${t("rolesConfig.disabledBadge")})` : ""}
-                        </option>
-                      );
-                    })}
+                    {Array.from(new Set([...availableStepRoles, ...(s.role ? [s.role] : [])])).map(
+                      (r) => {
+                        const isRoleDisabled = !enabledRoles.includes(r as OrgRole);
+                        return (
+                          <option key={r} value={r}>
+                            {t(`org.roles.${r}` as TKey)}
+                            {isRoleDisabled ? ` (${t("rolesConfig.disabledBadge")})` : ""}
+                          </option>
+                        );
+                      },
+                    )}
                   </Select>
                 </Field>
                 <Field label={t("flows.stepUser")}>

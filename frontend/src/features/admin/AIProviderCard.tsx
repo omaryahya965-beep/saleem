@@ -84,7 +84,7 @@ export function AIProviderCard() {
               {error instanceof Error ? error.message : t("errors.generic")}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="secondary" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-3.5 w-3.5 ms-1" />
             {t("aiProvider.testConnection")}
           </Button>
@@ -98,43 +98,50 @@ export function AIProviderCard() {
       case "verified":
         return {
           label: t("aiProvider.statusVerified"),
-          color: "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+          color:
+            "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
           icon: <CheckCircle2 className="h-4 w-4" />,
         };
       case "configured":
         return {
           label: t("aiProvider.statusConfigured"),
-          color: "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300",
+          color:
+            "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300",
           icon: <ShieldCheck className="h-4 w-4" />,
         };
       case "missing_key":
         return {
           label: t("aiProvider.statusMissingKey"),
-          color: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+          color:
+            "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
           icon: <AlertTriangle className="h-4 w-4" />,
         };
       case "invalid_key":
         return {
           label: t("aiProvider.statusInvalidKey"),
-          color: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+          color:
+            "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
           icon: <XCircle className="h-4 w-4" />,
         };
       case "model_not_found":
         return {
           label: t("aiProvider.statusModelNotFound"),
-          color: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+          color:
+            "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
           icon: <XCircle className="h-4 w-4" />,
         };
       case "provider_down":
         return {
           label: t("aiProvider.statusProviderDown"),
-          color: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+          color:
+            "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
           icon: <XCircle className="h-4 w-4" />,
         };
       default:
         return {
           label: status,
-          color: "border-gray-300 bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300",
+          color:
+            "border-gray-300 bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300",
           icon: <AlertTriangle className="h-4 w-4" />,
         };
     }
@@ -161,7 +168,7 @@ export function AIProviderCard() {
             {badge.label}
           </span>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={handleTest}
             disabled={testing}

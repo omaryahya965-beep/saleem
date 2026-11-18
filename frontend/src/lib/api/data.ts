@@ -54,10 +54,7 @@ export async function fetchRulebook(): Promise<{ version: RulebookVersion | null
   const version = versions?.[0] ?? null;
 
   try {
-    const { data: dbRules, error: rErr } = await supabase
-      .from("rules")
-      .select("*")
-      .order("code");
+    const { data: dbRules, error: rErr } = await supabase.from("rules").select("*").order("code");
 
     if (!rErr && dbRules && dbRules.length >= 150) {
       return { version, rules: dbRules };

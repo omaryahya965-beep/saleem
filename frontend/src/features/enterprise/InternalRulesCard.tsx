@@ -1,14 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  FileText,
-  FileUp,
-  Filter,
-  Loader2,
-  Plus,
-  Search,
-  Sparkles,
-  Upload,
-} from "lucide-react";
+import { FileText, FileUp, Filter, Loader2, Plus, Search, Sparkles, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
   Badge,
@@ -62,9 +53,11 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [extracting, setExtracting] = useState(false);
-  const [fileStats, setFileStats] = useState<{ name: string; chars: number; pages?: number } | null>(
-    null,
-  );
+  const [fileStats, setFileStats] = useState<{
+    name: string;
+    chars: number;
+    pages?: number;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -268,7 +261,9 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
 
           {fileStats && (
             <div className="mt-1 flex items-center gap-2 rounded bg-green/10 px-3 py-1.5 text-xs text-green">
-              <span>ملف: <strong>{fileStats.name}</strong></span>
+              <span>
+                ملف: <strong>{fileStats.name}</strong>
+              </span>
               {fileStats.pages && <span>· {fileStats.pages} صفحة</span>}
               <span>· {fileStats.chars} حرف مستخرج</span>
             </div>

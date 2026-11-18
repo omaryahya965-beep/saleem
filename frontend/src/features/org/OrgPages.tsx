@@ -507,9 +507,9 @@ export function OrgPage({ id }: { id: string }) {
                 <Field label={t("org.role")}>
                   <Select
                     value={
-                      enabledRoles.filter((r) => r !== "owner").includes(inviteRole)
+                      (enabledRoles.filter((r) => r !== "owner") as OrgRole[]).includes(inviteRole)
                         ? inviteRole
-                        : (enabledRoles.find((r) => r !== "owner") ?? "creator")
+                        : ((enabledRoles.find((r) => r !== "owner") ?? "creator") as OrgRole)
                     }
                     onChange={(e) => setInviteRole(e.target.value as OrgRole)}
                   >

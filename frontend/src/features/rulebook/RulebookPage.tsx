@@ -98,7 +98,7 @@ export function RulebookPage() {
 
   // Summary counts
   const stats = useMemo(() => {
-    let total = rules.length;
+    const total = rules.length;
     let active = 0;
     let draft = 0;
     let pending = 0;
@@ -216,7 +216,9 @@ export function RulebookPage() {
         </Card>
         <Card className="flex flex-col gap-1 p-3.5 border-l-4 border-l-amber">
           <span className="text-xs font-medium text-fg-muted">{t("rulebook.pendingRules")}</span>
-          <span className="text-2xl font-bold tracking-tight text-amber-text">{stats.pending + stats.draft}</span>
+          <span className="text-2xl font-bold tracking-tight text-amber-text">
+            {stats.pending + stats.draft}
+          </span>
           <span className="text-[11px] text-fg-muted">مسودات وقواعد بحثية للمعاينة</span>
         </Card>
         <Card className="flex flex-col gap-1 p-3.5">
@@ -243,7 +245,11 @@ export function RulebookPage() {
               className="ps-10"
             />
           </label>
-          {(q || authority !== "all" || status !== "all" || sector !== "all" || severity !== "all") && (
+          {(q ||
+            authority !== "all" ||
+            status !== "all" ||
+            sector !== "all" ||
+            severity !== "all") && (
             <Button
               size="sm"
               variant="ghost"
@@ -263,7 +269,9 @@ export function RulebookPage() {
         {/* Filter Dropdowns Grid */}
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">{t("rulebook.filterAuthority")}</label>
+            <label className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterAuthority")}
+            </label>
             <Select value={authority} onChange={(e) => setAuthority(e.target.value)}>
               {AUTHORITIES.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -274,7 +282,9 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">{t("rulebook.filterStatus")}</label>
+            <label className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterStatus")}
+            </label>
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               {STATUSES.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -285,7 +295,9 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">{t("rulebook.filterSector")}</label>
+            <label className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterSector")}
+            </label>
             <Select value={sector} onChange={(e) => setSector(e.target.value)}>
               {SECTORS.map((sec) => (
                 <option key={sec.id} value={sec.id}>
@@ -296,7 +308,9 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">{t("rulebook.filterSeverity")}</label>
+            <label className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterSeverity")}
+            </label>
             <Select value={severity} onChange={(e) => setSeverity(e.target.value)}>
               <option value="all">{t("rulebook.all")}</option>
               <option value="violation">مخالفة نظامية (Violation)</option>
@@ -331,12 +345,11 @@ export function RulebookPage() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-xs text-fg-muted">
             <span>
-              عرض <strong>{filtered.length}</strong> من إجمالي <strong>{rules.length}</strong> قاعدة تنظيمية
+              عرض <strong>{filtered.length}</strong> من إجمالي <strong>{rules.length}</strong> قاعدة
+              تنظيمية
             </span>
             {authority !== "all" && (
-              <Badge variant="outline">
-                {AUTHORITIES.find((a) => a.id === authority)?.ar}
-              </Badge>
+              <Badge variant="outline">{AUTHORITIES.find((a) => a.id === authority)?.ar}</Badge>
             )}
           </div>
 
@@ -437,11 +450,7 @@ export function RulebookPage() {
                     <StatusChip tone={r.default_severity} size="sm">
                       {t(`severity.${r.default_severity}`)}
                     </StatusChip>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setSelectedRule(r)}
-                    >
+                    <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
                       {t("rulebook.detailsBtn")}
                     </Button>
                   </div>
@@ -502,9 +511,12 @@ export function RulebookPage() {
 
             {/* 1. Official Regulatory Reference */}
             <div className="flex flex-col gap-1 rounded-md border border-border p-3">
-              <span className="text-xs font-semibold text-fg-muted">{t("rulebook.officialRef")}</span>
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.officialRef")}
+              </span>
               <p className="font-semibold text-fg text-base">
-                {selectedRule.source_name} — {selectedRule.article_ref || "المادة النظامية المعتمدة"}
+                {selectedRule.source_name} —{" "}
+                {selectedRule.article_ref || "المادة النظامية المعتمدة"}
               </p>
               {selectedRule.source_url && (
                 <a
@@ -522,14 +534,14 @@ export function RulebookPage() {
             {/* 2. Direct Requirement Text */}
             <div className="flex flex-col gap-1 rounded-md border border-border p-3 bg-sunken/40">
               <span className="text-xs font-semibold text-fg-muted">{t("rulebook.legalText")}</span>
-              <p className="font-bold text-fg leading-relaxed">
-                {selectedRule.title_ar}
-              </p>
+              <p className="font-bold text-fg leading-relaxed">{selectedRule.title_ar}</p>
             </div>
 
             {/* 3. Explanation & Practical Description */}
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold text-fg-muted">{t("rulebook.explanation")}</span>
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.explanation")}
+              </span>
               <p className="leading-relaxed text-fg-muted">
                 {selectedRule.description_ar || selectedRule.summary_ar}
               </p>
@@ -537,24 +549,32 @@ export function RulebookPage() {
 
             {/* 4. Applicability */}
             <div className="flex flex-col gap-1 rounded-md border border-border p-3">
-              <span className="text-xs font-semibold text-fg-muted">{t("rulebook.applicability")}</span>
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.applicability")}
+              </span>
               <p className="leading-relaxed text-fg">
-                {selectedRule.applicability_ar || "تنطبق على كافة المواد الإعلانية الترويجية في هذا القطاع."}
+                {selectedRule.applicability_ar ||
+                  "تنطبق على كافة المواد الإعلانية الترويجية في هذا القطاع."}
               </p>
             </div>
 
             {/* 5. Evidence Policy */}
             <div className="flex flex-col gap-1 rounded-md border border-border p-3">
-              <span className="text-xs font-semibold text-fg-muted">{t("rulebook.evidencePolicy")}</span>
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.evidencePolicy")}
+              </span>
               <p className="leading-relaxed text-fg-muted">
-                {selectedRule.evidence_policy_ar || "نص الإعلان، تفريغ الصوت، والنصوص المكتوبة على الشاشة."}
+                {selectedRule.evidence_policy_ar ||
+                  "نص الإعلان، تفريغ الصوت، والنصوص المكتوبة على الشاشة."}
               </p>
             </div>
 
             {/* 6. How SALEEM Evaluates It */}
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="rounded-md border border-border p-3">
-                <span className="text-xs font-semibold text-fg-muted">{t("rulebook.howWeCheck")}</span>
+                <span className="text-xs font-semibold text-fg-muted">
+                  {t("rulebook.howWeCheck")}
+                </span>
                 <p className="mt-1 text-fg font-medium">
                   {selectedRule.check_mode === "content"
                     ? "فحص ذكاء اصطناعي وتحليل محتوى متعدد الوسائط"

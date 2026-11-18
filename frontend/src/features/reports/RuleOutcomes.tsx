@@ -1,5 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen, CheckCircle2, FileText, Info, Layers, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  FileText,
+  Info,
+  Layers,
+  ShieldCheck,
+} from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import type { ReportBundle } from "@/lib/api/data";
@@ -16,21 +24,12 @@ function outcomeCounts(checks: CheckRow[]) {
   return m;
 }
 
-function coverageOf(bundle: ReportBundle) {
+function coverageOf(bundle: ReportBundle): CoverageView | null {
   const run = bundle.run;
   if (!run?.coverage || typeof run.coverage !== "object") return null;
-  const cov = run.coverage as {
-    status?: string;
-    items?: { modality: string; state: string }[];
-    packs?: {
-      code: string;
-      reason: string;
-      include_drafts: boolean;
-      applicable: number;
-      not_applicable: number;
-    }[];
-  };
-  return cov;
+  const cov = run.coverage as Partial<CoverageView>;
+  if (cov.status !== "complete" && cov.status !== "partial") return null;
+  return cov as CoverageView;
 }
 
 function stateLabel(t: (k: TKey, v?: Record<string, string | number>) => string, state: string) {
@@ -95,7 +94,9 @@ export function CoverageBanner({ bundle }: { bundle: ReportBundle }) {
             <p className="mt-1 text-fg-muted">{t("report2.draftCtaBody")}</p>
           </div>
           <Button asChild size="sm" variant="secondary" icon={<BookOpen />}>
-            <Link to="/rules">{t("report2.draftCtaAction")}</Link>
+            <Link to="/rules" search={{ q: undefined }}>
+              {t("report2.draftCtaAction")}
+            </Link>
           </Button>
         </div>
       )}
@@ -129,10 +130,16 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
 
   // Internal company rules identified in findings
   const companyFindings = bundle.findings.filter(
-    (f) => f.rule_code.startsWith("INT-") || (f.citation as { internal_policy?: boolean })?.internal_policy,
+    (f) =>
+      f.rule_code.startsWith("INT-") ||
+      (f.citation as { internal_policy?: boolean })?.internal_policy,
   );
 
-  const list = (outcome: "not_applicable" | "unable_to_verify", heading: string, testId: string) => {
+  const list = (
+    outcome: "not_applicable" | "unable_to_verify",
+    heading: string,
+    testId: string,
+  ) => {
     const rows = checks.filter(
       (c) => c.outcome === outcome && c.reason_code !== "reviewer_checklist",
     );
@@ -147,7 +154,10 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
         </summary>
         <ul className="mt-3 flex flex-col gap-2 text-sm">
           {rows.map((c) => (
-            <li key={c.id} className="flex flex-col gap-0.5 border-b border-border/40 pb-1.5 last:border-b-0">
+            <li
+              key={c.id}
+              className="flex flex-col gap-0.5 border-b border-border/40 pb-1.5 last:border-b-0"
+            >
               <span className="text-fg font-medium">
                 <bdi>{title(c.rule_id)}</bdi>
               </span>
@@ -160,14 +170,18 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
   };
 
   return (
-    <section aria-labelledby="rule-outcomes" className="flex flex-col gap-4 border-t border-border pt-6">
+    <section
+      aria-labelledby="rule-outcomes"
+      className="flex flex-col gap-4 border-t border-border pt-6"
+    >
       <div className="flex flex-col gap-1">
         <h2 id="rule-outcomes" className="text-xl font-bold flex items-center gap-2 text-fg">
           <Layers className="size-5 text-green" />
           القواعد والحزم المطبقة ولماذا
         </h2>
         <p className="text-xs text-fg-muted">
-          تفصيل شامل للحزم والأنظمة السعودية وقواعد الشركة التي تم فحص الإعلان بموجبها وأسباب انطباقها أو استبعادها.
+          تفصيل شامل للحزم والأنظمة السعودية وقواعد الشركة التي تم فحص الإعلان بموجبها وأسباب
+          انطباقها أو استبعادها.
         </p>
       </div>
 
@@ -181,7 +195,8 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
             قواعد محققة بنجاح: <bdi className="font-bold">{counts.passed}</bdi>
           </Badge>
           <Badge variant="amber">
-            تتطلب دليلاً أو معلومات إضافية: <bdi className="font-bold">{counts.unable_to_verify}</bdi>
+            تتطلب دليلاً أو معلومات إضافية:{" "}
+            <bdi className="font-bold">{counts.unable_to_verify}</bdi>
           </Badge>
           <Badge variant="outline">
             قواعد مستبعدة لعدم الانطباق: <bdi className="font-bold">{counts.not_applicable}</bdi>
@@ -236,7 +251,8 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
       >
         <summary className="cursor-pointer font-bold text-fg flex items-center gap-2">
           <FileText className="size-4 text-green" />
-          سياسات وقواعد الشركة المفحوصة ({companyFindings.length > 0 ? companyFindings.length : "مطبقة"})
+          سياسات وقواعد الشركة المفحوصة (
+          {companyFindings.length > 0 ? companyFindings.length : "مطبقة"})
         </summary>
         <div className="mt-3 text-sm flex flex-col gap-2">
           {companyFindings.length > 0 ? (
@@ -285,9 +301,7 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
                   ☐ <bdi>{title(c.rule_id)}</bdi>
                 </span>
                 {policy(c.rule_id) && (
-                  <span className="text-xs text-fg-muted">
-                    الدليل المطلوب: {policy(c.rule_id)}
-                  </span>
+                  <span className="text-xs text-fg-muted">الدليل المطلوب: {policy(c.rule_id)}</span>
                 )}
               </li>
             ))}

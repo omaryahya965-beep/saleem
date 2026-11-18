@@ -31,7 +31,8 @@
     "skipToContent": "Skip to content",
     "yes": "Yes",
     "no": "No",
-    "none": "—"
+    "none": "—",
+    "saved": "Saved successfully"
   },
   "nav": {
     "home": "Home",

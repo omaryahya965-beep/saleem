@@ -58,7 +58,7 @@ export function Badge({
   mono,
 }: {
   children: ReactNode;
-  variant?: "neutral" | "outline" | "inverse" | "green";
+  variant?: "neutral" | "outline" | "inverse" | "green" | "amber";
   className?: string;
   /** Monospace, LTR — for codes like MAW-01. */
   mono?: boolean;
@@ -72,6 +72,7 @@ export function Badge({
         variant === "outline" && "border border-border text-fg-muted",
         variant === "inverse" && "bg-ink text-paper",
         variant === "green" && "bg-green-bg text-ready",
+        variant === "amber" && "bg-warning-bg text-warning",
         mono && "font-mono tracking-normal",
         className,
       )}

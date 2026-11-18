@@ -9,14 +9,8 @@ const sb = () => import("@/lib/supabase").then((m) => m.supabase);
  * VITE_DEMO_LOGIN only shows the UI; it is not a secret and grants nothing by itself.
  */
 export const DEMO_LOGINS =
-  import.meta.env["VITE_DEMO_LOGIN"] === "true" ||
-  import.meta.env["VITE_DEMO_LOGIN"] !== "false";
-export const ESSENTIAL_PERSONAS = [
-  "admin",
-  "creator",
-  "reviewer",
-  "external_uploader",
-] as const;
+  import.meta.env["VITE_DEMO_LOGIN"] === "true" || import.meta.env["VITE_DEMO_LOGIN"] !== "false";
+export const ESSENTIAL_PERSONAS = ["admin", "creator", "reviewer", "external_uploader"] as const;
 
 export const ADVANCED_PERSONAS = [
   "owner",
@@ -26,10 +20,7 @@ export const ADVANCED_PERSONAS = [
   "viewer",
 ] as const;
 
-export const DEMO_PERSONAS = [
-  ...ESSENTIAL_PERSONAS,
-  ...ADVANCED_PERSONAS,
-] as const;
+export const DEMO_PERSONAS = [...ESSENTIAL_PERSONAS, ...ADVANCED_PERSONAS] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number];
 
 export const DEMO_EMAILS: Record<DemoPersona, string> = {

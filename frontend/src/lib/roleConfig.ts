@@ -50,9 +50,7 @@ export function getEnabledRoles(
 
   let base: OrgRole[];
   if (Array.isArray(configured) && configured.length > 0) {
-    base = (configured as string[]).filter((r): r is OrgRole =>
-      ORG_ROLES.includes(r as OrgRole),
-    );
+    base = (configured as string[]).filter((r): r is OrgRole => ORG_ROLES.includes(r as OrgRole));
   } else {
     // If not configured, all roles are available by default
     base = [...ORG_ROLES];

@@ -251,6 +251,7 @@ export function LandingPage() {
           </ul>
           <Link
             to="/rules"
+            search={{ q: undefined }}
             className="mt-6 inline-flex min-h-11 items-center text-sm font-medium text-mint underline-offset-4 hover:underline"
           >
             {t("nav.rulebook")}

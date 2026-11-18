@@ -174,13 +174,19 @@ export function DemoRolePicker({ onSignedIn }: { onSignedIn: () => void }) {
             >
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4 text-fg-muted" />
-                <span>{showAdvanced ? t("auth.demo.hideAdvanced") : t("auth.demo.showAdvanced")}</span>
+                <span>
+                  {showAdvanced ? t("auth.demo.hideAdvanced") : t("auth.demo.showAdvanced")}
+                </span>
                 <span className="text-[11px] text-fg-muted font-normal">
                   — {t("auth.demo.advancedHint")}
                 </span>
               </div>
               <div className="flex items-center gap-1 text-fg-muted">
-                {showAdvanced ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                {showAdvanced ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
               </div>
             </button>
 
@@ -196,9 +202,7 @@ export function DemoRolePicker({ onSignedIn }: { onSignedIn: () => void }) {
           </div>
         </div>
 
-        <p className="mt-3 text-[11px] text-fg-muted leading-relaxed">
-          {t("auth.demo.fictional")}
-        </p>
+        <p className="mt-3 text-[11px] text-fg-muted leading-relaxed">{t("auth.demo.fictional")}</p>
       </Dialog>
     </section>
   );
