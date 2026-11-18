@@ -28,7 +28,9 @@ jobs:
       - run: npm ci
       - name: Write public env for Vite (envDir is backend/)
         run: |
-          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$VITE_SUPABASE_URL" "$VITE_SUPABASE_PUBLISHABLE_KEY" > backend/.env
+          URL="${VITE_SUPABASE_URL:-http://127.0.0.1:54321}"
+          KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-mock-publishable-key}"
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$URL" "$KEY" > backend/.env
       - run: npm --workspace frontend exec tsc -- --noEmit -p .
       - run: npm run lint
       - run: npm test
@@ -70,7 +72,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: |
-          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$VITE_SUPABASE_URL" "$VITE_SUPABASE_PUBLISHABLE_KEY" > backend/.env
+          URL="${VITE_SUPABASE_URL:-http://127.0.0.1:54321}"
+          KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-mock-publishable-key}"
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_PUBLISHABLE_KEY=%s\nVITE_DEMO_MODE=false\n' "$URL" "$KEY" > backend/.env
       - run: npx playwright install --with-deps chromium
       - run: npm --workspace frontend run build
       - run: npm --workspace frontend run e2e

@@ -50,13 +50,13 @@ async function mockPromotions(page: Page) {
     body: JSON.stringify(body),
   });
   const wantsObject = (h: Record<string, string>) => h["accept"]?.includes("vnd.pgrst.object");
-  await page.context().route(`${URL_}/rest/v1/promotions**`, (route) => {
+  await page.context().route("**/rest/v1/promotions**", (route) => {
     const u = new URL(route.request().url());
     if (u.searchParams.get("id") === `eq.${PID}`)
       return route.fulfill(json(wantsObject(route.request().headers()) ? promotion : [promotion]));
     return route.fulfill(json([promotion]));
   });
-  await page.context().route(`${URL_}/rest/v1/submissions**`, (route) => {
+  await page.context().route("**/rest/v1/submissions**", (route) => {
     const u = new URL(route.request().url());
     if (u.searchParams.get("promotion_id") === `eq.${PID}`) return route.fulfill(json(versions));
     const inIds = u.searchParams.get("id");
