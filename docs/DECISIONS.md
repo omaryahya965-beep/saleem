@@ -460,3 +460,10 @@ Format: decision — why — alternatives considered.
 - **D163. The "invalid key" error on the live site** («مفتاح مزوّد التحليل غير صالح. أبلغ فريق سَليم.») comes
   from the v1 build on `master`, which defaults to OpenAI; the OpenAI key is expired (D157). The fix is deploying
   this branch with `GEMINI_API_KEY` set as a Supabase secret, which needs separate release approval.
+- **D164. Live Gemini findings (2026-11-19).** First real runs exposed: (1) a 45 s client timeout, which the SDK
+  sends as `X-Server-Timeout`, made Google answer 504 for full v2 prompts (~39 s at default thinking) → 90 s;
+  (2) thinking dominated output tokens and latency (6,073 → 2,419 output tokens, 39 s → 23 s for the same kind
+  of ad) → `GEMINI_THINKING_LEVEL`, default `LOW` (answers stay schema-validated and evidence-checked);
+  (3) CheckPage briefly rendered a report bundle fetched before the run finished — a false "no automated
+  findings" — now shows the skeleton until the fresh bundle arrives; (4) the project key is on the Gemini
+  **Free Tier: 20 requests/day per model**, far below SALEEM's needs — billing is required before release.

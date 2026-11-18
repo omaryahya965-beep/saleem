@@ -75,7 +75,6 @@ export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
     );
   }
   if (!done) return <ProcessingView submission={status.data} />;
-  if (report.isPending) return <ReportSkeleton />;
   if (report.isError)
     return (
       <Page narrow>
@@ -86,5 +85,8 @@ export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
         />
       </Page>
     );
+  // Never render a bundle loaded before the pipeline finished: it has no findings yet and would read
+  // as a clean "no automated findings" report until the refetch lands (seen in a live Gemini run).
+  if (report.isPending || staleReport) return <ReportSkeleton />;
   return <ReportView bundle={report.data} startAt={startAt} />;
 }

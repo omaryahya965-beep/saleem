@@ -26,6 +26,7 @@ async function draftWithGemini(apiKey: string, model: string, text: string): Pro
         responseMimeType: "application/json",
         responseSchema: DRAFT_SCHEMA,
         maxOutputTokens: 4000,
+        thinkingConfig: { thinkingLevel: Deno.env.get("GEMINI_THINKING_LEVEL")?.trim().toUpperCase() || "LOW" },
       },
     }),
     signal: AbortSignal.timeout(90_000),

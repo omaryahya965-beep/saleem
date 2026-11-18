@@ -9,7 +9,13 @@ import { classifyProviderError } from "./errors.ts";
 
 // Stable, multimodal Flash: https://aistudio.google.com/docs/models/gemini-3.8-flash
 export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash";
-export const GEMINI_TIMEOUT_MS = 45_000;
+// Measured live (2026-11-19): a full v2 text analysis took ~39 s at the default thinking level. The SDK sends
+// this as X-Server-Timeout, so a tight value makes Google answer 504 (deadline exceeded).
+export const GEMINI_TIMEOUT_MS = 90_000;
+/** Thinking is billed as output and dominates latency; the answer is schema-validated and evidence-checked. */
+export const GEMINI_THINKING_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
+export type GeminiThinkingLevel = (typeof GEMINI_THINKING_LEVELS)[number];
+export const GEMINI_DEFAULT_THINKING: GeminiThinkingLevel = "LOW";
 export const GEMINI_MAX_MEDIA_BYTES = 8 * 1024 * 1024;
 export const GEMINI_FRAMES_PER_BATCH = 16;
 const MAX_FRAME_BYTES = 512 * 1024;
@@ -23,6 +29,8 @@ interface Options {
   sleep?: (ms: number) => Promise<void>;
   /** Trusted server configuration, never taken from an advertisement. Supports local Kong. */
   storageUrl?: string;
+  /** GEMINI_THINKING_LEVEL (LOW | MEDIUM | HIGH); anything else falls back to GEMINI_DEFAULT_THINKING. */
+  thinkingLevel?: string;
 }
 
 export const GEMINI_ANALYSIS_SCHEMA = {
@@ -162,10 +170,13 @@ class GeminiClient {
   protected readonly timeout: number;
   protected readonly storageOrigin: string | undefined;
   private readonly sleep: NonNullable<Options["sleep"]>;
+  readonly thinkingLevel: GeminiThinkingLevel;
   constructor(key: string, protected readonly model: string, options: Options = {}) {
     if (!key.trim() || /^(your[_-]|sk-\.\.\.)/i.test(key)) throw new ProviderError("GEMINI_API_KEY is not set", false);
     if (!/^gemini-[a-z0-9.-]+$/.test(model)) inputError("Invalid GEMINI_MODEL");
     this.timeout = options.timeoutMs ?? GEMINI_TIMEOUT_MS;
+    const level = options.thinkingLevel?.trim().toUpperCase();
+    this.thinkingLevel = (GEMINI_THINKING_LEVELS as readonly string[]).includes(level ?? "") ? level as GeminiThinkingLevel : GEMINI_DEFAULT_THINKING;
     this.storageOrigin = options.storageUrl ? new URL(options.storageUrl).origin : undefined;
     const client = options.generate ? null : new GoogleGenAI({ apiKey: key.trim(), httpOptions: { timeout: this.timeout, retryOptions: { attempts: 1 } } });
     this.generate = options.generate ?? ((request) => client!.models.generateContent(request));
@@ -186,6 +197,7 @@ class GeminiClient {
           this.generate({ model: this.model, contents: [{ role: "user", parts: requestParts }], config: {
             systemInstruction: instruction, responseMimeType: "application/json", responseJsonSchema: schema,
             maxOutputTokens: 12_000, automaticContinuation: false, abortSignal: ctrl.signal,
+            thinkingConfig: { thinkingLevel: this.thinkingLevel as never },
           } }),
           new Promise<never>((_, reject) => { timer = setTimeout(() => { ctrl.abort(); reject(geminiError(null)); }, timeout); }),
         ]);

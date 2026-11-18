@@ -1,5 +1,5 @@
 // Provider registry. SALEEM uses Google Gemini only (D161): analysis, vision and Arabic transcription.
-// Configuration is server-side env only: GEMINI_API_KEY (required) and GEMINI_MODEL (optional).
+// Configuration is server-side env only: GEMINI_API_KEY (required), GEMINI_MODEL and GEMINI_THINKING_LEVEL (optional).
 // Legacy LLM_PROVIDER / TRANSCRIPTION_PROVIDER values (e.g. "openai") are ignored on purpose, so an old
 // secret can never route an analysis to another provider. There is no fallback provider.
 
@@ -40,9 +40,9 @@ function requireKey(env: Env): string {
 }
 
 export function transcriptionProvider(env: Env): TranscriptionProvider {
-  return new GeminiTranscription(requireKey(env), config(env).transcriptionModel);
+  return new GeminiTranscription(requireKey(env), config(env).transcriptionModel, { thinkingLevel: env("GEMINI_THINKING_LEVEL") });
 }
 
 export function analysisProvider(env: Env): AnalysisProvider {
-  return new GeminiAnalysis(requireKey(env), config(env).llmModel, { storageUrl: env("SUPABASE_URL") });
+  return new GeminiAnalysis(requireKey(env), config(env).llmModel, { storageUrl: env("SUPABASE_URL"), thinkingLevel: env("GEMINI_THINKING_LEVEL") });
 }

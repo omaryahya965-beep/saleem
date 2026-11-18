@@ -16,13 +16,18 @@ const stamp = (m) => console.log(`${((Date.now() - t0) / 1000).toFixed(1).padSta
 
 await page.goto(`${base}/login`);
 await page.locator("html[data-app-ready]").waitFor({ state: "attached" });
-await page.getByRole("button", { name: /demo@saleem\.app/ }).click();
-await page.waitForURL(/\/dashboard/);
-stamp("signed in as demo@saleem.app");
+// One-click demo login (server-side broker, local sandbox org): the marketer persona.
+await page.getByTestId("demo-open").click();
+await page.getByTestId("demo-enter-creator").click();
+await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 30000 });
+stamp("signed in as marketer@demo.saleem.app (demo broker)");
 
 await page.goto(`${base}/new`);
+const isImage = /\.(jpe?g|png|webp)$/i.test(clip);
+if (isImage) await page.getByText("صورة", { exact: true }).first().click();
 await page.locator('input[type="file"]').setInputFiles(clip);
-await page.getByText(/المدة/).first().waitFor({ timeout: 20000 });
+// Videos show their duration once decoded; images have none.
+if (!/\.(jpe?g|png|webp)$/i.test(clip)) await page.getByText(/المدة/).first().waitFor({ timeout: 20000 });
 const sidecarPath = clip.replace(/\.[^.]+$/, ".json");
 const side = fs.existsSync(sidecarPath) ? (JSON.parse(fs.readFileSync(sidecarPath, "utf8")).submission ?? {}) : {};
 await page.getByLabel(/الوصف \(الكابشن\)/).fill(side.caption ?? "جربت شاي التنحيف الجديد 🔥 الرابط في البايو");
@@ -64,7 +69,11 @@ for (const c of cards) console.log("   •", c.replace(/\s+/g, " ").slice(0, 150
 await page.screenshot({ path: process.env.SHOT ?? "docs/demo/real-check-report.png", fullPage: true });
 
 // Run metadata (cost, models, durations) via the user's own session — readable through RLS.
-const tok = await (await fetch(`${env.VITE_SUPABASE_URL}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email: "demo@saleem.app", password: "demo123456" }) })).json();
+// The signed-in user's own session (RLS applies), as stored by supabase-js.
+const tok = await page.evaluate(() => {
+  const k = Object.keys(localStorage).find((x) => x.startsWith("sb-") && x.endsWith("-auth-token"));
+  return k ? JSON.parse(localStorage.getItem(k)) : {};
+});
 const runs = await (await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/analysis_runs?select=finished_at,started_at,audio_mode,llm_model,asr_model,cost_usd,durations_ms,token_usage,frames_count,status&submission_id=eq.${id}`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${tok.access_token}` } })).json();
 console.log("run:", JSON.stringify(runs[0]));
 const subRow = (await (await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/submissions?select=created_at,analyzed_at&id=eq.${id}`, { headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${tok.access_token}` } })).json())[0];

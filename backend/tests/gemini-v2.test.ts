@@ -103,3 +103,16 @@ describe("Gemini transcription media fallback", () => {
     await expect(asr.transcribe(new Blob([new Uint8Array(10)], { type: "application/octet-stream" }), "x.bin")).rejects.toMatchObject({ info: { code: "bad_request" } });
   });
 });
+
+describe("Gemini thinking level (latency and cost)", () => {
+  const call = async (thinkingLevel?: string) => {
+    const calls: GenerateContentParameters[] = [];
+    await new GeminiAnalysis("test-key-not-a-real-credential", GEMINI_DEFAULT_MODEL, { generate: async (p: GenerateContentParameters) => { calls.push(p); return response(valid); }, sleep: async () => {}, thinkingLevel } as never).analyzeV2(req());
+    return (calls[0]!.config as { thinkingConfig?: { thinkingLevel?: string } }).thinkingConfig?.thinkingLevel;
+  };
+  it("defaults to LOW, accepts a valid GEMINI_THINKING_LEVEL, and ignores invalid values", async () => {
+    expect(await call()).toBe("LOW");
+    expect(await call("high")).toBe("HIGH");
+    expect(await call("minimal")).toBe("LOW");
+  });
+});

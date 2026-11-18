@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
         headers: { "x-goog-api-key": geminiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: promptText }] }],
-          generationConfig: { maxOutputTokens: 800 },
+          generationConfig: { maxOutputTokens: 800, thinkingConfig: { thinkingLevel: env("GEMINI_THINKING_LEVEL")?.trim().toUpperCase() || "LOW" } },
         }),
         signal: AbortSignal.timeout(45_000),
       });
