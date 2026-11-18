@@ -348,3 +348,51 @@ Format: decision — why — alternatives considered.
   footnote block over 60 words. Only the caption and text are checked.
 - **D137. Calibration** uses the last reviewer response per finding and dates by the start of the analysis run.
   Notes are plain text, with no rule edits.
+
+## Phase 8 — Docker gate, Saudi rules v0.1, roles, company rules (2026-11-18)
+
+- **D138. History rewrite:** with the user's approval, each phase 0–7 is one commit whose tree equals its old tag.
+  The tags were moved, the backup is branch `v2/full-run-backup`, and main was not touched. Phase 8 stays as
+  separate slice commits. The user asked not to squash or force-push without explicit authorisation.
+- **D139. Column grants on real Supabase:** Supabase default privileges give `authenticated` ALL on new tables, so
+  the v2 column grants restricted nothing. Status columns were writable, and token hashes were readable.
+  `20261118080200` revokes the table privileges and restates the intended column grants. PGlite had hidden this.
+- **D140. Saudi rules v0.1** are generated from the CSVs (`gen-saudi-rules.mjs`), never typed by hand. All 187 are
+  drafts, HAJ is archived, and packs are off by default. Mapping of `check_mode` to `check_kind`: content → llm;
+  hybrid → hybrid; document and workflow → workflow. Priority high maps to violation, otherwise warning, and drafts
+  are capped at warning anyway.
+- **D141. Cross-sector scope:** SALE triggers on `discount_sale`, COMP on `contest_or_prize`, PD on
+  `direct_marketing`, and MEDIA on influencer distribution. Sector packs outside finance (FOOD, DRUG, RE, TR, …) are
+  opt-in per organisation, because the organisation sector list covers finance only.
+- **D142. check_mode semantics in the engine:** document → «يحتاج مستنداً» (needs_evidence, warning, never sent to
+  the model); workflow → a reviewer-checklist outcome (`reviewer_checklist`), never a finding or a model guess;
+  hybrid → capped at potential_risk/warning, with `evidence_request_ar`; content with partial coverage →
+  `unable_to_verify` (`coverage:partial`). With no model, nothing is fabricated: content rules are unable to verify.
+- **D143. SAMA/CMA mapping:** `gen-rule-mapping.mjs` classifies by source document, article path (numbers and
+  Arabic sub-item letters) and text similarity. Results: 33 Exact (citation identity, not wording), 16 Possible,
+  1 No Match. «Verified Equivalent» is never automatic. Nothing was superseded, merged, deleted or deactivated.
+  `rule_mappings` rows are pending, and the 44 NEW drafts with a match carry `possible_duplicate_of` and are never
+  applied (`possible_duplicate:<code>`). The old rules are drafts, so no "verified active" rule was at stake.
+  Awaiting the user's decision.
+- **D144. Version-aware evaluation:** every finding's citation records `rule_version` (the release id, or
+  `internal:vN` for company rules), `check_mode` and `evidence_policy_ar`. Coverage records the packs applied, why,
+  and per-pack counts.
+- **D145. Roles:** `compliance_lead` and `viewer` are added (enum). Existing roles are unchanged and no user is
+  migrated, but four display names changed. Risk acceptor stays the `can_accept_risk` permission. Source of truth:
+  `frontend/src/lib/permissions.ts` → `org_role_can` / `org_can` (hand-written SQL) →
+  `p8_roles_matrix.test.sql` (generated: 153 cells and 99 probes against the real RPCs and tables).
+- **D146. Role rewrite by generator:** `gen-roles-migration.mjs` restated 26 functions and 7 policies from the local
+  definitions, adding `compliance_lead` wherever owner, admin and reviewer are listed together, and viewer reads.
+  A lone `'reviewer'` literal (an `actor_role`) is left alone. The viewer is blocked in `add_comment` and
+  `can_submit`.
+- **D147. Company rules:** versioned (`internal_rules.version`, immutable `internal_rule_versions` written on each
+  approval). The author (last editor) cannot approve. «جرّب القاعدة» is `analyze {try_rule}`: text only (transcript,
+  caption, last on-screen text, no frames), nothing saved, gated by `manage_company_rules`. **NOT VERIFIED with a
+  live model.**
+- **D148. Supabase types:** regenerating them from the local database was rejected. The generated types are
+  stricter on nullable RPC arguments and would have broken dozens of call sites, so new tables and functions are
+  added by hand.
+- **D149. Intermittent e2e failures:** investigated. With 3 workers: 135/135 over three repeats. With 6 workers,
+  failures reproduce (10/33). Traces show the HTML from `vite preview` taking 39.8 s and the first Supabase REST call
+  never completing, with an empty `<main>`. Cause: an environment resource limit (drive C has 1.1 GB free); no app
+  defect was found. Timeouts were not loosened. To confirm, re-run on a machine with free disk space.

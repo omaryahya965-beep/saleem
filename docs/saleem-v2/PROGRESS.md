@@ -7,10 +7,10 @@
 
 ## Current position
 
-- Phase: done (Phases 0–7)
-- Task: final report written
-- Last commit: Phase 7 report (tag `v2-phase-7`)
-- Next step: the user verifies locally (FINAL_REPORT §4), legal review of the draft rules, then deploys (runbook §5).
+- Phase: 8 (steps 1–6, 8 and 10 done; step 7 blocked on the demo video; step 9 deploy not started)
+- Task: waiting for the user — SAMA/CMA mapping approval, demo video, squash and deploy authorisation
+- Last commit: Phase 8 reports (slice commits on `v2/full-run`, not squashed)
+- Next step: the user annotates `docs/saleem-v2/legal/SAMA_CMA_MAPPING.md`, provides `demo/media/real-ad.mp4`, and frees disk space on C.
 
 ## Status
 
@@ -24,6 +24,7 @@
 | 5 Libraries + dashboard | done (with not-run checks) | v2/full-run · v2-phase-5 | progress/phase-5-report.md | 2026-11-18 |
 | 6 Enterprise (P2) | done (with not-run checks; 6.3 external reviewer and 6.4 carousel not built) | v2/full-run · v2-phase-6 | progress/phase-6-report.md | 2026-11-18 |
 | 7 Expansion (P3) | done (with not-run checks; API v1 read-only) | v2/full-run · v2-phase-7 | progress/phase-7-report.md | 2026-11-18 |
+| 8 Docker gate, Saudi rules, roles, company rules | in progress (demo, mapping approval, deploy pending) | v2/full-run (slices) | progress/phase-8-report.md | 2026-11-18 |
 
 Status values: not started · planning · waiting for "go" · in progress · done · done (with not-run
 checks) · blocked.

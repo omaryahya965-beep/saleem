@@ -1,5 +1,8 @@
 # SALEEM v2 — final report (autonomous full run)
-Branch `v2/full-run` · tags `v2-phase-0` … `v2-phase-7` · 2026-11-17 → 2026-11-18 · nothing was deployed or pushed.
+Branch `v2/full-run` · tags `v2-phase-0` … `v2-phase-7` + Phase 8 slices · 2026-11-17 → 2026-11-18 · nothing was deployed or pushed.
+
+> **Phase 8 update:** the checks marked «not run» below have since run on local Docker: `db reset`, 19 pgTAP files,
+> the isolation test and all 45 e2e tests including `public.spec` — all green. See §8 and `progress/phase-8-report.md`.
 
 ## 1. Phases
 | Phase | Status | Built | Gate | Deviations |
@@ -112,3 +115,19 @@ admin.
 13. فعّل «سياسات داخلية» ← الصق دليل الهوية ← «اقتراح قواعد» ← حرّر واعتمد ← تظهر ملاحظة «سياسة داخلية».
 14. فعّل «واجهة برمجية» ← أنشئ مفتاح قراءة ← `curl -H "Authorization: Bearer slm_…" <URL>/functions/v1/api/v1/promotions`.
 15. افتح «القواعد»: كل قواعد البنك المركزي وهيئة السوق المالية «مسودة» ولا شيء مفعّل منها.
+
+## 8. Phase 8 (Docker gate, Saudi rules v0.1, roles, company rules)
+- **Real database:** it found and fixed column grants that restricted nothing (D139), a viewer write path, author
+  self-approval of company rules, and duplicate rules on `/rules`.
+- **Rules:**
+  - 187 Saudi draft rules in 15 packs, generated from the CSVs, with scope by sector, signal and channel.
+  - check_mode semantics: document → «يحتاج مستنداً»; workflow → reviewer checklist; hybrid → capped at «خطر محتمل»;
+    content → «تعذّر التحقق» when the analysis is incomplete.
+  - Evidence policy on each finding, «الحزم المطبّقة ولماذا» in the report, and the rule version on each finding.
+- **SAMA/CMA ↔ CSV mapping:** `docs/saleem-v2/legal/SAMA_CMA_MAPPING.md` (33 Exact, 16 Possible, 1 No Match) —
+  **pending your approval**. No rule status was changed; 44 possible-duplicate drafts are kept out of analyses.
+- **Roles:** compliance lead and viewer; one permission matrix in TypeScript, implemented in SQL as `org_can` and
+  checked by generated tests (153 cells, 99 probes); «الأدوار والصلاحيات»; role home; `ROLES_AND_FLOW.md`.
+- **Company rules:** «قواعد الشركة», with versions, approval by another person and «جرّب القاعدة» (**NOT VERIFIED**
+  with a live model).
+- **New migrations, not deployed:** `20261118080100` … `20261118080700`.
