@@ -106,26 +106,29 @@ export function AppShell({
           )}
         >
           {brand}
-          <nav
-            aria-label={t("nav.mainNav")}
-            className={cn("hidden h-full items-stretch gap-1", !sidebar && "md:flex")}
-          >
-            {nav
-              .filter((i) => !i.mobileOnly)
-              .map((item) => (
-                <span key={item.key} className="flex">
-                  {item.render({
-                    className: cn(
-                      "relative inline-flex items-center px-3 text-[15px] font-medium transition-colors duration-150",
-                      "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full",
-                      item.active ? "text-fg after:bg-green" : "text-fg-muted hover:text-fg",
-                    ),
-                    children: item.label,
-                    ...(item.active ? { "aria-current": "page" as const } : {}),
-                  })}
-                </span>
-              ))}
-          </nav>
+          {/* With a sidebar, the top bar has no nav (one navigation landmark, no duplicate drawer). */}
+          {!sidebar && (
+            <nav
+              aria-label={t("nav.mainNav")}
+              className="hidden h-full items-stretch gap-1 md:flex"
+            >
+              {nav
+                .filter((i) => !i.mobileOnly)
+                .map((item) => (
+                  <span key={item.key} className="flex">
+                    {item.render({
+                      className: cn(
+                        "relative inline-flex items-center px-3 text-[15px] font-medium transition-colors duration-150",
+                        "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full",
+                        item.active ? "text-fg after:bg-green" : "text-fg-muted hover:text-fg",
+                      ),
+                      children: item.label,
+                      ...(item.active ? { "aria-current": "page" as const } : {}),
+                    })}
+                  </span>
+                ))}
+            </nav>
+          )}
           <div className="ms-auto flex items-center gap-1">{actions}</div>
         </div>
       </header>

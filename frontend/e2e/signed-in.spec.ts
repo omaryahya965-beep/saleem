@@ -43,3 +43,25 @@ test("failed check explains the reason and offers retry", async ({ signedIn: pag
     page.getByRole("button", { name: tr(lang, "أعد المحاولة", "Try again") }),
   ).toBeVisible();
 });
+
+test("app navigation lives in the sidebar/drawer; the account menu stays small", async ({
+  signedIn: page,
+  lang,
+}) => {
+  await page.goto("/dashboard");
+  const mobile = (page.viewportSize()?.width ?? 1440) < 768;
+  if (mobile) {
+    await page.getByTestId("nav-menu").click();
+    await expect(page.getByRole("dialog").getByTestId("nav-rules")).toBeVisible();
+    await page.keyboard.press("Escape");
+  } else {
+    const sidebar = page.getByTestId("app-sidebar");
+    await expect(sidebar.getByTestId("nav-dashboard")).toHaveAttribute("aria-current", "page");
+    await expect(sidebar.getByTestId("nav-rules")).toBeVisible();
+  }
+  await page.getByTestId("account-menu").click();
+  const items = page.getByTestId("account-menu-content").getByRole("menuitem");
+  // Personal settings, terms, sign out (+ workspace switcher entries only with several workspaces).
+  await expect(items).toHaveCount(3);
+  await expect(items.last()).toHaveText(tr(lang, "تسجيل الخروج", "Sign out"));
+});

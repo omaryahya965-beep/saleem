@@ -97,7 +97,7 @@ npm run dev        # http://localhost:3000
 | `npm test` | اختبارات الوحدات |
 | `npm --workspace frontend run e2e` | اختبارات الواجهة (Playwright) |
 | `npm --workspace backend run eval` | قياس دقة التحليل على حالات معروفة |
-| `npm run seed:backend` | إنشاء حساب العرض التجريبي (`demo@saleem.app`) |
+| `npm run demo:seed` | مساحة «بنك سليم التجريبي» محلياً بسبعة أدوار (كلمة المرور في `demo/.demo-credentials.json` غير المتتبَّع) |
 
 **النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. التفاصيل في [`FINAL_REPORT.md`](docs/saleem-v2/progress/FINAL_REPORT.md) §5.
 

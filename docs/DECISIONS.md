@@ -396,3 +396,30 @@ Format: decision — why — alternatives considered.
   failures reproduce (10/33). Traces show the HTML from `vite preview` taking 39.8 s and the first Supabase REST call
   never completing, with an empty `<main>`. Cause: an environment resource limit (drive C has 1.1 GB free); no app
   defect was found. Timeouts were not loosened. To confirm, re-run on a machine with free disk space.
+
+## UX pass — navigation, errors, demo personas (2026-11-18)
+
+- **D150. Navigation:** the account menu holds only account-level items (name, email, active workspace and
+  switcher, my settings, terms, sign out). App modules live in a sidebar (`components/layout/navModel.ts`) grouped
+  as Work, Compliance, Organization, Help and Platform admin. The sidebar is derived from `lib/permissions.ts` and
+  the organisation's feature flags. It is visibility only: the server still enforces every action. Nothing is
+  shown until the role is known.
+- **D151. Errors are classified** (`classifyError`): network, unauthorized, forbidden, not_found, schema, provider,
+  invalid, server. Each has an Arabic message and the right recovery action. React Query retries only network and
+  server errors. Likely cause of the hosted "backend unavailable" pages: the deployed frontend expects v2
+  tables/RPCs that are not on the hosted database. It now says «الخادم يحتاج تحديثاً». Not confirmed on
+  production, which was not touched.
+- **D152. Demo personas:** the hard-coded test passwords were removed from the bundle. `npm run demo:seed` (local
+  only) creates «بنك سليم التجريبي» with 7 users via the app's RPCs. The password is stored only in the git-ignored
+  `demo/.demo-credentials.json`. The login page shows 5 persona cards only when `VITE_DEMO_MODE=true` **and**
+  `VITE_DEMO_PASSWORD` are set at build time. The old `demo@`, `agency@` and `admin@saleem.app` accounts were
+  public in the old bundle: **rotate or disable them on the hosted project before any production deploy.**
+- **D153. Partners** can read their own membership row (new policy). Their navigation has no `/new`, because they
+  create through their partner link.
+- **D154. Removed:** `seed-demo-user.ts` (hard-coded default password, printed it, no local guard),
+  `check-test-logins.mjs`, the unused `signInDemo`, the role home's wall of disabled cards, and unused `nav.*`
+  i18n keys.
+- **D155. e2e flakiness, revisited:** isolated runs pass (63/63, 135/135). Full parallel runs sometimes time out
+  waiting for data. Traces show a 39.8 s HTML response and a REST call that never returned, with drive C at under
+  1 GB free. Added a router pending state, so a slow navigation shows a loading page instead of the old page.
+  Timeouts were not loosened.

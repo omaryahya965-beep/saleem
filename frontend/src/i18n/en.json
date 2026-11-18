@@ -45,25 +45,10 @@
     "mainNav": "Main navigation",
     "language": "Language",
     "switchTo": "العربية",
-    "signedInAs": "Signed in as",
-    "archive": "Archive audit",
     "workspace": "Agency workspace",
-    "admin": "Admin",
-    "evalNav": "Accuracy evaluation",
-    "rulesAdmin": "Rulebook admin",
     "legal": "Terms & privacy",
-    "metricsNav": "Operations metrics",
     "promotions": "Promotions",
-    "products": "Products",
-    "queue": "Review queue",
-    "audit": "Audit log",
-    "claims": "Claims library",
-    "disclaimers": "Required disclaimers",
-    "analytics": "Analytics",
-    "ask": "Ask Saleem",
-    "features": "Features",
-    "roles": "Roles & permissions",
-    "companyRules": "Company rules"
+    "features": "Features"
   },
   "status": {
     "ready": "No automated findings",
@@ -2116,7 +2101,6 @@
     }
   },
   "roleHome": {
-    "notAllowed": "Not available to the «{role}» role. Ask an org admin to change your role if you need it.",
     "title": {
       "owner": "Your workspace — owner",
       "admin": "Your workspace — org admin",

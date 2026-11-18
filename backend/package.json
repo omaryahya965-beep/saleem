@@ -8,7 +8,6 @@
     "eval": "npx tsx eval/run-eval.ts",
     "clips": "npx tsx eval/run-clips.ts",
     "smoke": "npx tsx eval/provider-smoke.ts",
-    "seed": "npx tsx scripts/seed-demo-user.ts",
     "eval:v2": "npx tsx eval/run-eval-v2.ts"
   }
 }

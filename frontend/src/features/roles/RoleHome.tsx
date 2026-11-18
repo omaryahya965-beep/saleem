@@ -55,29 +55,16 @@ export function RoleHome() {
           const label = t(`roleHome.shortcut.${k}` as never);
           return (
             <li key={k}>
-              {c === "no" ? (
-                <div
-                  className="flex h-full flex-col gap-1 rounded-md border border-dashed border-border p-3 text-fg-muted"
-                  aria-disabled="true"
-                  data-testid={`shortcut-${k}-disabled`}
-                >
-                  <span className="font-medium">{label}</span>
-                  <span className="text-xs">
-                    {t("roleHome.notAllowed", { role: t(`org.roles.${role}` as never) })}
-                  </span>
-                </div>
-              ) : (
-                <Link
-                  to={s.to}
-                  className="flex h-full flex-col gap-1 rounded-md border border-border p-3 hover:bg-surface-2"
-                  data-testid={`shortcut-${k}`}
-                >
-                  <span className="font-medium">{label}</span>
-                  {c === "cond" && (
-                    <span className="text-xs text-fg-muted">{conditionOf(s.action)}</span>
-                  )}
-                </Link>
-              )}
+              <Link
+                to={s.to}
+                className="flex h-full flex-col gap-1 rounded-md border border-border p-3 hover:bg-surface-2"
+                data-testid={`shortcut-${k}`}
+              >
+                <span className="font-medium">{label}</span>
+                {c === "cond" && (
+                  <span className="text-xs text-fg-muted">{conditionOf(s.action)}</span>
+                )}
+              </Link>
             </li>
           );
         })}

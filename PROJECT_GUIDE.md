@@ -99,7 +99,7 @@ saleem/
     │       ├── diagnostics/     تشخيص (للمشرف، استنتاجاً من الاسم)
     │       └── _shared/         providers/, rules/, pipeline/, media/, notify.ts, http.ts
     ├── eval/                    قياس الدقة: cases.json + run-eval.ts + results/
-    ├── scripts/seed-demo-user.ts
+    ├── scripts/demo-seed.ts
     └── tests/                   Vitest: pipeline, speech, blur, isolation, provider-errors
 ```
 
@@ -267,7 +267,7 @@ npm run dev                                      # http://localhost:3000
 | `npm run build` | `vite build` ثم `scripts/prerender.mjs` (يولّد HTML ثابتاً للصفحات العامة) |
 | `npm --workspace frontend run e2e` | Playwright |
 | `npm --workspace backend run eval` | قياس الدقة على `eval/cases.json` (يستدعي OpenAI ويكلّف مالاً إلا مع `--deterministic-only`) |
-| `npm run seed:backend` | إنشاء حساب العرض |
+| `npm run demo:seed` | مساحة تجريبية محلية بسبعة أدوار |
 
 > ⚠️ ملف الـ migration [20261014000000_pipeline_hardening.sql](backend/supabase/migrations/20261014000000_pipeline_hardening.sql) يكتب **رابط مشروع Supabase مباشرة في الكود** داخل `cron.schedule`. إذا نشرت على مشروع آخر فعدّل هذا الرابط.
 
