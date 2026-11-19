@@ -116,3 +116,41 @@ describe("Gemini thinking level (latency and cost)", () => {
     expect(await call("minimal")).toBe("LOW");
   });
 });
+
+describe("Gemini overload fallback (GEMINI_FALLBACK_MODEL)", () => {
+  const run = async (fail: { status: number; message: string }, fallbackModel?: string) => {
+    const models: string[] = [];
+    let first = true;
+    const generate = async (p: GenerateContentParameters) => {
+      models.push(p.model);
+      if (first) { first = false; throw fail; }
+      return response(valid);
+    };
+    const out = await new GeminiAnalysis("test-key-not-a-real-credential", "gemini-3.6-flash", { generate, sleep: async () => {}, fallbackModel } as never).analyzeV2(req());
+    return { models, model: out.model };
+  };
+  it("switches to the fallback only on 503 and records the model that answered", async () => {
+    expect(await run({ status: 503, message: "UNAVAILABLE: high demand" }, "gemini-3.1-flash-lite"))
+      .toEqual({ models: ["gemini-3.6-flash", "gemini-3.1-flash-lite"], model: "gemini-3.1-flash-lite" });
+  });
+  it("also falls back when the primary does not answer in time, even after a first retry", async () => {
+    const models: string[] = [];
+    let calls = 0;
+    const generate = async (p: GenerateContentParameters) => {
+      models.push(p.model);
+      calls++;
+      if (calls === 1) throw { status: 500, message: "internal" };
+      if (calls === 2) throw { message: "timeout" }; // no HTTP status, like an aborted request
+      return response(valid);
+    };
+    const out = await new GeminiAnalysis("test-key-not-a-real-credential", "gemini-3.6-flash", { generate, sleep: async () => {}, fallbackModel: "gemini-3.1-flash-lite" } as never).analyzeV2(req());
+    expect(models).toEqual(["gemini-3.6-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite"]);
+    expect(out.model).toBe("gemini-3.1-flash-lite");
+  });
+  it("without a fallback, a 503 retries the same model", async () => {
+    expect(await run({ status: 503, message: "UNAVAILABLE" })).toEqual({ models: ["gemini-3.6-flash", "gemini-3.6-flash"], model: "gemini-3.6-flash" });
+  });
+  it("never falls back on other errors (rate limit retries the same model)", async () => {
+    expect((await run({ status: 429, message: "RESOURCE_EXHAUSTED per minute" }, "gemini-3.1-flash-lite")).models).toEqual(["gemini-3.6-flash", "gemini-3.6-flash"]);
+  });
+});

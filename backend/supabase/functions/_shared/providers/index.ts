@@ -40,9 +40,9 @@ function requireKey(env: Env): string {
 }
 
 export function transcriptionProvider(env: Env): TranscriptionProvider {
-  return new GeminiTranscription(requireKey(env), config(env).transcriptionModel, { thinkingLevel: env("GEMINI_THINKING_LEVEL") });
+  return new GeminiTranscription(requireKey(env), config(env).transcriptionModel, { thinkingLevel: env("GEMINI_THINKING_LEVEL"), fallbackModel: env("GEMINI_FALLBACK_MODEL") });
 }
 
 export function analysisProvider(env: Env): AnalysisProvider {
-  return new GeminiAnalysis(requireKey(env), config(env).llmModel, { storageUrl: env("SUPABASE_URL"), thinkingLevel: env("GEMINI_THINKING_LEVEL") });
+  return new GeminiAnalysis(requireKey(env), config(env).llmModel, { storageUrl: env("SUPABASE_URL"), thinkingLevel: env("GEMINI_THINKING_LEVEL"), fallbackModel: env("GEMINI_FALLBACK_MODEL") });
 }

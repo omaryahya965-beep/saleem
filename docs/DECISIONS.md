@@ -473,3 +473,9 @@ Format: decision — why — alternatives considered.
   (`master` + v1 data → 34 v2 migrations) kept existing rows byte-identical and seal verification unchanged; the
   migrations backfill data and rewrite RLS, so the release needs a backup and a short maintenance window. Demo
   login UI is opt-in (`VITE_DEMO_LOGIN=true`). Inherited `seroval` (prod) and `vite` (high, dev) advisories fixed.
+- **D166. Demo phase model choice (2026-11-19).** Primary `gemini-3.6-flash` (best quality in live runs). Optional
+  `GEMINI_FALLBACK_MODEL` switches once to another Gemini model on 503 or timeout only — never on quota (429) or
+  other errors, never another provider — and every run records the model that answered. Live evidence today:
+  3.6/3.8 Flash overloaded (503) for long periods while `gemini-3.1-flash-lite` answered; Lite is faster but gave
+  one false-positive company-rule violation, so it stays a fallback. A request to `gemini-3.7-flash` was served by
+  `gemini-3.8-flash` (`modelVersion`). Demo guide: docs/DEMO.md.
