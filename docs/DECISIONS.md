@@ -494,3 +494,14 @@ Format: decision — why — alternatives considered.
   `view_analytics`; `assign_reviewer` is «cond» (self) for the reviewer, as the server already enforced. Pages:
   one `PAGE_ROLES` table drives the sidebar and a route guard; dashboard create action and claim buttons follow the
   role; query cache cleared when the signed-in user changes. Reference: docs/saleem-v2/RBAC.md.
+- **D169. Final governance decisions (2026-11-19).** (1) Marketers propose claims: own drafts only, submit for
+  review, withdraw before approval; approval only by a different owner/admin/lead/reviewer (`review_claim`), never by
+  direct table writes. (2) Reviewers never assign: `assign_reviewer` is owner/admin/compliance_lead; `open_review` no
+  longer makes the opener the assignee (that was a self-assignment path); a reviewer opens and decides only cases
+  assigned to them (`can_decide` → `not_assigned`). (3) Legal is case-scoped (`legal_case`: escalated to them, or
+  answered by them): promotions, versions, media, linked claims (+ evidence files), the case product and the
+  disclaimers that apply; no organisation libraries or other advertisements. Also fixed: `archive_claim` was
+  NULL-unsafe for non-members. Migration `20261119110000_v2_governance.sql`; tests in `rbac.test.ts` (D1–D3), pgTAP
+  `p3_review`, `p6_lifecycle`, `p6_risk` now assign before opening. UI: no «استلام» for reviewers, «بانتظار الإسناد»,
+  claims «اقتراح ادعاء» / «اقتراحاتي فقط» / «سحب الاقتراح», approved vs pending badges, compliance lead can assign
+  and decide in the UI (server already allowed), no «إعلان جديد» for roles that cannot create.

@@ -18,7 +18,7 @@ const run = `${Date.now().toString(36)}`;
 const password = `Rb-${crypto.randomUUID()}`;
 const errOf = async (p: PromiseLike<{ error: { message: string } | null }>) => (await p).error?.message ?? null;
 // Authorization refusals only (a validation error must never count as «denied»).
-const DENIED = /code:forbidden|code:not_found|^forbidden$|permission denied|row-level security|separation_of_duties|last_owner/i;
+const DENIED = /code:forbidden|code:not_found|code:not_assigned|^forbidden$|permission denied|row-level security|separation_of_duties|last_owner/i;
 
 async function newUser(tag: string): Promise<{ c: SupabaseClient; id: string; email: string }> {
   const email = `rbac-${run}-${tag}@test.local`;
@@ -44,6 +44,7 @@ describe.skipIf(!enabled)("RBAC: a new organisation, real users per role, enforc
   const u = {} as Record<OrgRole, { c: SupabaseClient; id: string; email: string }>;
   let orgA = "", orgB = "", ownerB: Awaited<ReturnType<typeof newUser>>;
   let promo = "", sub = "";
+  const x = {} as Record<"creator2" | "reviewer2", { c: SupabaseClient; id: string; email: string }>;
 
   const newPromotion = async (c: SupabaseClient, ownerId: string, org: string, title: string) => {
     const id = crypto.randomUUID();
@@ -80,6 +81,10 @@ describe.skipIf(!enabled)("RBAC: a new organisation, real users per role, enforc
     for (const r of ORG_ROLES.filter((r) => r !== "owner")) await join(u.owner.c, orgA, u[r], r);
     // Multi-org: the marketer of A is only a viewer in B.
     await join(ownerB.c, orgB, u.creator, "viewer");
+    x.creator2 = await newUser("creator2");
+    x.reviewer2 = await newUser("reviewer2");
+    await join(u.owner.c, orgA, x.creator2, "creator");
+    await join(u.owner.c, orgA, x.reviewer2, "reviewer");
     // Organisation features used below (as an owner would enable them on «الميزات»).
     await svc().from("org_settings").update({ features: { internal_rules: true, analytics: true, ask_saleem: true } }).eq("org_id", orgA);
   }, 120_000);
@@ -116,7 +121,7 @@ describe.skipIf(!enabled)("RBAC: a new organisation, real users per role, enforc
     expect(await errOf(u.compliance_lead.c.rpc("create_org_invite", { _org: orgA, _email: `x-${run}@test.local`, _role: "creator" }))).toMatch(DENIED);
   });
 
-  const claimArgs = (name: string) => ({ _id: null, _org: orgA, _name: name, _text_ar: "ادعاء تجريبي", _text_en: null, _product_ids: [], _channels: [], _communication_types: [], _substantiation: [], _next_review: null, _expires: null });
+  const claimArgs = (name: string) => ({ _id: null, _org: orgA, _name: name, _text_ar: "ادعاء تجريبي", _text_en: null, _product_ids: [], _channels: [], _communication_types: [], _substantiation: [{ kind: "url", url: "https://example.com/proof", title: "مصدر" }], _next_review: null, _expires: null });
 
   it("positive controls: the same writes succeed for roles that are allowed", async () => {
     expect(await errOf(u.creator.c.rpc("save_claim", claimArgs("creator")))).toBeNull();
@@ -214,5 +219,122 @@ describe.skipIf(!enabled)("RBAC: a new organisation, real users per role, enforc
       expect(`${r}:${await errOf(u[r].c.rpc("approve_internal_rule", { _id: rid }))}`).toMatch(DENIED);
     expect(await errOf(u.compliance_lead.c.rpc("approve_internal_rule", { _id: rid }))).toMatch(DENIED); // its author
     expect(await errOf(u.admin.c.rpc("approve_internal_rule", { _id: rid }))).toBeNull();
+  });
+  // ---------------------------------------------------------------- D169 governance decisions
+  const claimId = async (c: SupabaseClient, name: string) => {
+    const { data, error } = await c.rpc("save_claim", claimArgs(name));
+    if (error) throw new Error(`save_claim ${name}: ${error.message}`);
+    return data as string;
+  };
+  const claimStatus = async (id: string) => (await svc().from("claims").select("status").eq("id", id).single()).data?.status as string;
+
+  it("D1 marketer proposes a claim; only a different reviewer/manager approves it", async () => {
+    const id = await claimId(u.creator.c, "الأفضل في السعودية");
+    expect(await claimStatus(id)).toBe("draft");
+    expect(await errOf(u.creator.c.rpc("submit_claim", { _id: id }))).toBeNull();
+    expect(await claimStatus(id)).toBe("pending_review");
+    // The marketer can neither approve nor publish it directly (no table write path).
+    expect(await errOf(u.creator.c.rpc("review_claim", { _id: id, _decision: "approve" }))).toMatch(DENIED);
+    await u.creator.c.from("claims").update({ status: "approved" }).eq("id", id);
+    expect(await claimStatus(id)).toBe("pending_review");
+    // Another marketer cannot edit, submit or withdraw someone else's proposal.
+    expect(await errOf(x.creator2.c.rpc("archive_claim", { _id: id }))).toMatch(DENIED);
+    // A reviewer requests changes; the author edits and resubmits; a reviewer approves.
+    expect(await errOf(u.reviewer.c.rpc("review_claim", { _id: id, _decision: "request_changes", _comment: "أضف مصدراً يثبت الادعاء" }))).toBeNull();
+    // Editable again, so only the ownership check can refuse another marketer.
+    expect(await errOf(x.creator2.c.rpc("save_claim", { ...claimArgs("تعديل"), _id: id }))).toMatch(/code:forbidden/);
+    expect(await errOf(u.creator.c.rpc("save_claim", { ...claimArgs("الأفضل في السعودية (معدّل)"), _id: id }))).toBeNull();
+    expect(await errOf(u.creator.c.rpc("submit_claim", { _id: id }))).toBeNull();
+    expect(await errOf(u.reviewer.c.rpc("review_claim", { _id: id, _decision: "approve" }))).toBeNull();
+    expect(await claimStatus(id)).toBe("approved");
+    // The author withdraws their own pending proposal; a manager may edit others' drafts.
+    const own = await claimId(u.creator.c, "سحب");
+    expect(await errOf(u.creator.c.rpc("submit_claim", { _id: own }))).toBeNull();
+    expect(await errOf(u.creator.c.rpc("archive_claim", { _id: own }))).toBeNull();
+    expect(await claimStatus(own)).toBe("archived");
+    const other = await claimId(x.creator2.c, "مسودة زميل");
+    expect(await errOf(x.creator2.c.rpc("submit_claim", { _id: other }))).toBeNull();
+    expect(await errOf(u.creator.c.rpc("submit_claim", { _id: other }))).toMatch(DENIED);
+    const draft = await claimId(x.creator2.c, "مسودة ثانية");
+    expect(await errOf(u.compliance_lead.c.rpc("save_claim", { ...claimArgs("تصحيح القائد"), _id: draft }))).toBeNull();
+    // A non-member cannot archive a claim by guessing its id (was NULL-unsafe).
+    expect(await errOf(ownerB.c.rpc("archive_claim", { _id: draft }))).toMatch(DENIED);
+    expect(await claimStatus(draft)).toBe("draft");
+  });
+
+  it("D2 reviewers never assign; managers assign; only the assignee opens and decides", async () => {
+    const p = await newPromotion(u.creator.c, u.creator.id, orgA, `إسناد ${run}`);
+    await newVersion(u.creator.c, u.creator.id, p.id);
+    expect(await errOf(u.creator.c.rpc("submit_promotion", { _pid: p.id }))).toBeNull();
+    expect(await errOf(u.reviewer.c.rpc("assign_reviewer", { _pid: p.id, _user: u.reviewer.id }))).toMatch(DENIED); // self
+    expect(await errOf(u.reviewer.c.rpc("assign_reviewer", { _pid: p.id, _user: x.reviewer2.id }))).toMatch(DENIED); // other
+    expect(await errOf(u.reviewer.c.rpc("open_review", { _pid: p.id }))).toMatch(DENIED); // no take-over by opening
+    await u.reviewer.c.from("promotions").update({ assigned_reviewer_id: u.reviewer.id }).eq("id", p.id); // direct write
+    expect((await svc().from("promotions").select("assigned_reviewer_id").eq("id", p.id).single()).data?.assigned_reviewer_id).toBeNull();
+    expect(await errOf(u.compliance_lead.c.rpc("assign_reviewer", { _pid: p.id, _user: u.reviewer.id }))).toBeNull();
+    expect(await errOf(x.reviewer2.c.rpc("assign_reviewer", { _pid: p.id, _user: x.reviewer2.id }))).toMatch(DENIED); // reassign
+    expect(await errOf(x.reviewer2.c.rpc("open_review", { _pid: p.id }))).toMatch(DENIED);
+    expect(await errOf(u.reviewer.c.rpc("open_review", { _pid: p.id }))).toBeNull();
+    expect(await errOf(x.reviewer2.c.rpc("decide_promotion", { _pid: p.id, _decision: "approve" }))).toMatch(DENIED);
+    expect(await errOf(u.reviewer.c.rpc("decide_promotion", { _pid: p.id, _decision: "request_changes", _reason_other: "أضف الشروط" }))).toBeNull();
+    expect(await orgCan(u.reviewer.c, orgA, "assign_reviewer")).toBe("no");
+  });
+
+  it("D3 legal reads only its case: the advertisement, linked claim, product and applicable disclaimer", async () => {
+    // Organisation data: one product/claim/disclaimer for the case, one unrelated of each.
+    const mk = async (name: string, type: string) => {
+      const { data, error } = await u.admin.c.from("products").insert({ org_id: orgA, name_ar: name, sector: "banking", product_type: type, regulator: "SAMA" }).select("id").single();
+      if (error) throw error;
+      expect(await errOf(u.owner.c.rpc("approve_product", { _id: data.id }))).toBeNull();
+      return data.id as string;
+    };
+    const product = await mk("تمويل شخصي", "personal_finance"), otherProduct = await mk("بطاقة", "credit_card");
+    const disc = async (name: string, types: string[]) => {
+      const { data, error } = await u.admin.c.rpc("save_disclaimer", { _id: null, _org: orgA, _name: name, _text_ar: `${name}: تطبق الشروط والأحكام`, _text_en: null, _product_types: types, _channels: [], _communication_types: [], _required_by: [], _prominence: false, _status: "active" });
+      if (error) throw new Error(`save_disclaimer: ${error.message}`);
+      return data as string;
+    };
+    const caseDisc = await disc("إفصاح التمويل", ["personal_finance"]), otherDisc = await disc("إفصاح البطاقات", ["credit_card"]);
+    const caseClaim = await claimId(u.creator.c, "ادعاء القضية"), otherClaim = await claimId(u.creator.c, "ادعاء آخر");
+
+    const p = await newPromotion(u.creator.c, u.creator.id, orgA, `قانوني ${run}`);
+    await svc().from("promotions").update({ product_id: product }).eq("id", p.id); // as chosen in the ad context form
+    const s = await newVersion(u.creator.c, u.creator.id, p.id);
+    expect(await errOf(u.creator.c.rpc("link_claim", { _pid: p.id, _claim: caseClaim }))).toBeNull();
+    const unrelated = await newPromotion(u.creator.c, u.creator.id, orgA, `غير مرتبط ${run}`);
+    // Media of the case version (own folder, like the app's upload).
+    const mediaPath = `${u.creator.id}/${s}/original.jpg`;
+    expect((await u.creator.c.storage.from("media").upload(mediaPath, new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: "image/jpeg" }), { contentType: "image/jpeg" })).error).toBeNull();
+
+    const L = u.legal.c;
+    const ids = async (t: string) => ((await L.from(t).select("id").eq("org_id", orgA)).data ?? []).map((r: { id: string }) => r.id);
+    // Before escalation: only the case escalated to this advisor earlier in this suite (`promo`), no libraries.
+    expect(await ids("promotions")).toEqual([promo]);
+    expect(await ids("claims")).toEqual([]);
+    expect(await ids("products")).toEqual([]);
+    expect(await ids("disclaimers")).toEqual([]);
+    expect((await L.storage.from("media").download(mediaPath)).error).not.toBeNull();
+
+    // Escalated to legal: exactly the case and its linked records.
+    expect(await errOf(u.creator.c.rpc("submit_promotion", { _pid: p.id }))).toBeNull();
+    expect(await errOf(u.compliance_lead.c.rpc("assign_reviewer", { _pid: p.id, _user: u.reviewer.id }))).toBeNull();
+    expect(await errOf(u.reviewer.c.rpc("open_review", { _pid: p.id }))).toBeNull();
+    expect(await errOf(u.reviewer.c.rpc("escalate_promotion", { _pid: p.id, _legal_user: u.legal.id, _question: "هل الادعاء مقبول؟" }))).toBeNull();
+    expect((await ids("promotions")).sort()).toEqual([promo, p.id].sort());
+    expect(((await L.from("submissions").select("id").eq("promotion_id", p.id)).data ?? []).map((r) => r.id)).toEqual([s]);
+    expect(await ids("claims")).toEqual([caseClaim]);
+    expect(await ids("products")).toEqual([product]);
+    expect(await ids("disclaimers")).toEqual([caseDisc]);
+    expect((await L.storage.from("media").download(mediaPath)).error).toBeNull();
+    for (const [t, id] of [["promotions", unrelated.id], ["claims", otherClaim], ["products", otherProduct], ["disclaimers", otherDisc]] as const)
+      expect(`${t}:${((await L.from(t).select("id").eq("id", id)).data ?? []).length}`).toBe(`${t}:0`);
+    // Opinion yes; approval, library writes and other organisations never.
+    expect(await errOf(L.rpc("respond_escalation", { _pid: p.id, _response: "يلزم إثبات الادعاء قبل النشر." }))).toBeNull();
+    expect(await errOf(L.rpc("decide_promotion", { _pid: p.id, _decision: "approve" }))).toMatch(DENIED);
+    expect(await errOf(L.rpc("save_claim", claimArgs("قانوني")))).toMatch(DENIED);
+    expect((await L.from("products").update({ name_ar: "x" }).eq("id", product).select()).data ?? []).toEqual([]);
+    expect(((await L.from("promotions").select("id").eq("org_id", orgB)).data ?? []).length).toBe(0);
+    // Answered cases stay readable to their legal advisor (history), nothing more.
+    expect((await ids("promotions")).sort()).toEqual([promo, p.id].sort());
   });
 });

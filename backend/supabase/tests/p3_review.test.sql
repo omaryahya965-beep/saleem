@@ -58,6 +58,15 @@ do $$ begin
   perform pg_temp.expect_error($q$update public.promotions set review_status = 'approved' where id = '44000000-0000-0000-0000-000000000001'$q$, 'permission denied');
 end $$;
 
+-- D169: a reviewer cannot take an unassigned case; the owner assigns, then the reviewer opens.
+select pg_temp.as_user('14000000-0000-0000-0000-000000000003');
+do $$ begin
+  perform pg_temp.expect_error($q$select public.open_review('44000000-0000-0000-0000-000000000001')$q$, 'code:not_assigned');
+  perform pg_temp.expect_error($q$select public.assign_reviewer('44000000-0000-0000-0000-000000000001', '14000000-0000-0000-0000-000000000003')$q$, 'code:forbidden');
+end $$;
+select pg_temp.as_user('14000000-0000-0000-0000-000000000001');
+select public.assign_reviewer('44000000-0000-0000-0000-000000000001', '14000000-0000-0000-0000-000000000003');
+
 -- Reviewer opens, must respond to findings, then requests changes with a reason.
 select pg_temp.as_user('14000000-0000-0000-0000-000000000003');
 do $$ begin

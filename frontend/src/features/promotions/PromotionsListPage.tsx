@@ -28,6 +28,8 @@ import {
 } from "@/lib/api/promotions";
 import { resultOf } from "./model";
 import { SavedViewsBar } from "@/features/libraries/SavedViewsBar";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
+import { canSeePage } from "@/components/layout/navModel";
 import { promotionRows } from "@/features/libraries/model";
 
 export function PromotionsListPage() {
@@ -50,6 +52,13 @@ export function PromotionsListPage() {
     return [...m.entries()];
   }, [all.data, lang]);
   const filtered = Boolean(status || productId || channel || communicationType || q.trim());
+  // Only roles that create advertisements get the create action (same rule as the sidebar and /new).
+  const picker = useOrgPicker();
+  const newAd = canSeePage("new", { role: picker.role, flags: {}, platformAdmin: false }) ? (
+    <Button asChild icon={<Plus />}>
+      <Link to="/new">{t("promo.newPromotion")}</Link>
+    </Button>
+  ) : undefined;
   const date = (s: string | null) =>
     s
       ? new Date(s).toLocaleDateString(lang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB")
@@ -60,11 +69,7 @@ export function PromotionsListPage() {
       <PageHeader
         title={t("promo.listTitle")}
         description={t("promo.listSubtitle")}
-        actions={
-          <Button asChild icon={<Plus />}>
-            <Link to="/new">{t("promo.newPromotion")}</Link>
-          </Button>
-        }
+        actions={newAd}
       />
 
       <SavedViewsBar
@@ -169,11 +174,7 @@ export function PromotionsListPage() {
             icon={<Megaphone />}
             title={t("promo.emptyTitle")}
             body={t("promo.emptyBody")}
-            action={
-              <Button asChild icon={<Plus />}>
-                <Link to="/new">{t("promo.newPromotion")}</Link>
-              </Button>
-            }
+            action={newAd}
           />
         )
       ) : (

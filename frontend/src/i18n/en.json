@@ -1405,6 +1405,7 @@
     }
   },
   "review": {
+    "awaitingAssignment": "Waiting for a compliance lead or admin to assign this case to you.",
     "submit": "Submit for review",
     "openReview": "Start review",
     "decide": "Decide",
@@ -1684,6 +1685,11 @@
     "added": "New ({n})"
   },
   "claims": {
+    "propose": "Propose a claim",
+    "mineOnly": "My proposals only",
+    "proposalNote": "Submitting a claim does not approve it: the compliance team (not its author) reviews it, and it is used in ads only once approved.",
+    "myProposal": "My proposal",
+    "withdraw": "Withdraw proposal",
     "title": "Approved claims library",
     "subtitle": "Approved claims with their substantiation. Saleem compares ad text with them; it never approves a claim itself.",
     "add": "New claim",

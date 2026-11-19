@@ -78,12 +78,13 @@ export const ACTIONS = {
   },
   decide_review: {
     cells: row("cond", "cond", "cond", "cond", "no", "no", "no", "no", "no"),
-    condition_ar: "ليس رافع الإعلان، ولا يوجد مسار اعتماد متعدد المراحل",
+    condition_ar:
+      "ليس رافع الإعلان، والمراجع للحالات المُسندة إليه فقط، ولا يوجد مسار اعتماد متعدد المراحل",
     enforcedBy: "can_decide",
   },
   assign_reviewer: {
-    cells: row("yes", "yes", "yes", "cond", "no", "no", "no", "no", "no"),
-    condition_ar: "لنفسه فقط (استلام من الطابور)",
+    // Reviewers never assign, not even to themselves (D169).
+    cells: row("yes", "yes", "yes", "no", "no", "no", "no", "no", "no"),
     enforcedBy: "assign_reviewer",
   },
   escalate_legal: {

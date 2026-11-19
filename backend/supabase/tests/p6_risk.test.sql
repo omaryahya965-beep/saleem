@@ -40,6 +40,9 @@ update public.submissions set status = 'done', analyzed_at = now() where id = '3
 set local role authenticated;
 select pg_temp.as_user('17000000-0000-0000-0000-000000000005');
 select public.submit_promotion('47000000-0000-0000-0000-000000000001');
+-- D169: the owner assigns; reviewers never assign themselves.
+select pg_temp.as_user('17000000-0000-0000-0000-000000000001');
+select public.assign_reviewer('47000000-0000-0000-0000-000000000001', '17000000-0000-0000-0000-000000000002');
 select pg_temp.as_user('17000000-0000-0000-0000-000000000002');
 select public.open_review('47000000-0000-0000-0000-000000000001');
 select public.decide_promotion('47000000-0000-0000-0000-000000000001', 'reject', '{}', 'مضلل');

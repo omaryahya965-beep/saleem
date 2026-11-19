@@ -52,6 +52,9 @@ update public.submissions set status = 'done', analyzed_at = now() where id = '3
 set local role authenticated;
 select pg_temp.as_user('1a000000-0000-0000-0000-000000000005');
 select public.submit_promotion('4a000000-0000-0000-0000-000000000001');
+-- D169: the owner assigns; reviewers never assign themselves.
+select pg_temp.as_user('1a000000-0000-0000-0000-000000000001');
+select public.assign_reviewer('4a000000-0000-0000-0000-000000000001', '1a000000-0000-0000-0000-000000000002');
 select pg_temp.as_user('1a000000-0000-0000-0000-000000000002');
 select public.open_review('4a000000-0000-0000-0000-000000000001');
 do $$ begin

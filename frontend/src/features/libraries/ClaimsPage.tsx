@@ -52,7 +52,12 @@ export function ClaimsPage() {
   const [editing, setEditing] = useState<Claim | "new" | null>(null);
   const [status, setStatus] = useState("");
   const refresh = () => void qc.invalidateQueries({ queryKey: lk.claims(picker.orgId) });
-  const reviewer = ["owner", "admin", "reviewer"].includes(picker.role ?? "");
+  // Approvers as review_claim (never the claim's author); managers may edit others' drafts (D169).
+  const reviewer = ["owner", "admin", "compliance_lead", "reviewer"].includes(picker.role ?? "");
+  const manager = ["owner", "admin", "compliance_lead"].includes(picker.role ?? "");
+  const proposer = canWrite && !manager; // marketer / reviewer: proposes, does not publish
+  const [mineOnly, setMineOnly] = useState(false);
+  const mine = (c: Claim) => c.created_by === picker.userId;
   const act = useMutation({
     mutationFn: async (v: {
       op: "submit" | "approve" | "reject" | "changes" | "version" | "archive";
@@ -95,7 +100,9 @@ export function ClaimsPage() {
         />
       </Page>
     );
-  const list = (claims.data ?? []).filter((c) => !status || c.status === status);
+  const list = (claims.data ?? []).filter(
+    (c) => (!status || c.status === status) && (!mineOnly || mine(c)),
+  );
   const due = claimsDue(claims.data ?? []);
   return (
     <Page className="flex flex-col gap-6">
@@ -105,7 +112,7 @@ export function ClaimsPage() {
         actions={
           canWrite ? (
             <Button icon={<Plus />} onClick={() => setEditing("new")}>
-              {t("claims.add")}
+              {proposer ? t("claims.propose") : t("claims.add")}
             </Button>
           ) : undefined
         }
@@ -130,7 +137,22 @@ export function ClaimsPage() {
             ))}
           </Select>
         </Field>
+        {canWrite && (
+          <Checkbox
+            checked={mineOnly}
+            onChange={(e) => setMineOnly(e.target.checked)}
+            label={t("claims.mineOnly")}
+          />
+        )}
       </div>
+      {proposer && (
+        <p
+          role="note"
+          className="rounded-md border border-border bg-sunken px-4 py-2 text-sm text-fg-muted"
+        >
+          {t("claims.proposalNote")}
+        </p>
+      )}
       {due.length > 0 && (
         <p
           role="status"
@@ -150,7 +172,20 @@ export function ClaimsPage() {
               <Card className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold text-fg">{c.name}</span>
-                  <Badge>{t(`claims.statusOpt.${c.status}` as TKey)}</Badge>
+                  <Badge
+                    variant={
+                      c.status === "approved"
+                        ? "green"
+                        : c.status === "pending_review"
+                          ? "amber"
+                          : "neutral"
+                    }
+                  >
+                    {t(`claims.statusOpt.${c.status}` as TKey)}
+                  </Badge>
+                  {mine(c) && c.status !== "approved" && (
+                    <Badge variant="outline">{t("claims.myProposal")}</Badge>
+                  )}
                   <Badge>{t("products.version", { n: c.version })}</Badge>
                   {c.next_review_at && (
                     <span className="text-xs text-fg-muted">
@@ -163,16 +198,18 @@ export function ClaimsPage() {
                 </p>
                 <SubstantiationList items={(c.substantiation ?? []) as Substantiation[]} />
                 <div className="flex flex-wrap gap-2 border-t border-border pt-2">
-                  {["draft", "changes_requested", "rejected"].includes(c.status) && canWrite && (
-                    <>
-                      <Button size="sm" variant="secondary" onClick={() => setEditing(c)}>
-                        {t("products.edit")}
-                      </Button>
-                      <Button size="sm" onClick={() => act.mutate({ op: "submit", c })}>
-                        {t("claims.submit")}
-                      </Button>
-                    </>
-                  )}
+                  {["draft", "changes_requested", "rejected"].includes(c.status) &&
+                    canWrite &&
+                    (mine(c) || manager) && (
+                      <>
+                        <Button size="sm" variant="secondary" onClick={() => setEditing(c)}>
+                          {t("products.edit")}
+                        </Button>
+                        <Button size="sm" onClick={() => act.mutate({ op: "submit", c })}>
+                          {t("claims.submit")}
+                        </Button>
+                      </>
+                    )}
                   {c.status === "pending_review" && reviewer && c.created_by !== picker.userId && (
                     <>
                       <Button size="sm" onClick={() => act.mutate({ op: "approve", c })}>
@@ -218,6 +255,19 @@ export function ClaimsPage() {
                       {t("products.archive")}
                     </Button>
                   )}
+                  {!["owner", "admin"].includes(picker.role ?? "") &&
+                    mine(c) &&
+                    ["draft", "pending_review", "changes_requested", "rejected"].includes(
+                      c.status,
+                    ) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => act.mutate({ op: "archive", c })}
+                      >
+                        {t("claims.withdraw")}
+                      </Button>
+                    )}
                 </div>
               </Card>
             </li>

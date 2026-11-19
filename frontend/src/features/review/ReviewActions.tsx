@@ -10,6 +10,7 @@ import { RereviewAction } from "@/features/enterprise/LifecyclePanel";
 import { SelfApproveAction } from "@/features/enterprise/SelfApproval";
 import { fk, flowLive, submitWithCarry, usePreview, useSteps } from "@/lib/api/flows";
 import { pk, type Promotion, type VersionSummary } from "@/lib/api/promotions";
+import { can } from "@/lib/permissions";
 import {
   archivePromotion,
   assignReviewer,
@@ -81,7 +82,13 @@ export function ReviewActions({
   const live = flowLive(steps.data ?? []);
   const onError = (e: unknown) => toast.error(errText(e));
   const isUploaderSide = me.isOwner || ["owner", "admin", "creator"].includes(me.orgRole ?? "");
-  const isReviewer = ["owner", "admin", "reviewer"].includes(me.orgRole ?? "");
+  const isReviewer = ["owner", "admin", "compliance_lead", "reviewer"].includes(me.orgRole ?? "");
+  // D169: a reviewer acts only on cases assigned to them (open_review / can_decide enforce it); managers assign.
+  const mayAct = me.orgRole !== "reviewer" || p.assigned_reviewer_id === me.userId;
+  const awaitingAssignment =
+    me.orgRole === "reviewer" &&
+    !mayAct &&
+    ["pending_review", "in_review"].includes(p.review_status);
   const uploadedIt = Boolean(current && me.userId && current.user_id === me.userId);
   const s = p.review_status;
   const open = useMutation({
@@ -92,18 +99,10 @@ export function ReviewActions({
     },
     onError,
   });
-  const assignMe = useMutation({
-    mutationFn: () => assignReviewer(p.id, me.userId!),
-    onSuccess: () => {
-      toast.success(t("review.assignedToast"));
-      refresh();
-    },
-    onError,
-  });
   const decidePre = useQuery({
     queryKey: ["can-decide", p.id, s],
     queryFn: () => canDecide(p.id),
-    enabled: isReviewer && s === "in_review" && !uploadedIt,
+    enabled: isReviewer && mayAct && s === "in_review" && !uploadedIt,
   });
 
   if (!p.org_id || p.is_demo) return null;
@@ -117,7 +116,7 @@ export function ReviewActions({
         {t("review.submit")}
       </Button>,
     );
-  if (isReviewer && !uploadedIt && s === "pending_review")
+  if (isReviewer && mayAct && !uploadedIt && s === "pending_review")
     buttons.push(
       <Button
         key="open"
@@ -128,7 +127,7 @@ export function ReviewActions({
         {t("review.openReview")}
       </Button>,
     );
-  if (isReviewer && !uploadedIt && s === "in_review" && !live) {
+  if (isReviewer && mayAct && !uploadedIt && s === "in_review" && !live) {
     buttons.push(
       <Button
         key="decide"
@@ -149,22 +148,6 @@ export function ReviewActions({
     buttons.push(
       <Button key="respond" icon={<Scale />} onClick={() => setDialog("respond")}>
         {t("review.respondEscalation")}
-      </Button>,
-    );
-  if (
-    me.orgRole === "reviewer" &&
-    !uploadedIt &&
-    ["pending_review", "in_review"].includes(s) &&
-    p.assigned_reviewer_id !== me.userId
-  )
-    buttons.push(
-      <Button
-        key="assign"
-        variant="secondary"
-        loading={assignMe.isPending}
-        onClick={() => assignMe.mutate()}
-      >
-        {t("review.assignToMe")}
       </Button>,
     );
   if (
@@ -206,7 +189,12 @@ export function ReviewActions({
       {uploadedIt && isReviewer && ["pending_review", "in_review"].includes(s) && (
         <p className="text-sm text-fg-muted">{t("review.preflight.separation_of_duties")}</p>
       )}
-      {["owner", "admin"].includes(me.orgRole ?? "") &&
+      {awaitingAssignment && (
+        <p className="text-sm text-fg-muted" data-testid="awaiting-assignment">
+          {t("review.awaitingAssignment")}
+        </p>
+      )}
+      {can(me.orgRole as never, "assign_reviewer") &&
         ["pending_review", "in_review"].includes(s) && (
           <AssignSelect promotion={p} current={current} onDone={refresh} />
         )}

@@ -39,7 +39,7 @@ const promo = (over: Partial<Promotion> = {}) =>
 const v1 = { id: "s1", version_no: 1, status: "done", user_id: "cr" } as VersionSummary;
 
 function view(p: Promotion, me: { userId: string; orgRole: string; isOwner: boolean }) {
-  render(
+  return render(
     <QueryClientProvider client={new QueryClient()}>
       <I18nProvider initialLang="ar">
         <ReviewActions promotion={p} current={v1} me={me} />
@@ -124,7 +124,8 @@ describe("review actions (case 14 in the UI)", () => {
           : { data: null, error: null },
       ),
     );
-    view(promo({ review_status: "in_review" }), {
+    // D169: the reviewer acts only on a case assigned to them.
+    view(promo({ review_status: "in_review", assigned_reviewer_id: "rv" }), {
       userId: "rv",
       orgRole: "reviewer",
       isOwner: false,
@@ -142,7 +143,8 @@ describe("review actions (case 14 in the UI)", () => {
           : { data: null, error: null },
       ),
     );
-    view(promo({ review_status: "in_review" }), {
+    // D169: the reviewer acts only on a case assigned to them.
+    view(promo({ review_status: "in_review", assigned_reviewer_id: "rv" }), {
       userId: "rv",
       orgRole: "reviewer",
       isOwner: false,
@@ -154,5 +156,20 @@ describe("review actions (case 14 in the UI)", () => {
     const dialog = await screen.findByTestId("decision-dialog");
     fireEvent.change(dialog.querySelector("select")!, { target: { value: "conditional_approve" } });
     expect(screen.getByRole("button", { name: ar.review.confirmDecision })).toBeDisabled();
+  });
+  it("an unassigned reviewer gets no open, decide or assign control (D169)", () => {
+    for (const review_status of ["pending_review", "in_review"] as const) {
+      const { unmount } = view(promo({ review_status, assigned_reviewer_id: null }), {
+        userId: "rv",
+        orgRole: "reviewer",
+        isOwner: false,
+      });
+      expect(screen.queryByRole("button", { name: ar.review.openReview })).toBeNull();
+      expect(screen.queryByRole("button", { name: ar.review.decide })).toBeNull();
+      expect(screen.queryByRole("button", { name: ar.review.assignToMe })).toBeNull();
+      expect(screen.queryByLabelText(ar.review.assignee)).toBeNull();
+      expect(screen.getByTestId("awaiting-assignment")).toBeInTheDocument();
+      unmount();
+    }
   });
 });
