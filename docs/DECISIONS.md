@@ -486,3 +486,11 @@ Format: decision — why — alternatives considered.
   requests. Retry reuses the unfinished run, keeps the upload, frames and transcript (verified live: 1 run, 32
   frames). Upload form defaults to the active workspace so org packs and company rules apply. COM-01 wording:
   a guaranteed financing approval is a finance claim (was worded as health).
+- **D168. RBAC hardening for all organisations (2026-11-19).** New `backend/tests/rbac.test.ts` builds a fresh
+  organisation with real users per role and calls the database directly. It found: (1) claims writes accepted any
+  member except legal — viewer and both external roles could write the claims library; (2) NULL-unsafe role checks
+  (`not (NULL in …)` does not raise) in assign_reviewer, respond_finding, link_claim; (3) `org_metrics` used its own
+  role list instead of `org_can`. All fixed in `20261119100000_v2_rbac_hardening.sql`. Matrix: reviewer loses
+  `view_analytics`; `assign_reviewer` is «cond» (self) for the reviewer, as the server already enforced. Pages:
+  one `PAGE_ROLES` table drives the sidebar and a route guard; dashboard create action and claim buttons follow the
+  role; query cache cleared when the signed-in user changes. Reference: docs/saleem-v2/RBAC.md.

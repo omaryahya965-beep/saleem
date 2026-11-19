@@ -82,7 +82,8 @@ export const ACTIONS = {
     enforcedBy: "can_decide",
   },
   assign_reviewer: {
-    cells: row("yes", "yes", "yes", "no", "no", "no", "no", "no", "no"),
+    cells: row("yes", "yes", "yes", "cond", "no", "no", "no", "no", "no"),
+    condition_ar: "لنفسه فقط (استلام من الطابور)",
     enforcedBy: "assign_reviewer",
   },
   escalate_legal: {
@@ -126,7 +127,7 @@ export const ACTIONS = {
     enforcedBy: "org_settings update / presets / API keys / webhooks / partners",
   },
   view_analytics: {
-    cells: row("yes", "yes", "yes", "yes", "no", "no", "no", "no", "yes"),
+    cells: row("yes", "yes", "yes", "no", "no", "no", "no", "no", "yes"),
     enforcedBy: "org_metrics",
   },
 } as const satisfies Record<string, ActionDef>;

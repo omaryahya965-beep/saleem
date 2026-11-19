@@ -31,6 +31,8 @@ import {
 import { formatClock, useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { WorkSummary } from "@/features/libraries/WorkSummary";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
+import { canSeePage } from "@/components/layout/navModel";
 import type { DashboardFilter, SubmissionListItem } from "@/lib/api/data";
 import { useSubmissions } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
@@ -166,7 +168,10 @@ export function DashboardPage() {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const filtered = filter !== "all" || Boolean(search.q);
 
-  const newButton = (
+  // Only roles that create advertisements get the create action (the reviewer, legal, viewer and externals do not).
+  const picker = useOrgPicker();
+  const canCreate = canSeePage("new", { role: picker.role, flags: {}, platformAdmin: false });
+  const newButton = canCreate && (
     <Button asChild>
       <Link to="/new">
         <Plus aria-hidden="true" />
@@ -180,7 +185,7 @@ export function DashboardPage() {
       <PageHeader
         title={t("dashboard.title")}
         description={t("dashboard.subtitle")}
-        actions={newButton}
+        actions={newButton || undefined}
       />
 
       <RoleHome />
@@ -255,8 +260,8 @@ export function DashboardPage() {
           <EmptyState
             icon={<LayoutList />}
             title={t("dashboard.emptyTitle")}
-            body={t("dashboard.emptyBody")}
-            action={newButton}
+            body={canCreate ? t("dashboard.emptyBody") : t("dashboard.emptyBodyNoCreate")}
+            action={newButton || undefined}
           />
         )
       ) : (

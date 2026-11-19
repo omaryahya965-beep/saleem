@@ -46,7 +46,16 @@ do $$ begin
   exception when others then if sqlerrm not like '%code:forbidden%' then raise; end if;
   end;
 end $$;
+-- Since D168 the reviewer has no organisation analytics (matrix view_analytics); the owner reads them.
 select pg_temp.as_user('1b000000-0000-0000-0000-000000000002');
+do $$ begin
+  begin
+    perform public.org_metrics('2b000000-0000-0000-0000-000000000001', '2026-11-01', '2026-12-01');
+    raise exception 'reviewer read metrics';
+  exception when others then if sqlerrm not like '%code:forbidden%' then raise; end if;
+  end;
+end $$;
+select pg_temp.as_user('1b000000-0000-0000-0000-000000000001');
 do $$
 declare m jsonb := public.org_metrics('2b000000-0000-0000-0000-000000000001', '2026-11-01 00:00+03', '2026-12-01 00:00+03');
 begin

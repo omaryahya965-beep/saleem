@@ -43,6 +43,10 @@ export function ClaimsPage() {
   const { t } = useI18n();
   const qc = useQueryClient();
   const picker = useOrgPicker();
+  // Writers match the server (save_claim / new_claim_version / submit_claim, D168); legal, viewer and externals read.
+  const canWrite = ["owner", "admin", "compliance_lead", "reviewer", "creator"].includes(
+    picker.role ?? "",
+  );
   const claims = useClaims(picker.orgId);
   const errText = usePreflightText();
   const [editing, setEditing] = useState<Claim | "new" | null>(null);
@@ -99,7 +103,7 @@ export function ClaimsPage() {
         title={t("claims.title")}
         description={t("claims.subtitle")}
         actions={
-          picker.role && picker.role !== "legal" ? (
+          canWrite ? (
             <Button icon={<Plus />} onClick={() => setEditing("new")}>
               {t("claims.add")}
             </Button>
@@ -159,17 +163,16 @@ export function ClaimsPage() {
                 </p>
                 <SubstantiationList items={(c.substantiation ?? []) as Substantiation[]} />
                 <div className="flex flex-wrap gap-2 border-t border-border pt-2">
-                  {["draft", "changes_requested", "rejected"].includes(c.status) &&
-                    picker.role !== "legal" && (
-                      <>
-                        <Button size="sm" variant="secondary" onClick={() => setEditing(c)}>
-                          {t("products.edit")}
-                        </Button>
-                        <Button size="sm" onClick={() => act.mutate({ op: "submit", c })}>
-                          {t("claims.submit")}
-                        </Button>
-                      </>
-                    )}
+                  {["draft", "changes_requested", "rejected"].includes(c.status) && canWrite && (
+                    <>
+                      <Button size="sm" variant="secondary" onClick={() => setEditing(c)}>
+                        {t("products.edit")}
+                      </Button>
+                      <Button size="sm" onClick={() => act.mutate({ op: "submit", c })}>
+                        {t("claims.submit")}
+                      </Button>
+                    </>
+                  )}
                   {c.status === "pending_review" && reviewer && c.created_by !== picker.userId && (
                     <>
                       <Button size="sm" onClick={() => act.mutate({ op: "approve", c })}>
@@ -197,7 +200,7 @@ export function ClaimsPage() {
                       </Button>
                     </>
                   )}
-                  {c.status === "approved" && picker.role !== "legal" && (
+                  {c.status === "approved" && canWrite && (
                     <Button
                       size="sm"
                       variant="secondary"

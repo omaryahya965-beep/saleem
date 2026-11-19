@@ -338,6 +338,7 @@
     "searchPlaceholder": "Search by name or caption…",
     "filtersLabel": "Filter by status",
     "emptyTitle": "No checks yet",
+    "emptyBodyNoCreate": "You have no checks of your own here. Advertisements you are allowed to see are under Advertisements.",
     "emptyBody": "Upload your first clip before publishing and get a report in minutes.",
     "emptyFilteredTitle": "No matching checks",
     "emptyFilteredBody": "Try another status or search term.",
@@ -2209,6 +2210,11 @@
       "unable_to_verify": "Unable to verify: the model returned no valid result.",
       "failed": "The trial failed. Try again."
     }
+  },
+  "access": {
+    "notForRoleTitle": "This page is not part of your role",
+    "notForRoleBody": "Your permissions in this workspace do not include this page. If you need it, ask your organization admin to change your role.",
+    "home": "Back to home"
   },
   "appNav": {
     "menu": "Menu",

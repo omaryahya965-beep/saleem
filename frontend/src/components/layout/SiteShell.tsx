@@ -12,9 +12,26 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-import { Suspense, createContext, lazy, useContext, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  createContext,
+  lazy,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
-import { AppShell, Brand, LanguageToggle, type NavItem } from "@/components/ui";
+import {
+  AppShell,
+  Brand,
+  Button,
+  EmptyState,
+  LanguageToggle,
+  Page,
+  type NavItem,
+} from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
 import { useIsAdmin } from "@/lib/api/roles";
@@ -22,7 +39,8 @@ import { useOrgSettings } from "@/lib/api/promotions";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { AppSidebar, NAV_ICONS, NavDrawer, isActive } from "./AppSidebar";
 import { DemoBanner } from "./DemoBanner";
-import { buildNav, primaryMobile, type NavGroup } from "./navModel";
+import { buildNav, pageForPath, primaryMobile, type NavGroup } from "./navModel";
+import { ShieldOff } from "lucide-react";
 const NotificationsBell = lazy(() =>
   import("./Notifications").then((m) => ({ default: m.NotificationsBell })),
 );
@@ -166,6 +184,25 @@ function useAppNav(picker: Picker): NavGroup[] {
   return buildNav({ role: picker.role, orgId: picker.orgId || null, flags, platformAdmin });
 }
 
+/** Shown instead of a page the current role has no use for (never reached from the sidebar). */
+function NotForRole() {
+  const { t } = useI18n();
+  return (
+    <Page narrow>
+      <EmptyState
+        icon={<ShieldOff aria-hidden="true" />}
+        title={t("access.notForRoleTitle")}
+        body={t("access.notForRoleBody")}
+        action={
+          <Button asChild>
+            <Link to="/dashboard">{t("access.home")}</Link>
+          </Button>
+        }
+      />
+    </Page>
+  );
+}
+
 /** Site chrome: signed-in app (sidebar + slim account menu) or the marketing nav when signed out. */
 export function SiteShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -173,7 +210,24 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const picker = useOrgPicker();
+  // A different signed-in user (e.g. switching demo roles) must never see the previous user's cached data or role.
+  const qcShell = useQueryClient();
+  const lastUser = useRef(user?.id);
+  useEffect(() => {
+    if (lastUser.current && lastUser.current !== user?.id) qcShell.clear();
+    lastUser.current = user?.id;
+  }, [user?.id, qcShell]);
   const groups = useAppNav(picker);
+  // Route guard: a page outside the role's navigation is not rendered, even by typed URL (the server still filters
+  // every query). Decided only once the navigation is known (memberships loaded), so nothing flashes.
+  const page = pageForPath(pathname);
+  const blocked = Boolean(
+    page &&
+    groups.length &&
+    !groups.some((g) =>
+      g.items.some((i) => i.key === page || (page === "adminMetrics" && i.key.startsWith("admin"))),
+    ),
+  );
   const signedIn = ready && Boolean(user);
 
   const link =
@@ -258,7 +312,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         mobileActionBar={<div data-slot ref={setSlot} />}
       >
         {signedIn && <DemoBanner />}
-        {children}
+        {signedIn && blocked ? <NotForRole /> : children}
       </AppShell>
     </ActionBarContext.Provider>
   );

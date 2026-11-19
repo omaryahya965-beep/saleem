@@ -22,10 +22,11 @@ const ORDER: Record<OrgRole, string[]> = {
   owner: ["roles", "features", "queue", "analytics"],
   admin: ["roles", "features", "queue", "analytics"],
   compliance_lead: ["queue", "rules", "analytics", "promotions"],
-  reviewer: ["queue", "promotions", "analytics"],
+  reviewer: ["queue", "promotions"],
   legal: ["legal", "promotions"],
   creator: ["new", "promotions"],
-  external_uploader: ["promotions", "new"],
+  // Partners create through their partner link only, not /new.
+  external_uploader: ["promotions"],
   external_reviewer: ["promotions"],
   viewer: ["promotions", "analytics"],
 };
