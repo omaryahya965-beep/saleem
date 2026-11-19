@@ -1,5 +1,5 @@
 // PR #1 integration: Gemini on the v2 engine (analyzeV2). No network: the SDK call is injected via `generate`.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GenerateContentResponse, type GenerateContentParameters } from "@google/genai";
 import { GeminiAnalysis, GeminiTranscription, GEMINI_DEFAULT_MODEL, packFrames } from "../supabase/functions/_shared/providers/gemini.ts";
 import { ANALYSIS_SCHEMA_V2 } from "../supabase/functions/_shared/pipeline/schema-v2.ts";
@@ -152,5 +152,43 @@ describe("Gemini overload fallback (GEMINI_FALLBACK_MODEL)", () => {
   });
   it("never falls back on other errors (rate limit retries the same model)", async () => {
     expect((await run({ status: 429, message: "RESOURCE_EXHAUSTED per minute" }, "gemini-3.1-flash-lite")).models).toEqual(["gemini-3.6-flash", "gemini-3.6-flash"]);
+  });
+});
+
+// Regression (local demo, 2026-11-19 16:43 UTC): transcription failed after 3.6 Flash -> 503 and the fallback
+// 3.1 Flash-Lite -> 503 within 17 s. Overload now gets bounded backoff retries alternating both models.
+describe("Arabic transcription under Gemini overload", () => {
+  const wav = () => new Blob([new Uint8Array(100)], { type: "audio/wav" });
+  const ok = () => response({ segments: [{ start: 0, end: 2.5, text: "تمويل بدون رسوم" }], requires_human_review: false });
+  const asr = (generate: (p: GenerateContentParameters) => Promise<GenerateContentResponse>, pause = async (_ms: number) => {}) =>
+    new GeminiTranscription("test-key-not-a-real-credential", "gemini-3.6-flash", { generate, sleep: pause, fallbackModel: "gemini-3.1-flash-lite" } as never);
+  it("recovers when both models answer 503 once: primary -> fallback -> (3 s) primary", async () => {
+    const models: string[] = [];
+    const pause = vi.fn(async (_ms: number) => {});
+    let n = 0;
+    const out = await asr(async (p) => { models.push(p.model); if (++n <= 2) throw { status: 503, message: "UNAVAILABLE high demand" }; return ok(); }, pause).transcribe(wav(), "a.wav");
+    expect(models).toEqual(["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.6-flash"]);
+    expect(out.segments).toEqual([{ start: 0, end: 2.5, text: "تمويل بدون رسوم" }]);
+    expect(out.model).toBe("gemini-3.6-flash");
+    expect(pause.mock.calls.map((c) => c[0])).toHaveLength(1);
+    expect(pause.mock.calls[0]![0]).toBeGreaterThanOrEqual(3000);
+  });
+  it("records the fallback as the transcription model when it is the one that answered", async () => {
+    let n = 0;
+    const out = await asr(async () => { if (++n === 1) throw { status: 503, message: "UNAVAILABLE" }; return ok(); }).transcribe(wav(), "a.wav");
+    expect(out.model).toBe("gemini-3.1-flash-lite");
+  });
+  it("an exhausted daily quota never switches model and fails as insufficient_quota (no retries)", async () => {
+    const models: string[] = [];
+    const quota = { status: 429, message: "Quota exceeded for metric generate_content_free_tier_requests, limit: 20, per day. Check your plan and billing details" };
+    await expect(asr(async (p) => { models.push(p.model); throw quota; }).transcribe(wav(), "a.wav"))
+      .rejects.toMatchObject({ retryable: false, info: { code: "insufficient_quota" } });
+    expect(models).toEqual(["gemini-3.6-flash"]);
+  });
+  it("gives up after bounded retries with the overloaded code when Google stays overloaded", async () => {
+    const models: string[] = [];
+    await expect(asr(async (p) => { models.push(p.model); throw { status: 503, message: "UNAVAILABLE" }; }).transcribe(wav(), "a.wav"))
+      .rejects.toMatchObject({ info: { code: "overloaded" } });
+    expect(models).toEqual(["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3.6-flash"]);
   });
 });

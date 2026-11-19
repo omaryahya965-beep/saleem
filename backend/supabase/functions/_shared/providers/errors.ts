@@ -9,7 +9,8 @@ export type ProviderErrorCode =
   | "insufficient_quota" // 429 + insufficient_quota — no credit / billing
   | "rate_limited" // 429 otherwise
   | "bad_request" // 400 — e.g. unsupported audio format, missing parameter
-  | "provider_down" // 5xx, timeouts, network errors
+  | "overloaded" // 503 UNAVAILABLE: the model is under high demand (Google says usually temporary)
+  | "provider_down" // other 5xx, timeouts, network errors
   | "unknown";
 
 export interface ProviderErrorInfo {
@@ -40,6 +41,7 @@ export function classifyProviderError(status: number | null, body: string, reque
   // Google: per-minute limits are transient; daily/zero/billing quota is not.
   else if (status === 429) code = /per.?minute/i.test(body) ? "rate_limited" : type === "insufficient_quota" || /quota|billing|credit|RESOURCE_EXHAUSTED/i.test(message + " " + body) ? "insufficient_quota" : "rate_limited";
   else if (status === 400 || status === 413 || status === 415 || status === 422) code = "bad_request";
+  else if (status === 503) code = "overloaded";
   else if (status === null || status === 408 || status >= 500) code = "provider_down";
   else code = "unknown";
   // Never echo key material even if a provider message quotes it.
@@ -65,8 +67,8 @@ export const PROVIDER_ERROR_MESSAGES: Record<ProviderErrorCode, { ar: string; en
     en: "The configured model is not available or does not support this analysis.",
   },
   insufficient_quota: {
-    ar: "تم الوصول إلى حد استخدام مزوّد التحليل. يرجى التحقق من الرصيد والحدود.",
-    en: "Analysis provider quota exceeded. Please check credit and usage limits.",
+    ar: "نفدت حصة الاستخدام المتاحة لمزوّد التحليل (Gemini). أعد المحاولة بعد تجدد الحصة اليومية أو بعد رفع الحد. ملفك محفوظ.",
+    en: "The analysis provider (Gemini) usage quota or credit is exhausted. Retry after the daily quota resets or the limit is raised. Your file is kept.",
   },
   rate_limited: {
     ar: "مزوّد التحليل مشغول حالياً. أعد المحاولة بعد دقيقة.",
@@ -75,6 +77,10 @@ export const PROVIDER_ERROR_MESSAGES: Record<ProviderErrorCode, { ar: string; en
   bad_request: {
     ar: "رفض مزوّد التحليل الملف (صيغة أو إعدادات غير مدعومة). جرّب ملفاً آخر أو أعد المحاولة.",
     en: "The analysis provider rejected the file (unsupported format or settings). Try another file or retry.",
+  },
+  overloaded: {
+    ar: "خدمة Gemini مزدحمة حالياً بسبب ضغط مرتفع لدى Google، ولم تنجح المحاولات التلقائية. ملفك محفوظ؛ أعد المحاولة بعد دقيقة.",
+    en: "Gemini is overloaded right now (high demand at Google) and the automatic retries did not succeed. Your file is kept; retry in a minute.",
   },
   provider_down: {
     ar: "خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. حاول مرة أخرى.",

@@ -13,6 +13,8 @@ export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash";
 // this as X-Server-Timeout, so a tight value makes Google answer 504 (deadline exceeded).
 export const GEMINI_TIMEOUT_MS = 90_000;
 /** Thinking is billed as output and dominates latency; the answer is schema-validated and evidence-checked. */
+/** Waits before each overload retry (0 = switch to the fallback model at once). Google: 503 spikes are temporary. */
+export const GEMINI_OVERLOAD_DELAYS_MS = [0, 3_000, 8_000, 15_000] as const;
 export const GEMINI_THINKING_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
 export type GeminiThinkingLevel = (typeof GEMINI_THINKING_LEVELS)[number];
 export const GEMINI_DEFAULT_THINKING: GeminiThinkingLevel = "LOW";
@@ -79,7 +81,7 @@ export function geminiError(error: unknown): ProviderError {
   const message = typeof e?.message === "string" ? e.message : "";
   // Classify from the message, but never store it: only the code leaves this function.
   const code = /invalid api key/i.test(message) ? "invalid_key" : classifyProviderError(status, message).code;
-  const retryable = code === "rate_limited" || code === "provider_down";
+  const retryable = code === "rate_limited" || code === "provider_down" || code === "overloaded";
   return new ProviderError(`Gemini request failed (${code}${status ? `, HTTP ${status}` : ""})`, retryable, status ?? undefined,
     { code, status, type: null, requestId: null, detail: "Gemini request failed; inspect provider settings and quota." });
 }
@@ -195,12 +197,15 @@ class GeminiClient {
   protected async json<T>(parts: Part[], schema: unknown, instruction: string, usage: TokenUsage, parse: (raw: unknown) => T, deadline = Date.now() + 2 * this.timeout + 2000): Promise<{ parsed: T; raw: unknown; attempts: number }> {
     if (JSON.stringify(parts).length + instruction.length > 16 * 1024 * 1024) inputError("Gemini request exceeds the inline request budget");
     const requestParts = [...parts];
+    let overloadRetries = 0;
+    let requests = 0; // every request sent, including overload retries (reported as attempts)
     for (let attempt = 1; attempt <= 2; attempt++) {
       const timeout = Math.min(this.timeout, deadline - Date.now());
       if (timeout <= 0) throw geminiError(null);
       const ctrl = new AbortController();
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
+        requests++;
         const response = await Promise.race([
           this.generate({ model: this.activeModel, contents: [{ role: "user", parts: requestParts }], config: {
             systemInstruction: instruction, responseMimeType: "application/json", responseJsonSchema: schema,
@@ -218,17 +223,25 @@ class GeminiClient {
         const text = candidate.content?.parts?.filter((p) => !p.thought && typeof p.text === "string").map((p) => p.text).join("") ?? "";
         if (text.length > 200_000) throw new SchemaError("Gemini response too large");
         const raw = parseModelJson(text);
-        return { parsed: parse(raw), raw, attempts: attempt };
+        return { parsed: parse(raw), raw, attempts: requests };
       } catch (error) {
         const safe = error instanceof SchemaError ? error : geminiError(error);
-        // Overload only — 503 "high demand", or no answer within the timeout: switch once to the configured
-        // fallback model and give it its own attempt (bounded: the switch happens at most once per client).
+        // Overload (503 "high demand", or no answer within the timeout) is transient: retry with bounded
+        // exponential backoff, alternating primary and fallback model (the first switch is immediate), and
+        // never past the deadline. Quota/rate limits (429) and every other error never change the model.
         const overloaded = safe instanceof ProviderError && (safe.status === 503 || (safe.status === undefined && safe.info?.code === "provider_down"));
-        if (overloaded && this.fallbackModel && this.activeModel !== this.fallbackModel) {
-          console.warn(JSON.stringify({ event: "gemini_fallback", from: this.activeModel, to: this.fallbackModel, reason: (safe as ProviderError).status ?? "timeout" }));
-          this.activeModel = this.fallbackModel;
-          attempt--;
-          continue;
+        const delays = this.fallbackModel ? GEMINI_OVERLOAD_DELAYS_MS : GEMINI_OVERLOAD_DELAYS_MS.slice(1);
+        if (overloaded && overloadRetries < delays.length) {
+          const wait = delays[overloadRetries]! && delays[overloadRetries]! + Math.random() * 500;
+          if (Date.now() + wait + 5_000 < deadline) {
+            const next = this.fallbackModel ? (this.activeModel === this.model ? this.fallbackModel : this.model) : this.activeModel;
+            console.warn(JSON.stringify({ event: "gemini_overload_retry", from: this.activeModel, to: next, retry: overloadRetries + 1, wait_ms: Math.round(wait), reason: (safe as ProviderError).status ?? "timeout" }));
+            overloadRetries++;
+            if (wait) await this.sleep(wait);
+            this.activeModel = next;
+            attempt--;
+            continue;
+          }
         }
         if (attempt === 2 || (safe instanceof ProviderError && !safe.retryable)) throw safe;
         if (safe instanceof SchemaError) requestParts.push({ text: `The previous response failed validation: ${safe.message}. Return corrected JSON. Do not invent evidence or missing information to satisfy validation. Omit unsupported findings and use review_reasons for uncertainty when that field is present in the schema.` });

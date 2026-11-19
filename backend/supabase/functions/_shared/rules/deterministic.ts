@@ -48,6 +48,8 @@ const NUM_WORD = "(\\d+|واحد|اثنين|ثنين|ثلاث|اربع|خمس|س
 
 /** Health and financial absolute claims (COM-01). Each has a key used in tests. */
 export const CLAIM_PATTERNS: { key: string; kind: "health" | "finance"; re: RegExp }[] = [
+  // Before the generic "guaranteed": a promised financing approval is a finance claim, not a health one.
+  { key: "guaranteed_approval", kind: "finance", re: /موافقه مضمونه|موافقة مضمونة|قبول مضمون|تمويل مضمون|الموافقه مضمونه|الموافقة مضمونة/ },
   { key: "slimming", kind: "health", re: /ينحف|يحرق الدهون|يذوب الدهون/ },
   { key: "weight_loss", kind: "health", re: new RegExp(`تنزل(ين|ون|ي)?\\s*${NUM_WORD}\\s*(كيلو|كيلوات|كيلوهات|كغ|kg)`) },
   { key: "cures", kind: "health", re: /(يعالج|تعالج|يشفي|تشفي)|علاج نهايي|شفاء تام/ },
@@ -56,6 +58,37 @@ export const CLAIM_PATTERNS: { key: string; kind: "health" | "finance"; re: RegE
   { key: "guaranteed_profit", kind: "finance", re: /ربح مضمون|ارباح مضمونه|ارباح مضمونة|عايد مضمون/ },
   { key: "daily_return", kind: "finance", re: /عايد يومي|ارباح يوميه|ارباح يومية|دخل يومي مضمون/ },
 ];
+
+/** Arabic/English wording per claim: the generic "guaranteed" pattern reads as health only for health products. */
+function claimText(key: string, kind: "health" | "finance", category: string | null | undefined) {
+  if (key === "guaranteed_approval")
+    return {
+      explanation_ar: "وعد بموافقة مضمونة على التمويل في محتوى ترويجي، بينما تخضع الموافقة للشروط وتقييم الجدارة الائتمانية.",
+      explanation_en: "Promises guaranteed financing approval in promotional content, although approval depends on terms and a credit assessment.",
+      fix_ar: "احذف وعد الموافقة المضمونة، واذكر أن الموافقة تخضع للشروط والأحكام وتقييم الجدارة الائتمانية.",
+      fix_en: "Remove the guaranteed-approval promise and state that approval is subject to terms and a credit assessment.",
+    };
+  if (kind === "finance")
+    return {
+      explanation_ar: "ادعاء مالي بعائد أو ربح مضمون في محتوى ترويجي.",
+      explanation_en: "Guaranteed financial return claim in promotional content.",
+      fix_ar: "احذف وعود الربح المضمون، وأضف تنبيهاً واضحاً بالمخاطر.",
+      fix_en: "Remove guaranteed-profit promises and add a clear risk notice.",
+    };
+  if (key === "guaranteed" && category !== "health")
+    return {
+      explanation_ar: "ادعاء مطلق بنتيجة مضمونة في محتوى ترويجي.",
+      explanation_en: "Absolute, guaranteed-outcome claim in promotional content.",
+      fix_ar: "احذف وعد النتيجة المضمونة، واذكر الشروط أو العوامل التي تؤثر في النتيجة.",
+      fix_en: "Remove the guaranteed-outcome promise and state the conditions that affect the outcome.",
+    };
+  return {
+    explanation_ar: "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي.",
+    explanation_en: "Absolute or guaranteed health claim in promotional content.",
+    fix_ar: "احذف وعود النتائج والضمان، واكتفِ بوصف تجربتك الشخصية مع توضيح أن النتائج تختلف.",
+    fix_en: "Remove result and guarantee promises; describe your personal experience and note results vary.",
+  };
+}
 
 interface TextSpan {
   t_start: number | null;
@@ -155,22 +188,7 @@ export function runDeterministicChecks(
         t_end: s.t_end,
         evidence_type: s.evidence_type,
         evidence_text: quote(s.raw),
-        explanation_ar:
-          c.kind === "health"
-            ? "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي."
-            : "ادعاء مالي بعائد أو ربح مضمون في محتوى ترويجي.",
-        explanation_en:
-          c.kind === "health"
-            ? "Absolute or guaranteed health claim in promotional content."
-            : "Guaranteed financial return claim in promotional content.",
-        fix_ar:
-          c.kind === "health"
-            ? "احذف وعود النتائج والضمان، واكتفِ بوصف تجربتك الشخصية مع توضيح أن النتائج تختلف."
-            : "احذف وعود الربح المضمون، وأضف تنبيهاً واضحاً بالمخاطر.",
-        fix_en:
-          c.kind === "health"
-            ? "Remove result and guarantee promises; describe your personal experience and note results vary."
-            : "Remove guaranteed-profit promises and add a clear risk notice.",
+        ...claimText(c.key, c.kind, submission.product_category),
         confidence: strong ? 0.9 : 0.65,
         source: "deterministic",
       });

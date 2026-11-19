@@ -175,8 +175,9 @@ describe("Gemini structured compliance results (mocked transport)", () => {
     const req = request(); req.submission.kind = "video"; req.duration = 20;
     req.frames = Array.from({ length: 17 }, (_, t) => ({ t, url: "data:image/jpeg;base64,/9j/2Q==" }));
     const generate = vi.fn().mockResolvedValueOnce(response(clean())).mockRejectedValue({ status: 503 });
-    await expect(provider(generate).analyze(req)).rejects.toMatchObject({ info: { code: "provider_down" } });
-    expect(generate).toHaveBeenCalledTimes(3);
+    await expect(provider(generate).analyze(req)).rejects.toMatchObject({ info: { code: "overloaded" } });
+    // batch 1 succeeds; batch 2: 1 request + 3 overload backoff retries + 1 ordinary retry, then fails as a whole
+    expect(generate).toHaveBeenCalledTimes(6);
   });
   it("supports local storage only when its exact origin is configured server-side", async () => {
     const req = request(); req.submission.kind = "image";
@@ -212,16 +213,19 @@ describe("Gemini structured compliance results (mocked transport)", () => {
 });
 
 describe("Gemini transport failures", () => {
-  it("exhausts persistent 503s after exactly two attempts and one bounded backoff", async () => {
+  it("exhausts persistent 503s after bounded exponential backoff (3 s, 8 s, 15 s) and one ordinary retry", async () => {
     const generate = vi.fn().mockRejectedValue({ status: 503, message: "High demand" });
     const pause = vi.fn(async (_ms: number) => {});
     await expect(provider(generate, { sleep: pause }).analyze(request())).rejects.toMatchObject({
-      status: 503, retryable: true, info: { code: "provider_down" },
+      status: 503, retryable: true, info: { code: "overloaded" },
     });
-    expect(generate).toHaveBeenCalledTimes(2);
-    expect(pause).toHaveBeenCalledTimes(1);
-    expect(pause.mock.calls[0]![0]).toBeGreaterThanOrEqual(800);
-    expect(pause.mock.calls[0]![0]).toBeLessThan(1050);
+    expect(generate).toHaveBeenCalledTimes(5);
+    const waits = pause.mock.calls.map((c) => c[0]);
+    expect(waits).toHaveLength(4);
+    expect(waits[0]).toBeGreaterThanOrEqual(3000); expect(waits[0]).toBeLessThan(3500);
+    expect(waits[1]).toBeGreaterThanOrEqual(8000); expect(waits[1]).toBeLessThan(8500);
+    expect(waits[2]).toBeGreaterThanOrEqual(15000); expect(waits[2]).toBeLessThan(15500);
+    expect(waits[3]).toBeGreaterThanOrEqual(800); expect(waits[3]).toBeLessThan(1050);
   });
   it.each([429, 500, 503])("retries transient HTTP %s and counts the successful usage", async (status) => {
     const generate = vi.fn().mockRejectedValueOnce({ status, message: "provider failure" }).mockResolvedValue(response(clean()));
@@ -238,7 +242,7 @@ describe("Gemini transport failures", () => {
     expect(JSON.stringify(error)).not.toContain("sensitive-key");
     expect(error.message).not.toContain("token=");
     const generate = vi.fn().mockRejectedValue({ status: 503, message: "private content" });
-    await expect(provider(generate).analyze(request())).rejects.toThrow("provider_down");
+    await expect(provider(generate).analyze(request())).rejects.toThrow("overloaded");
   });
   it.each([
     [400, "[400 Bad Request] API key expired. Please renew the API key. reason: API_KEY_INVALID", "invalid_key", false],
@@ -247,7 +251,7 @@ describe("Gemini transport failures", () => {
     [400, "models/gemini-x is not supported for generateContent", "model_not_found", false],
     [429, "Quota exceeded for metric generate_content_free_tier_requests, limit: 0, per day. Check plan and billing", "insufficient_quota", false],
     [429, "RESOURCE_EXHAUSTED: Quota exceeded for metric: requests per minute per model", "rate_limited", true],
-    [503, "The model is overloaded", "provider_down", true],
+    [503, "The model is overloaded", "overloaded", true],
   ])("classifies Google HTTP %s errors precisely (%s)", (status, message, code, retryable) => {
     const error = geminiError({ status, message });
     expect(error.info?.code).toBe(code);
@@ -256,7 +260,8 @@ describe("Gemini transport failures", () => {
   it("times out even when a transport fails to honor its abort signal", async () => {
     const generate = vi.fn(() => new Promise<GenerateContentResponse>(() => {}));
     await expect(provider(generate, { timeoutMs: 5 }).analyze(request())).rejects.toMatchObject({ info: { code: "provider_down" } });
-    expect(generate).toHaveBeenCalledTimes(2);
+    // a timeout counts as overload: 1 request + 3 backoff retries + 1 ordinary retry, all bounded by the deadline
+    expect(generate).toHaveBeenCalledTimes(5);
   });
 });
 

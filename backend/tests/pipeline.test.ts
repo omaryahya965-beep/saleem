@@ -112,6 +112,25 @@ describe("runDeterministicChecks", () => {
     expect(com.every((f) => f.severity === "violation")).toBe(true);
   });
 
+  // Live demo (2026-11-19): «موافقة مضمونة 100%» in a financing video was explained as a *health* claim.
+  it("explains a guaranteed financing approval as a finance claim, never as health", () => {
+    const r = runDeterministicChecks(sub({ is_paid_ad: true, caption: "#اعلان", product_category: "finance" }), [
+      seg(5.5, "والأحلى موافقة مضمونة 100% لكل العملاء وبدون أي شروط", 9.9),
+    ]);
+    const com = r.findings.find((f) => f.rule_code === "COM-01")!;
+    expect(com).toMatchObject({ t_start: 5.5, severity: "violation" });
+    expect(com.explanation_ar).toContain("موافقة مضمونة على التمويل");
+    expect(com.explanation_ar).not.toContain("صحي");
+    expect(com.fix_ar).toContain("الجدارة الائتمانية");
+  });
+
+  it("uses health wording for a generic guarantee only in a health ad", () => {
+    const health = runDeterministicChecks(sub({ product_category: "health" }), [seg(1, "النتيجة مضمونة")]);
+    const other = runDeterministicChecks(sub({ product_category: "electronics" }), [seg(1, "النتيجة مضمونة")]);
+    expect(health.findings.find((f) => f.rule_code === "COM-01")!.explanation_ar).toContain("صحي");
+    expect(other.findings.find((f) => f.rule_code === "COM-01")!.explanation_ar).not.toContain("صحي");
+  });
+
   it("COM-01 is only a warning in non-promotional content", () => {
     const r = runDeterministicChecks(sub(), [seg(3, "هالخلطة تشفي من كل شي")]);
     expect(r.findings.find((f) => f.rule_code === "COM-01")?.severity).toBe("warning");

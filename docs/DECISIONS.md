@@ -479,3 +479,10 @@ Format: decision — why — alternatives considered.
   3.6/3.8 Flash overloaded (503) for long periods while `gemini-3.1-flash-lite` answered; Lite is faster but gave
   one false-positive company-rule violation, so it stays a fallback. A request to `gemini-3.7-flash` was served by
   `gemini-3.8-flash` (`modelVersion`). Demo guide: docs/DEMO.md.
+- **D167. Video transcription under Gemini overload (2026-11-19).** Live failure: 3.6 Flash 503 → fallback 3.1 Lite
+  503 within 17 s → transcription failed. Overload (503 or timeout) now retries with bounded backoff (0/3/8/15 s +
+  jitter), alternating primary and fallback, never past the deadline; quota/rate limits (429) never change model.
+  New error code `overloaded` (Arabic message distinct from quota and generic outage). `attempts` counts real
+  requests. Retry reuses the unfinished run, keeps the upload, frames and transcript (verified live: 1 run, 32
+  frames). Upload form defaults to the active workspace so org packs and company rules apply. COM-01 wording:
+  a guaranteed financing approval is a finance claim (was worded as health).

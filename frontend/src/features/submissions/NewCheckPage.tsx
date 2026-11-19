@@ -44,6 +44,7 @@ import {
 } from "@/lib/api/promotions";
 import { ContextFields } from "@/features/promotions/ContextFields";
 import { emptyContext, type ContextValue } from "@/features/promotions/model";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { InspectedMedia } from "@/lib/media";
 
 type Stage = "hashing" | "extracting" | "uploading" | "saving";
@@ -71,6 +72,14 @@ export function NewCheckPage() {
   const target = usePromotion(promotionParam ?? "", Boolean(promotionParam));
   const orgs = useQuery({ queryKey: ["orgs"], queryFn: fetchMyOrgs });
   const [orgId, setOrgId] = useState<string>(orgParam ?? "");
+  // Default to the active workspace (as in the sidebar) so a member's upload gets the organisation's rule
+  // packs and company rules; "personal" stays one click away. Only before the user picks, and only members.
+  const active = useOrgPicker();
+  const [orgPicked, setOrgPicked] = useState(Boolean(orgParam));
+  useEffect(() => {
+    if (orgPicked || promotionParam || !active.orgId) return;
+    if (orgs.data?.some((o) => o.id === active.orgId)) setOrgId(active.orgId);
+  }, [orgPicked, promotionParam, active.orgId, orgs.data]);
   const [campaignId, setCampaignId] = useState<string>(campaignParam ?? "");
   const orgDetail = useQuery({
     queryKey: ["org", orgId],
@@ -422,6 +431,7 @@ export function NewCheckPage() {
                   <Select
                     value={orgId}
                     onChange={(e) => {
+                      setOrgPicked(true);
                       setOrgId(e.target.value);
                       setCampaignId("");
                     }}

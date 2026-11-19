@@ -18,7 +18,7 @@ describe("classifyProviderError", () => {
     [400, body("invalid_request_error", "Unrecognized file format"), "bad_request"],
     [413, "payload too large", "bad_request"],
     [500, "upstream error", "provider_down"],
-    [503, body("server_error"), "provider_down"],
+    [503, body("server_error"), "overloaded"],
     [408, "timeout", "provider_down"],
     [null, "fetch failed", "provider_down"],
     [418, "teapot", "unknown"],

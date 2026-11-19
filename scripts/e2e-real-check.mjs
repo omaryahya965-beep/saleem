@@ -34,6 +34,8 @@ await page.getByLabel(/الوصف \(الكابشن\)/).fill(side.caption ?? "ج�
 if (side.has_written_contract) await page.getByRole("switch", { name: /لدي عقد مكتوب/ }).click();
 if (side.mawthooq_license_no) await page.getByLabel(/رقم رخصة موثوق/).fill(side.mawthooq_license_no);
 await page.getByLabel(/اسم الفحص/).fill(`اختبار شامل ${new Date().toISOString().slice(11, 19)}`);
+// Optional ad context (org workspace form), e.g. COMM_TYPE=financial_promotion so the SAMA pack applies.
+if (process.env.COMM_TYPE) await page.getByLabel("نوع الاتصال").selectOption(process.env.COMM_TYPE);
 await page.getByText(/أؤكد أن لدي الحق/).click();
 await page.locator("form#new-check").evaluate((f) => f.requestSubmit());
 await page.waitForURL(/\/checks\/[0-9a-f-]{36}$/, { timeout: 120000 });
