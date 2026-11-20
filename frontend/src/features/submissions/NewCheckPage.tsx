@@ -1,7 +1,22 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+// New advertisement — guided four-step flow (V2 upgrade §7, D179): 1 content · 2 advertisement information ·
+// 3 organisational and publication context · 4 review and start. One representation per fact (paid status,
+// channels → platform), product-driven defaults (a cosmetic product never defaults to a financial promotion),
+// conflicts explained before any AI request, and field-only draft recovery (no duplicate advertisements).
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileImage, FileText, FileVideo, Lock, RefreshCw } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  FileImage,
+  FileText,
+  FileVideo,
+  Info,
+  Lock,
+  RefreshCw,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { MobileActionBar } from "@/components/layout/SiteShell";
 import {
   Button,
@@ -34,7 +49,6 @@ import {
 import { useProfile } from "@/lib/api/hooks";
 import { errorCode, fetchMyOrgs, fetchOrg } from "@/lib/api/features";
 import {
-  FINANCIAL_SECTORS,
   createPromotion,
   dbErrorCode,
   deleteEmptyPromotion,
@@ -46,20 +60,24 @@ import { ContextFields } from "@/features/promotions/ContextFields";
 import { emptyContext, type ContextValue } from "@/features/promotions/model";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { InspectedMedia } from "@/lib/media";
+import { cn } from "@/lib/utils";
+import {
+  STEPS,
+  categoryFor,
+  clearDraft,
+  conflicts as findConflicts,
+  defaultCommunication,
+  loadDraft,
+  platformFromChannels,
+  saveDraft,
+  showsCreatorFields,
+  type Draft,
+} from "./wizard";
 
 type Stage = "hashing" | "extracting" | "uploading" | "saving";
-type Errors = Partial<Record<"file" | "text" | "consent", string>>;
-
-const SIDE_ITEMS: TKey[] = [
-  "newCheck.sideSpeech",
-  "newCheck.sideVisuals",
-  "newCheck.sideCaption",
-  "newCheck.sideDisclosure",
-  "newCheck.sideClaims",
-];
 
 export function NewCheckPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -72,8 +90,6 @@ export function NewCheckPage() {
   const target = usePromotion(promotionParam ?? "", Boolean(promotionParam));
   const orgs = useQuery({ queryKey: ["orgs"], queryFn: fetchMyOrgs });
   const [orgId, setOrgId] = useState<string>(orgParam ?? "");
-  // Default to the active workspace (as in the sidebar) so a member's upload gets the organisation's rule
-  // packs and company rules; "personal" stays one click away. Only before the user picks, and only members.
   const active = useOrgPicker();
   const [orgPicked, setOrgPicked] = useState(Boolean(orgParam));
   useEffect(() => {
@@ -93,6 +109,7 @@ export function NewCheckPage() {
     enabled: Boolean(parentId),
   });
 
+  const [step, setStep] = useState(0);
   const [kind, setKind] = useState<SubmissionKind>("video");
   const [media, setMedia] = useState<InspectedMedia | null>(null);
   const [text, setText] = useState("");
@@ -105,30 +122,54 @@ export function NewCheckPage() {
   const [aiUsed, setAiUsed] = useState(false);
   const [license, setLicense] = useState("");
   const [consent, setConsent] = useState(false);
-  const [errors, setErrors] = useState<Errors>({});
+  const [error, setError] = useState<string | null>(null);
   const [context, setContext] = useState<ContextValue | null>(null);
+  const [commTouched, setCommTouched] = useState(false);
+  const [restored, setRestored] = useState<Draft | null>(null);
   const settings = useOrgSettings(orgId || null);
   const products = useProducts(orgId || null);
   const myRole = orgs.data
     ?.find((o) => o.id === orgId)
     ?.org_members.find((m) => m.user_id === user?.id)?.role;
-  // Org uploaders describe the ad (product, channels…); personal creators and reviewers keep
-  // today's form (the database attaches their upload to a new promotion).
   const withContext =
     Boolean(orgId) && !promotionParam && myRole !== undefined && myRole !== "reviewer";
-  const sector = settings.data?.sector ?? "";
+  const orgSector = settings.data?.sector ?? null;
+  const product = useMemo(
+    () => (products.data ?? []).find((p) => p.id === context?.productId) ?? null,
+    [products.data, context?.productId],
+  );
+  const addingVersion = Boolean(promotionParam);
+
   useEffect(() => {
     if (!withContext) {
       setContext(null);
       return;
     }
-    setContext(
-      (c) =>
-        c ??
-        emptyContext(FINANCIAL_SECTORS.has(sector) ? "financial_promotion" : "general_commercial"),
+    // D179: the communication type follows the product, never the organisation sector alone.
+    setContext((c) => c ?? emptyContext(defaultCommunication(null, orgSector)));
+  }, [withContext, orgSector]);
+  // Product chosen → sensible defaults (unless the user already chose a communication type).
+  useEffect(() => {
+    if (!product) return;
+    const cat = categoryFor(product);
+    if (cat) setCategory(cat);
+    if (!commTouched)
+      setContext((c) =>
+        c ? { ...c, communicationType: defaultCommunication(product, orgSector) } : c,
+      );
+  }, [product, commTouched, orgSector]);
+  // One paid flag: the context mirrors the version's declaration.
+  useEffect(() => {
+    setContext((c) => (c && c.isPaid !== isPaidAd ? { ...c, isPaid: isPaidAd } : c));
+  }, [isPaidAd]);
+  // One licence field: the context's creator licence mirrors the declaration field.
+  useEffect(() => {
+    setContext((c) =>
+      c && c.creatorLicenseNo !== (license || null)
+        ? { ...c, creatorLicenseNo: license || null }
+        : c,
     );
-  }, [withContext, sector]);
-  // Adding a version: the promotion decides workspace, campaign, title and caption.
+  }, [license]);
   useEffect(() => {
     const p = target.data?.promotion;
     if (!p) return;
@@ -140,14 +181,12 @@ export function NewCheckPage() {
   const [stage, setStage] = useState<Stage | null>(null);
   const [stageDetail, setStageDetail] = useState<{ done: number; total: number } | null>(null);
 
-  // Prefill from the profile, and from the previous version when re-checking.
   useEffect(() => {
     const p = profile.data;
     if (!p) return;
     if (p.mawthooq_license_no) setLicense((v) => v || p.mawthooq_license_no || "");
     if (p.platforms[0] && !parentId) setPlatform(p.platforms[0]);
   }, [profile.data, parentId]);
-
   useEffect(() => {
     const p = parent.data;
     if (!p) return;
@@ -162,6 +201,97 @@ export function NewCheckPage() {
     if (p.mawthooq_license_no) setLicense(p.mawthooq_license_no);
     if (p.kind === "text") setText(p.text_content ?? "");
   }, [parent.data]);
+
+  // Draft recovery: only for a brand-new advertisement (never when adding a version or re-checking).
+  const draftable = Boolean(user) && !promotionParam && !parentId;
+  useEffect(() => {
+    if (!draftable || !user) return;
+    const d = loadDraft(user.id);
+    if (d && (d.text || d.caption || d.title)) setRestored(d);
+  }, [draftable, user]);
+  useEffect(() => {
+    if (!draftable || !user || restored) return;
+    if (!(text || caption || title)) return;
+    const h = setTimeout(
+      () =>
+        saveDraft(user.id, {
+          step,
+          kind,
+          text,
+          caption,
+          title,
+          platform,
+          category,
+          isPaidAd,
+          hasContract,
+          aiUsed,
+          license,
+          orgId,
+          campaignId,
+          context,
+        }),
+      600,
+    );
+    return () => clearTimeout(h);
+  }, [
+    draftable,
+    user,
+    restored,
+    step,
+    kind,
+    text,
+    caption,
+    title,
+    platform,
+    category,
+    isPaidAd,
+    hasContract,
+    aiUsed,
+    license,
+    orgId,
+    campaignId,
+    context,
+  ]);
+  const applyDraft = (d: Draft) => {
+    setKind(d.kind as SubmissionKind);
+    setText(d.text);
+    setCaption(d.caption);
+    setTitle(d.title);
+    setPlatform(d.platform as Platform);
+    setCategory(d.category as ProductCategory);
+    setIsPaidAd(d.isPaidAd);
+    setHasContract(d.hasContract);
+    setAiUsed(d.aiUsed);
+    setLicense(d.license);
+    if (d.orgId) {
+      setOrgPicked(true);
+      setOrgId(d.orgId);
+    }
+    setCampaignId(d.campaignId);
+    if (d.context) setContext(d.context as ContextValue);
+    setRestored(null);
+  };
+
+  const effectivePlatform = context
+    ? platformFromChannels(context.channels, PLATFORMS, platform)
+    : platform;
+  const issues = findConflicts({
+    hasOrg: withContext,
+    product,
+    communicationType: context?.communicationType ?? null,
+    category,
+    channels: context?.channels ?? [],
+    distribution: context?.distribution ?? null,
+    isPaid: isPaidAd,
+    hasContract,
+    aiUsed,
+    license,
+  });
+  const creatorFields = showsCreatorFields({
+    hasOrg: withContext,
+    distribution: context?.distribution ?? null,
+    communicationType: context?.communicationType ?? null,
+  });
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -181,6 +311,9 @@ export function NewCheckPage() {
       if (!promotionId && withContext && context) {
         promotionId = await createPromotion(user.id, {
           ...context,
+          isPaid: isPaidAd,
+          creatorLicenseNo: license || null,
+          sector: product?.sector ?? null,
           title: versionTitle,
           orgId: orgId || null,
           campaignId: campaignId || null,
@@ -199,7 +332,7 @@ export function NewCheckPage() {
           textContent: text,
           caption,
           title: versionTitle,
-          platform,
+          platform: effectivePlatform,
           productCategory: category,
           isPaidAd,
           hasWrittenContract: hasContract,
@@ -214,7 +347,6 @@ export function NewCheckPage() {
           setStageDetail(detail ?? null);
         },
       );
-      // A promotion created here but left without a version is removed again.
       if (!created || !promotionId) return upload;
       const pid = promotionId;
       return upload.catch(async (e: unknown) => {
@@ -223,7 +355,9 @@ export function NewCheckPage() {
       });
     },
     onSuccess: (id) => {
+      if (user) clearDraft(user.id);
       void qc.invalidateQueries({ queryKey: ["submissions"] });
+      void qc.invalidateQueries({ queryKey: ["promotions"] });
       void navigate({ to: "/checks/$id", params: { id } });
     },
     onError: (err) => {
@@ -242,17 +376,41 @@ export function NewCheckPage() {
     },
   });
 
-  const onSubmit = (e?: FormEvent) => {
-    e?.preventDefault();
-    const next: Errors = {};
-    if (kind !== "text" && !media) next.file = t("newCheck.errFile");
-    if (kind === "text" && !text.trim()) next.text = t("newCheck.errText");
-    if (!consent) next.consent = t("newCheck.errConsent");
-    setErrors(next);
-    if (Object.keys(next).length) {
-      toast.error(t("newCheck.fixErrors"));
-      document.querySelector<HTMLElement>("[aria-invalid=true], [data-error=true] input")?.focus();
-      return;
+  /** Validates the current step; the uploaded file is kept whatever fails elsewhere. */
+  const validate = (s: number): string | null => {
+    if (s === 0) {
+      if (kind !== "text" && !media) return t("newCheck.errFile");
+      if (kind === "text" && !text.trim()) return t("newCheck.errText");
+    }
+    if (s === 2 && withContext && issues.some((i) => i.level === "blocking"))
+      return t("wiz.conflict.no_channels");
+    if (s === 3 && !consent) return t("newCheck.errConsent");
+    return null;
+  };
+  const go = (to: number) => {
+    if (to > step) {
+      for (let s = step; s < to; s++) {
+        const e = validate(s);
+        if (e) {
+          setStep(s);
+          setError(e);
+          return;
+        }
+      }
+    }
+    setError(null);
+    setStep(to);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const start = () => {
+    for (let s = 0; s < STEPS.length; s++) {
+      const e = validate(s);
+      if (e) {
+        setStep(s);
+        setError(e);
+        toast.error(e);
+        return;
+      }
     }
     submit.mutate();
   };
@@ -260,24 +418,43 @@ export function NewCheckPage() {
   const busy = submit.isPending;
   const stageLabel = stage
     ? `${t(`newCheck.stage${stage[0]!.toUpperCase()}${stage.slice(1)}` as TKey)}${stage === "extracting" && stageDetail ? ` ${Math.round((stageDetail.done / stageDetail.total) * 100)}٪` : ""}`
-    : t("newCheck.submit");
-  const submitButton = (
-    <Button type="submit" form="new-check" size="lg" block loading={busy}>
-      {busy ? stageLabel : t("newCheck.submit")}
+    : t("wiz.start");
+  const last = step === STEPS.length - 1;
+  const primary = last ? (
+    <Button size="lg" block loading={busy} onClick={start} data-testid="start-analysis">
+      {busy ? stageLabel : t("wiz.start")}
+    </Button>
+  ) : (
+    <Button
+      size="lg"
+      block
+      icon={<ArrowLeft className="ltr:rotate-180" />}
+      onClick={() => go(step + 1)}
+    >
+      {t("wiz.next")}
     </Button>
   );
+  const productName = product ? (lang === "en" && product.name_en) || product.name_ar : null;
+  const org = orgs.data?.find((o) => o.id === orgId);
+  const campaign = orgDetail.data?.campaigns?.find((c) => c.id === campaignId);
 
   return (
     <Page>
       <PageHeader
-        title={parentId ? t("newCheck.recheckTitle") : t("newCheck.title")}
-        description={t("newCheck.subtitle")}
-        className="mb-6 sm:mb-8"
+        title={
+          parentId
+            ? t("newCheck.recheckTitle")
+            : addingVersion
+              ? t("wiz.titleVersion")
+              : t("wiz.title")
+        }
+        description={t("wiz.subtitle")}
+        className="mb-5"
       />
       {target.data && (
         <p
           data-testid="new-version-banner"
-          className="mb-6 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg"
+          className="mb-5 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg"
         >
           <RefreshCw aria-hidden="true" className="mt-1 size-4 shrink-0 text-green" />
           {t("promo.newVersionBanner", {
@@ -287,27 +464,89 @@ export function NewCheckPage() {
         </p>
       )}
       {parent.data && (
-        <p className="mb-6 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg">
+        <p className="mb-5 flex items-start gap-3 rounded-md border border-green/20 bg-green-bg px-4 py-3 text-fg">
           <RefreshCw aria-hidden="true" className="mt-1 size-4 shrink-0 text-green" />
           {t("newCheck.recheckBanner", { title: parent.data.title ?? "" })}
         </p>
       )}
+      {restored && (
+        <div
+          role="status"
+          className="mb-5 flex flex-col gap-2 rounded-md border border-border bg-sunken px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>{t("wiz.draftFound")}</span>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => applyDraft(restored)}>
+              {t("wiz.draftRestore")}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                if (user) clearDraft(user.id);
+                setRestored(null);
+              }}
+            >
+              {t("wiz.draftDiscard")}
+            </Button>
+          </div>
+        </div>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-        <form id="new-check" noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
-          <Card className="flex flex-col gap-5">
-            <CardTitle>{t("newCheck.sectionContent")}</CardTitle>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium" id="kind-label">
-                {t("newCheck.contentType")}
+      <ol className="mb-6 grid grid-cols-4 gap-2" aria-label={t("wiz.stepsLabel")}>
+        {STEPS.map((s, i) => (
+          <li key={s}>
+            <button
+              type="button"
+              onClick={() => go(i)}
+              aria-current={i === step ? "step" : undefined}
+              className={cn(
+                "flex w-full flex-col items-start gap-1 rounded-md border-t-4 px-1 pt-2 text-start text-sm transition-colors",
+                i === step
+                  ? "border-ink font-bold text-fg"
+                  : i < step
+                    ? "border-green text-fg"
+                    : "border-border text-fg-muted",
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-xs">
+                {i < step ? (
+                  <Check aria-hidden="true" className="size-3.5 text-green" />
+                ) : (
+                  <span className="tabular">{i + 1}</span>
+                )}
+                <span className="sr-only">
+                  {t("wiz.stepOf", { n: i + 1, total: STEPS.length })}
+                </span>
               </span>
+              <span className="hidden sm:block">{t(`wiz.step.${s}` as TKey)}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <h2 className="mb-4 text-xl font-bold sm:hidden">{t(`wiz.step.${STEPS[step]}` as TKey)}</h2>
+
+      {error && (
+        <p
+          role="alert"
+          className="mb-4 rounded-md border border-red/30 bg-red-bg px-4 py-2 text-sm font-medium text-red"
+        >
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="flex flex-col gap-6">
+          {step === 0 && (
+            <Card className="flex flex-col gap-5">
+              <CardTitle>{t("wiz.step.content")}</CardTitle>
               <SegmentedControl
                 label={t("newCheck.contentType")}
                 value={kind}
                 onValueChange={(k) => {
                   setKind(k);
                   setMedia(null);
-                  setErrors({});
+                  setError(null);
                 }}
                 options={[
                   {
@@ -324,193 +563,299 @@ export function NewCheckPage() {
                   { value: "pdf", label: t("kinds.pdf"), icon: <FileText aria-hidden="true" /> },
                 ]}
               />
-            </div>
-
-            {kind === "text" ? (
-              <Field label={t("newCheck.textLabel")} error={errors.text}>
-                <Textarea
-                  rows={6}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder={t("newCheck.textPlaceholder")}
-                  dir="auto"
-                />
-              </Field>
-            ) : (
-              <div data-error={Boolean(errors.file)}>
+              {kind === "text" ? (
+                <Field label={t("newCheck.textLabel")}>
+                  <Textarea
+                    rows={8}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder={t("newCheck.textPlaceholder")}
+                    dir="auto"
+                  />
+                </Field>
+              ) : (
                 <Dropzone
                   kind={kind}
                   value={media}
                   onChange={(m) => {
                     setMedia(m);
-                    if (m) setErrors((e) => ({ ...e, file: undefined }));
+                    if (m) setError(null);
                   }}
                 />
-                {errors.file && (
-                  <p role="alert" className="mt-2 text-sm font-medium text-red">
-                    {errors.file}
-                  </p>
-                )}
-              </div>
-            )}
+              )}
+              <p className="text-xs text-fg-muted">{t("wiz.formats")}</p>
+            </Card>
+          )}
 
-            <Field label={t("newCheck.captionLabel")} hint={t("newCheck.captionHint")}>
-              <Textarea
-                rows={3}
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder={t("newCheck.captionPlaceholder")}
-                dir="auto"
-              />
-            </Field>
-            <Field
-              label={t("newCheck.titleLabel")}
-              hint={t("newCheck.titleHint")}
-              optional
-              optionalLabel={t("common.optional")}
-            >
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("newCheck.titlePlaceholder")}
-                maxLength={120}
-                dir="auto"
-              />
-            </Field>
-          </Card>
-
-          <Card className="flex flex-col gap-5">
-            <CardTitle>{t("newCheck.sectionPublish")}</CardTitle>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label={t("newCheck.platform")}>
-                <Select value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
-                  {PLATFORMS.map((p) => (
-                    <option key={p} value={p}>
-                      {t(`platforms.${p}`)}
-                    </option>
-                  ))}
-                </Select>
+          {step === 1 && (
+            <Card className="flex flex-col gap-5">
+              <CardTitle>{t("wiz.step.details")}</CardTitle>
+              <Field
+                label={t("newCheck.titleLabel")}
+                hint={t("newCheck.titleHint")}
+                optional
+                optionalLabel={t("common.optional")}
+              >
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t("newCheck.titlePlaceholder")}
+                  maxLength={120}
+                  dir="auto"
+                />
               </Field>
-              <Field label={t("newCheck.category")}>
-                <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {t(`categories.${c}`)}
-                    </option>
-                  ))}
-                </Select>
+              <Field label={t("newCheck.captionLabel")} hint={t("newCheck.captionHint")}>
+                <Textarea
+                  rows={3}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder={t("newCheck.captionPlaceholder")}
+                  dir="auto"
+                />
               </Field>
-            </div>
-            <div className="divide-y divide-border rounded-md border border-border px-4">
-              <Switch
-                checked={isPaidAd}
-                onCheckedChange={setIsPaidAd}
-                label={t("newCheck.paidAd")}
-                hint={t("newCheck.paidAdHint")}
-              />
-              <Switch
-                checked={hasContract}
-                onCheckedChange={setHasContract}
-                label={t("newCheck.contract")}
-                hint={t("newCheck.contractHint")}
-                disabled={!isPaidAd}
-              />
-              <Switch
-                checked={aiUsed}
-                onCheckedChange={setAiUsed}
-                label={t("newCheck.aiUsed")}
-                hint={t("newCheck.aiUsedHint")}
-              />
-            </div>
-            {!promotionParam && (orgs.data?.length ?? 0) > 0 && (
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label={t("newCheck.workspace")}>
+                <Field
+                  label={t("newCheck.category")}
+                  hint={product ? t("wiz.categoryFromProduct") : undefined}
+                >
                   <Select
-                    value={orgId}
-                    onChange={(e) => {
-                      setOrgPicked(true);
-                      setOrgId(e.target.value);
-                      setCampaignId("");
-                    }}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as ProductCategory)}
                   >
-                    <option value="">{t("newCheck.personal")}</option>
-                    {orgs.data!.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.name}
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {t(`categories.${c}`)}
                       </option>
                     ))}
                   </Select>
                 </Field>
-                {orgId && (
-                  <Field label={t("newCheck.campaign")}>
-                    <Select value={campaignId} onChange={(e) => setCampaignId(e.target.value)}>
-                      <option value="">{t("newCheck.none")}</option>
-                      {(orgDetail.data?.campaigns ?? []).map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
+                {!withContext && (
+                  <Field label={t("newCheck.platform")}>
+                    <Select
+                      value={platform}
+                      onChange={(e) => setPlatform(e.target.value as Platform)}
+                    >
+                      {PLATFORMS.map((p) => (
+                        <option key={p} value={p}>
+                          {t(`platforms.${p}`)}
                         </option>
                       ))}
                     </Select>
                   </Field>
                 )}
               </div>
-            )}
-            <Field
-              label={t("newCheck.license")}
-              hint={t("newCheck.licenseHint")}
-              optional
-              optionalLabel={t("common.optional")}
-            >
-              <Input
-                value={license}
-                onChange={(e) => setLicense(e.target.value)}
-                placeholder="MW-0000-00000"
-                dir="ltr"
-                className="text-start rtl:text-end"
-              />
-            </Field>
-          </Card>
-
-          {context && (
-            <Card className="flex flex-col gap-5" data-testid="promotion-context">
-              <div>
-                <CardTitle>{t("promo.contextTitle")}</CardTitle>
-                <p className="mt-1 text-sm text-fg-muted">{t("promo.contextHint")}</p>
+              <div className="divide-y divide-border rounded-md border border-border px-4">
+                <Switch
+                  checked={isPaidAd}
+                  onCheckedChange={setIsPaidAd}
+                  label={t("newCheck.paidAd")}
+                  hint={t("newCheck.paidAdHint")}
+                />
+                <Switch
+                  checked={aiUsed}
+                  onCheckedChange={setAiUsed}
+                  label={t("newCheck.aiUsed")}
+                  hint={t("newCheck.aiUsedHint")}
+                />
+                {creatorFields && isPaidAd && (
+                  <Switch
+                    checked={hasContract}
+                    onCheckedChange={setHasContract}
+                    label={t("newCheck.contract")}
+                    hint={t("newCheck.contractHint")}
+                  />
+                )}
               </div>
-              <ContextFields value={context} onChange={setContext} products={products.data ?? []} />
+              {creatorFields && (
+                <Field
+                  label={t("newCheck.license")}
+                  hint={t("wiz.licenseHint")}
+                  optional
+                  optionalLabel={t("common.optional")}
+                >
+                  <Input
+                    value={license}
+                    onChange={(e) => setLicense(e.target.value)}
+                    placeholder="MW-0000-00000"
+                    dir="ltr"
+                    className="text-start rtl:text-end"
+                  />
+                </Field>
+              )}
+              {!creatorFields && (
+                <p className="text-xs text-fg-muted">{t("wiz.creatorFieldsHidden")}</p>
+              )}
             </Card>
           )}
 
-          <div className="flex flex-col gap-4">
-            <Checkbox
-              checked={consent}
-              onChange={(e) => {
-                setConsent(e.target.checked);
-                if (e.target.checked) setErrors((x) => ({ ...x, consent: undefined }));
-              }}
-              aria-invalid={errors.consent ? true : undefined}
-              label={t("newCheck.consent")}
-              hint={
-                errors.consent ? (
-                  <span className="font-medium text-red">{errors.consent}</span>
-                ) : undefined
-              }
-            />
-            <div className="hidden md:block md:max-w-xs">{submitButton}</div>
+          {step === 2 && (
+            <Card className="flex flex-col gap-5" data-testid="promotion-context">
+              <CardTitle>{t("wiz.step.context")}</CardTitle>
+              {!promotionParam && (orgs.data?.length ?? 0) > 0 && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field label={t("newCheck.workspace")}>
+                    <Select
+                      value={orgId}
+                      onChange={(e) => {
+                        setOrgPicked(true);
+                        setOrgId(e.target.value);
+                        setCampaignId("");
+                        setContext(null);
+                      }}
+                    >
+                      <option value="">{t("newCheck.personal")}</option>
+                      {orgs.data!.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  {orgId && (
+                    <Field label={t("newCheck.campaign")}>
+                      <Select value={campaignId} onChange={(e) => setCampaignId(e.target.value)}>
+                        <option value="">{t("newCheck.none")}</option>
+                        {(orgDetail.data?.campaigns ?? []).map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  )}
+                </div>
+              )}
+              {context ? (
+                <ContextFields
+                  value={context}
+                  onChange={(v) => {
+                    if (v.communicationType !== context.communicationType) setCommTouched(true);
+                    setContext(v);
+                  }}
+                  products={products.data ?? []}
+                  omit={["isPaid", "creatorLicenseNo"]}
+                />
+              ) : (
+                <p className="text-sm text-fg-muted">
+                  {addingVersion ? t("wiz.versionContextNote") : t("wiz.personalContextNote")}
+                </p>
+              )}
+            </Card>
+          )}
+
+          {step === 3 && (
+            <div className="flex flex-col gap-5">
+              <Card className="flex flex-col gap-3" data-testid="review-summary">
+                <CardTitle>{t("wiz.step.review")}</CardTitle>
+                <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                  <Row label={t("wiz.sum.content")}>
+                    {kind === "text"
+                      ? t("kinds.text")
+                      : media
+                        ? `${media.file.name} · ${(media.file.size / 1048576).toFixed(1)} MB${media.duration ? ` · ${Math.round(media.duration)} ث` : ""}`
+                        : "—"}
+                  </Row>
+                  <Row label={t("newCheck.titleLabel")}>{title || caption.slice(0, 60) || "—"}</Row>
+                  <Row label={t("newCheck.workspace")}>{org?.name ?? t("newCheck.personal")}</Row>
+                  <Row label={t("newCheck.campaign")}>{campaign?.name ?? t("newCheck.none")}</Row>
+                  <Row label={t("promo.product")}>{productName ?? t("promo.noProduct")}</Row>
+                  <Row label={t("ws.info.sector")}>
+                    {t(`ws.sector.${product?.sector ?? orgSector ?? "other"}` as TKey)}
+                    {!product && withContext && ` (${t("wiz.sum.orgSector")})`}
+                  </Row>
+                  <Row label={t("promo.communicationType")}>
+                    {context ? t(`promo.commType.${context.communicationType}` as TKey) : "—"}
+                  </Row>
+                  <Row label={t("promo.channels")}>
+                    {context?.channels.length
+                      ? context.channels.map((c) => t(`promo.channel.${c}` as TKey)).join("، ")
+                      : t(`platforms.${effectivePlatform}`)}
+                  </Row>
+                  <Row label={t("newCheck.paidAd")}>
+                    {isPaidAd ? t("common.yes") : t("common.no")}
+                  </Row>
+                  <Row label={t("newCheck.aiUsed")}>
+                    {aiUsed ? t("common.yes") : t("common.no")}
+                  </Row>
+                </dl>
+              </Card>
+              {issues.length > 0 && (
+                <Card className="flex flex-col gap-2" data-testid="wizard-conflicts">
+                  <CardTitle>{t("wiz.checksTitle")}</CardTitle>
+                  <ul className="flex flex-col gap-2">
+                    {issues.map((c) => (
+                      <li
+                        key={c.key}
+                        className={cn(
+                          "flex items-start gap-2 rounded-md px-3 py-2 text-sm",
+                          c.level === "info" ? "bg-sunken" : "bg-amber-bg",
+                        )}
+                      >
+                        {c.level === "info" ? (
+                          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                        ) : (
+                          <AlertTriangle
+                            aria-hidden="true"
+                            className="mt-0.5 size-4 shrink-0 text-amber-text"
+                          />
+                        )}
+                        <span>
+                          <span className="sr-only">{t(`wiz.level.${c.level}` as TKey)}: </span>
+                          {t(`wiz.conflict.${c.key}` as TKey)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="self-start"
+                    onClick={() => go(2)}
+                  >
+                    {t("wiz.fixContext")}
+                  </Button>
+                </Card>
+              )}
+              <Card className="flex flex-col gap-3">
+                <p className="text-sm">{t("wiz.whatHappens")}</p>
+                <Checkbox
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  label={t("newCheck.consent")}
+                />
+              </Card>
+            </div>
+          )}
+
+          <div className="hidden items-center justify-between gap-3 md:flex">
+            <Button
+              variant="secondary"
+              disabled={step === 0 || busy}
+              icon={<ArrowRight className="ltr:rotate-180" />}
+              onClick={() => go(step - 1)}
+            >
+              {t("common.back")}
+            </Button>
+            <div className="w-72">{primary}</div>
           </div>
-        </form>
+        </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
           <Card className="border-transparent bg-ink text-paper">
             <h2 className="text-lg font-bold text-paper">{t("newCheck.sideTitle")}</h2>
-            <ul className="mt-3 flex flex-col gap-2.5">
-              {SIDE_ITEMS.map((k) => (
-                <li key={k} className="flex items-start gap-2.5 text-sm text-paper/90">
+            <ul className="mt-3 flex flex-col gap-2.5 text-sm text-paper/90">
+              {(
+                [
+                  "sideSpeech",
+                  "sideVisuals",
+                  "sideCaption",
+                  "sideDisclosure",
+                  "sideClaims",
+                ] as const
+              ).map((k) => (
+                <li key={k} className="flex items-start gap-2.5">
                   <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-mint" />
-                  {t(k)}
+                  {t(`newCheck.${k}` as TKey)}
                 </li>
               ))}
             </ul>
@@ -524,10 +869,39 @@ export function NewCheckPage() {
               </p>
             </div>
           </Card>
+          {addingVersion && target.data && (
+            <Link
+              to="/promotions/$id"
+              params={{ id: target.data.promotion.id }}
+              className="text-sm text-green underline-offset-4 hover:underline"
+            >
+              {t("wiz.backToAd")}
+            </Link>
+          )}
         </aside>
       </div>
 
-      <MobileActionBar>{submitButton}</MobileActionBar>
+      <MobileActionBar>
+        <div className="flex gap-2">
+          {step > 0 && (
+            <Button variant="secondary" disabled={busy} onClick={() => go(step - 1)}>
+              {t("common.back")}
+            </Button>
+          )}
+          <div className="flex-1">{primary}</div>
+        </div>
+      </MobileActionBar>
     </Page>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col border-b border-border py-1.5">
+      <dt className="text-xs text-fg-muted">{label}</dt>
+      <dd className="font-medium break-words" dir="auto">
+        {children}
+      </dd>
+    </div>
   );
 }

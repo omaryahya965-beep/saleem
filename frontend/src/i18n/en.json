@@ -2746,5 +2746,77 @@
       "removed": "Removed",
       "added": "Added"
     }
+  },
+  "wiz": {
+    "title": "New advertisement",
+    "titleVersion": "Upload a new version",
+    "subtitle": "Four steps: content, advertisement information, regulatory and publication context, then review and start.",
+    "start": "Create advertisement and start check",
+    "next": "Next",
+    "stepsLabel": "Advertisement creation steps",
+    "stepOf": "Step {n} of {total}",
+    "step": {
+      "content": "Upload content",
+      "details": "Advertisement information",
+      "context": "Context & publication",
+      "review": "Review & start"
+    },
+    "draftFound": "You have an unsent draft saved on this device (fields only, not the file).",
+    "draftRestore": "Restore draft",
+    "draftDiscard": "Discard",
+    "formats": "Supported: MP4 / MOV / WebM video, JPG / PNG / WebP images, PDF documents, or text. The uploaded file is kept while you move between steps.",
+    "categoryFromProduct": "Set from the product's sector; you can change it.",
+    "licenseHint": "Required when publishing through a content creator or influencer.",
+    "creatorFieldsHidden": "The Mawthooq licence and written agreement appear only for creator / sponsored publication.",
+    "versionContextNote": "The new version inherits the advertisement's context (product, channels, communication type). Edit it from the Information tab.",
+    "personalContextNote": "Personal check outside workspaces: no products or organisation rule packages.",
+    "sum": {
+      "content": "Content",
+      "orgSector": "organisation sector — no product selected"
+    },
+    "checksTitle": "Check before starting",
+    "level": {
+      "warning": "Warning",
+      "info": "Note",
+      "blocking": "Required"
+    },
+    "conflict": {
+      "no_channels": "Choose at least one publication channel.",
+      "no_product": "No product selected: the organisation's sector decides the rules. Choose the product for a more accurate result.",
+      "financial_comm_for_non_financial": "The product is not financial but the communication type is «financial promotion»: financial-product rules will apply. Correct it if unintended.",
+      "general_comm_for_financial": "Financial product with «general commercial» communication: make sure the ad does not promote a financial product.",
+      "no_distribution": "No publication method selected (own channels / paid media / creator). It affects Mawthooq rules.",
+      "draft_product": "The selected product is an unapproved draft; its data may change.",
+      "category_mismatch": "The content category does not match the product's sector.",
+      "missing_license": "Paid creator advertising without a Mawthooq licence number.",
+      "missing_contract": "Paid creator advertising without a written agreement with the advertiser.",
+      "ai_disclosure": "You declared AI use: make sure the ad discloses it."
+    },
+    "fixContext": "Edit context",
+    "whatHappens": "Starting creates the advertisement, uploads the content and runs one automated analysis. The result is advisory; the ad is only sent for review when you choose to.",
+    "backToAd": "Back to the advertisement"
+  },
+  "queue2": {
+    "resubmitted": "Resubmitted",
+    "new": "New",
+    "version": "Version",
+    "findings": "Findings",
+    "v": "{n} violations",
+    "w": "{n} warnings",
+    "assign": "Assign reviewer",
+    "reassign": "Reassign"
+  },
+  "compare2": {
+    "violations": "{n} violations",
+    "warnings": "{n} warnings",
+    "summaryLine": "{gone} findings no longer detected · {kept} remaining · {added} new.",
+    "notResolution": "A finding that disappears from the automated report is not legally resolved until a reviewer verifies it. No compliance percentage is shown.",
+    "noLongerDetected": "No longer detected ({n})",
+    "persistent": "Remaining ({n})",
+    "added": "New ({n})",
+    "legendRemoved": "Sentence removed from the previous version",
+    "legendAdded": "Sentence added in the current version",
+    "removedTag": "Removed",
+    "addedTag": "Added"
   }
 }

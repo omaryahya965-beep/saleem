@@ -48,15 +48,22 @@ export const CHANNELS = [
 ] as const;
 export const AUDIENCES = ["general", "youth", "professionals", "high_net_worth", "sme"] as const;
 export const DISTRIBUTIONS = ["owned", "paid_media", "influencer"] as const;
+/** D170: financial sectors plus non-financial industries (extensible: add a sector + its product types). */
 export const SECTORS = [
   "banking",
   "finance_company",
   "payments",
   "capital_market",
   "insurance",
+  "cosmetics",
+  "food_beverage",
+  "health_supplements",
+  "tourism",
+  "ecommerce",
+  "retail",
   "other",
 ] as const;
-export const REGULATORS = ["SAMA", "CMA", "IA", "other"] as const;
+export const REGULATORS = ["SAMA", "CMA", "IA", "SFDA", "MOT", "MOC", "other"] as const;
 export const PRODUCT_TYPES = [
   "personal_finance",
   "real_estate_finance",
@@ -83,8 +90,148 @@ export const PRODUCT_TYPES = [
   "insurance_health",
   "insurance_protection_savings",
   "insurance_other",
+  "skincare",
+  "makeup",
+  "haircare",
+  "fragrance",
+  "personal_care",
+  "food_product",
+  "beverage",
+  "dietary_supplement",
+  "health_product",
+  "tour_package",
+  "accommodation",
+  "experience",
+  "travel_service",
+  "online_product",
+  "retail_product",
+  "electronics",
+  "apparel",
+  "service",
   "other",
 ] as const;
+export type Sector = (typeof SECTORS)[number];
+export type ProductType = (typeof PRODUCT_TYPES)[number];
+/** Product types offered per sector (the form shows only these) and the default regulator. */
+export const SECTOR_MODEL: Record<
+  Sector,
+  {
+    types: ProductType[];
+    regulator: (typeof REGULATORS)[number];
+    fields: "financial" | "cosmetics" | "food_health" | "tourism" | "retail" | "basic";
+  }
+> = {
+  banking: {
+    types: [
+      "personal_finance",
+      "real_estate_finance",
+      "auto_finance",
+      "credit_card",
+      "sme_finance",
+      "current_account",
+      "savings_deposit",
+      "time_deposit",
+      "prepaid_card",
+      "remittance",
+      "fx",
+      "other",
+    ],
+    regulator: "SAMA",
+    fields: "financial",
+  },
+  finance_company: {
+    types: [
+      "personal_finance",
+      "real_estate_finance",
+      "auto_finance",
+      "bnpl",
+      "sme_finance",
+      "consumer_microfinance",
+      "finance_lease",
+      "credit_card",
+      "other",
+    ],
+    regulator: "SAMA",
+    fields: "financial",
+  },
+  payments: {
+    types: ["wallet", "prepaid_card", "remittance", "bnpl", "fx", "other"],
+    regulator: "SAMA",
+    fields: "financial",
+  },
+  capital_market: {
+    types: [
+      "public_fund",
+      "non_retail_fund",
+      "equities",
+      "derivatives",
+      "sukuk_bonds",
+      "robo_advisory",
+      "other",
+    ],
+    regulator: "CMA",
+    fields: "financial",
+  },
+  insurance: {
+    types: [
+      "insurance_motor",
+      "insurance_health",
+      "insurance_protection_savings",
+      "insurance_other",
+    ],
+    regulator: "IA",
+    fields: "financial",
+  },
+  cosmetics: {
+    types: ["skincare", "makeup", "haircare", "fragrance", "personal_care", "other"],
+    regulator: "SFDA",
+    fields: "cosmetics",
+  },
+  food_beverage: {
+    types: ["food_product", "beverage", "other"],
+    regulator: "SFDA",
+    fields: "food_health",
+  },
+  health_supplements: {
+    types: ["dietary_supplement", "health_product", "other"],
+    regulator: "SFDA",
+    fields: "food_health",
+  },
+  tourism: {
+    types: ["tour_package", "accommodation", "experience", "travel_service", "other"],
+    regulator: "MOT",
+    fields: "tourism",
+  },
+  ecommerce: {
+    types: ["online_product", "electronics", "apparel", "service", "other"],
+    regulator: "MOC",
+    fields: "retail",
+  },
+  retail: {
+    types: ["retail_product", "electronics", "apparel", "service", "other"],
+    regulator: "MOC",
+    fields: "retail",
+  },
+  other: { types: ["service", "other"], regulator: "other", fields: "basic" },
+};
+/** Legacy v1 content category for a sector (kept on each version for the v1 checks). */
+export const CATEGORY_OF_SECTOR: Record<
+  string,
+  "food" | "health" | "beauty" | "finance" | "real_estate" | "other"
+> = {
+  banking: "finance",
+  finance_company: "finance",
+  payments: "finance",
+  capital_market: "finance",
+  insurance: "finance",
+  cosmetics: "beauty",
+  food_beverage: "food",
+  health_supplements: "health",
+  tourism: "other",
+  ecommerce: "other",
+  retail: "other",
+  other: "other",
+};
 /** States in which context can be edited and a new version uploaded (mirrors `promotion_is_open`). */
 export const OPEN_STATUSES = new Set<ReviewStatus>([
   "draft",
@@ -254,6 +401,8 @@ export async function versionLocation(
 
 export interface PromotionContext {
   title: string;
+  /** The advertisement's own sector (D170); defaults to its product's sector. */
+  sector?: string | null;
   orgId: string | null;
   productId: string | null;
   channels: string[];
@@ -272,6 +421,7 @@ const contextRow = (c: Partial<PromotionContext>) => {
   const row: Tables["promotions"]["Update"] = {};
   if (c.title !== undefined) row.title = c.title.trim().slice(0, 200) || "إعلان جديد";
   if (c.productId !== undefined) row.product_id = c.productId;
+  if (c.sector !== undefined) row.sector = c.sector;
   if (c.channels !== undefined) row.channels = c.channels;
   if (c.communicationType !== undefined) row.communication_type = c.communicationType;
   if (c.audience !== undefined) row.audience = c.audience.length ? c.audience : ["general"];

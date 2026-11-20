@@ -50,10 +50,13 @@ export function ContextFields({
   value,
   onChange,
   products,
+  omit = [],
 }: {
   value: ContextValue;
   onChange: (v: ContextValue) => void;
   products: Product[];
+  /** Controls owned elsewhere on the page (one representation, no contradicting duplicates). */
+  omit?: ("isPaid" | "creatorLicenseNo" | "reviewerNotes")[];
 }) {
   const { t, lang } = useI18n();
   const set = <K extends keyof ContextValue>(k: K, v: ContextValue[K]) =>
@@ -106,18 +109,20 @@ export function ContextFields({
       />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label={t("promo.paid")}>
-          <Select
-            value={value.isPaid === null ? "" : String(value.isPaid)}
-            onChange={(e) =>
-              set("isPaid", e.target.value === "" ? null : e.target.value === "true")
-            }
-          >
-            <option value="">{t("promo.unknown")}</option>
-            <option value="true">{t("common.yes")}</option>
-            <option value="false">{t("common.no")}</option>
-          </Select>
-        </Field>
+        {!omit.includes("isPaid") && (
+          <Field label={t("promo.paid")}>
+            <Select
+              value={value.isPaid === null ? "" : String(value.isPaid)}
+              onChange={(e) =>
+                set("isPaid", e.target.value === "" ? null : e.target.value === "true")
+              }
+            >
+              <option value="">{t("promo.unknown")}</option>
+              <option value="true">{t("common.yes")}</option>
+              <option value="false">{t("common.no")}</option>
+            </Select>
+          </Field>
+        )}
         <Field label={t("promo.distribution")}>
           <Select
             value={value.distribution ?? ""}
@@ -133,7 +138,7 @@ export function ContextFields({
             ))}
           </Select>
         </Field>
-        {value.distribution === "influencer" && (
+        {value.distribution === "influencer" && !omit.includes("creatorLicenseNo") && (
           <Field label={t("promo.creatorLicense")} hint={t("promo.creatorLicenseHint")}>
             <Input
               value={value.creatorLicenseNo ?? ""}
@@ -158,20 +163,22 @@ export function ContextFields({
         </Field>
       </div>
 
-      <Field
-        label={t("promo.reviewerNotes")}
-        hint={t("promo.reviewerNotesHint")}
-        optional
-        optionalLabel={t("common.optional")}
-      >
-        <Textarea
-          rows={3}
-          value={value.reviewerNotes ?? ""}
-          onChange={(e) => set("reviewerNotes", e.target.value)}
-          maxLength={5000}
-          dir="auto"
-        />
-      </Field>
+      {!omit.includes("reviewerNotes") && (
+        <Field
+          label={t("promo.reviewerNotes")}
+          hint={t("promo.reviewerNotesHint")}
+          optional
+          optionalLabel={t("common.optional")}
+        >
+          <Textarea
+            rows={3}
+            value={value.reviewerNotes ?? ""}
+            onChange={(e) => set("reviewerNotes", e.target.value)}
+            maxLength={5000}
+            dir="auto"
+          />
+        </Field>
+      )}
     </div>
   );
 }
