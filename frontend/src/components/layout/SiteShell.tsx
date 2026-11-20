@@ -11,6 +11,7 @@ import {
   Scale,
   Settings,
   ShieldCheck,
+  FileSearch,
 } from "lucide-react";
 import {
   Suspense,
@@ -270,6 +271,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
       icon: <Home />,
       active: pathname === "/",
       render: link("/"),
+    },
+    {
+      key: "sample",
+      label: t("nav.sample"),
+      icon: <FileSearch />,
+      active: pathname.startsWith("/sample"),
+      render: link("/sample"),
     },
     {
       key: "rules",

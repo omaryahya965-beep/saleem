@@ -49,7 +49,9 @@
     "workspace": "Agency workspace",
     "legal": "Terms & privacy",
     "promotions": "Promotions",
-    "features": "Features"
+    "features": "Features",
+    "sample": "Sample report",
+    "how": "How it works"
   },
   "status": {
     "ready": "No automated findings",
@@ -2818,5 +2820,190 @@
     "legendAdded": "Sentence added in the current version",
     "removedTag": "Removed",
     "addedTag": "Added"
+  },
+  "land2": {
+    "eyebrow": "Advertising compliance and approval — Arabic first",
+    "heroTitle": "From advertisement to approval, in one workspace.",
+    "heroBody": "Check your ads with AI, find regulatory risks, fix the findings, and coordinate review and approval before publishing.",
+    "ctaStart": "Start an advertisement check",
+    "ctaSample": "View a sample report",
+    "ctaDemo": "Try the available demo",
+    "ctaRules": "Regulatory guide",
+    "heroNote": "Automated results are advisory; approval is a recorded human decision. SALEEM does not guarantee legal compliance.",
+    "previewLabel": "Preview of the advertisement review workspace (sample data)",
+    "previewEvidence": "evidence items",
+    "previewReviewed": "reviewed",
+    "howTitle": "How SALEEM works",
+    "howBody": "The whole advertisement journey, from creation to a preserved decision record.",
+    "step": {
+      "create": "Create the advertisement",
+      "upload": "Upload media",
+      "analyse": "Analyse regulatory risks",
+      "review": "Review findings and evidence",
+      "correct": "Correct the advertisement",
+      "revise": "Upload or generate a revision",
+      "submit": "Submit for human review",
+      "decide": "Record the decision",
+      "keep": "Keep the compliance history"
+    },
+    "capTitle": "What SALEEM does today",
+    "capBody": "Every capability here is built. Provider-dependent or experimental ones are labelled.",
+    "tag": {
+      "provider": "Provider-dependent",
+      "experimental": "Experimental"
+    },
+    "cap": {
+      "analysis": {
+        "title": "AI advertisement analysis",
+        "body": "Video, images, text and PDF, against the applicable rules only."
+      },
+      "transcription": {
+        "title": "Arabic speech transcription",
+        "body": "Timestamped speech linked to findings."
+      },
+      "evidence": {
+        "title": "Timestamped evidence",
+        "body": "Every finding with its evidence: speech, on-screen text, caption, frame."
+      },
+      "applicability": {
+        "title": "Rule applicability",
+        "body": "Sector, communication type and publication method — with excluded rules explained."
+      },
+      "workflow": {
+        "title": "Human approval workflow",
+        "body": "Submission, assignment, changes, structured conditional approval and final approval."
+      },
+      "compare": {
+        "title": "Version comparison",
+        "body": "Media side by side, sentence-level text, and findings that disappeared or remain."
+      },
+      "roles": {
+        "title": "Roles and permissions",
+        "body": "Nine roles enforced by the database, not just the interface."
+      },
+      "policies": {
+        "title": "Internal company policies",
+        "body": "Company rules and brand guidelines with second-person approval."
+      },
+      "partners": {
+        "title": "External partners",
+        "body": "Scoped submission links for agencies, with limits and expiry."
+      },
+      "campaigns": {
+        "title": "Campaigns and products",
+        "body": "Financial and non-financial products with sector-specific fields."
+      },
+      "history": {
+        "title": "Decision history",
+        "body": "Immutable, hash-chained decisions."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "body": "Organisation metrics for authorised roles."
+      },
+      "fix": {
+        "title": "SALEEM Fix",
+        "body": "A correction plan and revised text for review. Video editing and replacement generation are not available yet."
+      }
+    },
+    "rolesTitle": "One team, clear responsibilities",
+    "role": {
+      "marketing": {
+        "title": "Marketing creates",
+        "body": "Uploads, answers findings and corrects."
+      },
+      "compliance": {
+        "title": "Compliance reviews",
+        "body": "Assesses findings and records the authorised decision."
+      },
+      "legal": {
+        "title": "Legal advises",
+        "body": "Gives specialised opinions on escalated cases."
+      },
+      "managers": {
+        "title": "Managers coordinate",
+        "body": "Assign reviewers and track deadlines."
+      },
+      "partners": {
+        "title": "Partners submit",
+        "body": "Upload and revise their own ads through their links only."
+      }
+    },
+    "trustTitle": "Trust and transparency",
+    "trustBody": "SALEEM is an assistant. It claims no official endorsement by any regulator and does not guarantee compliance.",
+    "trust": {
+      "human": {
+        "title": "Humans decide",
+        "body": "AI never approves an advertisement, nor its own output."
+      },
+      "evidence": {
+        "title": "Evidence-based findings",
+        "body": "No finding without evidence from the ad itself."
+      },
+      "versioned": {
+        "title": "Versioned regulatory references",
+        "body": "Each rule with its source, verification status and rulebook version."
+      },
+      "access": {
+        "title": "Database-enforced access",
+        "body": "Isolation between organisations and partners, with negative access tests."
+      },
+      "history": {
+        "title": "A record that stays",
+        "body": "Decisions and events are preserved and verifiable."
+      },
+      "limits": {
+        "title": "Stated limitations",
+        "body": "Partial coverage is shown as such; unverified rules are labelled."
+      }
+    },
+    "finalTitle": "Ready to try SALEEM on your advertisement?",
+    "finalBody": "Create an ad, upload the content, and see evidence-based findings in minutes.",
+    "footnote": "Available in Arabic and English."
+  },
+  "sample": {
+    "badge": "Sample report",
+    "fictional": "Fictional product — illustrative data",
+    "title": "Nada Cream — كريم ندى",
+    "intro": "A fictional cosmetics ad used in SALEEM's manual testing: version 1 with absolute claims, version 2 after correction. Play the video, jump to findings, and compare the versions.",
+    "v1": "Version 1 (original)",
+    "v2": "Version 2 (revised)",
+    "counts": "{v} violations · {w} warnings",
+    "grouping": "Grouping in SALEEM V2",
+    "groupingValue": "{raw} evidence → {groups} consolidated findings",
+    "honesty": "The numbers (6 violations and 3 warnings → 0 violations and 2 warnings) are what the report showed in the manual test. The two versions were analysed with different Gemini models, so this is an illustration, not an accuracy benchmark.",
+    "cta": "Start checking your advertisement",
+    "backHome": "Home",
+    "tab": {
+      "v1": "Original version",
+      "v2": "Revised version",
+      "compare": "Comparison",
+      "workflow": "Example review workflow"
+    },
+    "videoLabel": "Version {n} video",
+    "transcript": "Speech transcript",
+    "caption": "Caption",
+    "v2Note": "The two remaining warnings (written agreement and Mawthooq licence) are documentary requirements that text edits cannot resolve. Since D171 they no longer apply automatically to an organisation publishing on its own channels, pending legal confirmation.",
+    "workflowTitle": "Example review workflow",
+    "workflowNote": "An illustrative sequence of what happens in SALEEM; not a real decision or a regulatory approval.",
+    "event": {
+      "created": "Marketing created the ad, chose the «Nada Cream» product and own channels",
+      "analysed": "Automated check completed: absolute claims and missing disclosure",
+      "submitted": "Marketing answered the findings and submitted for review",
+      "assigned": "A manager assigned the compliance reviewer",
+      "changes": "The reviewer requested changes: remove the guarantee and add «paid ad»",
+      "uploaded": "Marketing uploaded the revised video with a new voice-over",
+      "analysed2": "Version 2 checked: no violations, two documentary warnings",
+      "returned": "The ad returned to the same reviewer",
+      "conditional": "Conditional approval: attach the product documents",
+      "fulfilled": "Marketing attached the documents and submitted the conditions",
+      "final": "The reviewer verified the conditions and recorded the final approval"
+    },
+    "fixNote": "SALEEM Fix proposes text like version 2's; verifying documents remains a human responsibility.",
+    "limitsTitle": "Limits of this example",
+    "limit1": "Static data for display only; no uploads, comments, decisions or paid requests from this page.",
+    "limit2": "Quotes cut in the original record end with «…» and were not completed.",
+    "limit3": "The automated result is advisory, not a regulatory approval.",
+    "limit4": "The example represents no real organisation or product."
   }
 }

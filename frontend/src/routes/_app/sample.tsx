@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckPage } from "@/features/reports/CheckPage";
-import { DEMO_ID } from "@/features/landing/LandingPage";
+import { SamplePage } from "@/features/sample/SamplePage";
 
-// Short, shareable link to the public sample report (instead of /checks/<uuid>).
+// Public, read-only sample report: the fictional «كريم ندى» advertisement (D182). The older herbal-tea demo stays
+// reachable at /checks/<DEMO_ID> for existing links and tests.
 export const Route = createFileRoute("/_app/sample")({
-  component: () => <CheckPage id={DEMO_ID} />,
+  component: SamplePage,
 });
