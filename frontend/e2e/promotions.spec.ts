@@ -80,9 +80,14 @@ test("promotions list opens a promotion with its latest version", async ({
   await page.getByText("إعلان تمويل تجريبي").click();
   await expect(page).toHaveURL(new RegExp(`/promotions/${PID}`));
   await expect(page.getByRole("heading", { name: "إعلان تمويل تجريبي" })).toBeVisible();
-  await expect(page.getByTestId("review-status")).toHaveText(tr(lang, "مسودة", "Draft"));
+  // D177: approval state and automated-analysis state are shown separately.
+  await expect(page.getByTestId("review-status")).toContainText(tr(lang, "مسودة", "Draft"));
+  await expect(page.getByTestId("analysis-status")).toContainText(tr(lang, "مكتمل", "Completed"));
   // Latest version (V2) is selected; the automated result never says "compliant".
-  await expect(page.getByRole("button", { name: /V2|إ2/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: /V2|إ2|الإصدار 2|Version 2/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await expect(
     page.getByText(tr(lang, "ملاحظات تستلزم التعديل", "Findings that require changes")).first(),
   ).toBeVisible();
@@ -92,9 +97,12 @@ test("promotions list opens a promotion with its latest version", async ({
 test("version switcher selects V1 through ?v=1", async ({ signedIn: page }) => {
   await mockPromotions(page);
   await page.goto(`/promotions/${PID}`);
-  await page.getByRole("button", { name: /V1|إ1/ }).click();
+  await page.getByRole("button", { name: /V1|إ1|الإصدار 1|Version 1/ }).click();
   await expect(page).toHaveURL(/v=1/);
-  await expect(page.getByRole("button", { name: /V1|إ1/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: /V1|إ1|الإصدار 1|Version 1/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });
 
 test("/checks/$id lands on the right version of its promotion", async ({ signedIn: page }) => {
@@ -106,7 +114,11 @@ test("/checks/$id lands on the right version of its promotion", async ({ signedI
 test("upload new version links to /new with the promotion", async ({ signedIn: page, lang }) => {
   await mockPromotions(page);
   await page.goto(`/promotions/${PID}`);
-  await page.getByRole("link", { name: tr(lang, "رفع إصدار جديد", "Upload new version") }).click();
+  await // D177: one primary revision action «ارفع النسخة المعدلة» (was «رفع إصدار جديد»).
+  await page
+    .getByRole("link", { name: tr(lang, "ارفع النسخة المعدلة", "Upload revised version") })
+    .first()
+    .click();
   await expect(page).toHaveURL(new RegExp(`/new\\?promotion=${PID}`));
   await expect(page.getByTestId("new-version-banner")).toContainText("إعلان تمويل تجريبي");
 });

@@ -539,7 +539,8 @@ export function ReportView({
 
       <CoverageBanner bundle={bundle} />
 
-      {status === "ready" && !workspace && <ReadyComparison bundle={bundle} />}
+      {/* Re-check of a parent check (not a promotion version): its «what you fixed» panel stays useful. */}
+      {status === "ready" && (!workspace || bundle.parent) && <ReadyComparison bundle={bundle} />}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
         <div className="flex flex-col gap-4 lg:sticky lg:top-24">

@@ -11,18 +11,49 @@ test("dashboard filters update the URL and list", async ({ signedIn: page, lang 
   await expect(page.getByText("مراجعة عطر العود")).toHaveCount(0);
 });
 
-test("new check validates file and consent before upload", async ({ signedIn: page, lang }) => {
+// V2 upgrade §7 (D179): a four-step wizard; each step validates before moving on, the file is kept.
+test("new advertisement wizard validates content, then consent before starting", async ({
+  signedIn: page,
+  lang,
+}) => {
   await page.goto("/new");
-  await page.locator("form#new-check").evaluate((f: HTMLFormElement) => f.requestSubmit());
-  await expect(
-    page.getByText(tr(lang, "اختر ملفاً للفحص.", "Choose a file to check.")),
-  ).toBeVisible();
-  await expect(
-    page.getByText(tr(lang, "يجب الموافقة للمتابعة.", "Please confirm to continue.")),
-  ).toBeVisible();
+  await page
+    .getByRole("button", { name: tr(lang, "التالي", "Next") })
+    .last()
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    tr(lang, "اختر ملفاً للفحص.", "Choose a file to check."),
+  );
   // Text-only content swaps the dropzone for a text field.
   await page.getByRole("radio", { name: tr(lang, "نص فقط", "Text only") }).click();
-  await expect(page.getByLabel(tr(lang, "نص المنشور", "Post text"))).toBeVisible();
+  await page.getByLabel(tr(lang, "نص المنشور", "Post text")).fill("عرض خاص على كريم ندى");
+  await page
+    .getByRole("button", { name: tr(lang, "التالي", "Next") })
+    .last()
+    .click();
+  await page
+    .getByRole("button", { name: tr(lang, "التالي", "Next") })
+    .last()
+    .click();
+  await page
+    .getByRole("button", { name: tr(lang, "التالي", "Next") })
+    .last()
+    .click();
+  // Step 3 blocks until a publication channel is chosen (one representation of the platform).
+  await expect(page.getByRole("alert")).toContainText(
+    tr(lang, "اختر قناة نشر واحدة على الأقل.", "Choose at least one publication channel."),
+  );
+  await page.getByRole("checkbox", { name: /سناب|Snapchat/ }).check();
+  await page
+    .getByRole("button", { name: tr(lang, "التالي", "Next") })
+    .last()
+    .click();
+  await expect(page.getByTestId("review-summary")).toBeVisible();
+  // Desktop and mobile each render one visible primary action.
+  await page.locator("[data-testid=start-analysis]:visible").click();
+  await expect(page.getByRole("alert")).toContainText(
+    tr(lang, "يجب الموافقة للمتابعة.", "Please confirm to continue."),
+  );
 });
 
 test("live processing view shows real backend progress", async ({ signedIn: page, lang }) => {

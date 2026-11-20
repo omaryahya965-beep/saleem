@@ -195,8 +195,9 @@ function PromotionView({
   }, [live.data, latest, qc, p.id]);
   const aState = analysisState(isLatest ? liveStatus : version?.status);
   const statusLabel = t(`promo.reviewStatus.${p.review_status}` as TKey);
-  const person = (id: string | null | undefined) =>
-    id ? (bundle.people?.[id]?.name ?? t("ws.header.unknownPerson")) : t("ws.header.unassigned");
+  // «غير مُسند» only for the reviewer slot; an unknown creator is «—».
+  const person = (id: string | null | undefined, empty = t("ws.header.unassigned")) =>
+    id ? (bundle.people?.[id]?.name ?? t("ws.header.unknownPerson")) : empty;
   const overdue = Boolean(
     p.deadline_at &&
     new Date(p.deadline_at) < new Date() &&
@@ -267,7 +268,7 @@ function PromotionView({
                 : t("promo.noProduct")}
             </Meta>
             <Meta label={t("ws.header.campaign")}>{bundle.campaign?.name ?? t("common.none")}</Meta>
-            <Meta label={t("ws.header.creator")}>{person(latest?.user_id ?? p.owner_id)}</Meta>
+            <Meta label={t("ws.header.creator")}>{person(latest?.user_id ?? p.owner_id, "—")}</Meta>
             <Meta label={t("ws.header.assignee")}>{person(p.assigned_reviewer_id)}</Meta>
             <Meta label={t("ws.header.deadline")}>
               {p.deadline_at ? (
@@ -817,8 +818,9 @@ function InfoPanel({
   });
   const canRerun = Boolean(user && currentVersion && currentVersion.user_id === user.id);
   const product = bundle.product;
-  const person = (id: string | null | undefined) =>
-    id ? (bundle.people?.[id]?.name ?? t("ws.header.unknownPerson")) : t("ws.header.unassigned");
+  // «غير مُسند» only for the reviewer slot; an unknown creator is «—».
+  const person = (id: string | null | undefined, empty = t("ws.header.unassigned")) =>
+    id ? (bundle.people?.[id]?.name ?? t("ws.header.unknownPerson")) : empty;
 
   return (
     <div className="flex flex-col gap-4">
@@ -899,7 +901,7 @@ function InfoPanel({
               </span>
             </InfoRow>
             <InfoRow label={t("ws.header.creator")}>
-              {person(currentVersion?.user_id ?? p.owner_id)}
+              {person(currentVersion?.user_id ?? p.owner_id, "—")}
             </InfoRow>
             <InfoRow label={t("ws.header.campaign")}>
               {bundle.campaign?.name ?? t("common.none")}
