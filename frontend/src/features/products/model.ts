@@ -4,7 +4,8 @@ import {
   type KeyFactsIssue,
   type ProductKeyFacts,
 } from "@/lib/key-facts";
-import type { Product, ProductInput } from "@/lib/api/promotions";
+import { FINANCIAL_SECTORS, type Product, type ProductInput } from "@/lib/api/promotions";
+import { attrsToFacts, factsToAttrs } from "./sectorFields";
 
 /** Form state: numbers stay as typed text (Arabic or Latin digits) until submit. */
 export interface FeeForm {
@@ -31,6 +32,8 @@ export interface ProductForm {
   targetCustomers: string;
   sharia: boolean;
   shariaRef: string;
+  /** Non-financial sector attributes (key_facts.<group>), all optional. */
+  attrs: Record<string, string>;
 }
 
 export const emptyProductForm = (sector: ProductInput["sector"] = "banking"): ProductForm => ({
@@ -49,6 +52,7 @@ export const emptyProductForm = (sector: ProductInput["sector"] = "banking"): Pr
   targetCustomers: "",
   sharia: false,
   shariaRef: "",
+  attrs: {},
 });
 
 const lines = (s: string) =>
@@ -61,6 +65,8 @@ const num = (s: string): number | null | undefined =>
 
 /** Converts the form into key facts. An unparsable number becomes NaN so validation reports it. */
 export function formToKeyFacts(f: ProductForm): ProductKeyFacts {
+  // D170: non-financial products never carry (or require) financial key facts.
+  if (!FINANCIAL_SECTORS.has(f.sector)) return attrsToFacts(f.sector, f.attrs) as ProductKeyFacts;
   const facts: ProductKeyFacts = {};
   const apr = num(f.apr);
   if (apr !== undefined) facts.apr = { value: apr ?? Number.NaN, type: f.aprType || null };
@@ -109,6 +115,7 @@ export function productToForm(p: Product): ProductForm {
     targetCustomers: (k.target_customers_ar ?? []).join("\n"),
     sharia: Boolean(k.sharia_compliant),
     shariaRef: k.sharia_approval_ref ?? "",
+    attrs: factsToAttrs(p.sector, p.key_facts),
   };
 }
 
@@ -117,6 +124,8 @@ export type FormIssue = KeyFactsIssue | { path: "nameAr"; error: "name_required"
 export function validateProductForm(f: ProductForm): FormIssue[] {
   const issues: FormIssue[] = [];
   if (!f.nameAr.trim()) issues.push({ path: "nameAr", error: "name_required" });
+  // Financial key facts are validated only for financial products (non-financial attributes are free text).
+  if (!FINANCIAL_SECTORS.has(f.sector)) return issues;
   return [...issues, ...validateKeyFacts(formToKeyFacts(f))];
 }
 

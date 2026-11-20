@@ -27,6 +27,7 @@ import {
   PRODUCT_TYPES,
   REGULATORS,
   SECTORS,
+  SECTOR_MODEL,
   approveProduct,
   archiveProduct,
   dbErrorCode,
@@ -46,6 +47,7 @@ import {
   type FormIssue,
   type ProductForm,
 } from "./model";
+import { SECTOR_FIELDS, groupOf } from "./sectorFields";
 
 export function ProductsPage() {
   const { t } = useI18n();
@@ -405,11 +407,22 @@ function ProductDialog({
           <Field label={t("products.sector")}>
             <Select
               value={f.sector}
-              onChange={(e) => set("sector", e.target.value as ProductForm["sector"])}
+              onChange={(e) => {
+                // A new sector brings its own product types and regulator (one consistent model).
+                const sector = e.target.value as ProductForm["sector"];
+                const m = SECTOR_MODEL[sector];
+                setF((x) => ({
+                  ...x,
+                  sector,
+                  productType: m.types[0]!,
+                  regulator: m.regulator,
+                  attrs: {},
+                }));
+              }}
             >
               {SECTORS.map((s) => (
                 <option key={s} value={s}>
-                  {t(`products.sectorOpt.${s}` as TKey)}
+                  {t(`ws.sector.${s}` as TKey)}
                 </option>
               ))}
             </Select>
@@ -419,9 +432,9 @@ function ProductDialog({
               value={f.productType}
               onChange={(e) => set("productType", e.target.value as ProductForm["productType"])}
             >
-              {PRODUCT_TYPES.map((s) => (
+              {(SECTOR_MODEL[f.sector]?.types ?? PRODUCT_TYPES).map((s) => (
                 <option key={s} value={s}>
-                  {t(`products.typeOpt.${s}` as TKey)}
+                  {t(`ws.productType.${s}` as TKey)}
                 </option>
               ))}
             </Select>
@@ -440,182 +453,210 @@ function ProductDialog({
           </Field>
         </div>
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-2 font-bold text-fg">{t("products.keyFacts")}</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              label={t("products.apr")}
-              error={err("apr")}
-              optional
-              optionalLabel={t("common.optional")}
-            >
-              <Input
-                inputMode="decimal"
-                value={f.apr}
-                onChange={(e) => set("apr", e.target.value)}
-                dir="ltr"
-              />
-            </Field>
-            <Field label={t("products.aprType")} optional optionalLabel={t("common.optional")}>
-              <Select
-                value={f.aprType}
-                onChange={(e) => set("aprType", e.target.value as ProductForm["aprType"])}
-              >
-                <option value="">{t("promo.unknown")}</option>
-                <option value="fixed">{t("products.aprTypeOpt.fixed")}</option>
-                <option value="variable">{t("products.aprTypeOpt.variable")}</option>
-              </Select>
-            </Field>
-            <Field
-              label={t("products.termMin")}
-              error={err("term_months")}
-              optional
-              optionalLabel={t("common.optional")}
-            >
-              <Input
-                inputMode="numeric"
-                value={f.termMin}
-                onChange={(e) => set("termMin", e.target.value)}
-                dir="ltr"
-              />
-            </Field>
-            <Field label={t("products.termMax")} optional optionalLabel={t("common.optional")}>
-              <Input
-                inputMode="numeric"
-                value={f.termMax}
-                onChange={(e) => set("termMax", e.target.value)}
-                dir="ltr"
-              />
-            </Field>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <p className="text-sm font-medium text-fg">{t("products.fees")}</p>
-            {f.fees.map((fee, i) => (
-              <div
-                key={i}
-                className="grid gap-3 rounded-md border border-border p-3 sm:grid-cols-2"
-              >
-                <Field label={t("products.feeName")} error={err(`fees.${i}.name_ar`)}>
-                  <Input
-                    value={fee.name_ar}
-                    onChange={(e) => setFee(i, { name_ar: e.target.value })}
-                    dir="auto"
-                  />
-                </Field>
-                <Field label={t("products.feeAmount")} error={err(`fees.${i}.amount`)}>
-                  <Input
-                    inputMode="decimal"
-                    value={fee.amount}
-                    onChange={(e) => setFee(i, { amount: e.target.value })}
-                    dir="ltr"
-                  />
-                </Field>
-                <Field label={t("products.feeUnit")}>
-                  <Select
-                    value={fee.unit}
-                    onChange={(e) => setFee(i, { unit: e.target.value as "percent" | "SAR" })}
-                  >
-                    <option value="percent">{t("products.feeUnitOpt.percent")}</option>
-                    <option value="SAR">{t("products.feeUnitOpt.SAR")}</option>
-                  </Select>
-                </Field>
+        {groupOf(f.sector) !== "financial" ? (
+          <fieldset className="flex flex-col gap-4" data-testid="sector-fields">
+            <legend className="mb-2 font-bold text-fg">{t("products.keyFacts")}</legend>
+            <p className="text-sm text-fg-muted">{t("prod2.optionalNote")}</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {SECTOR_FIELDS[
+                groupOf(f.sector) as Exclude<ReturnType<typeof groupOf>, "financial">
+              ].map((k) => (
                 <Field
-                  label={t("products.feeCap")}
-                  error={err(`fees.${i}.cap_sar`)}
+                  key={k}
+                  label={t(`prod2.field.${k}` as TKey)}
                   optional
                   optionalLabel={t("common.optional")}
                 >
-                  <Input
-                    inputMode="decimal"
-                    value={fee.cap_sar}
-                    onChange={(e) => setFee(i, { cap_sar: e.target.value })}
-                    dir="ltr"
+                  <Textarea
+                    rows={2}
+                    value={f.attrs[k] ?? ""}
+                    onChange={(e) =>
+                      setF((x) => ({ ...x, attrs: { ...x.attrs, [k]: e.target.value } }))
+                    }
+                    dir="auto"
                   />
                 </Field>
-                <Checkbox
-                  label={t("products.feeVat")}
-                  checked={fee.vat_included}
-                  onChange={(e) => setFee(i, { vat_included: e.target.checked })}
+              ))}
+            </div>
+          </fieldset>
+        ) : (
+          <fieldset className="flex flex-col gap-4">
+            <legend className="mb-2 font-bold text-fg">{t("products.keyFacts")}</legend>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label={t("products.apr")}
+                error={err("apr")}
+                optional
+                optionalLabel={t("common.optional")}
+              >
+                <Input
+                  inputMode="decimal"
+                  value={f.apr}
+                  onChange={(e) => set("apr", e.target.value)}
+                  dir="ltr"
                 />
-                <div className="flex items-end justify-end">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    icon={<Trash2 />}
-                    onClick={() =>
-                      set(
-                        "fees",
-                        f.fees.filter((_, j) => j !== i),
-                      )
-                    }
-                  >
-                    {t("products.removeFee")}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              icon={<Plus />}
-              className="self-start"
-              onClick={() =>
-                set("fees", [
-                  ...f.fees,
-                  { name_ar: "", amount: "", unit: "percent", cap_sar: "", vat_included: true },
-                ])
-              }
-            >
-              {t("products.addFee")}
-            </Button>
-          </div>
+              </Field>
+              <Field label={t("products.aprType")} optional optionalLabel={t("common.optional")}>
+                <Select
+                  value={f.aprType}
+                  onChange={(e) => set("aprType", e.target.value as ProductForm["aprType"])}
+                >
+                  <option value="">{t("promo.unknown")}</option>
+                  <option value="fixed">{t("products.aprTypeOpt.fixed")}</option>
+                  <option value="variable">{t("products.aprTypeOpt.variable")}</option>
+                </Select>
+              </Field>
+              <Field
+                label={t("products.termMin")}
+                error={err("term_months")}
+                optional
+                optionalLabel={t("common.optional")}
+              >
+                <Input
+                  inputMode="numeric"
+                  value={f.termMin}
+                  onChange={(e) => set("termMin", e.target.value)}
+                  dir="ltr"
+                />
+              </Field>
+              <Field label={t("products.termMax")} optional optionalLabel={t("common.optional")}>
+                <Input
+                  inputMode="numeric"
+                  value={f.termMax}
+                  onChange={(e) => set("termMax", e.target.value)}
+                  dir="ltr"
+                />
+              </Field>
+            </div>
 
-          <Field
-            label={t("products.requirements")}
-            hint={t("products.listHint")}
-            error={err("min_requirements_ar")}
-            optional
-            optionalLabel={t("common.optional")}
-          >
-            <Textarea
-              rows={3}
-              value={f.requirements}
-              onChange={(e) => set("requirements", e.target.value)}
-              dir="auto"
-            />
-          </Field>
-          <Field
-            label={t("products.targetCustomers")}
-            hint={t("products.listHint")}
-            error={err("target_customers_ar")}
-            optional
-            optionalLabel={t("common.optional")}
-          >
-            <Textarea
-              rows={2}
-              value={f.targetCustomers}
-              onChange={(e) => set("targetCustomers", e.target.value)}
-              dir="auto"
-            />
-          </Field>
-          <Checkbox
-            label={t("products.sharia")}
-            checked={f.sharia}
-            onChange={(e) => set("sharia", e.target.checked)}
-          />
-          {f.sharia && (
-            <Field label={t("products.shariaRef")} optional optionalLabel={t("common.optional")}>
-              <Input
-                value={f.shariaRef}
-                onChange={(e) => set("shariaRef", e.target.value)}
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium text-fg">{t("products.fees")}</p>
+              {f.fees.map((fee, i) => (
+                <div
+                  key={i}
+                  className="grid gap-3 rounded-md border border-border p-3 sm:grid-cols-2"
+                >
+                  <Field label={t("products.feeName")} error={err(`fees.${i}.name_ar`)}>
+                    <Input
+                      value={fee.name_ar}
+                      onChange={(e) => setFee(i, { name_ar: e.target.value })}
+                      dir="auto"
+                    />
+                  </Field>
+                  <Field label={t("products.feeAmount")} error={err(`fees.${i}.amount`)}>
+                    <Input
+                      inputMode="decimal"
+                      value={fee.amount}
+                      onChange={(e) => setFee(i, { amount: e.target.value })}
+                      dir="ltr"
+                    />
+                  </Field>
+                  <Field label={t("products.feeUnit")}>
+                    <Select
+                      value={fee.unit}
+                      onChange={(e) => setFee(i, { unit: e.target.value as "percent" | "SAR" })}
+                    >
+                      <option value="percent">{t("products.feeUnitOpt.percent")}</option>
+                      <option value="SAR">{t("products.feeUnitOpt.SAR")}</option>
+                    </Select>
+                  </Field>
+                  <Field
+                    label={t("products.feeCap")}
+                    error={err(`fees.${i}.cap_sar`)}
+                    optional
+                    optionalLabel={t("common.optional")}
+                  >
+                    <Input
+                      inputMode="decimal"
+                      value={fee.cap_sar}
+                      onChange={(e) => setFee(i, { cap_sar: e.target.value })}
+                      dir="ltr"
+                    />
+                  </Field>
+                  <Checkbox
+                    label={t("products.feeVat")}
+                    checked={fee.vat_included}
+                    onChange={(e) => setFee(i, { vat_included: e.target.checked })}
+                  />
+                  <div className="flex items-end justify-end">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      icon={<Trash2 />}
+                      onClick={() =>
+                        set(
+                          "fees",
+                          f.fees.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      {t("products.removeFee")}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                icon={<Plus />}
+                className="self-start"
+                onClick={() =>
+                  set("fees", [
+                    ...f.fees,
+                    { name_ar: "", amount: "", unit: "percent", cap_sar: "", vat_included: true },
+                  ])
+                }
+              >
+                {t("products.addFee")}
+              </Button>
+            </div>
+
+            <Field
+              label={t("products.requirements")}
+              hint={t("products.listHint")}
+              error={err("min_requirements_ar")}
+              optional
+              optionalLabel={t("common.optional")}
+            >
+              <Textarea
+                rows={3}
+                value={f.requirements}
+                onChange={(e) => set("requirements", e.target.value)}
                 dir="auto"
               />
             </Field>
-          )}
-        </fieldset>
+            <Field
+              label={t("products.targetCustomers")}
+              hint={t("products.listHint")}
+              error={err("target_customers_ar")}
+              optional
+              optionalLabel={t("common.optional")}
+            >
+              <Textarea
+                rows={2}
+                value={f.targetCustomers}
+                onChange={(e) => set("targetCustomers", e.target.value)}
+                dir="auto"
+              />
+            </Field>
+            <Checkbox
+              label={t("products.sharia")}
+              checked={f.sharia}
+              onChange={(e) => set("sharia", e.target.checked)}
+            />
+            {f.sharia && (
+              <Field label={t("products.shariaRef")} optional optionalLabel={t("common.optional")}>
+                <Input
+                  value={f.shariaRef}
+                  onChange={(e) => set("shariaRef", e.target.value)}
+                  dir="auto"
+                />
+              </Field>
+            )}
+          </fieldset>
+        )}
       </form>
     </Dialog>
   );

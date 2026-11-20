@@ -1159,7 +1159,10 @@
       "SAMA": "Saudi Central Bank (SAMA)",
       "CMA": "Capital Market Authority",
       "IA": "Insurance Authority",
-      "other": "Other"
+      "other": "Other",
+      "SFDA": "Saudi Food and Drug Authority",
+      "MOT": "Ministry of Tourism",
+      "MOC": "Ministry of Commerce"
     },
     "keyFacts": "Key facts",
     "apr": "Annual percentage rate (%)",
@@ -3065,6 +3068,31 @@
       "verify": "Conditions to verify",
       "drafts": "Drafts",
       "waiting": "Awaiting decision"
+    }
+  },
+  "prod2": {
+    "optionalNote": "All fields are optional: never enter values that are not true. Accurate data helps match the ad's claims.",
+    "field": {
+      "category": "Product category",
+      "ingredients": "Ingredients",
+      "intended_use": "Intended use",
+      "usage_instructions": "Usage instructions",
+      "warnings": "Warnings and precautions",
+      "claim_evidence": "Evidence supporting the claims",
+      "regulatory_classification": "Regulatory classification / listing no.",
+      "nutrition_or_dosage": "Nutrition values or dosage",
+      "destination": "Destination",
+      "duration": "Trip or experience duration",
+      "price": "Price",
+      "booking_conditions": "Booking conditions",
+      "cancellation_terms": "Cancellation terms",
+      "included": "Included services",
+      "excluded": "Excluded services",
+      "specifications": "Specifications",
+      "warranty": "Warranty",
+      "availability": "Availability",
+      "conditions": "Conditions",
+      "description": "Product or service description"
     }
   }
 }
