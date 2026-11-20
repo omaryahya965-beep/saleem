@@ -2635,6 +2635,16 @@
       "finalizeHint": "The final approval becomes available once every condition is verified.",
       "finalize": "Record final approval",
       "finalizedToast": "Final approval recorded."
+    },
+    "facet": {
+      "no_side_effects": "Claim: no side effects",
+      "absolute_or_fast_result": "Claim: complete or fast result",
+      "universal_result": "Claim: for all skin types",
+      "guaranteed": "Claim: guaranteed result",
+      "cure": "Claim: cure or treatment",
+      "weight_loss": "Claim: weight loss",
+      "guaranteed_return": "Claim: guaranteed return",
+      "guaranteed_approval": "Claim: guaranteed approval"
     }
   },
   "fix": {

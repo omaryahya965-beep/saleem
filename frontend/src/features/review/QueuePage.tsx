@@ -25,6 +25,7 @@ import type { Promotion } from "@/lib/api/promotions";
 import { assignReviewer, eligibleReviewers, fetchQueue, isOverdue, rk } from "@/lib/api/review";
 import { filterQueue, usePreflightText, type QueueTab as Tab } from "./model";
 import { cn } from "@/lib/utils";
+import { groupFindings, type GroupableFinding } from "@/features/reports/grouping";
 
 interface Details {
   products: Map<string, { name_ar: string; name_en: string | null }>;
@@ -81,16 +82,21 @@ async function fetchDetails(items: Promotion[]): Promise<Details> {
     ? ((
         await supabase
           .from("findings")
-          .select("run_id, severity, submission_id")
+          .select(
+            "id, run_id, severity, submission_id, rule_code, finding_type, evidence_type, evidence_text, explanation_ar, t_start",
+          )
           .in("run_id", runIds)
       ).data ?? [])
     : [];
+  // Grouped counts (D176), the same numbers the advertisement workspace shows.
+  const bySub = new Map<string, GroupableFinding[]>();
+  for (const f of findings as (GroupableFinding & { submission_id: string })[])
+    bySub.set(f.submission_id, [...(bySub.get(f.submission_id) ?? []), f]);
   const counts = new Map<string, { v: number; w: number }>();
-  for (const f of findings as { submission_id: string; severity: string }[]) {
-    const c = counts.get(f.submission_id) ?? { v: 0, w: 0 };
-    if (f.severity === "violation") c.v++;
-    else c.w++;
-    counts.set(f.submission_id, c);
+  for (const [sid, fs] of bySub) {
+    const g = groupFindings(fs);
+    const v = g.filter((x) => x.severity === "violation").length;
+    counts.set(sid, { v, w: g.length - v });
   }
   return {
     products: new Map(

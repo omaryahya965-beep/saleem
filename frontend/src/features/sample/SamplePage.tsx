@@ -303,6 +303,9 @@ function SampleGroup({
             <Badge variant="neutral">{t("ws.kind.automated")}</Badge>
             <Badge mono>{g.ruleCode}</Badge>
           </span>
+          {g.facet && (
+            <span className="text-sm text-fg-muted">{t(`ws.facet.${g.facet}` as TKey)}</span>
+          )}
           <span className="font-bold">
             {(lang === "en" ? f.explanation_en : f.explanation_ar) ?? g.ruleCode}
           </span>

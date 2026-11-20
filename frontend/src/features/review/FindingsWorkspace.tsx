@@ -374,6 +374,11 @@ function GroupCard({
                 <Badge variant="neutral">{t("ws.kind.missingEvidence")}</Badge>
               )}
           </span>
+          {g.facet && (
+            <span className="text-sm font-medium text-fg-muted">
+              {t(`ws.facet.${g.facet}` as TKey)}
+            </span>
+          )}
           <span className="text-lg leading-snug font-bold text-fg">{lead.title}</span>
           <span className="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
             <Badge mono className="font-semibold">
