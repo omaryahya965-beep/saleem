@@ -63,3 +63,21 @@ and D169: marketer proposes / cannot approve or publish, reviewers never assign,
 - `/rules` is a public page (also signed out); externals simply do not get it in their menu.
 - Legal reads company rules (internal_rules) to give opinions; claims, products and disclaimers only as linked to its
   cases (D169). A disclaimer «applies» to a case when its product type / channel / communication type scope matches.
+
+## V2 upgrade actions (D172–D178, 2026-11-20)
+
+| Action | Who | Enforced by |
+|---|---|---|
+| Submit with unanswered findings | uploader side; explanation required when `require_uploader_responses` | `can_submit` (`note_required_unanswered`) |
+| Request changes / reject | deciders (owner, admin, lead; assigned reviewer); never the uploader | `can_decide.ok`, `decide_promotion` |
+| Approve / conditional approve | as above **and** no approval blockers (confirmed violations, missing assessments) | `approval_blockers`, `decide_promotion` |
+| Reviewer assessment of a finding | deciders, a reviewer only when assigned; never the uploader | `respond_finding` |
+| Fulfil a condition / submit conditions | uploader side (owner of the ad, uploader, owner/admin/creator, the responsible person); never viewer/legal/external reviewer | `save_condition_response`, `submit_conditions`, storage policy «condition evidence write» |
+| Verify a condition / final approval | deciders on the current conditionally approved version; never the uploader | `verify_condition`, `finalize_conditional_approval` |
+| Eligible reviewers list | owner, admin, lead | `eligible_reviewers` |
+| Partner link create / update / rotate / stats | owner, admin; flag `partners` | `create_partner_link_v2`, `update_partner_link`, `rotate_partner_link`, `partner_link_stats` |
+| Partner submission | approved external_uploader assigned to the link (or joined through it); within limit, products, channels, communication types | `partner_create_promotion_v2` (advisory lock) |
+| Cancel an unsent draft | the advertisement's owner | `cancel_draft_promotion` |
+| SALEEM Fix | uploader side (not reviewer/legal/viewer/external reviewer); flag `saleem_fix`; open states; analysed current version; quota | `can_fix_promotion`, `create_correction_job`, `begin/finish/abort_accept_correction`, Edge Function `fix` (job owner only) |
+
+Verified by pgTAP `p9_upgrade` (decisions, conditions, partners, idempotency) and `p10_fix`.

@@ -505,3 +505,67 @@ Format: decision — why — alternatives considered.
   `p3_review`, `p6_lifecycle`, `p6_risk` now assign before opening. UI: no «استلام» for reviewers, «بانتظار الإسناد»,
   claims «اقتراح ادعاء» / «اقتراحاتي فقط» / «سحب الاقتراح», approved vs pending badges, compliance lead can assign
   and decide in the UI (server already allowed), no «إعلان جديد» for roles that cannot create.
+- **D170. Sector model for non-financial advertising (2026-11-20).** Products, organisations and advertisements
+  accept cosmetics, food & beverages, health & supplements, tourism, e-commerce and retail besides the five
+  financial sectors; product types per sector and regulators SFDA / MOT / MOC (`SECTOR_MODEL`). Non-financial
+  attributes are optional free text under `key_facts.<group>`; financial key facts and their validation apply only
+  to financial sectors. The analysis context uses the advertisement's own sector, then its product's, then the
+  organisation's — a bank's cosmetic ad is not evaluated as a financial promotion. Migration
+  `20261120100000_v2_upgrade_workflow.sql` (constraints widened, existing values unchanged).
+- **D171. MAW-03 / MAW-04 scope (2026-11-20).** The written creator agreement and the Mawthooq licence concern
+  advertising through natural-person creators (GAMR/Mawthooq; secondary sources agree, official text not
+  re-verified here). They now apply to `creator_sponsored` communication or `influencer` distribution only; an
+  organisation publishing a general commercial ad on its own channels is excluded with the reason
+  `context:communication_type`. `legal_status` stays `illustrative_pending_review`; the rule's `applicability_ar`
+  states that official accounts need legal confirmation. `v2_rule_scope_fixes()` re-applies it after a fresh seed.
+- **D172. Submission and finding responses (2026-11-20).** Unanswered findings no longer block submission: the
+  marketer adds an explanation when `require_uploader_responses` is on (`note_required_unanswered:n`). New answers:
+  correction done, request guidance, provide evidence (uploader); evidence required, correction verified,
+  clarification required (reviewer, assigned only). Repeating the same answer is a no-op (no duplicate history).
+- **D173. Decision gating vs approval blockers (2026-11-20).** `can_decide` returns `ok` (may decide at all) and
+  `approve_ok` / `approve_blockers`. Request changes and reject need no per-finding answers; approve and conditional
+  approve stay blocked by confirmed violations not verified as corrected and by missing reviewer assessments when the
+  organisation requires them. Enforced in `decide_promotion`. The dialog has no default decision.
+- **D174. Partners (2026-11-20).** The one-at-a-time rule blocked partners with an unsent draft (`one_at_a_time`).
+  Replaced by a per-link `max_active_submissions` (default 5; draft, pending, in review, escalated, changes
+  requested, conditionally approved, risk review, re-review count), checked under an advisory lock and reporting the
+  blocking ads. Links gain campaign, instructions, expiry, assigned partners and communication types; rotation issues
+  a new token (old one stops); partners open assigned links from their account (`partner_link_for_me`, no token);
+  owners cancel unsent drafts (archived, history kept). Resubmission returns to the previous reviewer only while that
+  reviewer is still eligible; re-assigning the same reviewer is a no-op.
+- **D175. Structured conditional approval (2026-11-20).** `approval_conditions` (description, required action,
+  evidence flag, responsible person, due date, status). Marketer answers each condition (note, https links, files in
+  `evidence/<org>/conditions/<promotion>/`), then «إرسال الشروط للتحقق» (no new analysis). The assigned decider
+  verifies, asks for more evidence or rejects the fulfilment; `finalize_conditional_approval` writes a separate,
+  hash-chained `approve` decision only when every condition is verified and the version is unchanged. Conditional
+  decisions and their conditions stay immutable history.
+- **D176. Finding grouping (2026-11-20).** Grouping is a pure, deterministic client function (rule + claim facet
+  from the evidence text, else rule + normalised explanation; whole-post rules collapse). Raw findings, responses and
+  hashes are unchanged; an answer to a group is written to every raw finding (idempotent). The same key is used to
+  compare versions. Nada Cream V1: 9 raw findings → 6 consolidated, two distinct COM-01 claims.
+- **D177. Advertisement workspace (2026-11-20).** One page: header with separate approval and live analysis
+  states (fixes the «جارٍ التحليل» shown after a finished report — the header read a stale bundle), historical
+  version banner, role next step, latest decision with correction checklist, conditions, and five tabs. One primary
+  «ارفع النسخة المعدلة» plus «الإصلاح الذكي».
+- **D178. SALEEM Fix (2026-11-20).** Implemented: AI-assisted TEXT correction (plan per finding + corrected caption
+  and script, user edits, acceptance creates a new text version under the same advertisement, analysed afresh, no
+  approval inherited). `correction_jobs`, flag `saleem_fix` (off by default), monthly quota
+  (`saleem_fix_monthly_limit`, default 30, separate from analysis), idempotency key, atomic two-step acceptance,
+  estimate before any call, one Gemini request per attempt (max 3, never automatic). The model output is rejected if
+  it states a licence number, regulator approval, clinical evidence, endorsement or written agreement — with no
+  "already in the ad" exemption (prompt-injection test). Media editing and replacement generation: provider
+  abstraction only, reported «يتطلب إعداداً»; no video is generated or simulated.
+- **D179. New-advertisement wizard (2026-11-20).** Four steps; one paid flag and one licence field; the version
+  platform derives from the channels; communication type follows the product; conflicts are shown before the
+  analysis; field-only draft recovery in localStorage (never the file, never a server draft).
+- **D180–D181. Queue and comparison (2026-11-20).** Queue: managers start on «غير مُسند», reviewers on their cases,
+  counters, rich cards with grouped counts, direct assignment of eligible reviewers (`eligible_reviewers`).
+  Comparison: side-by-side media, sentence-level text with labelled additions/removals, grouped findings; «no
+  longer detected» is never shown as «resolved», no percentage.
+- **D182–D183. Public pages (2026-11-20).** `/sample` is the read-only Nada Cream report built from the manual-test
+  rows (V1 and V2 videos recovered from the local storage volume after the local DB was reset; quotes cut in the
+  captured rows end with «…»). The herbal-tea demo remains at `/checks/<id>`. New landing page; every capability
+  shown is implemented, provider-dependent and experimental ones are labelled.
+- **D184–D185. Notifications and dashboards (2026-11-20).** Decision notifications name the decision and version
+  and link to the advertisement version; new kinds `conditions_submitted`, `condition_returned`,
+  `partner_access_decided`. The dashboard adds RLS-scoped workload tiles per role and the partner's links.

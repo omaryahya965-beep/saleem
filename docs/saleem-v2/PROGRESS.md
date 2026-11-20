@@ -7,10 +7,13 @@
 
 ## Current position
 
-- Phase: 8 (steps 1–6, 8 and 10 done; step 7 blocked on the demo video; step 9 deploy not started)
-- Task: live Gemini verified on gemini-3.5-flash (text, image, video+Arabic ASR, Try Rule, authenticated workflow); gemini-3.8-flash not exercised (Google overload, then Free Tier 20/day quota) — D164
-- Last commit: live-Gemini fixes (timeout, thinking level, stale report); pushed to origin/integrate/pr-1-gemini
-- Next step: enable Gemini billing (Free Tier = 20 req/day/model), re-run the live set on gemini-3.8-flash; user checks Vercel Production Branch and hosted migrations before PR #2 → master.
+- Phase: V2 comprehensive upgrade (SALEEM_V2_UPGRADE.md) implemented on integrate/pr-1-gemini — see
+  docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (checklist with statuses) and D170–D185.
+- Last run: lint (0 errors), tsc, Deno check, build, 145 frontend + 272 backend tests (local stack), 21 pgTAP suites
+  after a fresh db reset, 51 Playwright e2e, deterministic eval — all passing (2026-11-20).
+- Next step: user review; enable `saleem_fix` per workspace and test it with a Gemini key (paid call); legal
+  confirmation of MAW-03/04 scope (D171) and SFDA cosmetics drafts; apply the two new migrations to hosted only
+  after approval and a backup.
 
 ## Status
 

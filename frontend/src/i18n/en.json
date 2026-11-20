@@ -46,7 +46,7 @@
     "mainNav": "Main navigation",
     "language": "Language",
     "switchTo": "العربية",
-    "workspace": "Agency workspace",
+    "workspace": "Workspace",
     "legal": "Terms & privacy",
     "promotions": "Promotions",
     "features": "Features",
@@ -566,7 +566,7 @@
     "loadError": "We couldn't load your settings",
     "exportDone": "Your data was downloaded.",
     "deleteDone": "Your account and data were deleted.",
-    "deleteTransferFirst": "Transfer ownership of your agency workspace before deleting your account.",
+    "deleteTransferFirst": "Transfer ownership of your workspace before deleting your account.",
     "deleteMismatch": "The email doesn't match your account.",
     "preferences": "Preferences",
     "notifyEmail": "Email me when a check finishes",
@@ -623,8 +623,8 @@
     "exhausted": "You've used this month's checks.",
     "nearLimit": "You're close to your monthly check limit.",
     "limits": "Up to {batch} clips per archive audit.",
-    "orgsYes": "Includes an agency workspace.",
-    "orgsNo": "No agency workspace."
+    "orgsYes": "Includes a workspace.",
+    "orgsNo": "No workspace."
   },
   "quota": {
     "quota_exceeded": "You've reached your plan's checks for this month.",
@@ -674,7 +674,7 @@
     "pending": "{n} still being checked."
   },
   "org": {
-    "title": "Agency workspace",
+    "title": "Workspace",
     "subtitle": "Track creators, campaigns and compliance in one place.",
     "loadError": "We couldn't load the workspace",
     "emptyTitle": "No workspaces yet",
@@ -721,7 +721,7 @@
     "expires": "Expires {date}",
     "revoke": "Revoke",
     "joined": "You joined the workspace.",
-    "inviteHeading": "Invitation to an agency workspace",
+    "inviteHeading": "Invitation to a workspace",
     "inviteBody": "Accept to join with the email on your account.",
     "acceptInvite": "Accept invite",
     "rolesHelpReview": "Owners, admins and reviewers review ads and decide. Legal only answers escalations. Creators upload versions and respond to findings. Nobody reviews a version they uploaded."
