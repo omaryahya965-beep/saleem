@@ -31,36 +31,103 @@ export const SECTORS = {
 };
 export const PRODUCT_TYPES = {
   ar: {
-    personal_finance: "تمويل شخصي", real_estate_finance: "تمويل عقاري", auto_finance: "تمويل سيارات", credit_card: "بطاقة ائتمانية",
-    bnpl: "اشترِ الآن وادفع لاحقاً", sme_finance: "تمويل منشآت", consumer_microfinance: "تمويل استهلاكي مصغّر", finance_lease: "إيجار تمويلي",
-    current_account: "حساب جارٍ", savings_deposit: "حساب ادخار", time_deposit: "وديعة لأجل", wallet: "محفظة رقمية", prepaid_card: "بطاقة مسبقة الدفع",
-    remittance: "حوالات", fx: "صرف عملات", public_fund: "صندوق عام", non_retail_fund: "صندوق خاص", equities: "أسهم", derivatives: "مشتقات",
-    sukuk_bonds: "صكوك وسندات", robo_advisory: "استشارات آلية", insurance_motor: "تأمين مركبات", insurance_health: "تأمين صحي",
-    insurance_protection_savings: "تأمين حماية وادخار", insurance_other: "تأمين آخر",
-    skincare: "عناية بالبشرة", makeup: "مكياج", haircare: "عناية بالشعر", fragrance: "عطور", personal_care: "عناية شخصية",
-    food_product: "منتج غذائي", beverage: "مشروب", dietary_supplement: "مكمل غذائي", health_product: "منتج صحي",
-    tour_package: "باقة سياحية", accommodation: "إقامة", experience: "تجربة / فعالية", travel_service: "خدمة سفر",
-    online_product: "منتج متجر إلكتروني", retail_product: "منتج تجزئة", electronics: "إلكترونيات", apparel: "ملابس", service: "خدمة",
+    personal_finance: "تمويل شخصي",
+    real_estate_finance: "تمويل عقاري",
+    auto_finance: "تمويل سيارات",
+    credit_card: "بطاقة ائتمانية",
+    bnpl: "اشترِ الآن وادفع لاحقاً",
+    sme_finance: "تمويل منشآت",
+    consumer_microfinance: "تمويل استهلاكي مصغّر",
+    finance_lease: "إيجار تمويلي",
+    current_account: "حساب جارٍ",
+    savings_deposit: "حساب ادخار",
+    time_deposit: "وديعة لأجل",
+    wallet: "محفظة رقمية",
+    prepaid_card: "بطاقة مسبقة الدفع",
+    remittance: "حوالات",
+    fx: "صرف عملات",
+    public_fund: "صندوق عام",
+    non_retail_fund: "صندوق خاص",
+    equities: "أسهم",
+    derivatives: "مشتقات",
+    sukuk_bonds: "صكوك وسندات",
+    robo_advisory: "استشارات آلية",
+    insurance_motor: "تأمين مركبات",
+    insurance_health: "تأمين صحي",
+    insurance_protection_savings: "تأمين حماية وادخار",
+    insurance_other: "تأمين آخر",
+    skincare: "عناية بالبشرة",
+    makeup: "مكياج",
+    haircare: "عناية بالشعر",
+    fragrance: "عطور",
+    personal_care: "عناية شخصية",
+    food_product: "منتج غذائي",
+    beverage: "مشروب",
+    dietary_supplement: "مكمل غذائي",
+    health_product: "منتج صحي",
+    tour_package: "باقة سياحية",
+    accommodation: "إقامة",
+    experience: "تجربة / فعالية",
+    travel_service: "خدمة سفر",
+    online_product: "منتج متجر إلكتروني",
+    retail_product: "منتج تجزئة",
+    electronics: "إلكترونيات",
+    apparel: "ملابس",
+    service: "خدمة",
     other: "أخرى",
   },
   en: {
-    personal_finance: "Personal finance", real_estate_finance: "Home finance", auto_finance: "Auto finance", credit_card: "Credit card",
-    bnpl: "Buy now, pay later", sme_finance: "SME finance", consumer_microfinance: "Consumer microfinance", finance_lease: "Finance lease",
-    current_account: "Current account", savings_deposit: "Savings account", time_deposit: "Time deposit", wallet: "Digital wallet", prepaid_card: "Prepaid card",
-    remittance: "Remittance", fx: "Foreign exchange", public_fund: "Public fund", non_retail_fund: "Private fund", equities: "Equities", derivatives: "Derivatives",
-    sukuk_bonds: "Sukuk & bonds", robo_advisory: "Robo-advisory", insurance_motor: "Motor insurance", insurance_health: "Health insurance",
-    insurance_protection_savings: "Protection & savings insurance", insurance_other: "Other insurance",
-    skincare: "Skincare", makeup: "Make-up", haircare: "Haircare", fragrance: "Fragrance", personal_care: "Personal care",
-    food_product: "Food product", beverage: "Beverage", dietary_supplement: "Dietary supplement", health_product: "Health product",
-    tour_package: "Tour package", accommodation: "Accommodation", experience: "Experience / event", travel_service: "Travel service",
-    online_product: "Online store product", retail_product: "Retail product", electronics: "Electronics", apparel: "Apparel", service: "Service",
+    personal_finance: "Personal finance",
+    real_estate_finance: "Home finance",
+    auto_finance: "Auto finance",
+    credit_card: "Credit card",
+    bnpl: "Buy now, pay later",
+    sme_finance: "SME finance",
+    consumer_microfinance: "Consumer microfinance",
+    finance_lease: "Finance lease",
+    current_account: "Current account",
+    savings_deposit: "Savings account",
+    time_deposit: "Time deposit",
+    wallet: "Digital wallet",
+    prepaid_card: "Prepaid card",
+    remittance: "Remittance",
+    fx: "Foreign exchange",
+    public_fund: "Public fund",
+    non_retail_fund: "Private fund",
+    equities: "Equities",
+    derivatives: "Derivatives",
+    sukuk_bonds: "Sukuk & bonds",
+    robo_advisory: "Robo-advisory",
+    insurance_motor: "Motor insurance",
+    insurance_health: "Health insurance",
+    insurance_protection_savings: "Protection & savings insurance",
+    insurance_other: "Other insurance",
+    skincare: "Skincare",
+    makeup: "Make-up",
+    haircare: "Haircare",
+    fragrance: "Fragrance",
+    personal_care: "Personal care",
+    food_product: "Food product",
+    beverage: "Beverage",
+    dietary_supplement: "Dietary supplement",
+    health_product: "Health product",
+    tour_package: "Tour package",
+    accommodation: "Accommodation",
+    experience: "Experience / event",
+    travel_service: "Travel service",
+    online_product: "Online store product",
+    retail_product: "Retail product",
+    electronics: "Electronics",
+    apparel: "Apparel",
+    service: "Service",
     other: "Other",
   },
 };
 
 const fixErrors = {
   ar: {
-    provider_not_configured: "مزوّد الذكاء الاصطناعي غير مُعد على الخادم (GEMINI_API_KEY). لم يُرسل أي طلب.",
+    provider_not_configured:
+      "مزوّد الذكاء الاصطناعي غير مُعد على الخادم (GEMINI_API_KEY). لم يُرسل أي طلب.",
     quota: "حصة مزوّد الذكاء الاصطناعي مستنفدة الآن. لم تتم إعادة المحاولة تلقائياً.",
     overloaded: "المزوّد مزدحم الآن. يمكنك إعادة المحاولة يدوياً لاحقاً.",
     provider_error: "تعذّر الحصول على اقتراح من المزوّد.",
@@ -79,14 +146,16 @@ const fixErrors = {
     source_unavailable: "تعذّر قراءة الإصدار المصدر.",
   },
   en: {
-    provider_not_configured: "The AI provider is not configured on the server (GEMINI_API_KEY). No request was sent.",
+    provider_not_configured:
+      "The AI provider is not configured on the server (GEMINI_API_KEY). No request was sent.",
     quota: "The AI provider quota is exhausted. No automatic retry was made.",
     overloaded: "The provider is overloaded. You can retry manually later.",
     provider_error: "The provider did not return a proposal.",
     timeout: "The request timed out.",
     schema: "The provider's response was invalid and was rejected.",
     empty_proposal: "The provider returned no corrected text.",
-    fabricated_licence_number: "Proposal rejected: it added a licence number. SALEEM never invents documents.",
+    fabricated_licence_number:
+      "Proposal rejected: it added a licence number. SALEEM never invents documents.",
     fabricated_regulator_approval: "Proposal rejected: it claimed a regulator's approval.",
     fabricated_clinical_evidence: "Proposal rejected: it claimed clinical or scientific evidence.",
     fabricated_endorsement: "Proposal rejected: it added an endorsement.",
@@ -114,7 +183,8 @@ export const ar = {
       deadline: "موعد القرار",
       submitted: "أُرسل للمراجعة",
       version: "الإصدار {n}",
-      historical: "تعرض الإصدار {n} كنسخة تاريخية للاطلاع فقط. الإجراءات تعمل دائماً على الإصدار الأحدث.",
+      historical:
+        "تعرض الإصدار {n} كنسخة تاريخية للاطلاع فقط. الإجراءات تعمل دائماً على الإصدار الأحدث.",
       viewLatest: "عرض الإصدار الأحدث",
       unknownPerson: "عضو في الجهة",
       unassigned: "غير مُسند",
@@ -150,7 +220,10 @@ export const ar = {
         verify_conditions: "تحقق من استيفاء شروط الاعتماد وسجّل الاعتماد النهائي.",
         not_assigned: "هذا الإعلان غير مُسند إليك؛ يُسنده المدير أو رئيس الالتزام.",
       },
-      legal: { answer: "قدّم الرأي القانوني المطلوب.", none: "لا يوجد طلب رأي قانوني مفتوح لك على هذا الإعلان." },
+      legal: {
+        answer: "قدّم الرأي القانوني المطلوب.",
+        none: "لا يوجد طلب رأي قانوني مفتوح لك على هذا الإعلان.",
+      },
       all: { approved: "الإعلان معتمد لهذا الإصدار. أي تعديل في المحتوى يتطلب مراجعة جديدة." },
     },
     decisionSummary: {
@@ -180,7 +253,8 @@ export const ar = {
       packsHint: "تظهر الحزم المطبقة ولماذا في تبويب الفحص الآلي («القواعد والحزم المطبقة»).",
       declarations: "الإقرارات والأدلة",
       declarationsNote: "الإقرارات",
-      declarationsHint: "إقرارات الذكاء الاصطناعي والإعلان المدفوع والعقد تُحفظ مع كل إصدار وتظهر في تقرير الفحص.",
+      declarationsHint:
+        "إقرارات الذكاء الاصطناعي والإعلان المدفوع والعقد تُحفظ مع كل إصدار وتظهر في تقرير الفحص.",
       workflow: "سير العمل",
     },
     sector: SECTORS.ar,
@@ -198,7 +272,8 @@ export const ar = {
       blockers: "الاعتماد غير متاح الآن",
       consequence: {
         approve: "يُعتمد هذا الإصدار تحديداً. أي إصدار لاحق يحتاج مراجعة جديدة.",
-        conditional_approve: "لا يُعد اعتماداً نهائياً: يستوفي التسويق الشروط، ثم تتحقق منها وتسجّل الاعتماد النهائي كقرار مستقل.",
+        conditional_approve:
+          "لا يُعد اعتماداً نهائياً: يستوفي التسويق الشروط، ثم تتحقق منها وتسجّل الاعتماد النهائي كقرار مستقل.",
         request_changes: "يعود الإعلان للتسويق مع الأسباب وقائمة التصحيح، ويُشعَر صاحب الإعلان.",
         reject: "يُغلق هذا الإصدار بالرفض مع الأسباب. يمكن تقديم إصدار جديد لاحقاً.",
       },
@@ -214,7 +289,8 @@ export const ar = {
       whatHappens: "ماذا سيحدث",
     },
     submit: {
-      unansweredRequired: "{n} ملاحظات بلا رد. يمكنك الإرسال مع شرح للمراجع (مطلوب وفق سياسة الجهة).",
+      unansweredRequired:
+        "{n} ملاحظات بلا رد. يمكنك الإرسال مع شرح للمراجع (مطلوب وفق سياسة الجهة).",
       unansweredOptional: "{n} ملاحظات بلا رد. يمكنك الإرسال، ويُستحسن إضافة شرح للمراجع.",
       notApproval: "الإرسال للمراجعة ليس اعتماداً للنشر؛ القرار يتخذه مراجع مخوّل.",
     },
@@ -223,10 +299,17 @@ export const ar = {
       title: "شروط الاعتماد",
       subtitle: "يجب استيفاء كل شرط والتحقق منه قبل الاعتماد النهائي.",
       closed: "هذه الشروط مغلقة.",
-      newVersionNote: "رُفع إصدار جديد بعد الاعتماد المشروط؛ الشروط تخص الإصدار السابق والإصدار الجديد يحتاج مراجعة كاملة.",
+      newVersionNote:
+        "رُفع إصدار جديد بعد الاعتماد المشروط؛ الشروط تخص الإصدار السابق والإصدار الجديد يحتاج مراجعة كاملة.",
       progress: "{done} من {total} تم التحقق منها",
       governance: "صدر الاعتماد المشروط في {date}. الاعتماد النهائي قرار منفصل ومسجّل.",
-      status: { open: "مفتوح", submitted: "بانتظار التحقق", verified: "تم التحقق", more_evidence: "مطلوب دليل إضافي", rejected: "الاستيفاء غير كافٍ" },
+      status: {
+        open: "مفتوح",
+        submitted: "بانتظار التحقق",
+        verified: "تم التحقق",
+        more_evidence: "مطلوب دليل إضافي",
+        rejected: "الاستيفاء غير كافٍ",
+      },
       evidenceRequired: "يتطلب دليلاً",
       due: "الموعد {date}",
       responsible: "المسؤول: {name}",
@@ -254,7 +337,8 @@ export const ar = {
   },
   fix: {
     title: "الإصلاح الذكي",
-    subtitle: "حوّل الملاحظات إلى تصحيح: خطة واضحة لكل ملاحظة، ونص معدّل تراجعه وتعدّله قبل قبوله كإصدار جديد يُفحص من جديد.",
+    subtitle:
+      "حوّل الملاحظات إلى تصحيح: خطة واضحة لكل ملاحظة، ونص معدّل تراجعه وتعدّله قبل قبوله كإصدار جديد يُفحص من جديد.",
     unavailable: "الإصلاح الذكي غير متاح لهذا الإعلان الآن",
     reason: {
       not_found: "الإعلان غير موجود.",
@@ -264,20 +348,35 @@ export const ar = {
       analysis_not_done: "يجب أن يكتمل الفحص الآلي للإصدار الحالي أولاً.",
       quota_exhausted: "استُنفدت حصة الإصلاح الشهرية لمساحة العمل.",
     },
-    disclaimer: "الإصلاح الذكي يقترح ولا يعتمد. لا يضمن الامتثال القانوني، ولا يخترع رخصاً أو موافقات أو أدلة، وكل نسخة مصححة تُفحص آلياً ثم يراجعها إنسان.",
+    disclaimer:
+      "الإصلاح الذكي يقترح ولا يعتمد. لا يضمن الامتثال القانوني، ولا يخترع رخصاً أو موافقات أو أدلة، وكل نسخة مصححة تُفحص آلياً ثم يراجعها إنسان.",
     available: "متاح",
     configRequired: "يتطلب إعداداً",
     method: {
-      manual: { title: "تعديل يدوي", body: "عدّل الإعلان خارج سليم وارفع النسخة المعدلة كإصدار جديد.", cta: "رفع نسخة معدلة" },
-      text: { title: "تصحيح بمساعدة الذكاء الاصطناعي", body: "خطة تصحيح لكل ملاحظة ووصف ونص تعليق صوتي مصححان مع الحفاظ على هوية الإعلان. تراجع النص وتعدّله قبل القبول.", cta: "ابدأ التصحيح" },
-      replacement: { title: "توليد إعلان بديل", body: "توليد فيديو أو تعليق صوتي بديل يتطلب مزوّد توليد معتمداً ومُعداً. لا يوجد تكامل مفعّل في هذا الإصدار.", cta: "غير مُعد" },
+      manual: {
+        title: "تعديل يدوي",
+        body: "عدّل الإعلان خارج سليم وارفع النسخة المعدلة كإصدار جديد.",
+        cta: "رفع نسخة معدلة",
+      },
+      text: {
+        title: "تصحيح بمساعدة الذكاء الاصطناعي",
+        body: "خطة تصحيح لكل ملاحظة ووصف ونص تعليق صوتي مصححان مع الحفاظ على هوية الإعلان. تراجع النص وتعدّله قبل القبول.",
+        cta: "ابدأ التصحيح",
+      },
+      replacement: {
+        title: "توليد إعلان بديل",
+        body: "توليد فيديو أو تعليق صوتي بديل يتطلب مزوّد توليد معتمداً ومُعداً. لا يوجد تكامل مفعّل في هذا الإصدار.",
+        cta: "غير مُعد",
+      },
     },
     setup: {
       findings: "الملاحظات المطلوب معالجتها",
-      findingsHint: "المخالفات محددة افتراضياً. الملاحظات التي تحتاج مستندات ستظهر في الخطة كأمور لا يصلحها الذكاء الاصطناعي.",
+      findingsHint:
+        "المخالفات محددة افتراضياً. الملاحظات التي تحتاج مستندات ستظهر في الخطة كأمور لا يصلحها الذكاء الاصطناعي.",
       evidenceCount: "{n} دليل",
       preferences: "التفضيلات",
-      voiceNote: "اختيار الصوت وتعديل الفيديو يتطلبان مزوّد وسائط مُعداً؛ هذا الإصدار يصحح النص فقط.",
+      voiceNote:
+        "اختيار الصوت وتعديل الفيديو يتطلبان مزوّد وسائط مُعداً؛ هذا الإصدار يصحح النص فقط.",
       instructions: "تعليمات إضافية",
       instructionsHint: "مثال: استخدمي صيغة الأنثى، واذكري تعليمات الاستخدام.",
       next: "إنشاء طلب التصحيح",
@@ -299,7 +398,8 @@ export const ar = {
       costUnknown: "تكلفة غير معروفة",
       quota: "المتبقي هذا الشهر",
       quotaValue: "{remaining} من {limit}",
-      notConfigured: "مزوّد الذكاء الاصطناعي غير مُعد على الخادم؛ لا يمكن التوليد. اطلب من المسؤول إعداد GEMINI_API_KEY.",
+      notConfigured:
+        "مزوّد الذكاء الاصطناعي غير مُعد على الخادم؛ لا يمكن التوليد. اطلب من المسؤول إعداد GEMINI_API_KEY.",
       body: "سيُرسل نص الإعلان والملاحظات المحددة إلى مزوّد الذكاء الاصطناعي المعتمد في سليم (طلب واحد مدفوع). لا يُرسل الفيديو.",
       retry: "إعادة المحاولة ({n} متبقية)",
       generate: "توليد خطة التصحيح",
@@ -317,7 +417,8 @@ export const ar = {
       mediaEdit: "تعديل الفيديو",
       voiceover: "تعليق صوتي جديد",
       evidence: "مستند مطلوب",
-      humanNote: "{n} بنود لا يمكن للذكاء الاصطناعي حلها (مستندات أو قرار قانوني). تبقى الملاحظات مفتوحة حتى تُقدَّم الأدلة.",
+      humanNote:
+        "{n} بنود لا يمكن للذكاء الاصطناعي حلها (مستندات أو قرار قانوني). تبقى الملاحظات مفتوحة حتى تُقدَّم الأدلة.",
       original: "الأصل",
       proposed: "المقترح",
       caption: "الوصف",
@@ -325,7 +426,8 @@ export const ar = {
       editable: "يمكنك تعديل النص قبل القبول.",
       changes: "التغييرات",
       limitations: "حدود الاقتراح",
-      acceptBody: "القبول يُنشئ إصداراً نصياً جديداً (الوصف والسيناريو المصححان) تحت الإعلان نفسه، ويبدأ فحصه الآلي فوراً. لا يُستبدل الأصل، ولا يُورَّث أي اعتماد سابق، ويجب إعادة إنتاج الفيديو نفسه خارجياً.",
+      acceptBody:
+        "القبول يُنشئ إصداراً نصياً جديداً (الوصف والسيناريو المصححان) تحت الإعلان نفسه، ويبدأ فحصه الآلي فوراً. لا يُستبدل الأصل، ولا يُورَّث أي اعتماد سابق، ويجب إعادة إنتاج الفيديو نفسه خارجياً.",
       meta: "النموذج {model} · التكلفة {cost}",
       accept: "قبول وإنشاء إصدار جديد",
       discard: "تجاهل الاقتراح",
@@ -351,7 +453,8 @@ export const en = {
       deadline: "Decision deadline",
       submitted: "Submitted",
       version: "Version {n}",
-      historical: "You are viewing version {n} as a read-only historical snapshot. Actions always apply to the latest version.",
+      historical:
+        "You are viewing version {n} as a read-only historical snapshot. Actions always apply to the latest version.",
       viewLatest: "View latest version",
       unknownPerson: "Organisation member",
       unassigned: "Unassigned",
@@ -373,10 +476,12 @@ export const en = {
       marketer: {
         start_analysis: "Upload content and start the check",
         analysis_running: "Analysis in progress — this page updates when it completes.",
-        analysis_failed: "The analysis failed. Retry from the analysis tab or submit with acknowledgement.",
+        analysis_failed:
+          "The analysis failed. Retry from the analysis tab or submit with acknowledgement.",
         respond_submit: "Answer the findings, then submit for review.",
         fix_changes: "Address the requested changes and upload the revised version.",
-        rejected: "The advertisement was rejected. Review the reasons; upload a new version to resubmit.",
+        rejected:
+          "The advertisement was rejected. Review the reasons; upload a new version to resubmit.",
         fulfill_conditions: "Fulfil the approval conditions, then submit them for verification.",
         wait_review: "Awaiting the review decision — nothing is required from you now.",
       },
@@ -385,9 +490,13 @@ export const en = {
         start: "Start the review assigned to you.",
         decide: "Assess the findings and record your decision.",
         verify_conditions: "Verify the approval conditions and record the final approval.",
-        not_assigned: "This advertisement is not assigned to you; an administrator or compliance lead assigns it.",
+        not_assigned:
+          "This advertisement is not assigned to you; an administrator or compliance lead assigns it.",
       },
-      legal: { answer: "Provide the requested legal opinion.", none: "No open legal request for you on this advertisement." },
+      legal: {
+        answer: "Provide the requested legal opinion.",
+        none: "No open legal request for you on this advertisement.",
+      },
       all: { approved: "Approved for this version. Any content change needs a new review." },
     },
     decisionSummary: {
@@ -406,7 +515,8 @@ export const en = {
     info: {
       editableNote: "You can edit the context while the advertisement is open for changes.",
       readOnlyNote: "Read-only in this state or for your role.",
-      snapshotNote: "The selected version is historical; the fields below belong to the current advertisement.",
+      snapshotNote:
+        "The selected version is historical; the fields below belong to the current advertisement.",
       details: "Advertisement details",
       currentVersion: "Current version",
       publication: "Publication",
@@ -414,10 +524,12 @@ export const en = {
       sector: "Sector",
       productType: "Product type",
       packs: "Regulatory packages",
-      packsHint: "Applied packages and why are listed in the analysis tab («Rules and packages applied»).",
+      packsHint:
+        "Applied packages and why are listed in the analysis tab («Rules and packages applied»).",
       declarations: "Declarations and evidence",
       declarationsNote: "Declarations",
-      declarationsHint: "AI-use, paid-ad and agreement declarations are stored per version and shown in the analysis report.",
+      declarationsHint:
+        "AI-use, paid-ad and agreement declarations are stored per version and shown in the analysis report.",
       workflow: "Workflow",
     },
     sector: SECTORS.en,
@@ -435,9 +547,12 @@ export const en = {
       blockers: "Approval is not available yet",
       consequence: {
         approve: "This exact version is approved. Any later version needs a new review.",
-        conditional_approve: "Not a final approval: marketing fulfils the conditions, then you verify them and record the final approval as a separate decision.",
-        request_changes: "The advertisement returns to marketing with the reasons and a correction checklist; the owner is notified.",
-        reject: "This version is closed as rejected with the reasons. A new version may be submitted later.",
+        conditional_approve:
+          "Not a final approval: marketing fulfils the conditions, then you verify them and record the final approval as a separate decision.",
+        request_changes:
+          "The advertisement returns to marketing with the reasons and a correction checklist; the owner is notified.",
+        reject:
+          "This version is closed as rejected with the reasons. A new version may be submitted later.",
       },
       conditions: "Approval conditions",
       conditionN: "Condition {n}",
@@ -451,19 +566,30 @@ export const en = {
       whatHappens: "What happens",
     },
     submit: {
-      unansweredRequired: "{n} findings have no answer. You can submit with an explanation for the reviewer (required by your organisation).",
-      unansweredOptional: "{n} findings have no answer. You can submit; an explanation for the reviewer is recommended.",
-      notApproval: "Submitting for review is not approval to publish; an authorised reviewer decides.",
+      unansweredRequired:
+        "{n} findings have no answer. You can submit with an explanation for the reviewer (required by your organisation).",
+      unansweredOptional:
+        "{n} findings have no answer. You can submit; an explanation for the reviewer is recommended.",
+      notApproval:
+        "Submitting for review is not approval to publish; an authorised reviewer decides.",
     },
     assign: { workload: "{n} open cases" },
     cond: {
       title: "Approval conditions",
       subtitle: "Every condition must be fulfilled and verified before the final approval.",
       closed: "These conditions are closed.",
-      newVersionNote: "A new version was uploaded after the conditional approval; these conditions belong to the previous version and the new one needs a full review.",
+      newVersionNote:
+        "A new version was uploaded after the conditional approval; these conditions belong to the previous version and the new one needs a full review.",
       progress: "{done} of {total} verified",
-      governance: "Conditional approval recorded on {date}. The final approval is a separate, recorded decision.",
-      status: { open: "Open", submitted: "Awaiting verification", verified: "Verified", more_evidence: "More evidence requested", rejected: "Fulfilment insufficient" },
+      governance:
+        "Conditional approval recorded on {date}. The final approval is a separate, recorded decision.",
+      status: {
+        open: "Open",
+        submitted: "Awaiting verification",
+        verified: "Verified",
+        more_evidence: "More evidence requested",
+        rejected: "Fulfilment insufficient",
+      },
       evidenceRequired: "Evidence required",
       due: "Due {date}",
       responsible: "Responsible: {name}",
@@ -491,7 +617,8 @@ export const en = {
   },
   fix: {
     title: "SALEEM Fix",
-    subtitle: "Turn findings into corrections: a clear plan per finding and corrected text you review and edit before accepting it as a new version that is analysed again.",
+    subtitle:
+      "Turn findings into corrections: a clear plan per finding and corrected text you review and edit before accepting it as a new version that is analysed again.",
     unavailable: "SALEEM Fix is not available for this advertisement now",
     reason: {
       not_found: "Advertisement not found.",
@@ -501,22 +628,38 @@ export const en = {
       analysis_not_done: "The current version's analysis must complete first.",
       quota_exhausted: "The workspace's monthly SALEEM Fix quota is used up.",
     },
-    disclaimer: "SALEEM Fix proposes, it does not approve. It does not guarantee legal compliance, never invents licences, approvals or evidence, and every corrected version is analysed and then reviewed by a person.",
+    disclaimer:
+      "SALEEM Fix proposes, it does not approve. It does not guarantee legal compliance, never invents licences, approvals or evidence, and every corrected version is analysed and then reviewed by a person.",
     available: "Available",
     configRequired: "Configuration required",
     method: {
-      manual: { title: "Manual correction", body: "Edit the advertisement outside SALEEM and upload the revised file as a new version.", cta: "Upload revised version" },
-      text: { title: "AI-assisted correction", body: "A correction plan per finding plus a corrected caption and voice-over script that keep the ad's identity. Review and edit before accepting.", cta: "Start correction" },
-      replacement: { title: "Generate a replacement ad", body: "Generating a replacement video or voice-over needs an authorised, configured generation provider. No integration is active in this release.", cta: "Not configured" },
+      manual: {
+        title: "Manual correction",
+        body: "Edit the advertisement outside SALEEM and upload the revised file as a new version.",
+        cta: "Upload revised version",
+      },
+      text: {
+        title: "AI-assisted correction",
+        body: "A correction plan per finding plus a corrected caption and voice-over script that keep the ad's identity. Review and edit before accepting.",
+        cta: "Start correction",
+      },
+      replacement: {
+        title: "Generate a replacement ad",
+        body: "Generating a replacement video or voice-over needs an authorised, configured generation provider. No integration is active in this release.",
+        cta: "Not configured",
+      },
     },
     setup: {
       findings: "Findings to address",
-      findingsHint: "Violations are selected by default. Findings that need documents appear in the plan as items AI cannot fix.",
+      findingsHint:
+        "Violations are selected by default. Findings that need documents appear in the plan as items AI cannot fix.",
       evidenceCount: "{n} evidence",
       preferences: "Preferences",
-      voiceNote: "Voice selection and video editing need a configured media provider; this release corrects text only.",
+      voiceNote:
+        "Voice selection and video editing need a configured media provider; this release corrects text only.",
       instructions: "Additional instructions",
-      instructionsHint: "Example: address the viewer in the feminine form and mention usage instructions.",
+      instructionsHint:
+        "Example: address the viewer in the feminine form and mention usage instructions.",
       next: "Create correction request",
     },
     pref: {
@@ -536,7 +679,8 @@ export const en = {
       costUnknown: "Cost unknown",
       quota: "Remaining this month",
       quotaValue: "{remaining} of {limit}",
-      notConfigured: "The AI provider is not configured on the server; generation is not possible. Ask an administrator to set GEMINI_API_KEY.",
+      notConfigured:
+        "The AI provider is not configured on the server; generation is not possible. Ask an administrator to set GEMINI_API_KEY.",
       body: "The ad text and the selected findings will be sent to SALEEM's approved AI provider (one paid request). The video is not sent.",
       retry: "Retry ({n} left)",
       generate: "Generate correction plan",
@@ -554,7 +698,8 @@ export const en = {
       mediaEdit: "Video edit",
       voiceover: "New voice-over",
       evidence: "Document required",
-      humanNote: "{n} items cannot be solved by AI (documents or a legal decision). Those findings stay open until evidence is provided.",
+      humanNote:
+        "{n} items cannot be solved by AI (documents or a legal decision). Those findings stay open until evidence is provided.",
       original: "Original",
       proposed: "Proposed",
       caption: "Caption",
@@ -562,7 +707,8 @@ export const en = {
       editable: "You can edit the text before accepting.",
       changes: "Changes",
       limitations: "Limitations",
-      acceptBody: "Accepting creates a new TEXT version (corrected caption and script) under the same advertisement and starts its analysis now. The original is kept, no previous approval carries over, and the video itself must be re-produced outside SALEEM.",
+      acceptBody:
+        "Accepting creates a new TEXT version (corrected caption and script) under the same advertisement and starts its analysis now. The original is kept, no previous approval carries over, and the video itself must be re-produced outside SALEEM.",
       meta: "Model {model} · cost {cost}",
       accept: "Accept and create new version",
       discard: "Discard proposal",

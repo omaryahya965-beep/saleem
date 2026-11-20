@@ -14,7 +14,8 @@ export const ar = {
     violations: "{n} مخالفات",
     warnings: "{n} تنبيهات",
     summaryLine: "{gone} ملاحظات لم تعد ظاهرة · {kept} ما زالت قائمة · {added} جديدة.",
-    notResolution: "اختفاء الملاحظة من التقرير الآلي لا يعني أنها حُلّت نظامياً حتى يتحقق منها مراجع. لا تُعرض نسبة امتثال.",
+    notResolution:
+      "اختفاء الملاحظة من التقرير الآلي لا يعني أنها حُلّت نظامياً حتى يتحقق منها مراجع. لا تُعرض نسبة امتثال.",
     noLongerDetected: "لم تعد ظاهرة ({n})",
     persistent: "ما زالت قائمة ({n})",
     added: "جديدة ({n})",
@@ -39,7 +40,8 @@ export const en = {
     violations: "{n} violations",
     warnings: "{n} warnings",
     summaryLine: "{gone} findings no longer detected · {kept} remaining · {added} new.",
-    notResolution: "A finding that disappears from the automated report is not legally resolved until a reviewer verifies it. No compliance percentage is shown.",
+    notResolution:
+      "A finding that disappears from the automated report is not legally resolved until a reviewer verifies it. No compliance percentage is shown.",
     noLongerDetected: "No longer detected ({n})",
     persistent: "Remaining ({n})",
     added: "New ({n})",

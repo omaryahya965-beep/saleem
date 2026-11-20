@@ -50,12 +50,15 @@ const preflight = {
     not_a_reviewer: "العضو المختار ليس مراجعاً مؤهلاً.",
   },
   en: {
-    note_required_unanswered: "{n} findings have no answer: add an explanation for the reviewer before submitting.",
+    note_required_unanswered:
+      "{n} findings have no answer: add an explanation for the reviewer before submitting.",
     confirmed_violations: "{n} violations confirmed by the reviewer are not verified as corrected.",
-    missing_reviewer_responses: "{n} findings have no reviewer assessment yet (required for approval only).",
+    missing_reviewer_responses:
+      "{n} findings have no reviewer assessment yet (required for approval only).",
     conditions_incomplete: "Answer every condition before submitting them for verification.",
     conditions_unverified: "Not every condition has been verified yet.",
-    new_version_requires_review: "A new version was uploaded; it needs a full review instead of final approval.",
+    new_version_requires_review:
+      "A new version was uploaded; it needs a full review instead of final approval.",
     invalid_link: "Evidence links must start with https://",
     invalid_path: "Invalid file path.",
     note_required: "A note is required.",

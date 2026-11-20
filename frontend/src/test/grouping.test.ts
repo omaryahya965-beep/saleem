@@ -26,16 +26,44 @@ const f = (
   evidence_text,
   t_start,
   status,
-  explanation_ar: rule_code === "COM-01" ? "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي." : null,
+  explanation_ar:
+    rule_code === "COM-01" ? "ادعاء صحي مطلق أو مضمون النتيجة في محتوى ترويجي." : null,
 });
 
 export const NADA_V1: GroupableFinding[] = [
-  f("1", "COM-01", "violation", "transcript", "كريم ندى التجريبي يزيل التصبغات تماما خلال ثلاثة أيام فقط والنتيجة مضمونة لكل أنواع البشرة", 0),
-  f("2", "COM-01", "violation", "caption", "ودّعي التصبغات مع كريم ندى! بشرة صافية خلال 3 أيام فقط، ونتائج مضمونة لجميع أنواع البشرة"),
+  f(
+    "1",
+    "COM-01",
+    "violation",
+    "transcript",
+    "كريم ندى التجريبي يزيل التصبغات تماما خلال ثلاثة أيام فقط والنتيجة مضمونة لكل أنواع البشرة",
+    0,
+  ),
+  f(
+    "2",
+    "COM-01",
+    "violation",
+    "caption",
+    "ودّعي التصبغات مع كريم ندى! بشرة صافية خلال 3 أيام فقط، ونتائج مضمونة لجميع أنواع البشرة",
+  ),
   f("3", "COM-01", "violation", "frame", "النتيجة مضمونة خلال ٣ أيام", 11),
-  f("4", "COM-01", "violation", "transcript", "والنتيجة مضمونة لكل أنواع البشرة بلا أي آثار جانبية", 5.461),
+  f(
+    "4",
+    "COM-01",
+    "violation",
+    "transcript",
+    "والنتيجة مضمونة لكل أنواع البشرة بلا أي آثار جانبية",
+    5.461,
+  ),
   f("5", "COM-01", "violation", "frame", "النتيجة مضمونة خلال ٣ أيام", 15),
-  f("6", "MAW-01", "violation", "metadata", "تم تحديد «إعلان مدفوع»، ولا توجد كلمة «إعلان» في الوصف أو أول 5 ثوانٍ", 0),
+  f(
+    "6",
+    "MAW-01",
+    "violation",
+    "metadata",
+    "تم تحديد «إعلان مدفوع»، ولا توجد كلمة «إعلان» في الوصف أو أول 5 ثوانٍ",
+    0,
+  ),
   f("7", "MAW-03", "warning", "metadata", "لا يوجد عقد مكتوب مع العلامة"),
   f("8", "MAW-04", "warning", "metadata", "لم يُدخل رقم رخصة موثوق"),
   f("9", "AI-01", "warning", "metadata", "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"),
@@ -53,7 +81,9 @@ describe("finding grouping", () => {
     expect(fast.time).toBe(0);
     expect(groups).toHaveLength(6);
     // Every raw finding is in exactly one group.
-    expect(groups.flatMap((g) => g.members.map((m) => m.id)).sort()).toEqual(NADA_V1.map((x) => x.id).sort());
+    expect(groups.flatMap((g) => g.members.map((m) => m.id)).sort()).toEqual(
+      NADA_V1.map((x) => x.id).sort(),
+    );
   });
 
   it("orders violations first, then by time", () => {
