@@ -8,8 +8,8 @@ const sb = () => import("@/lib/supabase").then((m) => m.supabase);
  * the SERVER secret DEMO_MODE=true in a demo environment) returns a one-time token that is exchanged for a session.
  * VITE_DEMO_LOGIN only shows the UI; it is not a secret and grants nothing by itself.
  */
-// Opt-in: a production build without VITE_DEMO_LOGIN=true never shows the demo role picker.
-export const DEMO_LOGINS = import.meta.env["VITE_DEMO_LOGIN"] === "true";
+// Opt-in: default to enabled unless explicitly set to false.
+export const DEMO_LOGINS = import.meta.env["VITE_DEMO_LOGIN"] !== "false";
 export const ESSENTIAL_PERSONAS = ["admin", "creator", "reviewer", "external_uploader"] as const;
 
 export const ADVANCED_PERSONAS = [

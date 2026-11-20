@@ -18,6 +18,7 @@ import { useI18n, type TKey } from "@/i18n";
 import {
   ADVANCED_PERSONAS,
   DEMO_EMAILS,
+  DEMO_PERSONAS,
   ESSENTIAL_PERSONAS,
   signInAsPersona,
   type DemoPersona,
@@ -122,14 +123,63 @@ export function DemoRolePicker({ onSignedIn }: { onSignedIn: () => void }) {
     <section
       aria-labelledby="demo-roles"
       data-testid="demo-roles"
-      className="flex flex-col gap-2 border-t border-border pt-4"
+      className="flex flex-col gap-2.5 border-t border-border pt-4"
     >
-      <h2 id="demo-roles" className="text-sm font-bold">
-        {t("auth.demo.title")}
-      </h2>
-      <p className="text-xs text-fg-muted">{t("auth.demo.hint")}</p>
-      <Button variant="secondary" onClick={() => setOpen(true)} data-testid="demo-open">
-        {t("auth.demo.explore")}
+      <div>
+        <h2 id="demo-roles" className="text-sm font-bold text-fg">
+          {t("auth.demo.title")}
+        </h2>
+        <p className="text-xs text-fg-muted mt-0.5">{t("auth.demo.hint")}</p>
+      </div>
+
+      {error && !open && (
+        <p role="alert" className="rounded-md bg-red-bg px-3 py-2 text-xs text-red">
+          {error}
+        </p>
+      )}
+
+      <ul className="flex flex-col gap-2">
+        {ESSENTIAL_PERSONAS.map((p) => (
+          <li key={p}>
+            <button
+              type="button"
+              onClick={() => void enter(p)}
+              disabled={busy !== null}
+              data-testid={`demo-quick-${p}`}
+              className="flex min-h-12 w-full items-center gap-3 rounded-lg border border-border bg-sunken/60 px-3 py-2 text-start transition-all hover:border-green hover:bg-sunken disabled:opacity-60 cursor-pointer"
+            >
+              {busy === p ? (
+                <Spinner className="size-4 shrink-0 text-green" />
+              ) : (
+                <span className="shrink-0">{ICONS[p]}</span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-semibold text-fg">
+                  {t(`org.roles.${p}` as TKey)}
+                </span>
+                <span
+                  dir="ltr"
+                  className="block truncate font-mono text-[11px] text-fg-muted rtl:text-end"
+                >
+                  {DEMO_EMAILS[p]}
+                </span>
+              </span>
+              <span className="text-[11px] font-medium text-green hover:underline">
+                {t("auth.demo.enter")}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setOpen(true)}
+        data-testid="demo-open"
+        className="w-full mt-1 text-xs"
+      >
+        {t("auth.demo.explore")} ({DEMO_PERSONAS.length} أدوار)
       </Button>
 
       <Dialog

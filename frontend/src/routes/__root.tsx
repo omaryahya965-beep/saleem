@@ -7,13 +7,28 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { Compass } from "lucide-react";
-import { I18nProvider, useI18n } from "@/i18n";
+import { useContext } from "react";
+import { I18nProvider, useI18n, translate, type I18n } from "@/i18n";
 import { AuthProvider } from "@/lib/api/auth";
 import { reportError } from "@/lib/telemetry";
 import { Button, EmptyState, ErrorState, Toaster } from "@/components/ui";
 
+/**
+ * Safe i18n hook: returns the real context when inside <I18nProvider>,
+ * otherwise returns a minimal fallback so root-level error/404 components
+ * never crash with "useI18n must be used inside <I18nProvider>".
+ */
+function useSafeI18n(): Pick<I18n, "t"> {
+  // Access the context directly — useI18n() throws when ctx is null.
+  try {
+    return useI18n();
+  } catch {
+    return { t: (key, params) => translate("ar", key, params) };
+  }
+}
+
 function NotFoundComponent() {
-  const { t } = useI18n();
+  const { t } = useSafeI18n();
   return (
     <div className="mx-auto flex min-h-[70dvh] max-w-xl items-center px-4">
       <EmptyState
@@ -32,7 +47,7 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
-  const { t } = useI18n();
+  const { t } = useSafeI18n();
   const router = useRouter();
   reportError(error, { source: "route" });
   return (
