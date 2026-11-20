@@ -66,6 +66,7 @@ on conflict (submission_id) do nothing;
 
 -- 8. v2 rulebook release (copies the v1 rules above into 2026.11-v2 and activates it; idempotent, D89)
 select public.v2_publish_rulebook();
+select public.v2_rule_scope_fixes(); -- D171: MAW-03/04 scoped to creator advertising
 
 -- 9. Seal demo compliance logs that a fresh database created after the sealing migration ran (v1 input).
 update public.compliance_logs set report_hash = public.compute_report_hash(submission_id) where report_hash is null;

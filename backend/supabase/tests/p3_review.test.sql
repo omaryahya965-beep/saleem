@@ -46,8 +46,8 @@ values ('64000000-0000-0000-0000-000000000001', '54000000-0000-0000-0000-0000000
 set local role authenticated;
 select pg_temp.as_user('14000000-0000-0000-0000-000000000005');
 do $$ begin
-  if (public.can_submit('44000000-0000-0000-0000-000000000001')->>'ok')::boolean then raise exception 'submit allowed without uploader responses'; end if;
-  perform pg_temp.expect_error($q$select public.submit_promotion('44000000-0000-0000-0000-000000000001')$q$, 'code:missing_uploader_responses');
+  if (public.can_submit('44000000-0000-0000-0000-000000000001')->>'ok')::boolean then raise exception 'submit allowed without an explanation'; end if;
+  perform pg_temp.expect_error($q$select public.submit_promotion('44000000-0000-0000-0000-000000000001')$q$, 'code:note_required_unanswered'); -- D172: explanation instead of a hard block
   perform pg_temp.expect_error($q$select public.respond_finding('64000000-0000-0000-0000-000000000001', 'dispute')$q$, 'code:comment_required');
   perform pg_temp.expect_error($q$select public.respond_finding('64000000-0000-0000-0000-000000000001', 'dismiss', 'x')$q$, 'code:forbidden');
   perform public.respond_finding('64000000-0000-0000-0000-000000000001', 'agree_will_action');

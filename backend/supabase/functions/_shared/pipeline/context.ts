@@ -8,6 +8,8 @@ export interface PromotionRow {
   id: string;
   org_id: string | null;
   communication_type: AnalysisContext["communicationType"];
+  /** The advertisement's own sector (D170); falls back to its product, then the organisation. */
+  sector?: string | null;
   channels: string[];
   distribution: string | null;
   creator_license_no: string | null;
@@ -45,7 +47,8 @@ export function buildContext(input: {
 }): AnalysisContext {
   const { submission: s, promotion: p, product } = input;
   const orgId = p?.org_id ?? s.org_id ?? null;
-  const sector = input.orgSettings?.sector ?? null;
+  // D170: the ad's own sector wins over the organisation's (a bank may advertise a non-financial product).
+  const sector = p?.sector ?? input.orgSettings?.sector ?? null;
   return {
     submissionId: s.id,
     promotionId: p?.id ?? s.promotion_id ?? null,

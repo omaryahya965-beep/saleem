@@ -84,7 +84,7 @@ begin
   _pid := public.partner_create_promotion((select v from tok), 'حملة البطاقة', '58000000-0000-0000-0000-000000000001', '{instagram}', 'financial_promotion');
   if not public.can_read_promotion(_pid) then raise exception 'partner cannot read own promotion'; end if;
   perform pg_temp.expect_error(format('select public.partner_create_promotion(%L, %L, %L, %L, %L)', (select v from tok), 'y',
-    '58000000-0000-0000-0000-000000000001', '{instagram}', 'financial_promotion'), 'code:one_at_a_time');
+    '58000000-0000-0000-0000-000000000001', '{instagram}', 'financial_promotion'), 'code:access_pending'); -- D174: the limit is now configurable (p9_upgrade); a pending partner still gets one draft
   -- Isolation: nothing else of the org is readable.
   if exists (select 1 from public.promotions where id = '48000000-0000-0000-0000-0000000000ff') then raise exception 'reads internal promotion'; end if;
   if exists (select 1 from public.products where org_id = '28000000-0000-0000-0000-000000000001') then raise exception 'reads products'; end if;

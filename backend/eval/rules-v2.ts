@@ -87,7 +87,8 @@ export function legacyRules(): RuleRow[] {
         source_status: source ? SOURCE_STATUS[source] ?? null : null, article_ref: null, title_ar: titleAr!, title_en: titleEn!,
         summary_ar: descAr, summary_en: descEn, check_kind: "hybrid", deterministic_check: null, finding_type_on_fail: null,
         default_severity: sev as RuleRow["default_severity"],
-        applicability: code!.startsWith("MAW-") ? { any_of: [{ communication_types: ["creator_sponsored", "general_commercial"] }, { distribution: ["influencer"] }] } : {},
+        // D171: MAW-03/04 (written agreement, Mawthooq licence) only for creator advertising; MAW-01/02 also for general commercial.
+        applicability: code!.startsWith("MAW-") ? { any_of: [{ communication_types: code === "MAW-03" || code === "MAW-04" ? ["creator_sponsored"] : ["creator_sponsored", "general_commercial"] }, { distribution: ["influencer"] }] } : {},
         content_triggers: [], llm_instructions: instr!, review_state: "active",
       };
     });
