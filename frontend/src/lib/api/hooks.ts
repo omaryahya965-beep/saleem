@@ -38,6 +38,7 @@ export function useSubmissionStatus(id: string) {
   return useQuery({
     queryKey: qk.submission(id),
     queryFn: () => fetchSubmission(id),
+    enabled: Boolean(id),
     refetchInterval: (q) => (q.state.data && TERMINAL.has(q.state.data.status) ? false : 1500),
   });
 }

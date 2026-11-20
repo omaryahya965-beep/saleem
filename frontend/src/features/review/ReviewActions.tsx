@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Gavel, Scale, Send, UserCheck } from "lucide-react";
 import { useState } from "react";
-import { Button, Checkbox, Dialog, Field, Input, Select, Textarea, toast } from "@/components/ui";
+import { Button, Checkbox, Dialog, Field, Select, Textarea, toast } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { usePreflightText } from "./model";
+import { DecisionDialog } from "./DecisionDialog";
 import { FlowPanel, SubmitFlowSection } from "@/features/enterprise/FlowPanel";
 import { RiskPanel } from "@/features/enterprise/RiskPanel";
 import { RereviewAction } from "@/features/enterprise/LifecyclePanel";
@@ -16,18 +17,14 @@ import {
   assignReviewer,
   canDecide,
   canSubmit,
-  decidePromotion,
   escalatePromotion,
   openReview,
   respondEscalation,
   rk,
   submitPromotion,
   useMembers,
-  useReasons,
-  type DecisionKind,
+  eligibleReviewers,
 } from "@/lib/api/review";
-
-const DECISIONS: DecisionKind[] = ["approve", "conditional_approve", "request_changes", "reject"];
 
 function Reasons({ reasons }: { reasons: string[] }) {
   const text = usePreflightText();
@@ -109,7 +106,8 @@ export function ReviewActions({
   const buttons: React.ReactNode[] = [];
   if (
     isUploaderSide &&
-    ["draft", "changes_requested", "rejected", "conditionally_approved"].includes(s)
+    ["draft", "changes_requested", "rejected", "conditionally_approved"].includes(s) &&
+    !(s === "conditionally_approved" && p.approved_version_id === p.current_version_id)
   )
     buttons.push(
       <Button key="submit" icon={<Send />} onClick={() => setDialog("submit")}>
@@ -207,7 +205,12 @@ export function ReviewActions({
         />
       )}
       {dialog === "decide" && (
-        <DecisionDialog promotion={p} onClose={() => setDialog(null)} onDone={refresh} />
+        <DecisionDialog
+          promotion={p}
+          version={current}
+          onClose={() => setDialog(null)}
+          onDone={refresh}
+        />
       )}
       {dialog === "escalate" && (
         <EscalateDialog promotion={p} onClose={() => setDialog(null)} onDone={refresh} />
@@ -246,8 +249,11 @@ function AssignSelect({
   onDone: () => void;
 }) {
   const { t } = useI18n();
-  const members = useMembers(p.org_id);
   const errText = usePreflightText();
+  const eligible = useQuery({
+    queryKey: ["eligible-reviewers", p.id, current?.id],
+    queryFn: () => eligibleReviewers(p.id),
+  });
   const assign = useMutation({
     mutationFn: (u: string) => assignReviewer(p.id, u),
     onSuccess: () => {
@@ -256,9 +262,7 @@ function AssignSelect({
     },
     onError: (e) => toast.error(errText(e)),
   });
-  const options = (members.data ?? []).filter(
-    (m) => ["owner", "admin", "reviewer"].includes(m.role) && m.user_id !== current?.user_id,
-  );
+  const options = eligible.data ?? [];
   return (
     <Field label={t("review.assignee")} className="max-w-xs">
       <Select
@@ -269,7 +273,14 @@ function AssignSelect({
         <option value="">{t("review.unassigned")}</option>
         {options.map((m) => (
           <option key={m.user_id} value={m.user_id}>
-            {m.display_name || m.email || m.user_id}
+            {[
+              m.display_name || m.email || m.user_id,
+              m.display_name && m.email ? m.email : null,
+              t(`org.roles.${m.role}` as TKey),
+              t("ws.assign.workload", { n: m.open_cases }),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </option>
         ))}
       </Select>
@@ -345,117 +356,22 @@ function SubmitDialog({
           />
         )}
         <SubmitFlowSection pid={p.id} carry={carry} setCarry={setCarry} />
+        {(pre.data?.unanswered ?? 0) > 0 && (
+          <p
+            role="status"
+            data-testid="unanswered-warning"
+            className="rounded-md border border-amber/30 bg-amber-bg px-3 py-2 text-sm"
+          >
+            {t(
+              pre.data?.explanationRequired
+                ? "ws.submit.unansweredRequired"
+                : "ws.submit.unansweredOptional",
+              { n: pre.data?.unanswered ?? 0 },
+            )}
+          </p>
+        )}
+        <p className="text-xs text-fg-muted">{t("ws.submit.notApproval")}</p>
         {pre.data && <Reasons reasons={pre.data.reasons} />}
-      </div>
-    </Dialog>
-  );
-}
-
-function DecisionDialog({
-  promotion: p,
-  onClose,
-  onDone,
-}: {
-  promotion: Promotion;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const { t, lang } = useI18n();
-  const reasons = useReasons(p.org_id);
-  const errText = usePreflightText();
-  const [decision, setDecision] = useState<DecisionKind>("approve");
-  const [picked, setPicked] = useState<string[]>([]);
-  const [other, setOther] = useState("");
-  const [condition, setCondition] = useState("");
-  const [comment, setComment] = useState("");
-  const needsReasons = decision === "reject" || decision === "request_changes";
-  const otherPicked = (reasons.data ?? []).some((r) => r.is_other && picked.includes(r.id));
-  const invalid =
-    (needsReasons && !picked.length && !other.trim()) ||
-    (otherPicked && !other.trim()) ||
-    (decision === "conditional_approve" && !condition.trim());
-  const decide = useMutation({
-    mutationFn: () =>
-      decidePromotion(p.id, {
-        decision,
-        reasonIds: needsReasons ? picked : [],
-        reasonOther: other,
-        condition,
-        comment,
-      }),
-    onSuccess: () => {
-      toast.success(t("review.decidedToast"));
-      onDone();
-      onClose();
-    },
-    onError: (e) => toast.error(errText(e)),
-  });
-  return (
-    <Dialog
-      open
-      onOpenChange={(o) => !o && onClose()}
-      title={t("review.decisionTitle")}
-      description={t("review.humanDecisionNote")}
-      className="sm:max-w-xl"
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button loading={decide.isPending} disabled={invalid} onClick={() => decide.mutate()}>
-            {t("review.confirmDecision")}
-          </Button>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4" data-testid="decision-dialog">
-        <Field label={t("review.decisionChoice")}>
-          <Select value={decision} onChange={(e) => setDecision(e.target.value as DecisionKind)}>
-            {DECISIONS.map((d) => (
-              <option key={d} value={d}>
-                {t(`review.decision.${d}` as TKey)}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        {needsReasons && (
-          <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-sm font-medium">{t("review.reasons")}</legend>
-            {(reasons.data ?? []).map((r) => (
-              <Checkbox
-                key={r.id}
-                label={lang === "en" ? r.label_en : r.label_ar}
-                checked={picked.includes(r.id)}
-                onChange={(e) =>
-                  setPicked((x) => (e.target.checked ? [...x, r.id] : x.filter((y) => y !== r.id)))
-                }
-              />
-            ))}
-          </fieldset>
-        )}
-        {(otherPicked || (needsReasons && !picked.length)) && (
-          <Field label={t("review.reasonOther")}>
-            <Input value={other} onChange={(e) => setOther(e.target.value)} dir="auto" />
-          </Field>
-        )}
-        {decision === "conditional_approve" && (
-          <Field label={t("review.condition")}>
-            <Textarea
-              rows={2}
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-              dir="auto"
-            />
-          </Field>
-        )}
-        <Field label={t("review.comment")} optional optionalLabel={t("common.optional")}>
-          <Textarea
-            rows={2}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            dir="auto"
-          />
-        </Field>
       </div>
     </Dialog>
   );

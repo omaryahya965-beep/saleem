@@ -39,7 +39,9 @@ import { ShareDialog } from "@/features/share/SharePages";
 import { cn } from "@/lib/utils";
 import { MediaPanel, TranscriptPanel } from "./MediaPanel";
 import { countBySeverity, diffFindings, sortIssues, toIssueViews } from "./model";
-import { CoverageBanner, RuleOutcomes } from "./RuleOutcomes";
+import { CoverageBanner, RuleOutcomes, coverageOf } from "./RuleOutcomes";
+import { FindingsWorkspace, type WorkspaceContext } from "@/features/review/FindingsWorkspace";
+import { groupFindings } from "./grouping";
 
 type Tone = "violation" | "warning" | "ready";
 
@@ -194,7 +196,103 @@ function ReadyComparison({ bundle }: { bundle: ReportBundle }) {
   );
 }
 
-export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?: number }) {
+/** Compact automated-result summary for the advertisement workspace (replaces the large banner there). */
+function ResultSummary({ bundle }: { bundle: ReportBundle }) {
+  const { t, formatDate } = useI18n();
+  const { submission: sub, findings, run } = bundle;
+  const groups = groupFindings(findings);
+  const violations = groups.filter((g) => g.severity === "violation").length;
+  const warnings = groups.length - violations;
+  const checks = bundle.ruleChecks;
+  const passed = checks.filter((c) => c.outcome === "passed").length;
+  const manual = checks.filter(
+    (c) =>
+      c.outcome === "unable_to_verify" ||
+      c.reason_code === "document_required" ||
+      c.reason_code === "reviewer_checklist",
+  ).length;
+  const coverage = coverageOf(bundle);
+  const status = sub.overall_status ?? "ready";
+  const tiles: { label: string; value: ReactNode; tone?: string }[] = [
+    {
+      label: t("ws.summary.violations"),
+      value: violations,
+      tone: violations ? "text-red" : undefined,
+    },
+    {
+      label: t("ws.summary.warnings"),
+      value: warnings,
+      tone: warnings ? "text-amber-text" : undefined,
+    },
+    { label: t("ws.summary.passed"), value: checks.length ? passed : "—" },
+    { label: t("ws.summary.manual"), value: checks.length ? manual : "—" },
+    {
+      label: t("ws.summary.coverage"),
+      value: coverage
+        ? t(
+            coverage.status === "partial"
+              ? "ws.summary.coveragePartial"
+              : "ws.summary.coverageComplete",
+          )
+        : "—",
+      tone: coverage?.status === "partial" ? "text-amber-text" : undefined,
+    },
+  ];
+  const model = [run?.llm_model, run?.asr_model].filter(Boolean).join(" · ");
+  return (
+    <section
+      aria-label={t("ws.summary.title")}
+      data-testid="result-summary"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:p-5"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          {t("ws.summary.title")}
+          <StatusChip
+            tone={status === "ready" ? "ready" : status === "review" ? "warning" : "violation"}
+            size="sm"
+          >
+            {t(`status.${status}`)}
+          </StatusChip>
+        </h2>
+        <p className="text-xs text-fg-muted">
+          {t("ws.summary.meta", {
+            date: formatDate(sub.analyzed_at ?? sub.created_at, true),
+            rulebook: bundle.rulebookVersion ?? "—",
+          })}
+          {model ? (
+            <>
+              {" · "}
+              <bdi dir="ltr">{model}</bdi>
+            </>
+          ) : null}
+        </p>
+      </div>
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {tiles.map((x) => (
+          <div key={x.label} className="rounded-md bg-sunken px-3 py-2">
+            <dt className="text-xs text-fg-muted">{x.label}</dt>
+            <dd className={cn("tabular text-xl font-bold", x.tone)}>{x.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-xs text-fg-muted">
+        {t("ws.summary.groupedNote", { groups: groups.length, raw: findings.length })}
+      </p>
+    </section>
+  );
+}
+
+export function ReportView({
+  bundle,
+  startAt,
+  workspace,
+}: {
+  bundle: ReportBundle;
+  startAt?: number;
+  /** Inside the advertisement page: compact summary, grouped findings with review actions, no page-level CTAs. */
+  workspace?: WorkspaceContext | null;
+}) {
   const { t, tn, lang, formatDate } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -384,33 +482,42 @@ export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?
   );
 
   return (
-    <Page className="flex flex-col gap-6 sm:gap-8">
+    <Page
+      wide={Boolean(workspace)}
+      className={cn("flex flex-col gap-6 sm:gap-8", workspace && "pt-4 sm:pt-6")}
+    >
       {sub.parent_id && (
         <Badge variant="outline" className="self-start">
           {t("report.recheckOf")}
           {bundle.parent?.title ? ` · ${bundle.parent.title}` : ""}
         </Badge>
       )}
-      <StatusBand
-        tone={tone}
-        title={`${t("report2.resultPrefix")} ${t(`status.${status}`)}`}
-        summary={summary}
-        facts={facts}
-        actions={
-          <>
+      {workspace ? (
+        <ResultSummary bundle={bundle} />
+      ) : (
+        <StatusBand
+          tone={tone}
+          title={`${t("report2.resultPrefix")} ${t(`status.${status}`)}`}
+          summary={summary}
+          facts={facts}
+          actions={
+            <>
+              {primary}
+              {secondary}
+              {more}
+            </>
+          }
+        />
+      )}
+
+      {!workspace && (
+        <MobileActionBar>
+          <div className="flex gap-2 [&>*]:flex-1">
             {primary}
             {secondary}
-            {more}
-          </>
-        }
-      />
-
-      <MobileActionBar>
-        <div className="flex gap-2 [&>*]:flex-1">
-          {primary}
-          {secondary}
-        </div>
-      </MobileActionBar>
+          </div>
+        </MobileActionBar>
+      )}
 
       {isOwner &&
         currentVersion &&
@@ -432,7 +539,7 @@ export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?
 
       <CoverageBanner bundle={bundle} />
 
-      {status === "ready" && <ReadyComparison bundle={bundle} />}
+      {status === "ready" && !workspace && <ReadyComparison bundle={bundle} />}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
         <div className="flex flex-col gap-4 lg:sticky lg:top-24">
@@ -459,7 +566,7 @@ export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?
           )}
         </div>
 
-        <section aria-labelledby="issues-heading" className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {noSpeech && (
             <p
               role="note"
@@ -469,40 +576,20 @@ export function ReportView({ bundle, startAt }: { bundle: ReportBundle; startAt?
               {t("report.noSpeechNote")}
             </p>
           )}
-          <h2 id="issues-heading" className="flex items-baseline gap-2 text-xl font-bold">
-            {t("report.issuesHeading")}
-            <span className="tabular text-base font-medium text-fg-muted">({issues.length})</span>
-          </h2>
-          {issues.length === 0 ? (
-            <Card className="flex items-center gap-3 text-fg">
-              <CircleCheck aria-hidden="true" className="size-6 text-green" />
-              {t("report.readyNoIssues")}
-            </Card>
-          ) : (
-            issues.map((issue: IssueView) => (
-              <div
-                key={issue.id}
-                ref={(el) =>
-                  void (el
-                    ? issueRefs.current.set(issue.id, el)
-                    : issueRefs.current.delete(issue.id))
-                }
-                className="scroll-mt-24"
-              >
-                <IssueCard
-                  issue={issue}
-                  selected={selectedId === issue.id}
-                  onSelect={() => selectIssue(issue.id, false)}
-                />
-              </div>
-            ))
-          )}
+          <FindingsWorkspace
+            findings={findings}
+            issues={issues}
+            ws={workspace ?? null}
+            selectedId={selectedId}
+            onSelect={(id) => selectIssue(id, false)}
+            submissionId={sub.id}
+          />
           {sub.kind === "video" && selectedId && (
             <p className="sr-only" aria-live="polite">
               {formatClock(issues.find((i) => i.id === selectedId)?.time)}
             </p>
           )}
-        </section>
+        </div>
       </div>
 
       <RuleOutcomes bundle={bundle} />

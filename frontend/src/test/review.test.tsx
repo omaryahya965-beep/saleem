@@ -120,7 +120,7 @@ describe("review actions (case 14 in the UI)", () => {
     rpc.mockImplementation((name: string) =>
       Promise.resolve(
         name === "can_decide"
-          ? { data: { ok: false, reasons: ["missing_reviewer_responses:1"] }, error: null }
+          ? { data: { ok: false, reasons: ["multi_level_flow"] }, error: null }
           : { data: null, error: null },
       ),
     );
@@ -131,7 +131,9 @@ describe("review actions (case 14 in the UI)", () => {
       isOwner: false,
     });
     await waitFor(() =>
-      expect(screen.getByTestId("preflight")).toHaveTextContent("1 ملاحظات بلا رد من المراجع."),
+      expect(screen.getByTestId("preflight")).toHaveTextContent(
+        ar.review.preflight.multi_level_flow,
+      ),
     );
     expect(screen.getByRole("button", { name: ar.review.decide })).toBeDisabled();
   });
@@ -154,8 +156,53 @@ describe("review actions (case 14 in the UI)", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: ar.review.decide }));
     const dialog = await screen.findByTestId("decision-dialog");
-    fireEvent.change(dialog.querySelector("select")!, { target: { value: "conditional_approve" } });
-    expect(screen.getByRole("button", { name: ar.review.confirmDecision })).toBeDisabled();
+    // D173: no default decision — confirm stays disabled until one is chosen.
+    expect(screen.getByRole("button", { name: ar.ws.decide.confirm })).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("radio", { name: new RegExp(ar.review.decision.conditional_approve) }),
+    );
+    // D175: an empty condition cannot be confirmed.
+    expect(screen.getByRole("button", { name: ar.ws.decide.confirm })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(ar.ws.decide.conditionDesc), {
+      target: { value: "إرفاق شهادة الإدراج" },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: ar.ws.decide.confirm })).toBeEnabled(),
+    );
+  });
+  it("approval is disabled while approval blockers remain, request changes is not (D173)", async () => {
+    rpc.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === "can_decide"
+          ? {
+              data: {
+                ok: true,
+                reasons: [],
+                approve_ok: false,
+                approve_blockers: ["confirmed_violations:2"],
+              },
+              error: null,
+            }
+          : { data: null, error: null },
+      ),
+    );
+    view(promo({ review_status: "in_review", assigned_reviewer_id: "rv" }), {
+      userId: "rv",
+      orgRole: "reviewer",
+      isOwner: false,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: ar.review.decide })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: ar.review.decide }));
+    await screen.findByTestId("decision-dialog");
+    // Options are ordered approve, conditional, request changes, reject.
+    await waitFor(() => expect(screen.getAllByRole("radio")[0]).toBeDisabled());
+    expect(screen.getAllByRole("radio")[1]).toBeDisabled();
+    expect(
+      screen.getByRole("radio", { name: new RegExp(ar.review.decision.request_changes) }),
+    ).toBeEnabled();
+    expect(screen.getByText(ar.ws.decide.blockers)).toBeInTheDocument();
   });
   it("an unassigned reviewer gets no open, decide or assign control (D169)", () => {
     for (const review_status of ["pending_review", "in_review"] as const) {

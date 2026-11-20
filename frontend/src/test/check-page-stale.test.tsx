@@ -1,6 +1,7 @@
 // Regression (live Gemini run, 2026-11-19): a report bundle fetched while the pipeline was still running has no
 // findings. When the status flips to done, CheckPage must not render it (it read as a clean "no automated
 // findings" report) — it shows the skeleton until the refetched bundle arrives.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -26,9 +27,12 @@ import { I18nProvider } from "@/i18n";
 
 const page = () =>
   render(
-    <I18nProvider initialLang="ar">
-      <CheckPage id="s1" />
-    </I18nProvider>,
+    // CheckPage refreshes the advertisement header when the pipeline finishes (§6), so it needs a client.
+    <QueryClientProvider client={new QueryClient()}>
+      <I18nProvider initialLang="ar">
+        <CheckPage id="s1" />
+      </I18nProvider>
+    </QueryClientProvider>,
   );
 
 describe("CheckPage after the pipeline finishes", () => {

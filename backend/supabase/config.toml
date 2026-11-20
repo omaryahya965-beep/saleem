@@ -446,6 +446,10 @@ verify_jwt = false
 [functions.ask]
 verify_jwt = true
 
+# fix: SALEEM Fix (D178); the caller's JWT is required and checked against the job owner.
+[functions.fix]
+verify_jwt = true
+
 [functions.demo-login]
 # Public by design (signed-out visitors start a demo); refuses unless DEMO_MODE=true is a server secret.
 verify_jwt = false

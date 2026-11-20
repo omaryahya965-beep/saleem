@@ -13,16 +13,49 @@ export type FindingResponse = Tables["finding_responses"]["Row"];
 export type RejectionReason = Tables["rejection_reasons"]["Row"];
 export type DecisionKind = "approve" | "conditional_approve" | "request_changes" | "reject";
 export type ResponseAction =
-  "agree_will_action" | "dispute" | "reply" | "agree_please_action" | "not_required" | "dismiss";
+  | "agree_will_action"
+  | "correction_done"
+  | "dispute"
+  | "request_guidance"
+  | "provide_evidence"
+  | "reply"
+  | "agree_please_action"
+  | "not_required"
+  | "dismiss"
+  | "evidence_required"
+  | "correction_verified"
+  | "clarification_required";
 
-export const UPLOADER_ACTIONS: ResponseAction[] = ["agree_will_action", "dispute", "reply"];
+/** Marketer / partner answers (D172). */
+export const UPLOADER_ACTIONS: ResponseAction[] = [
+  "agree_will_action",
+  "correction_done",
+  "dispute",
+  "request_guidance",
+  "provide_evidence",
+];
+/** Reviewer assessments (D172). */
 export const REVIEWER_ACTIONS: ResponseAction[] = [
   "agree_please_action",
   "not_required",
   "dismiss",
-  "reply",
+  "evidence_required",
+  "correction_verified",
+  "clarification_required",
 ];
-export const COMMENT_REQUIRED = new Set<ResponseAction>(["dispute", "not_required", "dismiss"]);
+/** Mirrors respond_finding: these need an explanation. */
+export const COMMENT_REQUIRED = new Set<ResponseAction>([
+  "dispute",
+  "request_guidance",
+  "provide_evidence",
+  "not_required",
+  "dismiss",
+  "evidence_required",
+  "clarification_required",
+  "reply",
+]);
+/** Finding statuses that count as "assessed by the reviewer" or "answered by the uploader". */
+export const RESOLVED_STATUSES = new Set(["resolved", "verified", "not_required", "dismissed"]);
 
 function check<T>(res: {
   data: T;
@@ -43,10 +76,30 @@ export function preflightKey(reasonOrError: unknown): { key: string; n?: number 
 export interface Preflight {
   ok: boolean;
   reasons: string[];
+  /** can_decide: approval / conditional approval may still be blocked (D173). */
+  approveOk?: boolean;
+  approveBlockers?: string[];
+  /** can_submit: findings without an uploader answer, and whether an explanation is then required (D172). */
+  unanswered?: number;
+  explanationRequired?: boolean;
 }
 const asPreflight = (j: Json): Preflight => {
-  const o = (j ?? {}) as { ok?: boolean; reasons?: string[] };
-  return { ok: Boolean(o.ok), reasons: o.reasons ?? [] };
+  const o = (j ?? {}) as {
+    ok?: boolean;
+    reasons?: string[];
+    approve_ok?: boolean;
+    approve_blockers?: string[];
+    unanswered?: number;
+    explanation_required?: boolean;
+  };
+  return {
+    ok: Boolean(o.ok),
+    reasons: o.reasons ?? [],
+    approveOk: o.approve_ok,
+    approveBlockers: o.approve_blockers ?? [],
+    unanswered: o.unanswered ?? 0,
+    explanationRequired: o.explanation_required,
+  };
 };
 
 /** Emails the in-app notifications a review action created (fire and forget; failures are logged server-side). */
@@ -88,6 +141,7 @@ export const decidePromotion = (
     reasonOther: string;
     condition: string;
     comment: string;
+    conditions?: ConditionInput[];
   },
 ) =>
   act(
@@ -99,8 +153,73 @@ export const decidePromotion = (
       _reason_other: d.reasonOther || null,
       _condition: d.condition || null,
       _comment: d.comment || null,
+      _conditions: (d.conditions ?? []).map((c) => ({
+        description: c.description.trim(),
+        required_action: c.requiredAction?.trim() || null,
+        evidence_required: Boolean(c.evidenceRequired),
+        responsible_user_id: c.responsibleUserId || null,
+        due_on: c.dueOn || null,
+      })) as unknown as Json,
     }),
   );
+
+// ---- Structured conditional approval (D175) ----
+export interface ConditionInput {
+  description: string;
+  requiredAction?: string;
+  evidenceRequired?: boolean;
+  responsibleUserId?: string | null;
+  dueOn?: string | null;
+}
+export type ApprovalCondition = Tables["approval_conditions"]["Row"];
+export type ConditionStatus = "open" | "submitted" | "verified" | "more_evidence" | "rejected";
+export async function fetchConditions(pid: string): Promise<ApprovalCondition[]> {
+  return check(
+    await supabase
+      .from("approval_conditions")
+      .select("*")
+      .eq("promotion_id", pid)
+      .order("created_at")
+      .order("position"),
+  ) as ApprovalCondition[];
+}
+export const saveConditionResponse = async (
+  id: string,
+  note: string,
+  links: string[],
+  paths: string[] = [],
+) =>
+  check(
+    await supabase.rpc("save_condition_response", {
+      _id: id,
+      _note: note,
+      _links: links,
+      _paths: paths,
+    }),
+  );
+export const submitConditions = (pid: string) =>
+  act(pid, supabase.rpc("submit_conditions", { _pid: pid }));
+export const verifyCondition = async (
+  id: string,
+  verdict: Exclude<ConditionStatus, "open" | "submitted">,
+  note: string,
+) =>
+  check(
+    await supabase.rpc("verify_condition", { _id: id, _verdict: verdict, _note: note || null }),
+  );
+export const finalizeConditional = (pid: string, comment: string) =>
+  act(pid, supabase.rpc("finalize_conditional_approval", { _pid: pid, _comment: comment || null }));
+
+export interface EligibleReviewer {
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  role: string;
+  open_cases: number;
+}
+/** Owner / admin / compliance lead only (server-enforced); never the uploader. */
+export const eligibleReviewers = async (pid: string) =>
+  check(await supabase.rpc("eligible_reviewers", { _pid: pid })) as unknown as EligibleReviewer[];
 export const escalatePromotion = (pid: string, legalUser: string, question: string) =>
   act(
     pid,
@@ -283,6 +402,8 @@ export const rk = {
   queue: ["review-queue"] as const,
   reasons: (orgId: string | null) => ["rejection-reasons", orgId] as const,
   members: (orgId: string) => ["org-members", orgId] as const,
+  conditions: (pid: string) => ["approval-conditions", pid] as const,
+  eligible: (pid: string) => ["eligible-reviewers", pid] as const,
 };
 export const useResponses = (sid: string | null | undefined) =>
   useQuery({

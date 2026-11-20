@@ -194,6 +194,10 @@ export interface PromotionBundle {
   promotion: Promotion;
   versions: VersionSummary[];
   product: Product | null;
+  /** Null when absent or not readable by the caller (RLS). */
+  campaign?: { id: string; name: string; brand: string | null } | null;
+  /** Display names of the organisation members the caller may read (creator, reviewer…). */
+  people?: Record<string, { name: string; role: string }>;
 }
 
 export async function getPromotion(id: string): Promise<PromotionBundle> {
@@ -207,7 +211,32 @@ export async function getPromotion(id: string): Promise<PromotionBundle> {
         await supabase.from("products").select("*").eq("id", p.product_id).maybeSingle(),
       ) as Product | null)
     : null;
-  return { promotion: p, versions: check(versions) as VersionSummary[], product: product ?? null };
+  const [campaign, members] = await Promise.all([
+    p.campaign_id
+      ? supabase.from("campaigns").select("id, name, brand").eq("id", p.campaign_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    p.org_id
+      ? supabase
+          .from("org_members")
+          .select("user_id, display_name, email, role")
+          .eq("org_id", p.org_id)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  const people: Record<string, { name: string; role: string }> = {};
+  for (const m of (members.data ?? []) as {
+    user_id: string;
+    display_name: string | null;
+    email: string | null;
+    role: string;
+  }[])
+    people[m.user_id] = { name: m.display_name || m.email || "—", role: m.role };
+  return {
+    promotion: p,
+    versions: check(versions) as VersionSummary[],
+    product: product ?? null,
+    campaign: (campaign.data as PromotionBundle["campaign"]) ?? null,
+    people,
+  };
 }
 
 /** Where `/checks/$id` should land: the version's promotion and number (null for unknown rows). */

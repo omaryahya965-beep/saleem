@@ -223,6 +223,34 @@ export type Database = {
         };
         Relationships: [];
       };
+      approval_conditions: {
+        Row: {
+          id: string;
+          promotion_id: string;
+          decision_id: string;
+          submission_id: string;
+          position: number;
+          description: string;
+          required_action: string | null;
+          evidence_required: boolean;
+          responsible_user_id: string | null;
+          due_on: string | null;
+          status: string;
+          fulfillment_note: string | null;
+          evidence_links: string[];
+          evidence_paths: string[];
+          fulfilled_by: string | null;
+          fulfilled_at: string | null;
+          verified_by: string | null;
+          verified_at: string | null;
+          verifier_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       approval_presets: {
         Row: {
           active: boolean;
@@ -1291,6 +1319,13 @@ export type Database = {
       };
       partner_links: {
         Row: {
+          campaign_id: string | null;
+          instructions_ar: string | null;
+          expires_at: string | null;
+          max_active_submissions: number;
+          allowed_partner_ids: string[];
+          allowed_communication_types: string[];
+          rotated_at: string | null;
           active: boolean;
           allowed_channels: string[];
           allowed_product_ids: string[];
@@ -1304,6 +1339,13 @@ export type Database = {
           token_hash: string;
         };
         Insert: {
+          campaign_id?: string | null;
+          instructions_ar?: string | null;
+          expires_at?: string | null;
+          max_active_submissions?: number;
+          allowed_partner_ids?: string[];
+          allowed_communication_types?: string[];
+          rotated_at?: string | null;
           active?: boolean;
           allowed_channels?: string[];
           allowed_product_ids?: string[];
@@ -1317,6 +1359,13 @@ export type Database = {
           token_hash: string;
         };
         Update: {
+          campaign_id?: string | null;
+          instructions_ar?: string | null;
+          expires_at?: string | null;
+          max_active_submissions?: number;
+          allowed_partner_ids?: string[];
+          allowed_communication_types?: string[];
+          rotated_at?: string | null;
           active?: boolean;
           allowed_channels?: string[];
           allowed_product_ids?: string[];
@@ -1578,6 +1627,7 @@ export type Database = {
       };
       promotions: {
         Row: {
+          partner_link_id: string | null;
           approved_at: string | null;
           approved_version_id: string | null;
           assigned_reviewer_id: string | null;
@@ -1621,6 +1671,7 @@ export type Database = {
           withdrawn_at: string | null;
         };
         Insert: {
+          partner_link_id?: string | null;
           approved_at?: string | null;
           approved_version_id?: string | null;
           assigned_reviewer_id?: string | null;
@@ -1664,6 +1715,7 @@ export type Database = {
           withdrawn_at?: string | null;
         };
         Update: {
+          partner_link_id?: string | null;
           approved_at?: string | null;
           approved_version_id?: string | null;
           assigned_reviewer_id?: string | null;
@@ -2852,10 +2904,47 @@ export type Database = {
           _reason_other?: string | null;
           _condition?: string | null;
           _comment?: string | null;
+          _conditions?: Json;
         };
         Returns: string;
       };
       assign_reviewer: { Args: { _pid: string; _user: string }; Returns: undefined };
+      approval_blockers: { Args: { _pid: string }; Returns: string[] };
+      eligible_reviewers: { Args: { _pid: string }; Returns: Json };
+      save_condition_response: {
+        Args: { _id: string; _note: string; _links?: string[]; _paths?: string[] };
+        Returns: undefined;
+      };
+      submit_conditions: { Args: { _pid: string }; Returns: number };
+      verify_condition: {
+        Args: { _id: string; _verdict: string; _note?: string | null };
+        Returns: undefined;
+      };
+      finalize_conditional_approval: {
+        Args: { _pid: string; _comment?: string | null };
+        Returns: string;
+      };
+      partner_link_info_by_id: { Args: { _id: string }; Returns: Json };
+      my_partner_links: { Args: Record<PropertyKey, never>; Returns: Json };
+      partner_create_promotion_v2: {
+        Args: {
+          _link: string | null;
+          _token: string | null;
+          _title: string;
+          _product: string | null;
+          _channels: string[];
+          _communication_type: Database["public"]["Enums"]["communication_type"];
+        };
+        Returns: string;
+      };
+      cancel_draft_promotion: {
+        Args: { _pid: string; _reason?: string | null };
+        Returns: undefined;
+      };
+      create_partner_link_v2: { Args: { _org: string; _payload: Json }; Returns: Json };
+      update_partner_link: { Args: { _id: string; _payload: Json }; Returns: undefined };
+      rotate_partner_link: { Args: { _id: string }; Returns: string };
+      partner_link_stats: { Args: { _org: string }; Returns: Json };
       open_review: { Args: { _pid: string }; Returns: undefined };
       submit_promotion: {
         Args: { _pid: string; _note?: string | null; _ack_failed?: boolean };

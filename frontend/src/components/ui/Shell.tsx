@@ -225,16 +225,19 @@ export function Page({
   children,
   className,
   narrow,
+  wide,
 }: {
   children: ReactNode;
   className?: string;
   narrow?: boolean;
+  /** Workspaces (advertisement review, queue): use the screen up to 1600px. */
+  wide?: boolean;
 }) {
   return (
     <div
       className={cn(
         "mx-auto w-full px-4 py-6 sm:px-8 sm:py-10",
-        narrow ? "max-w-[880px]" : "max-w-[1200px]",
+        narrow ? "max-w-[880px]" : wide ? "max-w-[1600px]" : "max-w-[1200px]",
         className,
       )}
     >

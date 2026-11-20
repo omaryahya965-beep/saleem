@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { FileQuestion } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { WorkspaceContext } from "@/features/review/FindingsWorkspace";
 import { Button, Card, EmptyState, ErrorState, Page, Skeleton } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { ApiError } from "@/lib/api/data";
@@ -48,10 +50,31 @@ export function NotFoundReport() {
 }
 
 /** /checks/$id — shows live processing until the pipeline is done, then the report. */
-export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
+export function CheckPage({
+  id,
+  startAt,
+  workspace,
+}: {
+  id: string;
+  startAt?: number;
+  workspace?: WorkspaceContext | null;
+}) {
   const { t } = useI18n();
+  const qc = useQueryClient();
   const status = useSubmissionStatus(id);
   const done = status.data?.status === "done";
+  // §6: when the pipeline reaches a terminal state, refresh every view that shows this version's state
+  // (advertisement header, lists) once — never a new analysis request.
+  const lastStatus = useRef(status.data?.status);
+  useEffect(() => {
+    const s = status.data?.status;
+    if (s && lastStatus.current && s !== lastStatus.current && (s === "done" || s === "failed")) {
+      void qc.invalidateQueries({ queryKey: ["promotion"] });
+      void qc.invalidateQueries({ queryKey: ["promotions"] });
+      void qc.invalidateQueries({ queryKey: ["submissions"] });
+    }
+    lastStatus.current = s;
+  }, [status.data?.status, qc]);
   // Start the report alongside the status poll (most opened checks are already done);
   // refetch once if it was loaded before the pipeline finished.
   const report = useReport(id, done || status.isPending);
@@ -88,5 +111,5 @@ export function CheckPage({ id, startAt }: { id: string; startAt?: number }) {
   // Never render a bundle loaded before the pipeline finished: it has no findings yet and would read
   // as a clean "no automated findings" report until the refetch lands (seen in a live Gemini run).
   if (report.isPending || staleReport) return <ReportSkeleton />;
-  return <ReportView bundle={report.data} startAt={startAt} />;
+  return <ReportView bundle={report.data} startAt={startAt} workspace={workspace} />;
 }

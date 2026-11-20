@@ -48,6 +48,7 @@ import { Route as AppShareTokenRouteImport } from './routes/_app/share/$token'
 import { Route as AppVerifyIdRouteImport } from './routes/_app/verify/$id'
 import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
 import { Route as AppOrgIdIndexRouteImport } from './routes/_app/org/$id.index'
+import { Route as AppPromotionsIdFixRouteImport } from './routes/_app/promotions/$id_.fix'
 import { Route as AppOrgIdCampaignsCidRouteImport } from './routes/_app/org/$id.campaigns.$cid'
 
 const AppRoute = AppRouteImport.update({
@@ -244,6 +245,11 @@ const AppOrgIdIndexRoute = AppOrgIdIndexRouteImport.update({
   path: '/org/$id/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPromotionsIdFixRoute = AppPromotionsIdFixRouteImport.update({
+  id: '/promotions/$id_/fix',
+  path: '/promotions/$id/fix',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrgIdCampaignsCidRoute = AppOrgIdCampaignsCidRouteImport.update({
   id: '/org/$id/campaigns/$cid',
   path: '/org/$id/campaigns/$cid',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/org/': typeof AppOrgIndexRoute
   '/promotions/': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/promotions/$id/fix': typeof AppPromotionsIdFixRoute
   '/org/$id/': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/org': typeof AppOrgIndexRoute
   '/promotions': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/promotions/$id/fix': typeof AppPromotionsIdFixRoute
   '/org/$id': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/_app/org/': typeof AppOrgIndexRoute
   '/_app/promotions/': typeof AppPromotionsIndexRoute
   '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
+  '/_app/promotions/$id_/fix': typeof AppPromotionsIdFixRoute
   '/_app/org/$id/': typeof AppOrgIdIndexRoute
   '/_app/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
 }
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/org/'
     | '/promotions/'
     | '/checks/$id/log'
+    | '/promotions/$id/fix'
     | '/org/$id/'
     | '/org/$id/campaigns/$cid'
   fileRoutesByTo: FileRoutesByTo
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/org'
     | '/promotions'
     | '/checks/$id/log'
+    | '/promotions/$id/fix'
     | '/org/$id'
     | '/org/$id/campaigns/$cid'
   id:
@@ -498,6 +509,7 @@ export interface FileRouteTypes {
     | '/_app/org/'
     | '/_app/promotions/'
     | '/_app/checks_/$id/log'
+    | '/_app/promotions/$id_/fix'
     | '/_app/org/$id/'
     | '/_app/org/$id/campaigns/$cid'
   fileRoutesById: FileRoutesById
@@ -782,6 +794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/promotions/$id_/fix': {
+      id: '/_app/promotions/$id_/fix'
+      path: '/promotions/$id/fix'
+      fullPath: '/promotions/$id/fix'
+      preLoaderRoute: typeof AppPromotionsIdFixRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/org/$id/campaigns/$cid': {
       id: '/_app/org/$id/campaigns/$cid'
       path: '/org/$id/campaigns/$cid'
@@ -829,6 +848,7 @@ interface AppRouteChildren {
   AppOrgIndexRoute: typeof AppOrgIndexRoute
   AppPromotionsIndexRoute: typeof AppPromotionsIndexRoute
   AppChecksIdLogRoute: typeof AppChecksIdLogRoute
+  AppPromotionsIdFixRoute: typeof AppPromotionsIdFixRoute
   AppOrgIdIndexRoute: typeof AppOrgIdIndexRoute
   AppOrgIdCampaignsCidRoute: typeof AppOrgIdCampaignsCidRoute
 }
@@ -870,6 +890,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrgIndexRoute: AppOrgIndexRoute,
   AppPromotionsIndexRoute: AppPromotionsIndexRoute,
   AppChecksIdLogRoute: AppChecksIdLogRoute,
+  AppPromotionsIdFixRoute: AppPromotionsIdFixRoute,
   AppOrgIdIndexRoute: AppOrgIdIndexRoute,
   AppOrgIdCampaignsCidRoute: AppOrgIdCampaignsCidRoute,
 }

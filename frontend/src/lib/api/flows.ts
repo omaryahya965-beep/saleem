@@ -32,6 +32,7 @@ export const FEATURE_FLAGS = [
   "notifications_chat",
   "ask_saleem",
   "readability_hint",
+  "saleem_fix",
 ] as const;
 export type FeatureFlag = (typeof FEATURE_FLAGS)[number];
 

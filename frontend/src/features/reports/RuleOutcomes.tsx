@@ -24,7 +24,7 @@ function outcomeCounts(checks: CheckRow[]) {
   return m;
 }
 
-function coverageOf(bundle: ReportBundle): CoverageView | null {
+export function coverageOf(bundle: ReportBundle): CoverageView | null {
   const run = bundle.run;
   if (!run?.coverage || typeof run.coverage !== "object") return null;
   const cov = run.coverage as Partial<CoverageView>;
