@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Copy, Plus } from "lucide-react";
+import { Copy, Plus, RotateCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchOrg } from "@/lib/api/features";
 import { useState } from "react";
 import {
   Badge,
@@ -16,7 +18,10 @@ import { useI18n, type TKey } from "@/i18n";
 import { usePreflightText } from "@/features/review/model";
 import { flagOn } from "@/lib/api/flows";
 import {
-  createPartnerLink,
+  createPartnerLinkV2,
+  rotatePartnerLink,
+  useLinkStats,
+  type LinkInput,
   decidePartnerAccess,
   partnerUrl,
   prk,
@@ -24,7 +29,7 @@ import {
   usePartnerLinks,
   usePartnerMembers,
 } from "@/lib/api/partners";
-import { CHANNELS, useOrgSettings, useProducts } from "@/lib/api/promotions";
+import { CHANNELS, COMMUNICATION_TYPES, useOrgSettings, useProducts } from "@/lib/api/promotions";
 
 /** Owners/admins create partner links (the URL is shown once) and approve partner access (Phase 6.3). */
 export function PartnersCard({ orgId }: { orgId: string }) {
@@ -35,17 +40,22 @@ export function PartnersCard({ orgId }: { orgId: string }) {
   const members = usePartnerMembers(orgId);
   const products = useProducts(orgId);
   const errText = usePreflightText();
-  const [form, setForm] = useState<{
-    label: string;
-    products: string[];
-    channels: string[];
-    intro: string;
-    terms: string;
-  } | null>(null);
+  const [form, setForm] = useState<LinkInput | null>(null);
+  const stats = useLinkStats(orgId);
+  const org = useQuery({ queryKey: ["org", orgId], queryFn: () => fetchOrg(orgId) });
+  const rotate = useMutation({
+    mutationFn: (id: string) => rotatePartnerLink(id),
+    onSuccess: (token) => {
+      // The new URL is shown once; the old link stops working immediately.
+      setCreated(partnerUrl(token));
+      void qc.invalidateQueries({ queryKey: prk.links(orgId) });
+    },
+    onError: (e) => toast.error(errText(e)),
+  });
   const [created, setCreated] = useState<string | null>(null);
   const create = useMutation({
-    mutationFn: () => createPartnerLink(orgId, form!),
-    onSuccess: (token) => {
+    mutationFn: () => createPartnerLinkV2(orgId, form!),
+    onSuccess: ({ token }) => {
       setCreated(partnerUrl(token));
       setForm(null);
       void qc.invalidateQueries({ queryKey: prk.links(orgId) });
@@ -105,6 +115,21 @@ export function PartnersCard({ orgId }: { orgId: string }) {
                 ? l.allowed_channels.map((c) => t(`promo.channel.${c}` as TKey)).join("، ")
                 : t("partner.allChannels")}
             </span>
+            {l.expires_at && (
+              <Badge variant={new Date(l.expires_at) < new Date() ? "neutral" : "outline"}>
+                {new Date(l.expires_at) < new Date()
+                  ? t("partner2.expired")
+                  : t("partner2.expires", { date: new Date(l.expires_at).toLocaleDateString() })}
+              </Badge>
+            )}
+            <span className="text-xs text-fg-muted">
+              {t("partner2.usage", {
+                n: stats.data?.[l.id]?.submissions ?? 0,
+                a: stats.data?.[l.id]?.active ?? 0,
+                p: stats.data?.[l.id]?.partners ?? 0,
+                max: l.max_active_submissions,
+              })}
+            </span>
             <Button
               size="sm"
               variant="ghost"
@@ -112,6 +137,15 @@ export function PartnersCard({ orgId }: { orgId: string }) {
               onClick={() => toggle.mutate({ id: l.id, on: !l.active })}
             >
               {l.active ? t("partner.deactivate") : t("partner.activate")}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<RotateCw />}
+              loading={rotate.isPending}
+              onClick={() => rotate.mutate(l.id)}
+            >
+              {t("partner2.rotate")}
             </Button>
           </li>
         ))}
@@ -122,7 +156,18 @@ export function PartnersCard({ orgId }: { orgId: string }) {
           icon={<Plus />}
           onClick={() => {
             setCreated(null);
-            setForm({ label: "", products: [], channels: [], intro: "", terms: "" });
+            setForm({
+              label: "",
+              products: [],
+              channels: [],
+              communicationTypes: [],
+              intro: "",
+              instructions: "",
+              terms: "",
+              campaignId: "",
+              expiresAt: "",
+              maxActive: 5,
+            });
           }}
         >
           {t("partner.newLink")}
@@ -162,6 +207,67 @@ export function PartnersCard({ orgId }: { orgId: string }) {
               />
             ))}
           </fieldset>
+          <fieldset className="flex flex-wrap gap-x-4">
+            <legend className="mb-1 text-sm font-medium">{t("partner2.allowedTypes")}</legend>
+            {COMMUNICATION_TYPES.filter((c) => c !== "internal").map((c) => (
+              <Checkbox
+                key={c}
+                label={t(`promo.commType.${c}` as TKey)}
+                checked={form.communicationTypes.includes(c)}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    communicationTypes: list(form.communicationTypes, c, e.target.checked),
+                  })
+                }
+              />
+            ))}
+          </fieldset>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label={t("partner2.campaign")} optional optionalLabel={t("common.optional")}>
+              <select
+                className="h-11 rounded-md border border-border bg-surface px-3"
+                value={form.campaignId}
+                onChange={(e) => setForm({ ...form, campaignId: e.target.value })}
+              >
+                <option value="">{t("common.none")}</option>
+                {(org.data?.campaigns ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("partner2.expiry")} optional optionalLabel={t("common.optional")}>
+              <Input
+                type="date"
+                value={form.expiresAt}
+                onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+              />
+            </Field>
+            <Field label={t("partner2.maxActive")} hint={t("partner2.maxActiveHint")}>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={form.maxActive}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    maxActive: Math.max(1, Math.min(100, Number(e.target.value) || 1)),
+                  })
+                }
+              />
+            </Field>
+          </div>
+          <Field label={t("partner2.instructions")} optional optionalLabel={t("common.optional")}>
+            <Textarea
+              rows={3}
+              value={form.instructions}
+              onChange={(e) => setForm({ ...form, instructions: e.target.value })}
+              dir="auto"
+            />
+          </Field>
           <Field label={t("partner.intro")} optional optionalLabel={t("common.optional")}>
             <Textarea
               rows={2}

@@ -48,6 +48,7 @@ import { Route as AppShareTokenRouteImport } from './routes/_app/share/$token'
 import { Route as AppVerifyIdRouteImport } from './routes/_app/verify/$id'
 import { Route as AppChecksIdLogRouteImport } from './routes/_app/checks_.$id.log'
 import { Route as AppOrgIdIndexRouteImport } from './routes/_app/org/$id.index'
+import { Route as AppPartnerLinkIdRouteImport } from './routes/_app/partner.link.$id'
 import { Route as AppPromotionsIdFixRouteImport } from './routes/_app/promotions/$id_.fix'
 import { Route as AppOrgIdCampaignsCidRouteImport } from './routes/_app/org/$id.campaigns.$cid'
 
@@ -245,6 +246,11 @@ const AppOrgIdIndexRoute = AppOrgIdIndexRouteImport.update({
   path: '/org/$id/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPartnerLinkIdRoute = AppPartnerLinkIdRouteImport.update({
+  id: '/partner/link/$id',
+  path: '/partner/link/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPromotionsIdFixRoute = AppPromotionsIdFixRouteImport.update({
   id: '/promotions/$id_/fix',
   path: '/promotions/$id/fix',
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/org/': typeof AppOrgIndexRoute
   '/promotions/': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/partner/link/$id': typeof AppPartnerLinkIdRoute
   '/promotions/$id/fix': typeof AppPromotionsIdFixRoute
   '/org/$id/': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByTo {
   '/org': typeof AppOrgIndexRoute
   '/promotions': typeof AppPromotionsIndexRoute
   '/checks/$id/log': typeof AppChecksIdLogRoute
+  '/partner/link/$id': typeof AppPartnerLinkIdRoute
   '/promotions/$id/fix': typeof AppPromotionsIdFixRoute
   '/org/$id': typeof AppOrgIdIndexRoute
   '/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/_app/org/': typeof AppOrgIndexRoute
   '/_app/promotions/': typeof AppPromotionsIndexRoute
   '/_app/checks_/$id/log': typeof AppChecksIdLogRoute
+  '/_app/partner/link/$id': typeof AppPartnerLinkIdRoute
   '/_app/promotions/$id_/fix': typeof AppPromotionsIdFixRoute
   '/_app/org/$id/': typeof AppOrgIdIndexRoute
   '/_app/org/$id/campaigns/$cid': typeof AppOrgIdCampaignsCidRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/org/'
     | '/promotions/'
     | '/checks/$id/log'
+    | '/partner/link/$id'
     | '/promotions/$id/fix'
     | '/org/$id/'
     | '/org/$id/campaigns/$cid'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/org'
     | '/promotions'
     | '/checks/$id/log'
+    | '/partner/link/$id'
     | '/promotions/$id/fix'
     | '/org/$id'
     | '/org/$id/campaigns/$cid'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/_app/org/'
     | '/_app/promotions/'
     | '/_app/checks_/$id/log'
+    | '/_app/partner/link/$id'
     | '/_app/promotions/$id_/fix'
     | '/_app/org/$id/'
     | '/_app/org/$id/campaigns/$cid'
@@ -794,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/partner/link/$id': {
+      id: '/_app/partner/link/$id'
+      path: '/partner/link/$id'
+      fullPath: '/partner/link/$id'
+      preLoaderRoute: typeof AppPartnerLinkIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/promotions/$id_/fix': {
       id: '/_app/promotions/$id_/fix'
       path: '/promotions/$id/fix'
@@ -848,6 +867,7 @@ interface AppRouteChildren {
   AppOrgIndexRoute: typeof AppOrgIndexRoute
   AppPromotionsIndexRoute: typeof AppPromotionsIndexRoute
   AppChecksIdLogRoute: typeof AppChecksIdLogRoute
+  AppPartnerLinkIdRoute: typeof AppPartnerLinkIdRoute
   AppPromotionsIdFixRoute: typeof AppPromotionsIdFixRoute
   AppOrgIdIndexRoute: typeof AppOrgIdIndexRoute
   AppOrgIdCampaignsCidRoute: typeof AppOrgIdCampaignsCidRoute
@@ -890,6 +910,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrgIndexRoute: AppOrgIndexRoute,
   AppPromotionsIndexRoute: AppPromotionsIndexRoute,
   AppChecksIdLogRoute: AppChecksIdLogRoute,
+  AppPartnerLinkIdRoute: AppPartnerLinkIdRoute,
   AppPromotionsIdFixRoute: AppPromotionsIdFixRoute,
   AppOrgIdIndexRoute: AppOrgIdIndexRoute,
   AppOrgIdCampaignsCidRoute: AppOrgIdCampaignsCidRoute,

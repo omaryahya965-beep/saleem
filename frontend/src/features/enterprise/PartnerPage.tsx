@@ -20,21 +20,27 @@ import { useI18n, type TKey } from "@/i18n";
 import { usePreflightText } from "@/features/review/model";
 import { useAuth } from "@/lib/api/auth";
 import {
-  createPartnerPromotion,
+  createPartnerPromotionRef,
+  cancelDraft,
+  usePartnerLink,
   joinPartner,
   prk,
   sendOtp,
   useMyPartnerPromotions,
-  usePartnerInfo,
   verifyOtp,
 } from "@/lib/api/partners";
-import { CHANNELS, COMMUNICATION_TYPES, type CommunicationType } from "@/lib/api/promotions";
+import {
+  CHANNELS,
+  COMMUNICATION_TYPES,
+  type CommunicationType,
+  FINANCIAL_SECTORS,
+} from "@/lib/api/promotions";
 
 /** /partner/$token — an external agency signs in with an email code, accepts the terms and submits (Phase 6.3). */
 export function PartnerPage({ token }: { token: string }) {
   const { t } = useI18n();
   const { user } = useAuth();
-  const info = usePartnerInfo(token);
+  const info = usePartnerLink(token);
   if (info.isPending)
     return (
       <Page>
@@ -56,11 +62,44 @@ export function PartnerPage({ token }: { token: string }) {
   return (
     <Page className="flex flex-col gap-6">
       <PageHeader title={d.org_name ?? ""} description={d.label} />
-      {d.intro_ar && (
-        <p className="whitespace-pre-line text-fg" dir="auto">
-          {d.intro_ar}
-        </p>
-      )}
+      <Card className="flex flex-col gap-2 text-sm" data-testid="partner-scope">
+        {d.intro_ar && (
+          <p className="whitespace-pre-line text-base text-fg" dir="auto">
+            {d.intro_ar}
+          </p>
+        )}
+        <dl className="grid gap-2 sm:grid-cols-3">
+          <div>
+            <dt className="text-xs text-fg-muted">{t("partner2.campaign")}</dt>
+            <dd className="font-medium">{d.campaign?.name ?? t("common.none")}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-fg-muted">{t("partner2.products")}</dt>
+            <dd className="font-medium">
+              {(d.products ?? []).map((p) => p.name_ar).join("، ") || t("partner2.anyProduct")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-fg-muted">{t("partner2.active")}</dt>
+            <dd className="tabular font-medium">
+              {t("partner2.activeValue", { n: d.my_active ?? 0, max: d.max_active ?? 5 })}
+            </dd>
+          </div>
+        </dl>
+        {d.instructions_ar && (
+          <div className="rounded-md bg-sunken p-3">
+            <p className="text-xs font-bold text-fg-muted">{t("partner2.instructions")}</p>
+            <p className="whitespace-pre-line" dir="auto">
+              {d.instructions_ar}
+            </p>
+          </div>
+        )}
+        {d.expires_at && (
+          <p className="text-xs text-fg-muted">
+            {t("partner2.expires", { date: new Date(d.expires_at).toLocaleDateString() })}
+          </p>
+        )}
+      </Card>
       {!user ? (
         <OtpSignIn />
       ) : d.membership &&
@@ -86,6 +125,12 @@ export function PartnerPage({ token }: { token: string }) {
             token={token}
             products={d.products ?? []}
             channels={d.channels?.length ? d.channels : [...CHANNELS]}
+            types={
+              (d.communication_types?.length
+                ? d.communication_types
+                : COMMUNICATION_TYPES) as CommunicationType[]
+            }
+            limitReached={(d.my_active ?? 0) >= (d.max_active ?? 5)}
           />
         </>
       )}
@@ -191,6 +236,17 @@ function Terms({ token, terms }: { token: string; terms: string }) {
 function MySubmissions({ orgId, userId }: { orgId: string; userId: string }) {
   const { t } = useI18n();
   const mine = useMyPartnerPromotions(orgId, userId);
+  const qc = useQueryClient();
+  const errText = usePreflightText();
+  // D174: an unsent draft can be cancelled (archived, history kept) to free a slot under the link's limit.
+  const cancel = useMutation({
+    mutationFn: (pid: string) => cancelDraft(pid, ""),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: prk.mine(orgId) });
+      void qc.invalidateQueries({ queryKey: ["partner-info"] });
+    },
+    onError: (e) => toast.error(errText(e)),
+  });
   return (
     <Card className="flex flex-col gap-3" data-testid="partner-mine">
       <CardTitle>{t("partner.mine")}</CardTitle>
@@ -216,6 +272,16 @@ function MySubmissions({ orgId, userId }: { orgId: string; userId: string }) {
                   · {t("partner.deadline")}: <bdi>{p.deadline_at.slice(0, 10)}</bdi>
                 </span>
               )}
+              {p.review_status === "draft" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  loading={cancel.isPending}
+                  onClick={() => cancel.mutate(p.id)}
+                >
+                  {t("partner2.cancelDraft")}
+                </Button>
+              )}
             </li>
           ))}
         </ul>
@@ -228,10 +294,14 @@ function NewSubmission({
   token,
   products,
   channels,
+  types,
+  limitReached,
 }: {
   token: string;
-  products: { id: string; name_ar: string; name_en: string | null }[];
+  products: { id: string; name_ar: string; name_en: string | null; sector?: string }[];
   channels: string[];
+  types: CommunicationType[];
+  limitReached: boolean;
 }) {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
@@ -239,10 +309,20 @@ function NewSubmission({
   const [title, setTitle] = useState("");
   const [productId, setProductId] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
-  const [type, setType] = useState<CommunicationType>(COMMUNICATION_TYPES[0]!);
+  // D174: never default to a financial promotion; follow the product's sector when it is financial.
+  const [type, setType] = useState<CommunicationType>(
+    types.includes("general_commercial") ? "general_commercial" : types[0]!,
+  );
+  const pickProduct = (id: string) => {
+    setProductId(id);
+    const sector = products.find((p) => p.id === id)?.sector;
+    const next: CommunicationType =
+      sector && FINANCIAL_SECTORS.has(sector) ? "financial_promotion" : "general_commercial";
+    if (types.includes(next)) setType(next);
+  };
   const create = useMutation({
     mutationFn: () =>
-      createPartnerPromotion(token, {
+      createPartnerPromotionRef(token, {
         title,
         productId: productId || null,
         channels: picked,
@@ -254,13 +334,21 @@ function NewSubmission({
   return (
     <Card className="flex flex-col gap-3" data-testid="partner-new">
       <CardTitle>{t("partner.newTitle")}</CardTitle>
-      <p className="text-sm text-fg-muted">{t("partner.oneAtATime")}</p>
+      <p className="text-sm text-fg-muted">{t("partner2.limitNote")}</p>
+      {limitReached && (
+        <p
+          role="status"
+          className="rounded-md border border-amber/30 bg-amber-bg px-3 py-2 text-sm"
+        >
+          {t("partner2.limitReached")}
+        </p>
+      )}
       <Field label={t("promo.fieldTitle")}>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} dir="auto" />
       </Field>
       {products.length > 0 && (
         <Field label={t("partner.product")}>
-          <Select value={productId} onChange={(e) => setProductId(e.target.value)}>
+          <Select value={productId} onChange={(e) => pickProduct(e.target.value)}>
             <option value="">—</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
@@ -272,7 +360,7 @@ function NewSubmission({
       )}
       <Field label={t("partner.communicationType")}>
         <Select value={type} onChange={(e) => setType(e.target.value as CommunicationType)}>
-          {COMMUNICATION_TYPES.map((c) => (
+          {types.map((c) => (
             <option key={c} value={c}>
               {t(`promo.commType.${c}` as TKey)}
             </option>
@@ -295,7 +383,9 @@ function NewSubmission({
       <Button
         className="self-start"
         icon={<Handshake />}
-        disabled={!title.trim() || !picked.length || (products.length > 0 && !productId)}
+        disabled={
+          limitReached || !title.trim() || !picked.length || (products.length > 0 && !productId)
+        }
         loading={create.isPending}
         onClick={() => create.mutate()}
       >

@@ -3015,5 +3015,56 @@
     "limit2": "Quotes cut in the original record end with «…» and were not completed.",
     "limit3": "The automated result is advisory, not a regulatory approval.",
     "limit4": "The example represents no real organisation or product."
+  },
+  "notif2": {
+    "decided": {
+      "approve": "«{title}» approved (version {n})",
+      "final": "Final approval recorded for «{title}» after the conditions",
+      "conditional_approve": "Conditional approval for «{title}» (version {n}) — see the conditions",
+      "request_changes": "Changes requested on «{title}» (version {n})",
+      "reject": "«{title}» rejected (version {n})"
+    },
+    "conditions_submitted": "Conditions of «{title}» submitted for verification",
+    "condition_returned": "A condition in «{title}» was returned for more evidence",
+    "partner_approved": "Your partner access to «{org}» was approved",
+    "partner_declined": "Your partner access to «{org}» was not approved"
+  },
+  "partner2": {
+    "campaign": "Campaign",
+    "products": "Allowed products",
+    "anyProduct": "Any product",
+    "active": "Your active ads",
+    "activeValue": "{n} of {max}",
+    "instructions": "Submission instructions",
+    "expires": "Valid until {date}",
+    "expired": "Expired",
+    "limitNote": "You can work on several ads up to this link's limit. Drafts, ads in review and ads awaiting changes count toward it.",
+    "limitReached": "You reached the active-ad limit. Finish an existing ad or cancel an unsent draft in «My submissions».",
+    "allowedTypes": "Allowed communication types (none = all)",
+    "expiry": "Expiry date",
+    "maxActive": "Maximum active ads per partner",
+    "maxActiveHint": "Drafts, in review and awaiting changes.",
+    "usage": "{n} submissions · {a} active · {p} partners · limit {max}",
+    "rotate": "Rotate link",
+    "myLinks": "Submission links available to you",
+    "openLink": "Open link and submit an ad",
+    "cancelDraft": "Cancel draft"
+  },
+  "dash2": {
+    "title": "Your work now",
+    "tile": {
+      "awaiting": "Awaiting review",
+      "unassigned": "Unassigned",
+      "in_review": "In review",
+      "changes": "Changes requested",
+      "conditional": "Conditionally approved",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "overdue": "Overdue",
+      "assigned": "Assigned to you",
+      "verify": "Conditions to verify",
+      "drafts": "Drafts",
+      "waiting": "Awaiting decision"
+    }
   }
 }

@@ -1,6 +1,8 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import { RoleHome } from "@/features/roles/RoleHome";
+import { RoleWorkload } from "@/features/roles/RoleWorkload";
+import { MyPartnerLinks } from "@/features/enterprise/MyPartnerLinks";
 import {
   ChevronLeft,
   FileImage,
@@ -189,6 +191,8 @@ export function DashboardPage() {
       />
 
       <RoleHome />
+      <RoleWorkload />
+      <MyPartnerLinks />
       <WorkSummary />
 
       <div className="flex flex-col gap-3">

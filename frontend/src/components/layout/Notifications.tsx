@@ -25,7 +25,25 @@ function text(n: Notification, t: ReturnType<typeof useI18n>["t"]) {
     overall_status?: string;
     decision?: string;
     reviewer?: string;
+    version_no?: number;
+    verdict?: string;
+    org_name?: string;
+    approved?: boolean;
+    final?: boolean;
   };
+  const title = p.title || t("dashboard.untitled");
+  // D184: decisions say what was decided and on which version; condition and partner events have their own text.
+  if (n.kind === "review_decided" && p.decision)
+    return t(`notif2.decided.${p.final ? "final" : p.decision}` as never, {
+      title,
+      n: p.version_no ?? "—",
+    });
+  if (n.kind === "conditions_submitted") return t("notif2.conditions_submitted", { title });
+  if (n.kind === "condition_returned") return t("notif2.condition_returned", { title });
+  if (n.kind === "partner_access_decided")
+    return t(p.approved ? "notif2.partner_approved" : "notif2.partner_declined", {
+      org: p.org_name ?? "",
+    });
   if (n.kind === "check_done")
     return t("notifications.done", {
       title: p.title || t("dashboard.untitled"),
@@ -41,6 +59,19 @@ function text(n: Notification, t: ReturnType<typeof useI18n>["t"]) {
   if (n.kind.startsWith("review_"))
     return t(`notif.${n.kind}` as never, { title: p.title || t("dashboard.untitled") });
   return t("notifications.generic");
+}
+
+/** Where a notification leads: the advertisement (and its version) when known, else the check, else home. */
+function notificationLink(n: Notification) {
+  const p = (n.payload ?? {}) as { promotion_id?: string; version_no?: number };
+  if (p.promotion_id)
+    return {
+      to: "/promotions/$id" as const,
+      params: { id: p.promotion_id },
+      search: p.version_no ? { v: p.version_no } : {},
+    };
+  if (n.submission_id) return { to: "/checks/$id" as const, params: { id: n.submission_id } };
+  return { to: "/dashboard" as const };
 }
 
 /** Bell with unread count; shows a toast for notifications that arrive while the app is open. */
@@ -113,8 +144,7 @@ export function NotificationsBell() {
                 return (
                   <Popover.Item key={n.id} asChild>
                     <Link
-                      to={n.submission_id ? "/checks/$id" : "/dashboard"}
-                      params={n.submission_id ? { id: n.submission_id } : undefined}
+                      {...notificationLink(n)}
                       className={cn(
                         "flex gap-3 rounded-sm px-3 py-2.5 text-sm outline-none data-[highlighted]:bg-sunken",
                         !n.read_at && "bg-green-bg/50",
