@@ -97,6 +97,7 @@ export const en = {
     comment_mention: "You were mentioned in a comment on «{title}»",
     comment_reply: "New reply to your comment on «{title}»",
     correction_ready: "SALEEM Fix proposal ready for «{title}»",
-    correction_accepted: "A corrected version of «{title}» was created with SALEEM Fix; it is re-analysed before any decision",
+    correction_accepted:
+      "A corrected version of «{title}» was created with SALEEM Fix; it is re-analysed before any decision",
   },
 };
