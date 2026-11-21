@@ -76,3 +76,6 @@ frontend/playwright-report/
 # Local demo credentials (demo:seed) — never commit
 demo/.demo-credentials.json
 demo/.demo-partner-link
+
+# Isolated test stack (scripts/isolated-stack.mjs)
+/.iso/

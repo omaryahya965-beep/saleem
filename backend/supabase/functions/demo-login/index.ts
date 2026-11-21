@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
   const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || "unknown";
   const ipHash = await sha256(`${env("DEMO_IP_SALT") ?? "saleem-demo"}:${ip}`);
-  const limit = Number(env("DEMO_RATE_PER_HOUR") ?? 500);
+  // D187: default matches the documented 20 sessions per IP and hour; production sets DEMO_RATE_PER_HOUR explicitly.
+  const limit = Number(env("DEMO_RATE_PER_HOUR") ?? 20);
   const since = new Date(Date.now() - 3600_000).toISOString();
   const { count } = await db.from("demo_sessions").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
   if ((count ?? 0) >= limit) return json({ error: "rate_limited" }, 429);

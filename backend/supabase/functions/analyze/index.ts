@@ -687,6 +687,14 @@ Deno.serve(async (req: Request) => {
   // Resuming an unfinished run does not start a new one, so only new runs are rate limited.
   const resuming = Boolean(latestRun.data && latestRun.data.status !== "done");
   if (!resuming && isRateLimited(count ?? 0, RATE_LIMIT_PER_HOUR)) return json({ error: "rate_limited" }, 429);
+  // D187: public demo accounts share one daily AI cap (DEMO_AI_DAILY_LIMIT, default 40) across all sandbox users.
+  if (!resuming) {
+    const { data: isDemo } = await db.rpc("is_demo_sandbox_user", { _user: userId });
+    if (isDemo === true) {
+      const { data: used } = await db.rpc("demo_ai_runs_today");
+      if (Number(used ?? 0) >= Number(env("DEMO_AI_DAILY_LIMIT") ?? 40)) return json({ error: "demo_quota" }, 429);
+    }
+  }
 
   // --- Run row: reuse the latest unfinished run so steps resume.
   const cfg = config(env);

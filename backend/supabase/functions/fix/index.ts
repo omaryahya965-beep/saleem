@@ -60,6 +60,11 @@ Deno.serve(async (req: Request) => {
   }
   if (!(check as { ok?: boolean } | null)?.ok) return json({ error: `code:${(check as { reasons?: string[] } | null)?.reasons?.[0] ?? "forbidden"}` }, 403);
   if (job.attempts >= 3) return json({ error: "code:too_many_attempts" }, 429);
+  const { data: isDemo } = await admin.rpc("is_demo_sandbox_user", { _user: me.user.id });
+  if (isDemo === true) {
+    const { data: used } = await admin.rpc("demo_ai_runs_today");
+    if (Number(used ?? 0) >= Number(env("DEMO_AI_DAILY_LIMIT") ?? 40)) return json({ error: "code:demo_quota" }, 429);
+  }
 
   // Atomic claim: only a draft or failed job starts generating (duplicate clicks / tabs get 409).
   const { data: claimed } = await admin.from("correction_jobs")
