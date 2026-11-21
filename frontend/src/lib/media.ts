@@ -27,6 +27,11 @@ export interface InspectedMedia {
   height: number | null;
   /** Object URL of a JPEG poster frame (video) or the image itself. Revoke when done. */
   previewUrl: string | null;
+  /**
+   * D207: the poster frame itself (video). The upload uses this Blob — the preview URL is revoked when the dropzone
+   * unmounts (leaving step 1), so fetching it at submit failed and no video could be uploaded through the wizard.
+   */
+  poster?: Blob | null;
 }
 
 /** Pure validation of type and size (duration needs the decoded media). */
@@ -181,6 +186,7 @@ export async function inspectMedia(
         width: v.videoWidth,
         height: v.videoHeight,
         previewUrl: poster ? URL.createObjectURL(poster) : null,
+        poster: poster ?? null,
       },
     };
   } catch {
