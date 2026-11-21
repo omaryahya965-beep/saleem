@@ -57,8 +57,10 @@ const CREATE_STEPS: { key: string; tag: Availability }[] = [
   { key: "product", tag: "available" },
   { key: "goals", tag: "available" },
   { key: "brand", tag: "available" },
-  { key: "script", tag: "soon" },
-  { key: "media", tag: "soon" },
+  { key: "script", tag: "provider" },
+  { key: "voice", tag: "available" },
+  { key: "assembly", tag: "available" },
+  { key: "footage", tag: "provider" },
   { key: "analyse", tag: "available" },
   { key: "review", tag: "available" },
 ];
@@ -121,7 +123,7 @@ export function Journeys({ startTo }: { startTo: string }) {
                 <div className="flex flex-col gap-2 rounded-[20px] border-2 border-dashed border-forest/15 p-4">
                   <p className="flex items-center justify-between gap-2 text-xs font-bold text-muted">
                     {t("home.journeys.create.draftTitle")}
-                    <AvailabilityTag kind="soon" label={tag("soon")} />
+                    <AvailabilityTag kind="available" label={tag("available")} />
                   </p>
                   {[92, 80, 86, 54].map((w, i) => (
                     <span
@@ -165,7 +167,7 @@ export function Journeys({ startTo }: { startTo: string }) {
                 {t("home.journeys.create.note")}
               </p>
               <div className="mt-auto">
-                <Link to={startTo} className={cta("outline")}>
+                <Link to={startTo === "/signup" ? "/signup" : "/studio"} className={cta("outline")}>
                   {t("home.journeys.create.cta")}
                 </Link>
               </div>

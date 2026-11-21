@@ -34,7 +34,10 @@ describe("public Nada Cream sample", () => {
   it("public copy makes no compliance guarantee and labels upcoming generation", () => {
     expect(ar.home.hero.note).toContain("لا يضمن الامتثال القانوني");
     expect(en.home.hero.note).toContain("does not guarantee legal compliance");
-    expect(en.home.journeys.create.note).toMatch(/not enabled yet/);
+    // D209: generated footage stays labelled provider-dependent and not configured; script by Gemini is not claimed as always on.
+    expect(en.home.journeys.create.steps.footage).toMatch(/not configured/);
+    expect(en.home.journeys.create.note).toMatch(/not configured/);
+    expect(en.home.journeys.create.steps.script).toMatch(/when configured/);
     expect(en.demo.honesty).toMatch(/prepared manually/);
   });
 });

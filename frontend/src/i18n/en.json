@@ -3664,13 +3664,16 @@
           "product": "Product information from the product library",
           "goals": "Campaign goals, audience and channels",
           "brand": "Brand requirements and company rules",
-          "script": "Draft ad script from your brief",
+          "script": "Draft script: deterministic template, or Gemini when configured",
           "media": "Generated voiceover and video",
           "analyse": "Check the resulting content",
-          "review": "Submit for human review"
+          "review": "Submit for human review",
+          "voice": "Arabic and English voiceover generated on your device",
+          "assembly": "MP4 assembled from product photos, text and disclosures",
+          "footage": "Fully generated video footage (paid provider, not configured)"
         },
-        "cta": "Start with a text ad",
-        "note": "Generating script, voice and video from a brief is not enabled yet and needs external providers. Available today: product, campaign and brand rules set-up, writing the ad, checking it and submitting it for review.",
+        "cta": "Open SALEEM AI Studio",
+        "note": "Available today in SALEEM AI Studio: a scene-by-scene script (free deterministic template, or Gemini when configured), a voiceover generated on your device, and an MP4 built from your photos and text. Fully generated footage and virtual presenters need a paid provider that is not configured.",
         "briefTitle": "Campaign brief",
         "briefProduct": "Product",
         "briefGoal": "Goal",
@@ -3780,8 +3783,8 @@
         "body": "A correction plan per finding and an editable revised text before it is accepted as a new version."
       },
       "media": {
-        "title": "In-browser video correction",
-        "body": "Mute statements, cover text, add a visible disclosure, subtitles and a recorded or uploaded voiceover — without sending the video to any provider."
+        "title": "In-browser video correction and assembly",
+        "body": "Mute statements, cover text, add a visible disclosure, subtitles, and a voiceover generated on your device or recorded — without sending the video to any provider."
       },
       "compare": {
         "title": "Version comparison",
@@ -3957,7 +3960,7 @@
       },
       "voice": {
         "title": "Corrected voiceover",
-        "body": "Record in the browser or upload a file. Automatic voice generation needs a provider that is not enabled."
+        "body": "Generated on your device in Arabic or English from the corrected script, or recorded or uploaded; it replaces the original audio."
       }
     },
     "honesty": "Version 2 in this example was prepared manually for the demonstration; SALEEM did not generate it automatically. The tools above are available in SALEEM Fix inside the workspace and produce a new version that is analysed from scratch.",

@@ -29,8 +29,10 @@ test("landing: direction, value proposition and calls to action", async ({
       .getByText(tr(lang, "لا يضمن الامتثال القانوني", "does not guarantee legal compliance"))
       .first(),
   ).toBeVisible();
-  // Upcoming generation is labelled, never offered as available.
-  await expect(page.getByText(tr(lang, "قادم", "Coming")).first()).toBeAttached();
+  // Fully generated footage is labelled provider-dependent and not configured, never offered as available.
+  await expect(
+    page.getByText(tr(lang, "مزوّد مدفوع غير مُعدّ", "paid provider, not configured")).first(),
+  ).toBeAttached();
   // Before/after uses the two local sample videos.
   await expect(page.locator('video[src="/sample/nada-cream-v1.mp4"]').first()).toBeAttached();
   await expect(page.locator('video[src="/sample/nada-cream-v2.mp4"]').first()).toBeAttached();
