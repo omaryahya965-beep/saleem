@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useI18n, type TKey } from "@/i18n";
+import { useGroupTitle } from "./groupTitle";
 import { cn } from "@/lib/utils";
 import { diffGroups, groupFindings, type FindingGroup } from "@/features/reports/grouping";
 import { NADA_MEDIA, NADA_V1, NADA_V2 } from "@/features/sample/nadaSample";
@@ -44,19 +45,9 @@ import {
   Container,
   PhoneFrame,
   SectionHeading,
-  cta,
   type Availability,
 } from "@/features/public/ui";
-
-/** Title of a consolidated group: the claim facet when there is one, else the finding's explanation. */
-export function useGroupTitle() {
-  const { t, lang } = useI18n();
-  return (g: FindingGroup) => {
-    if (g.facet) return t(`ws.facet.${g.facet}` as TKey);
-    const f = g.members[0]!;
-    return (lang === "en" ? f.explanation_en : f.explanation_ar) ?? g.ruleCode;
-  };
-}
+import { cta } from "@/features/public/cta";
 
 /* ------------------------------------------------------------------------------------------------------------ */
 /* Two journeys                                                                                                 */

@@ -7,7 +7,8 @@ import { Brand, LanguageToggle } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
-import { Container, cta } from "./ui";
+import { Container } from "./ui";
+import { cta } from "./cta";
 
 type NavLink = { key: string; to: string; hash?: string };
 const LINKS: NavLink[] = [

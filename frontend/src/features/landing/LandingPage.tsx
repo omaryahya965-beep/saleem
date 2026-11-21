@@ -5,7 +5,8 @@ import { Link } from "@tanstack/react-router";
 import { BadgeCheck, Languages, Layers, ShieldCheck, Timer } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
-import { Container, Eyebrow, cta } from "@/features/public/ui";
+import { Container, Eyebrow } from "@/features/public/ui";
+import { cta } from "@/features/public/cta";
 import { HeroStage } from "./HeroStage";
 import {
   BeforeAfter,

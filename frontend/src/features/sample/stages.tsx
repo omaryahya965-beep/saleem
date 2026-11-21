@@ -26,8 +26,9 @@ import { formatClock, useI18n, type TKey } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { diffGroups, groupFindings, type FindingGroup } from "@/features/reports/grouping";
 import { sentenceDiff, type SentenceOp } from "@/features/collab/sentenceDiff";
-import { useGroupTitle } from "@/features/landing/sections";
-import { AvailabilityTag, PhoneFrame, cta, type Availability } from "@/features/public/ui";
+import { useGroupTitle } from "@/features/landing/groupTitle";
+import { AvailabilityTag, PhoneFrame, type Availability } from "@/features/public/ui";
+import { cta } from "@/features/public/cta";
 import {
   NADA_MEDIA,
   NADA_V1,
