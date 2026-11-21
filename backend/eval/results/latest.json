@@ -1,23 +1,35 @@
 {
-  "at": "2026-10-14T18:25:09.926Z",
-  "llm_model": "gpt-6.1-sol",
-  "prompt_version": "v3-2026-10",
+  "at": "2026-11-21T08:37:02.568Z",
+  "llm_model": null,
+  "prompt_version": "v4-2026-11",
   "summary": {
-    "cases": 12,
-    "mode": "deterministic+llm",
-    "recall": 1,
-    "precision": 0.9444444444444444,
-    "hits": 17,
-    "misses": 0,
-    "false_alarms": 1,
-    "avg_ms_per_case": 7459,
-    "avg_cost_usd_per_case": 0.006416666666666667,
-    "total_cost_usd": 0.077
+    "cases": 26,
+    "mode": "deterministic-only",
+    "recall": 0.8095238095238095,
+    "precision": 1,
+    "hits": 34,
+    "misses": 8,
+    "false_alarms": 0,
+    "avg_ms_per_case": 0,
+    "avg_cost_usd_per_case": 0,
+    "total_cost_usd": 0,
+    "deterministic_capable": {
+      "rules": [
+        "MAW-01",
+        "MAW-03",
+        "MAW-04",
+        "COM-01",
+        "AI-01"
+      ],
+      "hits": 34,
+      "misses": 0,
+      "recall": 1
+    }
   },
   "per_rule": [
     {
       "rule": "AI-01",
-      "hits": 2,
+      "hits": 3,
       "misses": 0,
       "false_alarms": 0,
       "recall": 1,
@@ -26,61 +38,61 @@
     },
     {
       "rule": "CNT-01",
-      "hits": 1,
-      "misses": 0,
+      "hits": 0,
+      "misses": 1,
       "false_alarms": 0,
-      "recall": 1,
-      "precision": 1,
-      "mean_t_error_s": 0
+      "recall": 0,
+      "precision": null,
+      "mean_t_error_s": null
     },
     {
       "rule": "CNT-02",
-      "hits": 1,
-      "misses": 0,
+      "hits": 0,
+      "misses": 1,
       "false_alarms": 0,
-      "recall": 1,
-      "precision": 1,
-      "mean_t_error_s": 0
+      "recall": 0,
+      "precision": null,
+      "mean_t_error_s": null
     },
     {
       "rule": "CNT-03",
-      "hits": 1,
-      "misses": 0,
+      "hits": 0,
+      "misses": 1,
       "false_alarms": 0,
-      "recall": 1,
-      "precision": 1,
-      "mean_t_error_s": 0
+      "recall": 0,
+      "precision": null,
+      "mean_t_error_s": null
     },
     {
       "rule": "CNT-04",
-      "hits": 1,
-      "misses": 0,
+      "hits": 0,
+      "misses": 1,
       "false_alarms": 0,
-      "recall": 1,
-      "precision": 1,
-      "mean_t_error_s": 0
+      "recall": 0,
+      "precision": null,
+      "mean_t_error_s": null
     },
     {
       "rule": "CNT-05",
-      "hits": 1,
+      "hits": 0,
+      "misses": 1,
+      "false_alarms": 0,
+      "recall": 0,
+      "precision": null,
+      "mean_t_error_s": null
+    },
+    {
+      "rule": "COM-01",
+      "hits": 11,
       "misses": 0,
       "false_alarms": 0,
       "recall": 1,
       "precision": 1,
-      "mean_t_error_s": 0
-    },
-    {
-      "rule": "COM-01",
-      "hits": 3,
-      "misses": 0,
-      "false_alarms": 1,
-      "recall": 1,
-      "precision": 0.75,
       "mean_t_error_s": 0
     },
     {
       "rule": "MAW-01",
-      "hits": 2,
+      "hits": 6,
       "misses": 0,
       "false_alarms": 0,
       "recall": 1,
@@ -89,16 +101,16 @@
     },
     {
       "rule": "MAW-02",
-      "hits": 3,
-      "misses": 0,
+      "hits": 0,
+      "misses": 3,
       "false_alarms": 0,
-      "recall": 1,
-      "precision": 1,
+      "recall": 0,
+      "precision": null,
       "mean_t_error_s": null
     },
     {
       "rule": "MAW-03",
-      "hits": 1,
+      "hits": 7,
       "misses": 0,
       "false_alarms": 0,
       "recall": 1,
@@ -107,7 +119,7 @@
     },
     {
       "rule": "MAW-04",
-      "hits": 1,
+      "hits": 7,
       "misses": 0,
       "false_alarms": 0,
       "recall": 1,
@@ -119,12 +131,12 @@
     {
       "id": "slimming-tea",
       "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
-      "ms": 17939,
-      "cost_usd": 0.012556,
+      "ms": 3,
+      "cost_usd": 0,
       "outcome": {
         "MAW-01": "hit",
         "COM-01": "hit",
-        "MAW-02": "hit",
+        "MAW-02": "miss",
         "MAW-03": "hit",
         "MAW-04": "hit",
         "AI-01": "hit"
@@ -143,16 +155,8 @@
           "rule": "COM-01",
           "severity": "violation",
           "t": 12,
-          "source": "llm",
-          "confidence": 1,
-          "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع\nومضمون بدون أعراض جانبية"
-        },
-        {
-          "rule": "MAW-02",
-          "severity": "warning",
-          "t": 12,
-          "source": "llm",
-          "confidence": 0.98,
+          "source": "deterministic",
+          "confidence": 0.9,
           "evidence": "هذا الشاي ينحف وتنزلين خمس كيلو في أسبوع"
         },
         {
@@ -192,8 +196,8 @@
     {
       "id": "herbal-tea-fixed",
       "title": "النسخة المعدّلة: إفصاح وتجربة شخصية",
-      "ms": 3257,
-      "cost_usd": 0.00348,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {},
       "error": null,
       "findings": []
@@ -201,22 +205,14 @@
     {
       "id": "crypto-daily-return",
       "title": "منصة استثمار بعائد يومي مضمون",
-      "ms": 7512,
-      "cost_usd": 0.00691,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
         "COM-01": "hit",
-        "MAW-02": "hit"
+        "MAW-02": "miss"
       },
       "error": null,
       "findings": [
-        {
-          "rule": "MAW-02",
-          "severity": "warning",
-          "t": 0,
-          "source": "llm",
-          "confidence": 1,
-          "evidence": "إعلان، يا شباب لقيت لكم منصة استثمار رهيبة"
-        },
         {
           "rule": "COM-01",
           "severity": "violation",
@@ -229,8 +225,8 @@
           "rule": "COM-01",
           "severity": "violation",
           "t": 12,
-          "source": "llm",
-          "confidence": 1,
+          "source": "deterministic",
+          "confidence": 0.9,
           "evidence": "ربح مضمون مية بالمية ولا فيه أي مخاطرة"
         }
       ]
@@ -238,76 +234,41 @@
     {
       "id": "kid-daily-vlog",
       "title": "يوميات مع طفل",
-      "ms": 8543,
-      "cost_usd": 0.00642,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "CNT-01": "hit"
+        "CNT-01": "miss"
       },
       "error": null,
-      "findings": [
-        {
-          "rule": "CNT-01",
-          "severity": "violation",
-          "t": 6,
-          "source": "llm",
-          "confidence": 0.98,
-          "evidence": "سلّم على المتابعين، عمره خمس سنين وكذا يحب المراجيح"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "domestic-worker",
       "title": "تصوير العاملة المنزلية",
-      "ms": 5168,
-      "cost_usd": 0.004892,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "CNT-02": "hit"
+        "CNT-02": "miss"
       },
       "error": null,
-      "findings": [
-        {
-          "rule": "CNT-02",
-          "severity": "violation",
-          "t": 5,
-          "source": "llm",
-          "confidence": 0.95,
-          "evidence": "تعالي يا الشغالة سلمي على المتابعين"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "insult",
       "title": "ألفاظ مسيئة",
-      "ms": 7389,
-      "cost_usd": 0.00678,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "CNT-05": "hit"
+        "CNT-05": "miss"
       },
       "error": null,
-      "findings": [
-        {
-          "rule": "CNT-05",
-          "severity": "violation",
-          "t": 0,
-          "source": "llm",
-          "confidence": 1,
-          "evidence": "اللي يقول هالمطعم زين واحد غبي ما يفهم"
-        },
-        {
-          "rule": "CNT-05",
-          "severity": "violation",
-          "t": 6,
-          "source": "llm",
-          "confidence": 1,
-          "evidence": "يا حمار روح جرب قبل لا تتكلم"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "organic-review",
       "title": "مراجعة مطعم غير مدفوعة",
-      "ms": 1760,
-      "cost_usd": 0.003042,
+      "ms": 1,
+      "cost_usd": 0,
       "outcome": {},
       "error": null,
       "findings": []
@@ -315,22 +276,13 @@
     {
       "id": "ai-undisclosed",
       "title": "صوت مولّد بالذكاء الاصطناعي دون إفصاح",
-      "ms": 10672,
-      "cost_usd": 0.008092,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "AI-01": "hit",
-        "COM-01": "false_alarm"
+        "AI-01": "hit"
       },
       "error": null,
       "findings": [
-        {
-          "rule": "COM-01",
-          "severity": "violation",
-          "t": 0,
-          "source": "llm",
-          "confidence": 0.9,
-          "evidence": "إعلان، عطر العود الجديد ريحته تثبت طول اليوم"
-        },
         {
           "rule": "AI-01",
           "severity": "violation",
@@ -344,28 +296,19 @@
     {
       "id": "wealth-flaunt",
       "title": "استعراض الثراء",
-      "ms": 5496,
-      "cost_usd": 0.005072,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "CNT-04": "hit"
+        "CNT-04": "miss"
       },
       "error": null,
-      "findings": [
-        {
-          "rule": "CNT-04",
-          "severity": "warning",
-          "t": 0,
-          "source": "llm",
-          "confidence": 0.6,
-          "evidence": "شوفوا الفلوس هذي كلها، كاش على الطاولة والساعة هذي بنص مليون، عادي عندي"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "code-no-paid-flag",
       "title": "كود خصم دون تحديد إعلان",
-      "ms": 4612,
-      "cost_usd": 0.005014,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
         "MAW-01": "hit"
       },
@@ -384,11 +327,11 @@
     {
       "id": "cure-claim-text",
       "title": "ادعاء علاجي في منشور نصي",
-      "ms": 10110,
-      "cost_usd": 0.0079,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
         "COM-01": "hit",
-        "MAW-02": "hit"
+        "MAW-02": "miss"
       },
       "error": null,
       "findings": [
@@ -396,16 +339,8 @@
           "rule": "COM-01",
           "severity": "violation",
           "t": null,
-          "source": "llm",
-          "confidence": 0.99,
-          "evidence": "زيت الأعشاب الطبيعي يعالج تساقط الشعر نهائياً ويشفي القشرة من أول استخدام"
-        },
-        {
-          "rule": "MAW-02",
-          "severity": "warning",
-          "t": null,
-          "source": "llm",
-          "confidence": 0.96,
+          "source": "deterministic",
+          "confidence": 0.9,
           "evidence": "#إعلان زيت الأعشاب الطبيعي يعالج تساقط الشعر نهائياً ويشفي القشرة من أول استخدام"
         }
       ]
@@ -413,28 +348,400 @@
     {
       "id": "family-privacy",
       "title": "تفاصيل خاصة عن الأسرة",
-      "ms": 7051,
-      "cost_usd": 0.006842,
+      "ms": 0,
+      "cost_usd": 0,
       "outcome": {
-        "CNT-03": "hit"
+        "CNT-03": "miss"
+      },
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "nada-cream-v1",
+      "title": "كريم ندى الأصلي (تجميل، ادعاءات مطلقة، دون إفصاح)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-01": "hit",
+        "COM-01": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit",
+        "AI-01": "hit"
       },
       "error": null,
       "findings": [
         {
-          "rule": "CNT-03",
-          "severity": "warning",
+          "rule": "MAW-01",
+          "severity": "violation",
           "t": 0,
-          "source": "llm",
-          "confidence": 0.6,
-          "evidence": "هذي غرفة نوم أمي وأبوي، وهنا يحطون أغراضهم الخاصة"
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «إعلان مدفوع»، ولا توجد كلمة «إعلان» في الوصف أو أول 5 ثوانٍ"
         },
         {
-          "rule": "CNT-03",
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "كريم ندى التجريبي يزيل التصبغات تماما خلال ثلاثة أيام فقط والنتيجة مضمونة لكل أنواع البشرة"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 5.461,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "والنتيجة مضمونة لكل أنواع البشرة بلا أي آثار جانبية"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "ودّعي التصبغات مع كريم ندى! بشرة صافية خلال 3 أيام فقط، ونتائج مضمونة لجميع أنواع البشرة."
+        },
+        {
+          "rule": "MAW-03",
           "severity": "warning",
-          "t": 7,
-          "source": "llm",
-          "confidence": 0.6,
-          "evidence": "وأختي الحين تتهاوش مع زوجها، خلونا نصورهم"
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        },
+        {
+          "rule": "AI-01",
+          "severity": "violation",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «استخدمت الذكاء الاصطناعي» دون إفصاح في الوصف"
+        }
+      ]
+    },
+    {
+      "id": "nada-cream-v2",
+      "title": "كريم ندى المعدّل (إفصاح، دون ادعاءات)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-03": "hit",
+        "MAW-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        }
+      ]
+    },
+    {
+      "id": "acne-complete-removal",
+      "title": "مستحضر يزيل حب الشباب نهائياً (ادعاء مطلق دون كلمة مضمون)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "COM-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 4,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "يقضي على حب الشباب نهائياً خلال أسبوع واحد"
+        }
+      ]
+    },
+    {
+      "id": "no-side-effects-athar",
+      "title": "مكمل غذائي «بلا أي آثار جانبية» (صيغة آثار)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "COM-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 3,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "مكمل الطاقة الطبيعي آمن تماماً ومن غير أي آثار جانبية"
+        }
+      ]
+    },
+    {
+      "id": "supplement-cure",
+      "title": "مكمل يدّعي علاج السكري دون إفصاح",
+      "ms": 1,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-01": "hit",
+        "COM-01": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "الرابط في البايو"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "هذه الكبسولات تعالج السكري وتغنيك عن الدواء"
+        },
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        }
+      ]
+    },
+    {
+      "id": "tourism-compliant",
+      "title": "باقة سياحية بإفصاح وترخيص وعقد (متوافق)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {},
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "ecommerce-code-undisclosed",
+      "title": "متجر إلكتروني بكود خصم دون إفصاح",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-01": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "استخدموا كود NOOR15 وتحصلون خصم خمسة عشر بالمية"
+        },
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        }
+      ]
+    },
+    {
+      "id": "influencer-sponsored-compliant",
+      "title": "محتوى برعاية بإفصاح وترخيص وعقد",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {},
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "influencer-documents-missing",
+      "title": "إعلان مؤثر بإفصاح لكن دون عقد أو ترخيص (متطلبات مستندية)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-03": "hit",
+        "MAW-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        }
+      ]
+    },
+    {
+      "id": "guaranteed-financing",
+      "title": "تمويل بموافقة مضمونة",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "COM-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 3,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "تمويل شخصي بموافقة مضمونة خلال ساعة"
+        }
+      ]
+    },
+    {
+      "id": "prompt-injection",
+      "title": "نص يحاول توجيه الفاحص (حقن تعليمات)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "COM-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 8,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "كريم التبييض نتيجته مضمونة"
+        }
+      ]
+    },
+    {
+      "id": "compliant-skincare",
+      "title": "كريم مرطب بإفصاح ودون ادعاءات (متوافق)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {},
+      "error": null,
+      "findings": []
+    },
+    {
+      "id": "tourism-price-guarantee",
+      "title": "رحلة «أقل سعر مضمون» دون إفصاح",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "MAW-01": "hit",
+        "COM-01": "hit",
+        "MAW-03": "hit",
+        "MAW-04": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "MAW-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.95,
+          "evidence": "تم تحديد «إعلان مدفوع»، ولا توجد كلمة «إعلان» في الوصف أو أول 5 ثوانٍ"
+        },
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 0,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "رحلة دبي بأقل سعر مضمون وما راح تلقى أرخص"
+        },
+        {
+          "rule": "MAW-03",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "لا يوجد عقد مكتوب مع العلامة"
+        },
+        {
+          "rule": "MAW-04",
+          "severity": "warning",
+          "t": null,
+          "source": "deterministic",
+          "confidence": 0.8,
+          "evidence": "لم يُدخل رقم رخصة موثوق"
+        }
+      ]
+    },
+    {
+      "id": "english-claims",
+      "title": "English ad with absolute claims (Arabic-only patterns: known limitation)",
+      "ms": 0,
+      "cost_usd": 0,
+      "outcome": {
+        "COM-01": "hit"
+      },
+      "error": null,
+      "findings": [
+        {
+          "rule": "COM-01",
+          "severity": "violation",
+          "t": 3,
+          "source": "deterministic",
+          "confidence": 0.9,
+          "evidence": "Guaranteed results in three days with no side effects"
         }
       ]
     }

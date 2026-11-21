@@ -125,6 +125,15 @@ const summary = {
   avg_ms_per_case: Math.round(totalMs / Math.max(1, n)),
   avg_cost_usd_per_case: totalCost / Math.max(1, n),
   total_cost_usd: totalCost,
+  // D188: rules the deterministic engine can check at all. The others (CNT-* content/visual rules, MAW-02 licensing
+  // documents) need the model or a document review, so deterministic-only misses on them are expected, not bugs.
+  deterministic_capable: (() => {
+    const cap = new Set(["MAW-01", "MAW-03", "MAW-04", "COM-01", "AI-01"]);
+    const rs = Object.entries(perRule).filter(([c]) => cap.has(c)).map(([, r]) => r);
+    const h = rs.reduce((a, r) => a + r.hits, 0);
+    const m = rs.reduce((a, r) => a + r.misses, 0);
+    return { rules: [...cap], hits: h, misses: m, recall: h / Math.max(1, h + m) };
+  })(),
 };
 
 console.log("\nPer rule:");

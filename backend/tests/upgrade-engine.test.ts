@@ -7,6 +7,7 @@ import { buildContext, extractTexts } from "../supabase/functions/_shared/pipeli
 import { evaluate } from "../supabase/functions/_shared/pipeline/evaluate.ts";
 import type { SubmissionData, TranscriptSegment } from "../supabase/functions/_shared/types.ts";
 import { releaseRules } from "../eval/rules-v2.ts";
+import { runDeterministicChecks } from "../supabase/functions/_shared/rules/deterministic.ts";
 
 const RULES = releaseRules();
 const PACKS = [
@@ -93,5 +94,19 @@ describe("MAW-03/04 scope (D171)", () => {
     const a = { any_of: [{ communication_types: ["creator_sponsored"] }, { distribution: ["influencer"] }] };
     expect(applicabilityMismatch(a, ctx({ communication: "general_commercial", distribution: "owned" }))).not.toBeNull();
     expect(applicabilityMismatch(a, ctx({ communication: "general_commercial", distribution: "influencer" }))).toBeNull();
+  });
+});
+
+describe("COM-01 claim patterns (D188, eval false negatives)", () => {
+  const promo = (text: string) => {
+    const s = { ...sub(), caption: "", is_paid_ad: true };
+    return runDeterministicChecks(s, [{ start: 0, end: 5, text }], []).findings.map((f) => f.rule_code);
+  };
+  it("absolute removal without «مضمون»", () => expect(promo("يقضي على حب الشباب نهائياً خلال أسبوع")).toContain("COM-01"));
+  it("«من غير أي آثار جانبية»", () => expect(promo("آمن ومن غير أي آثار جانبية")).toContain("COM-01"));
+  it("English absolute claims", () => expect(promo("Guaranteed results with no side effects")).toContain("COM-01"));
+  it("no false alarm on a plain care claim or a makeup remover", () => {
+    expect(promo("كريم مرطب للاستخدام اليومي")).not.toContain("COM-01");
+    expect(promo("مزيل المكياج يزيل المكياج تماماً")).not.toContain("COM-01");
   });
 });

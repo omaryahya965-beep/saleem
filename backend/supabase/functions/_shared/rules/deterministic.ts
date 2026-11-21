@@ -53,8 +53,17 @@ export const CLAIM_PATTERNS: { key: string; kind: "health" | "finance"; re: RegE
   { key: "slimming", kind: "health", re: /ينحف|يحرق الدهون|يذوب الدهون/ },
   { key: "weight_loss", kind: "health", re: new RegExp(`تنزل(ين|ون|ي)?\\s*${NUM_WORD}\\s*(كيلو|كيلوات|كيلوهات|كغ|kg)`) },
   { key: "cures", kind: "health", re: /(يعالج|تعالج|يشفي|تشفي)|علاج نهايي|شفاء تام/ },
+  // D188: absolute removal of a skin / body condition without the word «guaranteed» (eval false negative).
+  {
+    key: "absolute_result",
+    kind: "health",
+    re: /(يزيل|تزيل|يقضي علي|تقضي علي|يخلصك من|تخلصك من)[^.،]{0,25}(التصبغات|حب الشباب|البقع|التجاعيد|الهالات|السيلوليت|الدهون|القشر|الشيب|تساقط الشعر)[^.،]{0,40}(نهاييا|تماما|كليا|للابد)/,
+  },
   { key: "guaranteed", kind: "health", re: /مضمون|مضمونه|مضمونة|نتيجه مضمونه|ضمان ?100/ },
-  { key: "no_side_effects", kind: "health", re: /بدون (اي )?اعراض جانبيه|بدون (اي )?اعراض جانبية|ما له اعراض جانبيه|ما له اعراض جانبية/ },
+  // D188: «آثار» as well as «أعراض», and «بلا» / «من غير» (eval false negative).
+  { key: "no_side_effects", kind: "health", re: /(بدون|بلا|من غير|ما له|ما لها) (اي )?(اعراض|اثار) جانبي(ه|ة)/ },
+  // D188: English absolute claims (the patterns above are Arabic only).
+  { key: "english_absolute", kind: "health", re: /\bguaranteed?\b|\bno side[- ]effects?\b|\bclinically proven\b|\b100% (results?|effective)\b/ },
   { key: "guaranteed_profit", kind: "finance", re: /ربح مضمون|ارباح مضمونه|ارباح مضمونة|عايد مضمون/ },
   { key: "daily_return", kind: "finance", re: /عايد يومي|ارباح يوميه|ارباح يومية|دخل يومي مضمون/ },
 ];
@@ -75,7 +84,7 @@ function claimText(key: string, kind: "health" | "finance", category: string | n
       fix_ar: "احذف وعود الربح المضمون، وأضف تنبيهاً واضحاً بالمخاطر.",
       fix_en: "Remove guaranteed-profit promises and add a clear risk notice.",
     };
-  if (key === "guaranteed" && category !== "health")
+  if ((key === "guaranteed" || key === "absolute_result" || key === "english_absolute") && category !== "health")
     return {
       explanation_ar: "ادعاء مطلق بنتيجة مضمونة في محتوى ترويجي.",
       explanation_en: "Absolute, guaranteed-outcome claim in promotional content.",
