@@ -296,9 +296,16 @@ export function NewCheckPage() {
   const submit = useMutation({
     mutationFn: async () => {
       if (!user) throw new ApiError("signed out", "unauthorized");
+      // D207: the stored poster Blob, never the preview URL (revoked once the dropzone unmounts after step 1,
+      // which made every video upload through the wizard fail before it started). A missing poster is optional.
       const poster =
-        media?.kind === "video" && media.previewUrl
-          ? await fetch(media.previewUrl).then((r) => r.blob())
+        media?.kind === "video"
+          ? (media.poster ??
+            (media.previewUrl
+              ? await fetch(media.previewUrl)
+                  .then((r) => r.blob())
+                  .catch(() => null)
+              : null))
           : null;
       const versionTitle =
         title.trim() ||
