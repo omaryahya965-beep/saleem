@@ -3196,5 +3196,49 @@
     "note": "كيف تحققت؟",
     "save": "تسجيل التحقق",
     "saved": "سُجّل التحقق من الرخصة."
+  },
+  "history2": {
+    "filters": "تصفية السجل",
+    "cat": {
+      "all": "الكل",
+      "versions": "الإصدارات والتحليل",
+      "workflow": "سير المراجعة",
+      "decisions": "القرارات",
+      "conditions": "الشروط",
+      "responses": "الردود على الملاحظات",
+      "legal": "القانوني",
+      "risk": "قبول المخاطر",
+      "lifecycle": "دورة الحياة"
+    },
+    "event": {
+      "unassigned": "أُلغي الإسناد (المراجع لم يعد مؤهلاً)",
+      "conditions_submitted": "أُرسلت الشروط للتحقق",
+      "condition_verified": "تحقق المراجع من شرط",
+      "condition_more_evidence": "طُلبت أدلة إضافية لشرط",
+      "condition_rejected": "رُفض استيفاء شرط",
+      "correction_started": "بدأ طلب الإصلاح الذكي",
+      "correction_accepted": "قُبل تصحيح الإصلاح الذكي كإصدار جديد",
+      "license_checked": "تحقق يدوي من رخصة موثوق",
+      "lifecycle_published": "سُجّل النشر"
+    },
+    "responses": "{n} ردود على الملاحظات من {side}",
+    "member": "عضو",
+    "notRecorded": "الفاعل غير مسجّل",
+    "currentRole": "(الدور الحالي)",
+    "noDetails": "لا تفاصيل إضافية مسجلة.",
+    "field": {
+      "note": "ملاحظة",
+      "reason": "السبب",
+      "question": "السؤال",
+      "response": "الرد",
+      "status": "الحالة",
+      "verdict": "النتيجة",
+      "method": "الطريقة",
+      "license_no": "رقم الرخصة",
+      "previous": "السابق",
+      "assignee": "المُسند إليه",
+      "returned_to": "أُعيد إلى",
+      "unanswered_findings": "ملاحظات بلا رد"
+    }
   }
 }

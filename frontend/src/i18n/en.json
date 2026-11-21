@@ -3172,5 +3172,49 @@
     "note": "How did you check?",
     "save": "Record check",
     "saved": "Licence check recorded."
+  },
+  "history2": {
+    "filters": "Filter history",
+    "cat": {
+      "all": "All",
+      "versions": "Versions & analysis",
+      "workflow": "Review workflow",
+      "decisions": "Decisions",
+      "conditions": "Conditions",
+      "responses": "Finding responses",
+      "legal": "Legal",
+      "risk": "Risk acceptance",
+      "lifecycle": "Lifecycle"
+    },
+    "event": {
+      "unassigned": "Assignment cleared (reviewer no longer eligible)",
+      "conditions_submitted": "Conditions submitted for verification",
+      "condition_verified": "Condition verified",
+      "condition_more_evidence": "More evidence requested for a condition",
+      "condition_rejected": "Condition fulfilment rejected",
+      "correction_started": "SALEEM Fix request started",
+      "correction_accepted": "SALEEM Fix correction accepted as a new version",
+      "license_checked": "Manual Mawthooq licence check",
+      "lifecycle_published": "Publication recorded"
+    },
+    "responses": "{n} finding responses by {side}",
+    "member": "Member",
+    "notRecorded": "Actor not recorded",
+    "currentRole": "(current role)",
+    "noDetails": "No further details recorded.",
+    "field": {
+      "note": "Note",
+      "reason": "Reason",
+      "question": "Question",
+      "response": "Response",
+      "status": "Status",
+      "verdict": "Result",
+      "method": "Method",
+      "license_no": "Licence no.",
+      "previous": "Previous",
+      "assignee": "Assignee",
+      "returned_to": "Returned to",
+      "unanswered_findings": "Unanswered findings"
+    }
   }
 }
