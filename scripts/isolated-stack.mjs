@@ -26,6 +26,15 @@ function sync() {
     cpSync(join(src, d), join(dst, d), { recursive: true });
   }
   cpSync(join(src, "seed.sql"), join(dst, "seed.sql"));
+  // D201: automated runs on the isolated stack must never spend AI quota by accident (accepting a corrected video
+  // starts a real analysis). The Gemini key is blanked unless ISO_ALLOW_REAL_AI=1 is set for a deliberate run.
+  const fenv = join(dst, "functions", ".env");
+  if (existsSync(fenv) && process.env.ISO_ALLOW_REAL_AI !== "1")
+    writeFileSync(
+      fenv,
+      readFileSync(fenv, "utf8").replace(/^GEMINI_API_KEY=.*$/m, "GEMINI_API_KEY=") +
+        "\nDEMO_AI_DAILY_LIMIT=0\n",
+    );
   // Same configuration, different project and ports (+100), heavy optional services off.
   let cfg = readFileSync(join(src, "config.toml"), "utf8")
     .replace(/^project_id = ".*"$/m, 'project_id = "saleem_iso"')
