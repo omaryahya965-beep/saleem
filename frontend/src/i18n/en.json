@@ -3439,5 +3439,40 @@
   "rules2": {
     "dupTitle": "Similar rules already exist",
     "dupHint": "Warning only: nothing is deleted or replaced. A draft that repeats an active rule cannot be approved."
+  },
+  "dash3": {
+    "title": {
+      "owner": "Workspace governance",
+      "admin": "Workspace reviews",
+      "compliance_lead": "Compliance team",
+      "reviewer": "My reviews",
+      "legal": "My legal cases",
+      "creator": "My advertisements",
+      "external_uploader": "My partner advertisements",
+      "external_reviewer": "External review",
+      "viewer": "Audit view (read-only)"
+    },
+    "tile": {
+      "escalated": "Escalated to legal",
+      "resubmitted": "Resubmitted",
+      "legalOpen": "Escalated to me, awaiting my opinion",
+      "legalAnswered": "Cases I answered",
+      "rejected": "Rejected"
+    },
+    "list": {
+      "unassignedList": "Awaiting assignment",
+      "overdueList": "Overdue",
+      "deadlines": "My cases by deadline",
+      "legalCases": "Legal cases",
+      "actionNeeded": "Needs action from you",
+      "recent": "Recent decisions on my ads"
+    },
+    "nothing": "Nothing here right now.",
+    "fixHint": "On an ad with requested changes, SALEEM Fix proposes a correction plan with revised text and video to review.",
+    "partnerSubs": "Partner submissions: {n}",
+    "manageWorkspace": "Team & Workspace",
+    "products": "Products",
+    "externalReviewer": "No advertisements shared with you",
+    "externalReviewerBody": "The external reviewer role currently grants no access; only ads explicitly shared with you will appear here once sharing is enabled."
   }
 }
