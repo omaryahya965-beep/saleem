@@ -25,7 +25,9 @@ import {
   saveInternalRule,
   useGuidelines,
   useInternalRules,
+  RULE_CATEGORIES,
   type InternalRule,
+  type RuleCategory,
 } from "@/lib/api/internalRules";
 import { useOrgSettings } from "@/lib/api/promotions";
 import { useAuth } from "@/lib/api/auth";
@@ -36,6 +38,7 @@ type Edit = {
   title: string;
   instruction: string;
   severity: string;
+  category: RuleCategory;
 };
 
 /** Brand guidelines -> drafted internal rules -> a person edits and approves each (Phase 6.7). «سياسة داخلية». */
@@ -53,6 +56,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
   const [edit, setEdit] = useState<Edit | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [extracting, setExtracting] = useState(false);
   const [fileStats, setFileStats] = useState<{
     name: string;
@@ -149,7 +153,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
       toast.success(t("internalRules.extractedSummary", { chars: extracted.length }));
     } catch (err) {
       console.error("Document extraction error:", err);
-      toast.error("تعذر استخراج نص المستند. يمكنك لصق النص يدوياً.");
+      toast.error(t("rules2.extractFailed"));
     } finally {
       setExtracting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -165,11 +169,13 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
       title: r.title_ar,
       instruction: r.instruction_ar,
       severity: r.severity,
+      category: (r.category ?? "compliance_policy") as RuleCategory,
     });
 
   // Filter company rules
   const filteredRules = (rules.data ?? []).filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (categoryFilter !== "all" && r.category !== categoryFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const match =
@@ -186,6 +192,12 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
       <div className="flex flex-col gap-1">
         <CardTitle>{t("internalRules.title")}</CardTitle>
         <p className="text-sm text-fg-muted leading-relaxed">{t("internalRules.subtitle")}</p>
+        <p
+          className="rounded-md border border-border bg-sunken/40 px-3 py-2 text-xs text-fg-muted"
+          data-testid="rules-not-regulatory"
+        >
+          {t("rules2.notRegulatory")}
+        </p>
       </div>
 
       {/* Upload & Guidelines Box */}
@@ -196,7 +208,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
             {t("internalRules.guidelines")}
           </h3>
           <span className="text-xs text-fg-muted">
-            {(guidelines.data ?? []).length} وثائق محفوظة
+            {t("rules2.savedDocs", { n: (guidelines.data ?? []).length })}
           </span>
         </div>
 
@@ -255,7 +267,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               disabled={extracting}
               onClick={() => fileInputRef.current?.click()}
             >
-              {extracting ? t("internalRules.extracting") : "اختيار ملف (PDF / TXT / DOCX)"}
+              {extracting ? t("internalRules.extracting") : t("rules2.chooseFile")}
             </Button>
             <span className="text-xs text-fg-muted">{t("internalRules.uploadDocHint")}</span>
           </div>
@@ -263,10 +275,10 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
           {fileStats && (
             <div className="mt-1 flex items-center gap-2 rounded bg-green/10 px-3 py-1.5 text-xs text-green">
               <span>
-                ملف: <strong>{fileStats.name}</strong>
+                {t("rules2.file")}: <strong>{fileStats.name}</strong>
               </span>
-              {fileStats.pages && <span>· {fileStats.pages} صفحة</span>}
-              <span>· {fileStats.chars} حرف مستخرج</span>
+              {fileStats.pages && <span>· {t("rules2.pages", { n: fileStats.pages })}</span>}
+              <span>· {t("rules2.chars", { n: fileStats.chars })}</span>
             </div>
           )}
         </div>
@@ -277,7 +289,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
             <Input
               value={gTitle}
               onChange={(e) => setGTitle(e.target.value)}
-              placeholder="مثال: دليل الهوية البصرية 2026 أو سياسة الإفصاحات التمويلية"
+              placeholder={t("rules2.guidelineTitlePh")}
               dir="auto"
             />
           </Field>
@@ -286,7 +298,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               rows={4}
               value={gText}
               onChange={(e) => setGText(e.target.value)}
-              placeholder="الصق نصوص السياسات أو الشروط الإلزامية هنا..."
+              placeholder={t("rules2.guidelineTextPh")}
               dir="auto"
             />
           </Field>
@@ -321,10 +333,24 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-36 text-xs"
           >
-            <option value="all">كافة الحالات</option>
-            <option value="active">مفعّلة (سارية)</option>
-            <option value="draft">مسودة</option>
-            <option value="archived">مؤرشفة</option>
+            <option value="all">{t("rules2.allStatuses")}</option>
+            <option value="active">{t("rules2.stActive")}</option>
+            <option value="draft">{t("rules2.stDraft")}</option>
+            <option value="archived">{t("rules2.stArchived")}</option>
+          </Select>
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-44 text-xs"
+            aria-label={t("rules2.category")}
+            data-testid="rule-category-filter"
+          >
+            <option value="all">{t("rules2.allCategories")}</option>
+            {RULE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {t(`rules2.cat.${c}` as TKey)}
+              </option>
+            ))}
           </Select>
         </div>
 
@@ -334,7 +360,15 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
             variant="secondary"
             icon={<Plus />}
             onClick={() =>
-              setEdit({ id: null, code: "INT-", title: "", instruction: "", severity: "warning" })
+              setEdit({
+                id: null,
+                code: "INT-",
+                title: "",
+                instruction: "",
+                severity: "warning",
+                category:
+                  categoryFilter === "all" ? "compliance_policy" : (categoryFilter as RuleCategory),
+              })
             }
           >
             {t("internalRules.add")}
@@ -346,7 +380,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
       <ul className="flex flex-col gap-2.5 text-sm">
         {filteredRules.length === 0 ? (
           <li className="rounded-md border border-dashed border-border p-6 text-center text-xs text-fg-muted">
-            لا توجد قواعد شركة مطابقة لخيارات البحث والتصفية.
+            {t("rules2.noMatch")}
           </li>
         ) : (
           filteredRules.map((r) => (
@@ -368,9 +402,12 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
                   <Badge variant="outline">{t(`internalRules.source.${r.source}` as TKey)}</Badge>
                   <Badge variant="outline">{t("companyRules.version", { n: r.version })}</Badge>
                   <Badge variant="neutral">{t("companyRules.internalPolicy")}</Badge>
+                  <Badge variant="outline" data-testid="rule-category">
+                    {t(`rules2.cat.${r.category ?? "compliance_policy"}` as TKey)}
+                  </Badge>
                 </div>
                 <Badge variant={r.severity === "violation" ? "inverse" : "neutral"}>
-                  {r.severity === "violation" ? "مخالفة لسياسة الشركة" : "تنبيه وملاحظة"}
+                  {r.severity === "violation" ? t("rules2.sevViolation") : t("rules2.sevWarning")}
                 </Badge>
               </div>
 
@@ -413,9 +450,9 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
       {edit && (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-sunken/40 p-4 shadow-sm">
           <div className="font-semibold text-sm text-fg">
-            {edit.id ? "تعديل قاعدة الشركة" : "إضافة قاعدة شركة جديدة"}
+            {edit.id ? t("rules2.editTitle") : t("rules2.addTitle")}
           </div>
-          <div className="grid gap-3 sm:grid-cols-[12rem_1fr_10rem]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[12rem_1fr_10rem_13rem]">
             <Field label={t("internalRules.code")}>
               <Input
                 value={edit.code}
@@ -428,7 +465,7 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               <Input
                 value={edit.title}
                 onChange={(e) => setEdit({ ...edit, title: e.target.value })}
-                placeholder="عنوان القاعدة باللغة العربية"
+                placeholder={t("rules2.ruleTitlePh")}
                 dir="auto"
               />
             </Field>
@@ -441,13 +478,26 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
                 <option value="violation">{t("internalRules.sev.violation")}</option>
               </Select>
             </Field>
+            <Field label={t("rules2.category")}>
+              <Select
+                value={edit.category}
+                onChange={(e) => setEdit({ ...edit, category: e.target.value as RuleCategory })}
+                data-testid="rule-category-select"
+              >
+                {RULE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`rules2.cat.${c}` as TKey)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           </div>
           <Field label={t("internalRules.instruction")}>
             <Textarea
               rows={2}
               value={edit.instruction}
               onChange={(e) => setEdit({ ...edit, instruction: e.target.value })}
-              placeholder="صف بدقة ما يجب فحصه في الإعلان (الشعار، الألوان، المصطلحات، نسب التخفيض، الإخلاء الإلزامي)..."
+              placeholder={t("rules2.instructionPh")}
               dir="auto"
             />
           </Field>

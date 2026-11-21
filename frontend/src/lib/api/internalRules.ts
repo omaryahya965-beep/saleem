@@ -6,6 +6,17 @@ import { ApiError } from "./data";
 
 type Tables = Database["public"]["Tables"];
 export type InternalRule = Tables["internal_rules"]["Row"];
+/** D200: what an internal rule governs. Descriptive only — never a Saudi regulatory requirement. */
+export const RULE_CATEGORIES = [
+  "compliance_policy",
+  "approved_language",
+  "prohibited_claim",
+  "brand_guideline",
+  "logo",
+  "brand_colors",
+  "required_disclosure",
+] as const;
+export type RuleCategory = (typeof RULE_CATEGORIES)[number];
 export type BrandGuideline = Tables["brand_guidelines"]["Row"];
 
 function check<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
@@ -56,18 +67,31 @@ export async function draftRules(org: string, guideline: string) {
   return data as { drafted: number; source: "model_draft" | "heuristic_draft" };
 }
 
+const untypedRpc = supabase.rpc.bind(supabase) as unknown as (
+  fn: string,
+  args: Record<string, unknown>,
+) => PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>;
+
 export const saveInternalRule = async (
   org: string,
-  i: { id: string | null; code: string; title: string; instruction: string; severity: string },
+  i: {
+    id: string | null;
+    code: string;
+    title: string;
+    instruction: string;
+    severity: string;
+    category: RuleCategory;
+  },
 ) =>
   check(
-    await supabase.rpc("save_internal_rule", {
+    await untypedRpc("save_internal_rule_v2", {
       _org: org,
       _id: i.id,
       _code: i.code,
       _title: i.title,
       _instruction: i.instruction,
       _severity: i.severity,
+      _category: i.category,
     }),
   );
 export const approveInternalRule = async (id: string) => {

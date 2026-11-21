@@ -979,6 +979,7 @@ export type Database = {
           approved_at: string;
           approved_by: string;
           code: string;
+          category: string | null;
           edited_at: string | null;
           edited_by: string | null;
           id: string;
@@ -998,6 +999,7 @@ export type Database = {
           approved_at: string | null;
           approved_by: string | null;
           code: string;
+          category: string;
           created_at: string;
           edited_at: string | null;
           edited_by: string | null;

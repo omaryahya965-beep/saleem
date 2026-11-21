@@ -81,6 +81,19 @@ do $$ begin
   perform pg_temp.expect_error(format('select public.approve_internal_rule(%L)', (select id from public.internal_rules where code = 'INT-FIN-02')), 'code:duplicate_of_active');
   if (select count(*) from public.internal_rules where org_id = '2e000000-0000-0000-0000-000000000001') <> 2 then raise exception 'rule deleted'; end if;
 end $$;
+-- D200: categories. The approved version records the category; changing it sends an active rule back to draft.
+do $$
+declare _id uuid := (select id from public.internal_rules where code = 'INT-FIN-01');
+begin
+  if (select category from public.internal_rule_versions where rule_id = _id order by version desc limit 1) is distinct from 'compliance_policy' then
+    raise exception 'version category not recorded'; end if;
+  perform pg_temp.expect_error(format('select public.save_internal_rule_v2(%L, %L, %L, %L, %L, %L, %L)', '2e000000-0000-0000-0000-000000000001', _id,
+    'INT-FIN-01', 'x', 'y', 'violation', 'regulatory'), 'code:invalid_category');
+  perform public.save_internal_rule_v2('2e000000-0000-0000-0000-000000000001', _id, 'INT-FIN-01', 'لا موافقة مضمونة',
+    'لا تذكر موافقة مضمونة على التمويل في أي إعلان', 'violation', 'prohibited_claim');
+  if (select status || '/' || category from public.internal_rules where id = _id) <> 'draft/prohibited_claim' then raise exception 'category edit not a draft'; end if;
+  if public.guess_rule_category('الشعار', 'يظهر الشعار أعلى الإعلان') <> 'logo' then raise exception 'guess logo'; end if;
+end $$;
 reset role;
 select pass('p13 workspace');
 select * from finish();

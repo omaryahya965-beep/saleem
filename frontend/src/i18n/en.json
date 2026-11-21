@@ -3445,7 +3445,38 @@
   },
   "rules2": {
     "dupTitle": "Similar rules already exist",
-    "dupHint": "Warning only: nothing is deleted or replaced. A draft that repeats an active rule cannot be approved."
+    "dupHint": "Warning only: nothing is deleted or replaced. A draft that repeats an active rule cannot be approved.",
+    "category": "Category",
+    "allCategories": "All categories",
+    "cat": {
+      "compliance_policy": "Internal compliance policy",
+      "approved_language": "Approved language",
+      "prohibited_claim": "Prohibited claims",
+      "brand_guideline": "Brand guidelines",
+      "logo": "Logo requirements",
+      "brand_colors": "Brand colours",
+      "required_disclosure": "Required disclosures"
+    },
+    "notRegulatory": "These are your organisation's internal policies, not Saudi regulatory requirements. Their findings carry an «Internal policy» label, and no rule (including AI-extracted ones) becomes active until someone other than its author approves it.",
+    "extractFailed": "The document text could not be extracted. You can paste the text manually.",
+    "savedDocs": "{n} saved documents",
+    "chooseFile": "Choose a file (PDF / TXT / DOCX)",
+    "file": "File",
+    "pages": "{n} pages",
+    "chars": "{n} characters extracted",
+    "guidelineTitlePh": "e.g. Visual identity guide 2026 or Financial disclosure policy",
+    "guidelineTextPh": "Paste the policy text or mandatory conditions here...",
+    "allStatuses": "All statuses",
+    "stActive": "Active",
+    "stDraft": "Draft",
+    "stArchived": "Archived",
+    "noMatch": "No company rules match the search and filters.",
+    "sevViolation": "Company policy violation",
+    "sevWarning": "Warning",
+    "editTitle": "Edit company rule",
+    "addTitle": "Add a company rule",
+    "ruleTitlePh": "Rule title",
+    "instructionPh": "Describe exactly what to check in the advertisement (logo, colours, terms, discount rates, mandatory disclosure)..."
   },
   "dash3": {
     "title": {

@@ -186,6 +186,9 @@ function VersionsCard({ orgId }: { orgId: string }) {
           <li key={v.id} className="flex flex-wrap items-center gap-2">
             <Badge mono>{v.code}</Badge>
             <Badge variant="outline">{t("companyRules.version", { n: v.version })}</Badge>
+            {v.category && (
+              <Badge variant="neutral">{t(`rules2.cat.${v.category}` as never)}</Badge>
+            )}
             <span dir="auto">{v.title_ar}</span>
             <span className="text-fg-muted">
               {t("companyRules.approvedAt", { date: formatDate(v.approved_at) })}
