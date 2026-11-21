@@ -668,6 +668,13 @@ Deno.serve(async (req: Request) => {
   if (sub.status === "done") return json({ status: "done" }, 200);
   if (sub.status === "failed" && sub.error_message === CANCELLED) return json({ status: "cancelled" }, 409);
 
+  // D207: without a configured model there is nothing to run — fail at once with a clear code instead of leaving the
+  // version queued until the 10-minute watchdog («stuck_timeout»). No provider request is made.
+  if (!hasGeminiKey(env)) {
+    await db.from("submissions").update({ status: "failed", error_message: "code:provider_not_configured" }).eq("id", sub.id).neq("status", "done");
+    return json({ status: "failed", error: "code:provider_not_configured" }, 503);
+  }
+
   // Another worker is active if the heartbeat is fresh (idempotent re-invocation).
   const fresh = sub.heartbeat_at && Date.now() - new Date(sub.heartbeat_at).getTime() < 45_000;
   if (fresh && !["queued", "failed"].includes(sub.status)) return json({ status: "running" }, 202);

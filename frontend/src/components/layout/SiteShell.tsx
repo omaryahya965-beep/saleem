@@ -223,8 +223,15 @@ export function SiteShell({ children }: { children: ReactNode }) {
   // Route guard: a page outside the role's navigation is not rendered, even by typed URL (the server still filters
   // every query). Decided only once the navigation is known (memberships loaded), so nothing flashes.
   const page = pageForPath(pathname);
+  // D207: an external partner creates advertisements only through a partner link, but must be able to upload the
+  // file and later versions of its OWN advertisement (/new?promotion=…). The server still checks ownership and state.
+  const addingVersion = useRouterState({
+    select: (s) => typeof (s.location.search as Record<string, unknown>)["promotion"] === "string",
+  });
+  const partnerVersion = page === "new" && addingVersion && picker.role === "external_uploader";
   const blocked = Boolean(
     page &&
+    !partnerVersion &&
     groups.length &&
     !groups.some((g) =>
       g.items.some((i) => i.key === page || (page === "adminMetrics" && i.key.startsWith("admin"))),

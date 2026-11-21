@@ -73,6 +73,9 @@ do $$ begin
   perform public.accept_studio_draft('3f000000-0000-0000-0000-000000000001', '4f000000-0000-0000-0000-000000000001', '5f000000-0000-0000-0000-000000000001'); -- idempotent
   if (select status || '/' || (result_submission_id = '5f000000-0000-0000-0000-000000000001')::text from public.studio_drafts where id = '3f000000-0000-0000-0000-000000000001') <> 'accepted/true' then
     raise exception 'not accepted with its result'; end if;
+  -- D208: approval is blocked while the version has no completed analysis.
+  if not (select bool_or(x like 'analysis_not_done:%') from unnest(public.approval_blockers('4f000000-0000-0000-0000-000000000001')) x) then
+    raise exception 'unanalysed version not blocked'; end if;
   -- The generated ad is never approved automatically.
   if (select review_status from public.promotions where id = '4f000000-0000-0000-0000-000000000001') <> 'draft' then raise exception 'status changed'; end if;
   -- Accepted drafts are frozen.

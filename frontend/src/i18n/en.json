@@ -952,7 +952,8 @@
     "provider_provider_down": "The AI analysis service is temporarily unavailable. Please retry shortly.",
     "provider_unknown": "The analysis did not complete. No ungrounded findings were produced. Please retry.",
     "pipeline_unexpected": "An unexpected error happened during the check. Please retry.",
-    "stuck_timeout": "The check stopped responding. Please retry."
+    "stuck_timeout": "The check stopped responding. Please retry.",
+    "provider_not_configured": "Automated analysis is not configured in this environment (no model provider). You can submit for human review with an acknowledgement, or retry once it is configured."
   },
   "audioMode": {
     "label": "Audio",
@@ -1439,7 +1440,7 @@
       "invalid_status": "This action isn't possible in the current review status.",
       "no_version": "No version has been uploaded.",
       "analysis_failed": "The automated analysis failed — confirm to submit anyway.",
-      "analysis_not_done": "The automated analysis hasn't finished.",
+      "analysis_not_done": "Approval needs a completed automated analysis of this version. You can request changes or reject, or re-run the analysis and then approve.",
       "missing_uploader_responses": "{n} findings have no response from you.",
       "missing_reviewer_responses": "{n} findings have no reviewer assessment yet (required for approval only).",
       "note_required_same_version": "Add a note to resubmit the same version.",
