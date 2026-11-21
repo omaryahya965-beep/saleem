@@ -81,3 +81,20 @@ and D169: marketer proposes / cannot approve or publish, reviewers never assign,
 | SALEEM Fix | uploader side (not reviewer/legal/viewer/external reviewer); flag `saleem_fix`; open states; analysed current version; quota | `can_fix_promotion`, `create_correction_job`, `begin/finish/abort_accept_correction`, Edge Function `fix` (job owner only) |
 
 Verified by pgTAP `p9_upgrade` (decisions, conditions, partners, idempotency) and `p10_fix`.
+
+## V2 completion additions (D186–D204)
+
+| Action | Who | Enforced by |
+|---|---|---|
+| Self-approval | only when no live multi-level flow, not a financial promotion, full coverage, every finding answered, no open violation, no required evidence, no high-risk pack, no unverified condition | `can_self_approve` (D186) |
+| Record publication | from approved, risk-accepted or due-for-re-review states only | `record_lifecycle` (D186) |
+| Mention a member | only promotion readers can be mentioned; external users see role names only | `add_comment`, `comment_participants` (D189) |
+| Comment kinds `change_request`, `reviewer_feedback` | the decider side | `add_comment` |
+| Verify a creator's Mawthooq licence | the decider side; manual and audited | `verify_creator_license` |
+| Company rule category / save | `can_manage_internal_rules`; a change sends the rule back to draft for second-person approval | `save_internal_rule_v2` (D200) |
+| SALEEM Fix media edit | as SALEEM Fix; needs an original video on the current version | `create_correction_job` (`media_edit`), `begin_accept_correction` (creator only; stale re-claim after 10 min) (D198) |
+| SALEEM Fix monthly quota | owner, admin | `set_fix_monthly_limit` |
+| Authorised organisations (/org) for externals | own membership rows and assigned links only (never the organisation row) | RLS on `org_members`, `my_partner_links` (D201) |
+| Demo AI usage | all sandbox personas share `DEMO_AI_DAILY_LIMIT` | `analyze`, `fix` + `demo_ai_runs_today` (service role) (D187) |
+
+Verified by pgTAP `p11`–`p14`, `rbac.test.ts`, and the nine-role browser walkthrough (`scripts/browser-walkthrough.mjs`).

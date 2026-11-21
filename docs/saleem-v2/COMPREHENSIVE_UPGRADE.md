@@ -124,3 +124,123 @@ SS = browser screenshot pass (local stack, 375–1920 px, no overflow, no page e
 - No live Gemini run of SALEEM Fix or of the Nada Cream V1/V2 analysis in this run.
 - Sections marked B above were not reached and remain as before.
 - The local manual-test database was wiped by a `db reset` during this run; only the uploaded media survived.
+
+---
+
+# V2 completion report (2026-11-21, branch `feature/saleem-v2-completion`)
+
+The original 122 observations are not in the repository. `SALEEM_V2_UPGRADE.md` consolidates them into the
+requirements of §4–§33, and the table below maps every consolidated requirement (some cover several observations).
+**Not all 122 are complete.** The rows marked P, B or L say what is left. Decisions: D186–D204. Nothing was
+deployed, and the hosted database was not touched.
+
+Statuses (spec §24): **V** Implemented and verified · **I** Implemented but not runtime-verified · **P** Partially
+implemented · **B** Blocked by external dependency · **L** Requires legal approval · **N/A** Not applicable after
+investigation.
+
+Verification: pgTAP = `backend/supabase/tests` on the isolated stack · BT/FT = backend/frontend vitest · E2E =
+Playwright (51 tests, 3 projects) · WT = `scripts/browser-walkthrough.mjs` (nine roles + 60 responsive views on
+the isolated stack) · NA = `scripts/nada-acceptance.mjs`.
+
+Migrations in this branch: `20261121100000_v2_governance_audit`, `20261121110000_v2_collaboration`,
+`20261121120000_v2_workspace`, `20261121130000_v2_fix_media`, `20261121140000_v2_fix_notifications`,
+`20261121150000_v2_rule_categories`.
+
+## Correctness, engine and security
+
+| § | Requirement | Before | Now | Files | Migration | Verification | Result | Limitation |
+|---|---|---|---|---|---|---|---|---|
+| 6 | Header analysis state after completion | V | V | `PromotionPage.tsx` | — | E2E | pass | — |
+| 6 | Separate analysis and approval states | V | V | header chips | — | E2E | pass | — |
+| 6 | «Partially completed» analysis state | P | P | model only | — | — | — | Header still shows «مكتمل» for partial coverage |
+| 6 | No duplicate paid analysis requests | V | V | `analyze` idempotency | — | BT | pass | — |
+| 5.1 | Semantic grouping, raw findings kept | V | V | `grouping.ts` | — | FT, E2E sample | pass | — |
+| 5.2 | Mawthooq rules not applied to own-channel company ads | V | V | `applicability.ts` | — | BT `mawthooq-applicability` (8) | pass | MAW scope still needs legal confirmation |
+| 5.3 | Sector coverage with official sources | P | L | `legal/REGULATORY_VERIFICATION.md`, generator | — | reachability of all 19 cited URLs | 126 ready for legal review · 18 need a primary instrument · 9 unreachable here · 34 SAMA link opens a page, not the PDF | No rule activated; exclusions and effective dates are not in the dataset |
+| 5.3 | Cosmetics coverage (Nada) | P | L | `legal/coverage-notes.md` | — | mapping to SA-COS-003/004 and the D188 patterns | therapeutic-claim gap found | Candidate COS-CAND-01 awaits a verified legal reference |
+| 5.4 | Applicability reporting | P | P | existing panel | — | — | — | No package-level view |
+| 5.5 | AI integrity and honest coverage | P | P | pipeline guards | — | BT | pass | No new red-team suite |
+| 14c | AI accuracy evaluation | — | V | `backend/eval/cases.json` (26), `deterministic.ts` | — | `eval --deterministic-only` | recall 0.81, precision 1.0; deterministic-capable 34/34 | Model-only rules need a live run |
+| 11 | Submit with unanswered findings per policy | V | V | — | — | pgTAP p3/p9 | pass | — |
+| 11 | Request changes without answering all; strict approval | V | V | — | — | pgTAP p9, NA | approval blocked (`confirmed_violations:4`) | — |
+| 12.4 | Resubmission to the previous reviewer | V | V | — | — | pgTAP p9 | pass | — |
+| 15 | Conditional approval integrity | V | V | — | 100000 | pgTAP p9, p11 | pass | — |
+| 17 | Decisions and audit preserved, no duplicate events | V | V | — | — | pgTAP, BT workflows (sealed chain) | pass | — |
+| 23 | RBAC from membership role, server-enforced | V | V | — | — | `rbac.test` (15), pgTAP p8, WT | pass | — |
+| 25 | Risk acceptance and self-approval re-audit | P | V | `can_self_approve`, `record_lifecycle` | 100000 | pgTAP p11 (negative tests) | bypass fixed (D186) | — |
+| 27.6 | Partner single-active-ad bug, configurable limit | V | V | — | — | pgTAP p9 | pass | — |
+| 35 / 21c | Security audit incl. direct requests | P | V | `SECURITY_AUDIT_V2.md` | — | pgTAP, rbac, isolation, demo-login, `client-ip` | 5 issues fixed (D186, D187, D189, D198, D204) | Production settings: recommendations only |
+| 21c | Demo login abuse (500/h in production) | — | P | `demo-login`, `_shared/http.ts` | 100000 | BT `client-ip` (4), `demo-login` | code default 20/h, spoof fix, shared AI cap | Production env change needs your approval |
+
+## Workflow and UI
+
+| § | Requirement | Before | Now | Files | Migration | Verification | Result | Limitation |
+|---|---|---|---|---|---|---|---|---|
+| 7 | Four-step new-advertisement flow | V | V | wizard | — | E2E | pass | — |
+| 7 | Paid / channel single representation | V | V | — | — | FT | pass | — |
+| 7 / 4.3 | Conflicts before analysis | V | V | — | — | FT, E2E | pass | — |
+| 7 | Draft recovery | I | I | localStorage | — | — | — | Not browser-tested |
+| 8.1 | Advertisement header | V | V | — | — | WT | pass | — |
+| 8.1 | Historical version guard | I | I | — | — | — | — | Not browser-tested |
+| 8.2 | Role-specific next step | V | V | `NextStep` | — | WT | pass | — |
+| 8.3 | Media workspace | V | V | player | — | E2E | pass | — |
+| 8.4 | Five consistent tabs | P | V | Comments, History, Information redesigned | 110000, 120000 | FT `comments`, `history`; WT | pass | — |
+| 9 | Findings summary and cards | V | V | — | — | E2E | pass | — |
+| 10 | Responses inside the cards | V | V | — | — | pgTAP; NA (real RPCs) | pass | — |
+| 12.1–12.3 | Queue and direct assignment | V | V | — | — | pgTAP, WT | pass | — |
+| 13 | Decision dialog | V | V | — | — | FT | pass | Summary counts not filled from the page |
+| 14 | Requested-changes workflow | V | V | — | — | NA (`changes_requested` with reason) | pass | — |
+| 15 | Conditions workspace in the browser | I | I | — | — | pgTAP only | — | Not exercised end-to-end in the browser |
+| 16 | Version comparison | V | V | — | — | E2E | pass | — |
+| 17 / 8c | History timeline | P | V | `HistoryPanel.tsx` | 120000 | FT `history`, WT | pass | — |
+| 18 / 3c | Comments: threads, mentions, categories, links | B | V | `CommentsPanel.tsx`, `comments.ts` | 110000 | pgTAP p12, FT `comments` | pass | Attachments are links; no file upload inside comments |
+| 19 / 9c | Information tab, Mawthooq manual check | P | V | `InfoSections.tsx`, `LicenseCheck.tsx` | 110000 | pgTAP p12, WT | pass | — |
+| 20 / 10c | Role dashboards | P | V | `RoleWorkload.tsx` | — | WT (8 of 9 roles show a workload) | pass | External reviewer sees no data until sharing exists |
+| 28 / 17c | Notifications | P | V | `Notifications.tsx` | 110000, 140000 | pgTAP p12, p14 | pass | In-app only; no email delivery |
+| 33 | Navigation and accessibility | P | P | — | — | WT | roles matrix overflow fixed | No full accessibility audit |
+| 36.5 / 22c | Visual QA 375/768/1024/1440/1920, ar/en | P | V | `browser-walkthrough.mjs` | — | WT: 60 responsive views | see final report | Screenshots are local files, not committed |
+
+## Organisation management
+
+| § | Requirement | Before | Now | Files | Migration | Verification | Result | Limitation |
+|---|---|---|---|---|---|---|---|---|
+| 4.1–4.2 | Sectors and dynamic product forms | V | V | — | — | FT, pgTAP p9 | pass | — |
+| 4.3 | Content-vs-metadata conflicts | P | P | — | — | — | — | Financial product facts only |
+| 21 / 4c | Team & Workspace six tabs, owner label | B | V | `OrgPages.tsx`, `WorkspaceOverview.tsx` | 120000 | pgTAP p13, WT | pass (owner-as-admin was a display bug) | — |
+| 22 / 5c | Roles & Permissions page | B | V | `RolesPage.tsx`, `catalogue.ts` | 120000 | FT `roles-catalogue`, WT | pass | — |
+| 24 / 6c | Features page categories and configuration | B | V | `FeaturesPage.tsx` | 120000 | pgTAP p13, WT | pass | — |
+| 26 / 7c | Duplicate internal rules | B | V | `DuplicateWarning.tsx`, `internal-rules-draft` | 120000 | pgTAP p13 | duplicates warned, approval refused | — |
+| 26 / 7c | Company Rules categories; internal vs regulatory | B | V | `InternalRulesCard.tsx`, `CompanyRulesPage.tsx` | 150000 | pgTAP p13 | pass | Logo and colour rules are text instructions; no image matching |
+| 27.1–27.2 | Partner identity and scoped links | V | V | — | — | pgTAP p6, p9 | pass | — |
+| 27.3 | Link origin | V | V | — | — | — | — | — |
+| 27.4 / 11c | Partner dashboard and authorised organisations | I | V | `MyPartnerLinks.tsx`, `PartnerOrgs.tsx` | — | WT (partner `/org`, dashboard) | pass | — |
+| 27.5 | Partner submission page | I | I | `PartnerPage.tsx` | — | pgTAP | — | No browser submission with a real analysis |
+| 27.7–27.8 | Full partner lifecycle and isolation | P | P | — | — | pgTAP p6/p9, rbac | isolation pass | Upload → analysis → revision as a partner not run in the browser |
+
+## SALEEM Fix
+
+| § | Requirement | Before | Now | Files | Migration | Verification | Result | Limitation |
+|---|---|---|---|---|---|---|---|---|
+| 29.1 | Methods (manual, AI text, media edit, replacement) | P | P | `FixPage.tsx` | 130000 | pgTAP p14 | media edit added | Replacement video needs a provider |
+| 29.2–29.4 | Text correction workspace | I | I | `fix` function | — | BT `fix.test` | guards pass | No live Gemini call: the key's free-tier status could not be confirmed |
+| 29.5 | On-screen and voiceover correction | B | V | `mediaPlan.ts`, `mediaRender.ts`, `MediaEditor.tsx` | 130000 | FT `media-plan`; browser on the isolated stack | real MP4, 15.4 s, 768×1344, disclosure burnt in | Recorded or uploaded voice only |
+| 29.5 | Text-to-speech voices | B | B | `providers.ts`, `SALEEM_FIX_PROVIDERS.md` | — | — | — | Gemini TTS / ElevenLabs / HeyGen need paid API access |
+| 29.6 | Replacement video generation | B | B | `providers.ts` | — | — | — | Veo / HeyGen / Runway need paid API access |
+| 29.7–29.9 | Preview, acceptance, new version, re-analysis | V | V | `fix.ts` | 130000 | browser + DB (v2 video, job accepted, ad back to draft) | pass | — |
+| 29.10 | Cost and quota controls | V | V | — | 120000, 130000 | pgTAP p10 | pass | — |
+| 30 / 16c | Nada Cream scenario | B | P | `nada-acceptance.mjs` | — | real run on the isolated stack | v1→v2: MAW-01 resolved, COM-01 5→4; submit, assign, review, changes requested; approval blocked | v3 and the final decision need another analysis run; no evidence invented |
+
+## Public presentation and cross-cutting
+
+| § | Requirement | Before | Now | Files | Migration | Verification | Result | Limitation |
+|---|---|---|---|---|---|---|---|---|
+| 31 | Landing page | V | V | — | — | E2E | pass | — |
+| 32 | Nada sample report | V | V | — | — | E2E | pass | — |
+| 34 | Safe migrations | V | V | 6 new migrations, no edits to old ones | all | isolated `db reset` + pgTAP | pass | — |
+| 36 | Tests extended | V | V | +p14, +4 BT files, +1 FT file | — | full suite | pass | — |
+| 36.1–36.2 | Internal and partner workflow tests | P | P | `workflows.test.ts` | — | 5 pass, 1 skipped | — | Agency case skipped: no partner token on the isolated seed |
+| 38 | Documentation | V | V | this file, DECISIONS D186–D204, SECURITY_AUDIT_V2, SALEEM_FIX_PROVIDERS, REGULATORY_VERIFICATION | — | — | — | — |
+
+"c" after a number refers to a section of the V2 completion request rather than `SALEEM_V2_UPGRADE.md`.
+
+**Counts (70 rows, by "Now"):** V 51 · I 5 · P 10 · B 2 · L 2 · N/A 0.

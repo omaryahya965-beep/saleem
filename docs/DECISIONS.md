@@ -569,3 +569,51 @@ Format: decision — why — alternatives considered.
 - **D184–D185. Notifications and dashboards (2026-11-20).** Decision notifications name the decision and version
   and link to the advertisement version; new kinds `conditions_submitted`, `condition_returned`,
   `partner_access_decided`. The dashboard adds RLS-scoped workload tiles per role and the partner's links.
+- **D186. Self-approval and lifecycle (2026-11-21).** `can_self_approve` also refuses multi-level flows, financial
+  promotions, partial coverage, unanswered findings, open violations, required evidence, high-risk packs and
+  unverified conditions. Publication can be recorded only from approved, risk-accepted or due-for-re-review states.
+- **D187. Demo abuse limits (2026-11-21).** All sandbox personas share one daily AI cap, `DEMO_AI_DAILY_LIMIT`
+  (default 40; `demo_quota` 429). The `demo-login` code default is now 20 sessions per IP per hour; production
+  sets its own value. Destructive tests run only on the isolated stack (`scripts/isolated-stack.mjs`, `saleem_iso`).
+- **D188. Evaluation (2026-11-21).** 26 Arabic cases across sectors. Three COM-01 false negatives fixed
+  (absolute-result, no-side-effects and English absolute patterns). Deterministic recall reported separately.
+- **D189–D191. Collaboration (2026-11-21).** Comment kinds (question, reviewer feedback, legal opinion, evidence),
+  replies and links. Mentions are limited to promotion readers, and externals see role names only. Information tab.
+  Mawthooq licence check is a manual, audited workflow (`verify_creator_license`). Distribution gains `agency`.
+- **D192. History (2026-11-21).** One chronological timeline with actors, recorded roles, versions, transitions,
+  reasons and hashes. Filters, and repeated events collapse.
+- **D193–D194. Workspace and features (2026-11-21).** Six-tab Team & Workspace. The owner row shows a badge (display
+  bug fixed). Features are grouped into five categories and configured in place, including the SALEEM Fix monthly
+  quota.
+- **D195. Roles page (2026-11-21).** Nine roles with corrected descriptions, member counts, enabled state and a
+  searchable matrix grouped by functional area.
+- **D196. Duplicate company rules (2026-11-21).** Duplicates are detected by stemmed Arabic token overlap (warning
+  at ≥0.5; approval refused as `duplicate_of_active` at ≥0.8 or an exact match). AI extraction skips known rules.
+  Nothing is deleted or silently replaced.
+- **D197. Role dashboards (2026-11-21).** Per-role workspaces from RLS-scoped rows: governance, reviewer deadlines
+  and resubmissions, legal cases, marketer actions, partner, external reviewer and viewer.
+- **D198. SALEEM Fix media (2026-11-21).** `media_edit` is deterministic and runs in the browser on the ORIGINAL
+  footage: mute ranges, cover bands, disclosure overlay, subtitles, and a recorded or uploaded voiceover. It renders
+  a real MP4 or WebM with canvas, Web Audio and MediaRecorder, and acceptance creates a new video version that is
+  analysed afresh. Third-party TTS and video providers report "not configured" and never return simulated media
+  (`docs/saleem-v2/SALEEM_FIX_PROVIDERS.md`). A stale `accepting` job can be re-claimed by its creator after 10 min.
+- **D199. Fix notifications (2026-11-21).** An asynchronous proposal becoming ready notifies its creator. An
+  accepted correction notifies the assigned reviewer.
+- **D200. Company rule categories (2026-11-21).** Seven descriptive categories, recorded on approved versions. AI
+  drafts get a keyword guess. A category change sends an active rule back to draft. The page states that internal
+  policies are not Saudi regulatory requirements.
+- **D201. Partner workspace and test isolation (2026-11-21).** `/org` lists the organisations an external user is
+  authorised for, from their own membership and assigned links only. The roles matrix scroller contains its
+  sr-only labels. Isolated-stack hardening: the copied Gemini key is blanked unless `ISO_ALLOW_REAL_AI=1`;
+  `demo-env` keeps the isolated keys under the runner; seed and workflow tests use `DEMO_STATE_DIR`. A nine-role
+  browser walkthrough script was added.
+- **D202. Regulatory verification (2026-11-21).** A generated register classifies the evidence of the 187 draft
+  rules: official instrument vs announcement, URL reachability, and status per authority. None is marked verified
+  or activated. Cosmetics coverage is mapped to the Nada claims, with one candidate rule (therapeutic claims) that
+  needs legal approval. Mawthooq licence rules apply to individuals and creator content only; this is tested.
+- **D203. Nada acceptance (2026-11-21).** The governance half runs as the real role users on the isolated stack.
+  Approval is blocked while claim violations remain, and changes are requested with a reason. No evidence is
+  invented.
+- **D204. Demo rate-limit key (2026-11-21).** The client IP comes from `cf-connecting-ip`, then `X-Real-IP`, then
+  the last `X-Forwarded-For` hop. The first `X-Forwarded-For` entry was client-controlled and let the per-IP limit
+  be bypassed.
