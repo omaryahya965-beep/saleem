@@ -38,7 +38,8 @@ import { useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/data";
 import { fetchMyMemberships, rerunSubmission } from "@/lib/api/features";
-import { useSubmissionStatus } from "@/lib/api/hooks";
+import { useReport, useSubmissionStatus } from "@/lib/api/hooks";
+import { coverageOf } from "@/features/reports/RuleOutcomes";
 import {
   OPEN_STATUSES,
   dbErrorCode,
@@ -194,7 +195,13 @@ function PromotionView({
       void qc.invalidateQueries({ queryKey: ["promotions"] });
     }
   }, [live.data, latest, qc, p.id]);
-  const aState = analysisState(isLatest ? liveStatus : version?.status);
+  // Done but some applicable rules could not be evaluated → «اكتمل جزئياً» (same cached report as the tab).
+  const shownStatus = isLatest ? liveStatus : version?.status;
+  const report = useReport(version?.id ?? "", Boolean(version?.id) && shownStatus === "done");
+  const aState = analysisState(
+    shownStatus,
+    report.data ? coverageOf(report.data)?.status === "partial" : false,
+  );
   const statusLabel = t(`promo.reviewStatus.${p.review_status}` as TKey);
   // «غير مُسند» only for the reviewer slot; an unknown creator is «—».
   const person = (id: string | null | undefined, empty = t("ws.header.unassigned")) =>
