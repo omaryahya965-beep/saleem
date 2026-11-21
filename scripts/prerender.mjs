@@ -9,7 +9,7 @@ import http from "node:http";
 import path from "node:path";
 
 const dist = path.resolve(process.argv[2] ?? "frontend/dist");
-const ROUTES = ["/", "/rules", "/login", "/signup", "/legal/terms", "/legal/privacy", "/legal/disclaimer", "/legal/ai", "/checks/d0000000-0000-0000-0000-000000000001", "/checks/d0000000-0000-0000-0000-000000000002", "/checks/d0000000-0000-0000-0000-000000000003", "/checks/d0000000-0000-0000-0000-000000000004"];
+const ROUTES = ["/", "/sample", "/rules", "/login", "/signup", "/legal/terms", "/legal/privacy", "/legal/disclaimer", "/legal/ai", "/checks/d0000000-0000-0000-0000-000000000001", "/checks/d0000000-0000-0000-0000-000000000002", "/checks/d0000000-0000-0000-0000-000000000003", "/checks/d0000000-0000-0000-0000-000000000004"];
 const rawTemplate = fs.readFileSync(path.join(dist, "index.html"), "utf8");
 // Preload the two fonts the first screen needs (Arabic UI 400, Arabic display 700) so text
 // doesn't re-layout late on slow networks.

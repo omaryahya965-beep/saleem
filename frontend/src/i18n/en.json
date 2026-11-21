@@ -3583,5 +3583,400 @@
     "active": "{n} open advertisements",
     "noLinks": "No submission link has been assigned to you yet. Ask the organisation to assign one.",
     "open": "Open my workspace"
+  },
+  "site": {
+    "nav": {
+      "label": "Main navigation",
+      "capabilities": "Capabilities",
+      "how": "How it works",
+      "sample": "Interactive report",
+      "rules": "Regulatory guide",
+      "login": "Sign in",
+      "start": "Get started",
+      "dashboard": "Workspace",
+      "menu": "Menu",
+      "close": "Close menu"
+    },
+    "footer": {
+      "tagline": "A workspace to prepare, check, correct, review and approve advertisements before publishing, for marketing and compliance teams in Saudi Arabia.",
+      "product": "Product",
+      "account": "Account",
+      "legal": "Legal",
+      "signup": "Create account",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "disclaimer": "Disclaimer",
+      "ai": "Use of AI",
+      "notice": "SALEEM is an assistive tool, not a regulator. It holds no endorsement from any official body and does not guarantee legal compliance. Automated results are advisory; final decisions belong to authorised people in your organisation.",
+      "rights": "© {year} SALEEM"
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "From idea to approval",
+      "title": "From idea to an advertisement ready for review and approval.",
+      "body": "An intelligent workspace that helps marketing and compliance teams create, check and correct advertising content, and manage review and approval before publishing.",
+      "ctaCheck": "Check your ad",
+      "ctaSample": "Try the interactive report",
+      "note": "AI analysis is advisory, and the decision always belongs to an authorised person. SALEEM does not guarantee legal compliance.",
+      "stageLabel": "Animated walkthrough of the fictional Nada Cream ad, from detection to review",
+      "pause": "Pause walkthrough",
+      "play": "Play walkthrough",
+      "fictional": "Fictional product · illustrative data",
+      "step": {
+        "original": "Original ad",
+        "detect": "Claim detected",
+        "fix": "Correction proposed",
+        "review": "Human review"
+      },
+      "onScreen": "On-screen text",
+      "flag": "Guaranteed-result claim",
+      "evidenceCount": "4 pieces of evidence · 1 consolidated finding",
+      "fixTitle": "Proposed correction",
+      "fixRemove": "النتيجة مضمونة خلال ٣ أيام",
+      "fixAdd": "إعلان مدفوع · استخدميه وفق التعليمات",
+      "v2": "Version 2",
+      "v2Result": "No automated violations · 2 warnings need evidence",
+      "reviewState": "Awaiting the reviewer's decision",
+      "reviewer": "Compliance reviewer",
+      "reviewerNote": "Checks the contract and Mawthooq licence before deciding"
+    },
+    "facts": {
+      "arabic": "Arabic understanding of video, audio and text",
+      "evidence": "Evidence linked to the second",
+      "versions": "Versions and comparison for every edit",
+      "human": "Human decisions, recorded and sealed"
+    },
+    "journeys": {
+      "eyebrow": "Two paths, one workspace",
+      "title": "Start from an idea, or from a finished ad.",
+      "body": "Both paths end in the same place: a checked advertisement, with clear evidence, awaiting an authorised person's decision.",
+      "tag": {
+        "available": "Available now",
+        "soon": "Coming",
+        "provider": "Provider-dependent"
+      },
+      "create": {
+        "title": "Create your ad with AI",
+        "lead": "Bring product information, campaign goals, audience and brand requirements together, then prepare the content and check it before review.",
+        "steps": {
+          "product": "Product information from the product library",
+          "goals": "Campaign goals, audience and channels",
+          "brand": "Brand requirements and company rules",
+          "script": "Draft ad script from your brief",
+          "media": "Generated voiceover and video",
+          "analyse": "Check the resulting content",
+          "review": "Submit for human review"
+        },
+        "cta": "Start with a text ad",
+        "note": "Generating script, voice and video from a brief is not enabled yet and needs external providers. Available today: product, campaign and brand rules set-up, writing the ad, checking it and submitting it for review.",
+        "briefTitle": "Campaign brief",
+        "briefProduct": "Product",
+        "briefGoal": "Goal",
+        "briefGoalValue": "Introduce a new product",
+        "briefAudience": "Audience",
+        "briefAudienceValue": "Adults · Saudi Arabia",
+        "briefBrand": "Brand rules",
+        "briefBrandValue": "3 approved rules",
+        "draftTitle": "Draft script"
+      },
+      "check": {
+        "title": "Check and correct your ad",
+        "lead": "Upload a video, image or text, see what was detected with evidence and timing, then correct, compare and submit for review.",
+        "steps": {
+          "upload": "Upload the ad: video, image or text",
+          "detect": "Detect potential violations",
+          "evidence": "Evidence and timestamp for each finding",
+          "suggest": "Suggested corrections",
+          "fix": "Edit with SALEEM Fix",
+          "compare": "Compare versions",
+          "reanalyse": "Check the revised version",
+          "submit": "Submit for human review"
+        },
+        "cta": "Check an ad now",
+        "cta2": "See a full example"
+      }
+    },
+    "ba": {
+      "eyebrow": "Before and after",
+      "title": "Nada Cream: what changed between the two versions?",
+      "body": "A cosmetics ad for a fictional product. Play both versions, then see how the automated findings changed and what still needs evidence or human verification.",
+      "v1": "Version 1 · original",
+      "v2": "Version 2 · after correction",
+      "summary": "{groups} consolidated findings from {raw} pieces of evidence",
+      "ledger": "What changed",
+      "gone": "No longer detected automatically",
+      "pending": "Still need evidence or verification",
+      "added": "New findings",
+      "none": "None",
+      "note": "A finding that is no longer detected is not a legal clearance of the ad. The two versions were analysed with different models; this is an illustration, not an accuracy benchmark. Version 2 was prepared manually for the demonstration.",
+      "cta": "Explore the full report",
+      "playBoth": "Play both versions",
+      "pauseBoth": "Pause both versions"
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "The life of an advertisement, step by step.",
+      "body": "Pick a stage to see what happens and who is responsible. AI assists; authorised people decide.",
+      "who": {
+        "ai": "SALEEM",
+        "human": "Your team",
+        "both": "SALEEM and your team"
+      },
+      "steps": {
+        "start": {
+          "title": "Create or upload the ad",
+          "body": "Choose the product, campaign and channels, then upload a video, image or text. SALEEM checks the information is complete before starting."
+        },
+        "analyse": {
+          "title": "Analyse the content",
+          "body": "Transcribes Arabic speech, reads on-screen text and the caption, and selects the applicable rules by sector, communication type and publisher."
+        },
+        "risks": {
+          "title": "Identify potential risks",
+          "body": "Every finding is tied to a specific rule and a clear classification: potential violation, warning, missing information or document requirement."
+        },
+        "evidence": {
+          "title": "Evidence and correction",
+          "body": "Jump from a finding to its second in the video, with the evidence, the reason and a suggested correction. Repeats of the same claim are consolidated."
+        },
+        "correct": {
+          "title": "Correct the ad",
+          "body": "Edit the text and caption, or use the SALEEM Fix video editor: mute a segment, cover text, add a visible disclosure, subtitles, a recorded voiceover."
+        },
+        "compare": {
+          "title": "Compare and re-check",
+          "body": "Every edit is a new version analysed from scratch, compared by video, text and findings. No earlier approval carries over."
+        },
+        "submit": {
+          "title": "Submit for review",
+          "body": "Respond to each finding; the ad is assigned to an authorised reviewer, who can consult the legal advisor."
+        },
+        "decide": {
+          "title": "Decision and record",
+          "body": "Approve, approve with conditions, request changes or reject, with reasons. Every decision is sealed in a record that cannot be edited."
+        }
+      }
+    },
+    "cap": {
+      "eyebrow": "Capabilities",
+      "title": "Built for Arabic advertising in a regulated setting.",
+      "body": "Connected capabilities from the first second of the video to the last decision in the record.",
+      "analysis": {
+        "title": "AI advertisement analysis",
+        "body": "Reads video, audio, text, caption and publication context together, and applies only the rules that apply, explaining why others were excluded."
+      },
+      "arabic": {
+        "title": "Arabic video and audio understanding",
+        "body": "Arabic speech transcription timed per sentence, and reading of on-screen text."
+      },
+      "evidence": {
+        "title": "Timestamped evidence",
+        "body": "Every finding takes you to its second in the video, with the quoted evidence and its source."
+      },
+      "fix": {
+        "title": "SALEEM Fix",
+        "body": "A correction plan per finding and an editable revised text before it is accepted as a new version."
+      },
+      "media": {
+        "title": "In-browser video correction",
+        "body": "Mute statements, cover text, add a visible disclosure, subtitles and a recorded or uploaded voiceover — without sending the video to any provider."
+      },
+      "compare": {
+        "title": "Version comparison",
+        "body": "Video side by side, text sentence by sentence, and findings: what disappeared, what stayed, what is new."
+      },
+      "rules": {
+        "title": "Regulatory and company rules",
+        "body": "A rulebook with sources, plus your brand's internal rules approved by a second person and shown as internal policy, not as regulation."
+      },
+      "approvals": {
+        "title": "Human approval workflows",
+        "body": "Reviewer assignment, approval levels and separation between who uploads and who approves."
+      },
+      "conditional": {
+        "title": "Conditional approval",
+        "body": "Specific conditions with required evidence, fulfilled by marketing and verified by the reviewer before final approval."
+      },
+      "agencies": {
+        "title": "Agency collaboration",
+        "body": "Submission links scoped by product, channel and limits; partners see only their own ads."
+      },
+      "audit": {
+        "title": "Complete audit trail",
+        "body": "Who did what, when, on which version — with sealed decisions."
+      },
+      "org": {
+        "title": "Organisation management",
+        "body": "Nine roles, campaigns, products and permissions enforced by the server."
+      },
+      "claimLabel": "Absolute claim",
+      "fixedLabel": "After correction"
+    },
+    "collab": {
+      "eyebrow": "Collaboration",
+      "title": "Everyone knows their role and next step.",
+      "body": "The ad moves between teams along a clear path. SALEEM suggests and explains; only authorised people decide.",
+      "ai": "SALEEM suggests and explains",
+      "human": "Authorised people decide",
+      "roles": {
+        "partner": {
+          "title": "External partner",
+          "body": "Submits ads through a dedicated link and sees only their own."
+        },
+        "marketer": {
+          "title": "Marketing specialist",
+          "body": "Prepares the ad, responds to findings, corrects and submits."
+        },
+        "reviewer": {
+          "title": "Compliance reviewer",
+          "body": "Assesses findings and decides: approve, conditions or changes."
+        },
+        "legal": {
+          "title": "Legal advisor",
+          "body": "Consulted on escalated cases and sees only that case."
+        },
+        "admin": {
+          "title": "Organisation administrator",
+          "body": "Manages the team, roles, assignment and governance settings."
+        }
+      },
+      "flowLabel": "How an ad moves through the organisation"
+    },
+    "trust": {
+      "eyebrow": "Transparency",
+      "title": "Trust built on evidence, not promises.",
+      "body": "SALEEM is clear about what it knows and what it doesn't, and leaves the decision with whoever owns it.",
+      "items": {
+        "evidence": {
+          "title": "Evidence-based findings",
+          "body": "Each finding has a quote, a timestamp and its source in the ad."
+        },
+        "references": {
+          "title": "Rule references",
+          "body": "Every rule with its source and legal-review status."
+        },
+        "human": {
+          "title": "Human review",
+          "body": "No automatic approval; an authorised person decides, with recorded reasons."
+        },
+        "versions": {
+          "title": "Version history",
+          "body": "Every edit is a new version; the original is kept."
+        },
+        "isolation": {
+          "title": "Organisation isolation",
+          "body": "Each organisation's data is isolated at the database level."
+        },
+        "roles": {
+          "title": "Role-based permissions",
+          "body": "Enforced by the server on every request, not just the interface."
+        },
+        "accountability": {
+          "title": "Decision accountability",
+          "body": "Decisions sealed in a chain that cannot be edited."
+        },
+        "limits": {
+          "title": "AI limitations",
+          "body": "It can be wrong or miss things; partial coverage is shown clearly."
+        }
+      },
+      "regulatory": "SALEEM's regulatory guide contains published rules and other draft rules still under legal review, which are not applied until approved. SALEEM is not an official body and does not represent any regulator.",
+      "rulesLink": "Browse the regulatory guide"
+    },
+    "final": {
+      "title": "Try SALEEM on your next advertisement.",
+      "body": "Check an ad, explore the interactive example, or enter the available demo with demo accounts.",
+      "start": "Get started",
+      "check": "Check an ad",
+      "sample": "Interactive example",
+      "demo": "Demo accounts"
+    }
+  },
+  "demo": {
+    "category": "Cosmetics and personal care",
+    "versions": "Two versions",
+    "explore": "Explore the original ad and its findings, then the correction tools, the comparison between versions and the human review path. Everything here is static demonstration data.",
+    "stagesLabel": "Example stages",
+    "stage": {
+      "original": "Original ad",
+      "findings": "Understand the findings",
+      "correct": "Correct the ad",
+      "compare": "Compare versions",
+      "review": "Review and decision"
+    },
+    "lead": {
+      "original": "Play the original ad and pick any finding to jump to its moment in the video and highlight the related sentence.",
+      "findings": "Each consolidated finding: what was detected, where, why, the rule reference and the proposed correction.",
+      "correct": "What SALEEM Fix can change, applied to this example.",
+      "compare": "Both versions side by side: video, speech, caption and findings.",
+      "review": "How the ad enters review, who decides and what is still required."
+    },
+    "prev": "Previous stage",
+    "next": "Next stage",
+    "timeline": "Finding positions in the video",
+    "pick": "Pick a finding to jump to its moment in the video.",
+    "selected": "Selected finding",
+    "evidence": "Evidence",
+    "why": "Why was it flagged?",
+    "source": "Rule reference",
+    "sourceNote": "The reference as listed in SALEEM's rulebook; the official source text is subject to legal review.",
+    "fix": "Proposed correction",
+    "requirement": "Required before a decision",
+    "noTime": "No timestamp",
+    "occurrences": "{n} pieces of evidence",
+    "req": {
+      "COM-01": "Remove the claim or provide documented scientific evidence for it.",
+      "MAW-01": "A clear ad disclosure at the start of the clip and in the caption.",
+      "MAW-03": "Attach the written agreement with the advertiser.",
+      "MAW-04": "Manual check of the Mawthooq licence where it applies to the publisher.",
+      "AI-01": "Disclose the use of AI in creating the content."
+    },
+    "tools": {
+      "title": "Correction tools",
+      "text": {
+        "title": "Text and caption correction",
+        "body": "A proposed replacement for each finding, editable before acceptance."
+      },
+      "overlay": {
+        "title": "Visible on-video disclosure",
+        "body": "A «paid ad» band burnt into the frames themselves."
+      },
+      "subtitles": {
+        "title": "Subtitles with the corrected script",
+        "body": "Written lines synchronised with the new speech."
+      },
+      "cover": {
+        "title": "Cover problematic text",
+        "body": "Hide an on-screen statement for a set duration."
+      },
+      "mute": {
+        "title": "Mute problematic statements",
+        "body": "Silence the original audio for the selected seconds."
+      },
+      "voice": {
+        "title": "Corrected voiceover",
+        "body": "Record in the browser or upload a file. Automatic voice generation needs a provider that is not enabled."
+      }
+    },
+    "honesty": "Version 2 in this example was prepared manually for the demonstration; SALEEM did not generate it automatically. The tools above are available in SALEEM Fix inside the workspace and produce a new version that is analysed from scratch.",
+    "captionChange": "Caption before and after",
+    "before": "Before",
+    "after": "After",
+    "overlayFrame": "First second of version 2: «paid ad» and «AI-generated content» disclosures",
+    "claimFrame": "Second 11 of version 1: «guaranteed result within 3 days» on screen",
+    "speech": "Speech",
+    "removed": "Removed",
+    "addedText": "Added",
+    "findingsDiff": "Findings",
+    "actor": {
+      "marketer": "Marketing specialist (fictional)",
+      "manager": "Organisation administrator (fictional)",
+      "reviewer": "Compliance reviewer (fictional)",
+      "system": "SALEEM (automated check)"
+    },
+    "open": "Requirements still open",
+    "openBody": "The written contract and the Mawthooq licence are document requirements that text edits cannot resolve; the reviewer checks them before final approval.",
+    "readOnly": "Read-only page: no uploads, comments, decisions or AI requests from here."
   }
 }

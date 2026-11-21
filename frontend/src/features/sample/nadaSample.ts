@@ -167,3 +167,51 @@ export const SAMPLE_TIMELINE = [
   { key: "fulfilled", version: 2 },
   { key: "final", version: 2 },
 ] as const;
+
+/** Poster frames cut from the two videos (D206), for fast first paint before a video is played. */
+export const NADA_MEDIA = {
+  v1Poster: "/sample/nada-v1-poster.jpg",
+  v1Claim: "/sample/nada-v1-claim.jpg",
+  v2Poster: "/sample/nada-v2-poster.jpg",
+} as const;
+
+/**
+ * Rule references as listed in the published SALEEM rulebook (2026.11-v2): rule title and source name. No article
+ * numbers are given because the rulebook does not record them for these rules; the official text is subject to legal
+ * review (docs/saleem-v2/legal/REGULATORY_VERIFICATION.md).
+ */
+export const RULE_REFS: Record<
+  string,
+  { title_ar: string; title_en: string; source_ar: string; source_en: string }
+> = {
+  "COM-01": {
+    title_ar: "عدم الادعاءات الكاذبة أو المضللة في الإعلانات",
+    title_en: "No false or misleading claims in ads",
+    source_ar: "ضوابط الإعلان في وسائل التواصل – وزارة التجارة",
+    source_en: "Social media advertising controls — Ministry of Commerce",
+  },
+  "MAW-01": {
+    title_ar: "الإفصاح الواضح عن الإعلان قبل بدايته",
+    title_en: "Disclose advertising clearly before the ad",
+    source_ar: "شروط منصة موثوق",
+    source_en: "Mawthooq platform terms",
+  },
+  "MAW-03": {
+    title_ar: "لا إعلان دون عقد أو اتفاق مكتوب",
+    title_en: "No advertising without a written contract",
+    source_ar: "شروط منصة موثوق",
+    source_en: "Mawthooq platform terms",
+  },
+  "MAW-04": {
+    title_ar: "الإعلان عبر حساب مرتبط برخصة موثوق",
+    title_en: "Ads only via an account linked to a Mawthooq licence",
+    source_ar: "شروط منصة موثوق",
+    source_en: "Mawthooq platform terms",
+  },
+  "AI-01": {
+    title_ar: "الإفصاح عن المحتوى المولّد أو المعدّل بالذكاء الاصطناعي",
+    title_en: "Disclose AI-generated or AI-edited content",
+    source_ar: "مبادئ الذكاء الاصطناعي في الإعلام – وزارة الإعلام وسدايا",
+    source_en: "AI principles in media — Ministry of Media and SDAIA",
+  },
+};

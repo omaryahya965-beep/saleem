@@ -40,6 +40,7 @@ import { useOrgSettings } from "@/lib/api/promotions";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { AppSidebar, NAV_ICONS, NavDrawer, isActive } from "./AppSidebar";
 import { DemoBanner } from "./DemoBanner";
+import { PublicLayout } from "@/features/public/PublicChrome";
 import { buildNav, pageForPath, primaryMobile, type NavGroup } from "./navModel";
 import { ShieldOff } from "lucide-react";
 const NotificationsBell = lazy(() =>
@@ -295,6 +296,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
       render: link("/login"),
     },
   ];
+
+  // D206: the public landing and sample have their own marketing chrome (for visitors and signed-in users alike).
+  if (pathname === "/" || pathname === "/sample" || pathname.startsWith("/sample/"))
+    return <PublicLayout>{children}</PublicLayout>;
 
   return (
     <ActionBarContext.Provider value={slot}>

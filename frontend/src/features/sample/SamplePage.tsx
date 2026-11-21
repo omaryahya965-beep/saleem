@@ -1,375 +1,286 @@
-// Public sample report — «كريم ندى» (V2 upgrade §32, D182). Read-only and static: plays the original and the
-// corrected video, seeks to finding timestamps, shows grouped findings with evidence and fixes, the version
-// comparison and an illustrative review workflow. No uploads, decisions, comments or paid requests are possible.
-import { Link } from "@tanstack/react-router";
-import { ChevronDown, CircleCheck, FlaskConical, Info, Sparkles } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
-import { Badge, Button, Card, CardTitle, Page, StatusChip, VideoTimeline } from "@/components/ui";
-import { formatClock, useI18n, type TKey } from "@/i18n";
-import { groupFindings, type FindingGroup } from "@/features/reports/grouping";
-import { CompareBody } from "@/features/collab/CompareTab";
+// Public interactive sample — «كريم ندى» (D206). A guided, read-only walk through five stages: the original ad and its
+// findings, what each finding means, the correction tools, the version comparison and the human review. Static data
+// only: no uploads, decisions, comments or AI requests are possible from this page.
+import { ArrowLeft, ArrowRight, FlaskConical, Info } from "lucide-react";
+import { useRef, useState } from "react";
+import { useI18n, type TKey } from "@/i18n";
+import { useAuth } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
+import { Container, Eyebrow, PhoneFrame } from "@/features/public/ui";
+import { NADA_MEDIA, NADA_V1, NADA_V2 } from "./nadaSample";
 import {
-  NADA_V1,
-  NADA_V2,
-  SAMPLE_TIMELINE,
-  type SampleFinding,
-  type SampleVersion,
-} from "./nadaSample";
+  CompareStage,
+  CorrectStage,
+  FindingsStage,
+  OriginalStage,
+  ReviewStage,
+  V1_GROUPS,
+  V2_GROUPS,
+} from "./stages";
 
-type View = "v1" | "v2" | "compare" | "workflow";
+const STAGES = ["original", "findings", "correct", "compare", "review"] as const;
+type Stage = (typeof STAGES)[number];
 
 export function SamplePage() {
   const { t } = useI18n();
-  const [view, setView] = useState<View>("v1");
+  const { user } = useAuth();
+  const startTo = user ? "/new" : "/signup";
+  const [stage, setStage] = useState<Stage>("original");
+  const [selected, setSelected] = useState<string | null>(V1_GROUPS[0]?.key ?? null);
+  const [seekRequest, setSeekRequest] = useState<{ t: number; n: number } | null>(null);
+  const top = useRef<HTMLDivElement>(null);
+  const idx = STAGES.indexOf(stage);
+  const go = (s: Stage) => {
+    setStage(s);
+    top.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  };
+
   return (
-    <Page wide className="flex flex-col gap-5">
+    <div className="flex flex-col">
       <header
         data-testid="sample-page"
-        className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5"
+        className="relative overflow-hidden bg-forest-glow text-cream"
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline">
-            <FlaskConical aria-hidden="true" className="me-1 inline size-3.5" />
-            {t("sample.badge")}
-          </Badge>
-          <Badge variant="neutral">{t("sample.fictional")}</Badge>
-        </div>
-        <h1 className="text-2xl font-bold sm:text-3xl">{t("sample.title")}</h1>
-        <p className="max-w-3xl text-fg-muted">{t("sample.intro")}</p>
-        <dl className="grid gap-2 sm:grid-cols-3">
-          <Stat
-            label={t("sample.v1")}
-            value={t("sample.counts", {
-              v: NADA_V1.rawCounts.violations,
-              w: NADA_V1.rawCounts.warnings,
-            })}
-            tone="violation"
-          />
-          <Stat
-            label={t("sample.v2")}
-            value={t("sample.counts", {
-              v: NADA_V2.rawCounts.violations,
-              w: NADA_V2.rawCounts.warnings,
-            })}
-            tone="warning"
-          />
-          <Stat
-            label={t("sample.grouping")}
-            value={t("sample.groupingValue", {
-              raw: NADA_V1.findings.length,
-              groups: groupFindings(NADA_V1.findings).length,
-            })}
-            tone="neutral"
-          />
-        </dl>
-        <p className="flex items-start gap-2 rounded-md bg-sunken px-3 py-2 text-sm">
-          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          {t("sample.honesty")}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link to="/new">{t("sample.cta")}</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link to="/">{t("sample.backHome")}</Link>
-          </Button>
-        </div>
+        <Container className="grid gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:py-16">
+          <div className="flex flex-col gap-5">
+            <Eyebrow inverse>
+              <FlaskConical aria-hidden="true" className="size-4" />
+              {t("sample.badge")}
+            </Eyebrow>
+            <h1 className="font-display text-[40px] leading-[1.2] font-bold sm:text-[52px] ltr:font-sans ltr:tracking-tight">
+              {t("sample.title")}
+            </h1>
+            <div className="flex flex-wrap gap-2 text-sm">
+              {[t("sample.fictional"), t("demo.category"), t("demo.versions")].map((x) => (
+                <span key={x} className="rounded-full px-3 py-1 text-cream/85 ring-1 ring-cream/20">
+                  {x}
+                </span>
+              ))}
+            </div>
+            <p className="max-w-2xl text-lg text-cream/80">{t("demo.explore")}</p>
+            <dl className="grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
+              <Stat
+                label={t("sample.v1")}
+                value={String(V1_GROUPS.length)}
+                sub={t("sample.counts", {
+                  v: NADA_V1.rawCounts.violations,
+                  w: NADA_V1.rawCounts.warnings,
+                })}
+                tone="text-[#ff8a7e]"
+              />
+              <Stat
+                label={t("sample.v2")}
+                value={String(V2_GROUPS.length)}
+                sub={t("sample.counts", {
+                  v: NADA_V2.rawCounts.violations,
+                  w: NADA_V2.rawCounts.warnings,
+                })}
+                tone="text-gold"
+              />
+              <Stat
+                label={t("sample.grouping")}
+                value={`${NADA_V1.findings.length} → ${V1_GROUPS.length}`}
+                valueLtr
+                sub={t("sample.groupingValue", {
+                  raw: NADA_V1.findings.length,
+                  groups: V1_GROUPS.length,
+                })}
+                tone="text-mint"
+                className="col-span-2 sm:col-span-1"
+              />
+            </dl>
+            <p className="flex max-w-2xl items-start gap-2 text-sm text-cream/60">
+              <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              {t("sample.honesty")}
+            </p>
+          </div>
+          <div aria-hidden="true" className="relative hidden h-[360px] w-[340px] lg:block">
+            <div className="absolute end-0 top-0 w-[170px] rotate-[5deg] rtl:-rotate-[5deg]">
+              <PhoneFrame>
+                <img
+                  src={NADA_MEDIA.v2Poster}
+                  alt=""
+                  width={540}
+                  height={945}
+                  className="size-full object-cover"
+                />
+              </PhoneFrame>
+            </div>
+            <div className="absolute start-0 bottom-0 w-[170px] -rotate-[4deg] rtl:rotate-[4deg]">
+              <PhoneFrame>
+                <img
+                  src={NADA_MEDIA.v1Claim}
+                  alt=""
+                  width={540}
+                  height={945}
+                  fetchPriority="high"
+                  className="size-full object-cover"
+                />
+              </PhoneFrame>
+            </div>
+          </div>
+        </Container>
       </header>
 
-      <div role="tablist" aria-label={t("sample.title")} className="flex flex-wrap gap-1.5">
-        {(["v1", "v2", "compare", "workflow"] as const).map((v) => (
-          <button
-            key={v}
-            role="tab"
-            type="button"
-            aria-selected={view === v}
-            onClick={() => setView(v)}
-            className={cn(
-              "min-h-10 rounded-full border px-4 text-sm",
-              view === v
-                ? "border-ink bg-ink text-white"
-                : "border-border bg-surface hover:bg-sunken",
-            )}
+      <div
+        ref={top}
+        className="sticky top-16 z-30 scroll-mt-16 border-b border-forest/10 bg-cream/95 backdrop-blur-md"
+      >
+        <Container>
+          <div
+            role="tablist"
+            aria-label={t("demo.stagesLabel")}
+            className="-mx-1 flex gap-1 overflow-x-auto py-2 [scrollbar-width:none]"
           >
-            {t(`sample.tab.${v}` as TKey)}
-          </button>
-        ))}
+            {STAGES.map((s, n) => {
+              const on = s === stage;
+              return (
+                <button
+                  key={s}
+                  id={`stage-tab-${s}`}
+                  role="tab"
+                  type="button"
+                  aria-selected={on}
+                  aria-controls="stage-panel"
+                  onClick={() => go(s)}
+                  className={cn(
+                    "flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors sm:px-4",
+                    on
+                      ? "bg-forest text-cream"
+                      : "text-forest/70 hover:bg-forest/5 hover:text-forest",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "tabular grid size-6 place-items-center rounded-full text-xs font-bold",
+                      on ? "bg-gold text-forest" : "bg-white ring-1 ring-forest/15",
+                    )}
+                  >
+                    {n + 1}
+                  </span>
+                  {t(`demo.stage.${s}` as TKey)}
+                </button>
+              );
+            })}
+          </div>
+        </Container>
       </div>
 
-      {view === "v1" && <VersionView v={NADA_V1} />}
-      {view === "v2" && <VersionView v={NADA_V2} />}
-      {view === "compare" && (
-        <CompareBody
-          a={{
-            caption: NADA_V1.caption,
-            transcript: NADA_V1.transcript.map((s) => s.text).join(" "),
-            findings: NADA_V1.findings,
-            preview: null,
-            mediaUrl: NADA_V1.video,
-            kind: "video",
-          }}
-          b={{
-            caption: NADA_V2.caption,
-            transcript: NADA_V2.transcript.map((s) => s.text).join(" "),
-            findings: NADA_V2.findings,
-            preview: null,
-            mediaUrl: NADA_V2.video,
-            kind: "video",
-          }}
-          labelA={t("sample.v1")}
-          labelB={t("sample.v2")}
-        />
-      )}
-      {view === "workflow" && <Workflow />}
+      <Container className="py-10 sm:py-14">
+        <section
+          id="stage-panel"
+          role="tabpanel"
+          aria-labelledby={`stage-tab-${stage}`}
+          className="flex flex-col gap-8"
+        >
+          <div className="flex max-w-3xl flex-col gap-2">
+            <p className="text-sm font-medium text-gold-deep">
+              {idx + 1} / {STAGES.length}
+            </p>
+            <h2 className="font-display text-3xl font-bold text-forest sm:text-4xl ltr:font-sans ltr:tracking-tight">
+              {t(`demo.stage.${stage}` as TKey)}
+            </h2>
+            <p className="text-lg text-muted">{t(`demo.lead.${stage}` as TKey)}</p>
+          </div>
+          {stage === "original" && (
+            <OriginalStage selected={selected} onSelect={setSelected} seekRequest={seekRequest} />
+          )}
+          {stage === "findings" && (
+            <FindingsStage
+              selected={selected}
+              onSelect={setSelected}
+              onSeekOriginal={(key, s) => {
+                setSelected(key);
+                setSeekRequest({ t: s, n: Date.now() });
+                go("original");
+              }}
+            />
+          )}
+          {stage === "correct" && <CorrectStage />}
+          {stage === "compare" && <CompareStage />}
+          {stage === "review" && <ReviewStage startTo={startTo} />}
 
-      <Card className="flex flex-col gap-2 text-sm">
-        <CardTitle>{t("sample.limitsTitle")}</CardTitle>
-        <ul className="list-inside list-disc text-fg-muted">
-          <li>{t("sample.limit1")}</li>
-          <li>{t("sample.limit2")}</li>
-          <li>{t("sample.limit3")}</li>
-          <li>{t("sample.limit4")}</li>
-        </ul>
-      </Card>
-    </Page>
+          <nav
+            aria-label={t("demo.stagesLabel")}
+            className="flex items-center justify-between gap-3 border-t border-forest/10 pt-6"
+          >
+            {idx > 0 ? (
+              <button
+                type="button"
+                onClick={() => go(STAGES[idx - 1]!)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-forest ring-1 ring-forest/20 hover:bg-forest/5"
+              >
+                <ArrowRight aria-hidden="true" className="size-4 ltr:rotate-180" />
+                {t("demo.prev")}
+              </button>
+            ) : (
+              <span />
+            )}
+            {idx < STAGES.length - 1 && (
+              <button
+                type="button"
+                onClick={() => go(STAGES[idx + 1]!)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-cream hover:bg-forest-2"
+              >
+                {t("demo.next")}: {t(`demo.stage.${STAGES[idx + 1]!}` as TKey)}
+                <ArrowLeft aria-hidden="true" className="size-4 ltr:rotate-180" />
+              </button>
+            )}
+          </nav>
+        </section>
+
+        <aside className="mt-12 grid gap-4 rounded-[24px] bg-white p-6 ring-1 ring-forest/10 md:grid-cols-[auto_minmax(0,1fr)]">
+          <p className="font-bold text-forest">{t("sample.limitsTitle")}</p>
+          <ul className="grid gap-x-8 gap-y-2 text-sm text-muted md:grid-cols-2">
+            {(["readOnly"] as const).map((k) => (
+              <li key={k} className="font-medium text-forest">
+                {t(`demo.${k}`)}
+              </li>
+            ))}
+            {(["limit1", "limit2", "limit3", "limit4"] as const).map((k) => (
+              <li key={k}>{t(`sample.${k}`)}</li>
+            ))}
+          </ul>
+        </aside>
+      </Container>
+    </div>
   );
 }
 
 function Stat({
   label,
   value,
+  sub,
   tone,
+  className,
+  valueLtr,
 }: {
   label: string;
   value: string;
-  tone: "violation" | "warning" | "neutral";
+  sub: string;
+  tone: string;
+  className?: string;
+  valueLtr?: boolean;
 }) {
   return (
-    <div className="rounded-md bg-sunken p-3">
-      <dt className="text-xs text-fg-muted">{label}</dt>
+    <div
+      className={cn(
+        "flex flex-col gap-1 rounded-[16px] bg-white/[0.06] p-4 ring-1 ring-white/10",
+        className,
+      )}
+    >
+      <dt className="text-xs text-cream/70">{label}</dt>
       <dd
+        dir={valueLtr ? "ltr" : undefined}
         className={cn(
-          "text-lg font-bold",
-          tone === "violation" && "text-red",
-          tone === "warning" && "text-amber-text",
+          "tabular font-display text-3xl leading-none font-bold ltr:font-sans",
+          valueLtr && "rtl:text-right",
+          tone,
         )}
       >
         {value}
       </dd>
+      <dd className="text-xs text-cream/60">{sub}</dd>
     </div>
-  );
-}
-
-function VersionView({ v }: { v: SampleVersion }) {
-  const { t, lang } = useI18n();
-  const video = useRef<HTMLVideoElement>(null);
-  const [time, setTime] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const groups = useMemo(() => groupFindings(v.findings), [v.findings]);
-  const seek = (s: number) => {
-    setTime(s);
-    if (video.current) {
-      video.current.currentTime = s;
-      void video.current.play().catch(() => {});
-    }
-  };
-  const markers = v.findings
-    .filter((f) => f.t_start !== null)
-    .map((f) => ({
-      id: f.id,
-      t: Number(f.t_start),
-      severity: f.severity,
-      title: (lang === "en" ? f.explanation_en : f.explanation_ar) ?? f.rule_code,
-    }));
-  return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
-      <div className="flex flex-col gap-3 lg:sticky lg:top-24">
-        <Card className="flex flex-col gap-3">
-          <video
-            ref={video}
-            src={v.video}
-            controls
-            playsInline
-            preload="metadata"
-            onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-            className="mx-auto aspect-[9/16] max-h-[65vh] w-full rounded-md bg-black object-contain"
-            aria-label={t("sample.videoLabel", { n: v.no })}
-          />
-          {markers.length > 0 && (
-            <VideoTimeline
-              duration={v.duration}
-              currentTime={time}
-              markers={markers}
-              selectedId={selected}
-              onSeek={seek}
-              onSelectMarker={(id) => {
-                setSelected(id);
-                const m = markers.find((x) => x.id === id);
-                if (m) seek(m.t);
-              }}
-            />
-          )}
-        </Card>
-        <Card className="flex flex-col gap-2">
-          <CardTitle>{t("sample.transcript")}</CardTitle>
-          <ol className="flex flex-col gap-1.5 text-sm">
-            {v.transcript.map((s, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => seek(s.start)}
-                  className={cn(
-                    "flex w-full gap-2 rounded-md px-2 py-1 text-start hover:bg-sunken",
-                    time >= s.start && time < s.end && "bg-green-bg",
-                  )}
-                >
-                  <span className="tabular shrink-0 font-bold">{formatClock(s.start)}</span>
-                  <span dir="auto">{s.text}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-          <p className="text-xs text-fg-muted">
-            <span className="font-bold">{t("sample.caption")}: </span>
-            <span dir="auto">{v.caption}</span>
-          </p>
-        </Card>
-      </div>
-      <section className="flex flex-col gap-3" aria-label={t("ws.findings.title")}>
-        <h2 className="text-xl font-bold">
-          {t("ws.findings.title")}{" "}
-          <span className="text-base font-medium text-fg-muted">
-            {t("ws.findings.counts", { groups: groups.length, raw: v.findings.length })}
-          </span>
-        </h2>
-        {groups.length === 0 ? (
-          <Card className="flex items-center gap-2">
-            <CircleCheck aria-hidden="true" className="size-5 text-green" />
-            {t("report.readyNoIssues")}
-          </Card>
-        ) : (
-          groups.map((g) => (
-            <SampleGroup
-              key={g.key}
-              g={g as FindingGroup<SampleFinding>}
-              onSeek={seek}
-              selected={g.members.some((m) => m.id === selected)}
-            />
-          ))
-        )}
-        {v.no === 2 && (
-          <p className="rounded-md border border-amber/30 bg-amber-bg px-3 py-2 text-sm">
-            {t("sample.v2Note")}
-          </p>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function SampleGroup({
-  g,
-  onSeek,
-  selected,
-}: {
-  g: FindingGroup<SampleFinding>;
-  onSeek: (s: number) => void;
-  selected: boolean;
-}) {
-  const { t, lang } = useI18n();
-  const [open, setOpen] = useState(g.severity === "violation");
-  const f = g.members[0]!;
-  return (
-    <article
-      className={cn("rounded-lg border bg-surface p-4", selected ? "border-ink" : "border-border")}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((x) => !x)}
-        className="flex w-full items-start gap-3 text-start"
-      >
-        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="flex flex-wrap items-center gap-2">
-            <StatusChip tone={g.severity} size="sm">
-              {t(`severity.${g.severity}`)}
-            </StatusChip>
-            {g.members.length > 1 && (
-              <Badge variant="outline">
-                {t("ws.findings.occurrences", { n: g.members.length })}
-              </Badge>
-            )}
-            <Badge variant="neutral">{t("ws.kind.automated")}</Badge>
-            <Badge mono>{g.ruleCode}</Badge>
-          </span>
-          {g.facet && (
-            <span className="text-sm text-fg-muted">{t(`ws.facet.${g.facet}` as TKey)}</span>
-          )}
-          <span className="font-bold">
-            {(lang === "en" ? f.explanation_en : f.explanation_ar) ?? g.ruleCode}
-          </span>
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={cn("size-5 shrink-0 text-fg-muted transition-transform", open && "rotate-180")}
-        />
-      </button>
-      {open && (
-        <div className="mt-3 flex flex-col gap-2 text-sm">
-          {g.members.map((m) => (
-            <div key={m.id} className="flex items-start gap-2 rounded-md bg-sunken p-2">
-              {m.t_start !== null ? (
-                <button
-                  type="button"
-                  onClick={() => onSeek(Number(m.t_start))}
-                  className="tabular shrink-0 rounded-full border border-border px-2 font-bold hover:bg-surface"
-                  aria-label={t("issue.seek", { time: formatClock(Number(m.t_start)) })}
-                >
-                  {formatClock(Number(m.t_start))}
-                </button>
-              ) : (
-                <span className="shrink-0 text-xs text-fg-muted">
-                  {t(`ws.source.${m.evidence_type}` as TKey)}
-                </span>
-              )}
-              <q dir="auto" className="[quotes:none]">
-                {m.evidence_text}
-              </q>
-            </div>
-          ))}
-          <p className="rounded-md border border-green/20 bg-green-bg/60 p-2">
-            <span className="font-bold">{t("issue.fix")}: </span>
-            {lang === "en" ? f.fix_en : f.fix_ar}
-          </p>
-        </div>
-      )}
-    </article>
-  );
-}
-
-function Workflow() {
-  const { t } = useI18n();
-  return (
-    <Card className="flex flex-col gap-3" data-testid="sample-workflow">
-      <CardTitle>{t("sample.workflowTitle")}</CardTitle>
-      <p className="text-sm text-fg-muted">{t("sample.workflowNote")}</p>
-      <ol className="relative flex flex-col gap-3 border-s-2 border-border ps-5">
-        {SAMPLE_TIMELINE.map((e) => (
-          <li key={e.key} className="relative">
-            <span
-              aria-hidden="true"
-              className="absolute -start-[27px] top-1.5 size-3 rounded-full border-2 border-surface bg-green"
-            />
-            <p className="font-medium">{t(`sample.event.${e.key}` as TKey)}</p>
-            <p className="text-xs text-fg-muted">{t("ws.header.version", { n: e.version })}</p>
-          </li>
-        ))}
-      </ol>
-      <p className="flex items-center gap-2 text-sm">
-        <Sparkles aria-hidden="true" className="size-4 text-green" />
-        {t("sample.fixNote")}
-      </p>
-    </Card>
   );
 }

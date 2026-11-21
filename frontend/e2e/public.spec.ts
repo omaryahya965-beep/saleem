@@ -3,7 +3,7 @@ import { appReady, expect, test, tr } from "./fixtures";
 const DEMO = "d0000000-0000-0000-0000-000000000001";
 const DEMO_READY = "d0000000-0000-0000-0000-000000000002";
 
-// V2 upgrade §31 (D183): the landing presents the whole advertisement-to-approval workspace.
+// D206: redesigned landing — product story, honest labels, real Nada Cream media, no compliance guarantee.
 test("landing: direction, value proposition and calls to action", async ({
   page,
   lang,
@@ -15,23 +15,30 @@ test("landing: direction, value proposition and calls to action", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     tr(
       lang,
-      "من الإعلان إلى الاعتماد، في مساحة عمل واحدة.",
-      "From advertisement to approval, in one workspace.",
+      "من الفكرة إلى إعلان جاهز للمراجعة والاعتماد.",
+      "From idea to an advertisement ready for review and approval.",
     ),
   );
   await expect(
-    page.getByRole("link", { name: tr(lang, "شاهد تقريراً جاهزاً", "View a sample report") }),
+    page.getByRole("link", {
+      name: tr(lang, "جرّب التقرير التفاعلي", "Try the interactive report"),
+    }),
   ).toBeVisible();
   await expect(
     page
       .getByText(tr(lang, "لا يضمن الامتثال القانوني", "does not guarantee legal compliance"))
       .first(),
   ).toBeVisible();
+  // Upcoming generation is labelled, never offered as available.
+  await expect(page.getByText(tr(lang, "قادم", "Coming")).first()).toBeAttached();
+  // Before/after uses the two local sample videos.
+  await expect(page.locator('video[src="/sample/nada-cream-v1.mp4"]').first()).toBeAttached();
+  await expect(page.locator('video[src="/sample/nada-cream-v2.mp4"]').first()).toBeAttached();
   expect(consoleErrors).toEqual([]);
 });
 
-// V2 upgrade §32 (D182): /sample is the read-only Nada Cream report.
-test("Nada Cream sample: versions, grouped findings, comparison, read-only", async ({
+// D206: /sample is a guided, read-only walk through the Nada Cream example.
+test("Nada Cream sample: guided stages, seeking evidence, comparison, read-only", async ({
   page,
   lang,
 }) => {
@@ -41,10 +48,26 @@ test("Nada Cream sample: versions, grouped findings, comparison, read-only", asy
     tr(lang, "كريم ندى — Nada Cream", "Nada Cream — كريم ندى"),
   );
   await expect(
-    page.getByText(tr(lang, "9 أدلة ← 6 ملاحظات موحّدة", "9 evidence → 6 consolidated findings")),
+    page
+      .getByText(tr(lang, "9 أدلة ← 6 ملاحظات موحّدة", "9 evidence → 6 consolidated findings"))
+      .first(),
   ).toBeVisible();
-  await page.getByRole("tab", { name: tr(lang, "المقارنة", "Comparison") }).click();
+  // Picking the on-screen evidence at 00:11 seeks the original video there.
+  const first = page.getByTestId("sample-finding").first();
+  await first.getByRole("button", { name: /^(انتقل إلى|Go to|Jump to|Seek to) 00:11$/ }).click();
+  await expect
+    .poll(() =>
+      page
+        .locator('video[src="/sample/nada-cream-v1.mp4"]')
+        .evaluate((v: HTMLVideoElement) => v.currentTime),
+    )
+    .toBeGreaterThanOrEqual(10.5);
+  await page.getByRole("tab", { name: tr(lang, "مقارنة الإصدارات", "Compare versions") }).click();
   await expect(page.getByTestId("compare-summary")).toBeVisible();
+  await page
+    .getByRole("tab", { name: tr(lang, "المراجعة والقرار", "Review and decision") })
+    .click();
+  await expect(page.getByTestId("sample-workflow")).toBeVisible();
   await expect(
     page.getByRole("button", { name: tr(lang, "إرسال للمراجعة", "Submit for review") }),
   ).toHaveCount(0);

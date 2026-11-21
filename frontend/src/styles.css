@@ -77,6 +77,11 @@
   --color-red-hover: var(--red-hover);
   --color-red-bg: var(--red-bg);
   --color-green-bg: var(--green-bg);
+  --color-forest: #07211a;
+  --color-forest-2: #0d3127;
+  --color-gold: #c9a86a;
+  --color-gold-deep: #8c6a2f; /* 4.6:1 on cream for small text */
+  --color-cream: #f7f3ea;
 
   --color-surface: var(--surface);
   --color-sunken: var(--surface-sunken);
@@ -250,6 +255,47 @@
     opacity: 0;
     transform: translateY(6px) scale(0.98);
   }
+}
+
+/* Public website (D206): forest + warm gold taken from the Nada Cream footage, editorial Arabic display type. */
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(201 168 106 / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgb(201 168 106 / 0);
+  }
+}
+@utility bg-forest-glow {
+  background-color: #07211a;
+  background-image:
+    radial-gradient(60rem 36rem at 85% -10%, rgb(127 209 174 / 0.16), transparent 60%),
+    radial-gradient(40rem 30rem at 0% 110%, rgb(201 168 106 / 0.14), transparent 60%);
+}
+@utility text-balance-ar {
+  text-wrap: balance;
 }
 
 /* ---------------------------------------------------------------------------

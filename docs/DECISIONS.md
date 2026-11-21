@@ -620,3 +620,14 @@ Format: decision — why — alternatives considered.
 - **D205. Partial analysis state (2026-11-21).** The advertisement header shows «مكتمل جزئياً» when the finished
   run's coverage is partial (it reads the same cached report as the analysis tab). The conditional-approval
   workspace was exercised end to end in the browser on the isolated stack.
+- **D206. Public website redesign (2026-11-21).** «/» and «/sample» get their own marketing chrome: a sticky nav
+  with a mobile menu, and a footer with existing links only. The visual system uses forest and warm gold taken from
+  the Nada Cream footage, with Naskh display type for Arabic. The landing presents SALEEM as a creation,
+  correction, compliance and approval workspace. Its hero walks real video frames through detection, correction and
+  human review. It also has two journeys (generation is labelled «قادم» or "provider-dependent", never offered as
+  available), a before/after with both videos and a change ledger computed by the app's own grouping, an
+  interactive lifecycle, a capabilities bento, a collaboration flow and a transparency section. The draft rules
+  are never marketed as verified. «/sample» is a guided, read-only five-stage experience: original, findings,
+  correction, comparison and review. Evidence seeks the video, rule references come from the published rulebook,
+  and the page says V2 was prepared manually for the demonstration. «/sample» is now prerendered. Invariants are in
+  `public-sample.test.ts`; screenshots are in `docs/saleem-v2/screenshots/public-redesign/`.
