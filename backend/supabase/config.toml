@@ -450,6 +450,9 @@ verify_jwt = true
 [functions.fix]
 verify_jwt = true
 
+[functions.studio]
+verify_jwt = true
+
 [functions.demo-login]
 # Public by design (signed-out visitors start a demo); refuses unless DEMO_MODE=true is a server secret.
 verify_jwt = false

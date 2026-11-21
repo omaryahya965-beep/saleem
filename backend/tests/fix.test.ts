@@ -84,8 +84,10 @@ describe("SALEEM Fix", () => {
     expect(estimateFixCost("x", null).usd).toBeNull();
   });
 
-  it("media editing and replacement generation are reported as not configured", () => {
+  it("browser media editing is available; generated replacement footage is never 'configured' by an env value alone (D207)", () => {
     const p = mediaProviders(() => "heygen");
-    expect(p.every((x) => x.configured === false)).toBe(true);
+    expect(p.find((x) => x.method === "media_edit")?.configured).toBe(true);
+    expect(p.find((x) => x.method === "replacement")?.configured).toBe(false);
+    expect(mediaProviders(() => undefined).find((x) => x.method === "replacement")?.provider).toBe("studio-template");
   });
 });

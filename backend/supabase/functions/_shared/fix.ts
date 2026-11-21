@@ -127,6 +127,11 @@ const norm = (s: string) =>
   s.replace(/[ً-ٰٟـ]/g, "").replace(/[إأآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
     .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).toLowerCase();
 
+/** Codes of statements that must never be generated (licence numbers, regulator approvals, clinical proof, endorsements, agreements). Shared with the Studio (D207). */
+export function fabricationCodes(text: string): string[] {
+  const n = norm(text);
+  return FABRICATION_PATTERNS.filter(({ re }) => re.test(n)).map(({ code }) => code);
+}
 export class FixValidationError extends Error {
   constructor(readonly code: string) {
     super(code);
@@ -203,7 +208,10 @@ export function mediaProviders(env: (k: string) => string | undefined): MediaPro
   const voice = env("SALEEM_FIX_VOICE_PROVIDER");
   const video = env("SALEEM_FIX_VIDEO_PROVIDER");
   return [
-    { method: "media_edit", configured: false, provider: voice ?? null, reason_ar: "تعديل الوسائط (التعليق الصوتي والنص على الشاشة) يتطلب مزوّداً مُعداً ومعتمداً؛ لا يوجد تكامل مفعّل في هذا الإصدار." },
-    { method: "replacement", configured: false, provider: video ?? null, reason_ar: "توليد إعلان بديل يتطلب مزوّد توليد فيديو مُعداً ومعتمداً؛ لا يوجد تكامل مفعّل في هذا الإصدار." },
+    // D198/D207: deterministic editing and template rendering run in the browser; an optional server voice provider
+    // (SALEEM_FIX_VOICE_PROVIDER) is reported as such. Generative replacement footage needs a video provider.
+    { method: "media_edit", configured: true, provider: voice ?? "browser", reason_ar: "تعديل الفيديو يتم في المتصفح: كتم، تغطية، إفصاح، ترجمة، وتعليق صوتي مسجّل أو مولّد محلياً." },
+    // No generative-video adapter exists, so an env value alone never makes this "configured".
+    { method: "replacement", configured: false, provider: video ? `${video} (no adapter)` : "studio-template", reason_ar: "الإعلان البديل يُنشأ في استوديو سليم بقالب حتمي من صور المنتج والنص؛ توليد لقطات فيديو بالذكاء الاصطناعي يتطلب مزوّداً غير مُعدّ." },
   ];
 }
