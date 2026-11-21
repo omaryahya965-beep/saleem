@@ -2682,9 +2682,9 @@
         "cta": "Start correction"
       },
       "replacement": {
-        "title": "Generate a replacement ad",
-        "body": "Generating a replacement video or voice-over needs an authorised, configured generation provider. No integration is active in this release.",
-        "cta": "Not configured"
+        "title": "Replacement ad",
+        "body": "Create a new ad in SALEEM AI Studio from this ad's purpose and product information; it is saved as a new version and analysed from scratch. Rendering uses a template with your photos; AI-generated footage needs a provider that is not configured.",
+        "cta": "Open the Studio"
       },
       "media": {
         "title": "Edit the video in SALEEM",
@@ -3978,5 +3978,227 @@
     "open": "Requirements still open",
     "openBody": "The written contract and the Mawthooq licence are document requirements that text edits cannot resolve; the reviewer checks them before final approval.",
     "readOnly": "Read-only page: no uploads, comments, decisions or AI requests from here."
+  },
+  "studio": {
+    "title": "SALEEM AI Studio",
+    "subtitle": "Create an ad from your product information: a scene-by-scene script, a voiceover and scenes from your photos, then analysis and human review.",
+    "replacementIntro": "Create a replacement for the current advertisement. It is saved as a new version and analysed from scratch; the original and its history stay as they are.",
+    "badge": "AI-assisted",
+    "stepsLabel": "Creation steps",
+    "notAllowed": "Creating advertisements is available to the owner, administrators and marketing specialists in this organisation.",
+    "renderFirst": "Render the video first in «Scenes and rendering».",
+    "backToNew": "Back",
+    "prev": "Previous",
+    "free": "Free",
+    "providerOn": "Available",
+    "providerOff": "Not configured",
+    "step": {
+      "brief": "Product and campaign",
+      "direction": "Creative direction",
+      "context": "Regulatory context",
+      "script": "Script and scenes",
+      "voice": "Voiceover",
+      "render": "Scenes and rendering",
+      "accept": "Preview and save"
+    },
+    "next": {
+      "direction": "Next: creative direction",
+      "context": "Next: regulatory context",
+      "script": "Next: write the script",
+      "voice": "Next: voiceover",
+      "render": "Next: scenes and rendering",
+      "accept": "Next: preview and save"
+    },
+    "brief": {
+      "product": "Product",
+      "fromLibrary": "From the product library",
+      "productName": "Product name",
+      "sector": "Sector",
+      "description": "Product description",
+      "verified": "Verified claims",
+      "verifiedHint": "One claim per line that you hold evidence for. Only these are stated as facts.",
+      "benefits": "Other benefits",
+      "benefitsHint": "Not stated as facts; flagged if used without verification.",
+      "brand": "Brand identity",
+      "brandName": "Brand name",
+      "colors": "Brand colours",
+      "identity": "Identity description",
+      "assets": "Product photos and logo",
+      "addPhotos": "Add photos",
+      "removePhoto": "Remove photo",
+      "logo": "Logo",
+      "assetsNote": "Photos stay on your device and are used only to render the video; they are not sent to any AI provider.",
+      "campaign": "Campaign",
+      "campaignName": "Campaign name",
+      "platform": "Publishing platform",
+      "objective": "Campaign objective",
+      "audience": "Target audience"
+    },
+    "dir": {
+      "duration": "Duration",
+      "seconds": "{n} seconds",
+      "aspect": "Aspect ratio",
+      "aspectName": {
+        "9_16": "Vertical",
+        "16_9": "Horizontal",
+        "1_1": "Square"
+      },
+      "style": "Ad style",
+      "styles": {
+        "product": {
+          "title": "Product-focused",
+          "body": "Product shots with clear text."
+        },
+        "presenter": {
+          "title": "Presenter",
+          "body": "A script for a real presenter you film."
+        },
+        "lifestyle": {
+          "title": "Lifestyle",
+          "body": "The product in everyday use."
+        },
+        "animated": {
+          "title": "Animated",
+          "body": "Brand-colour backgrounds and animated text."
+        }
+      },
+      "language": "Language",
+      "dialect": "Dialect",
+      "msa": "Modern Standard Arabic",
+      "saudi": "Saudi dialect",
+      "narration": "Narration",
+      "narr": {
+        "male": "Male voice",
+        "female": "Female voice",
+        "none": "No narration"
+      },
+      "tone": "Tone",
+      "tones": {
+        "warm": "Warm",
+        "confident": "Confident",
+        "playful": "Playful",
+        "formal": "Formal"
+      },
+      "femaleArNote": "No open-source Arabic female voice is available for local generation yet; record or upload the narration, or use the available voice.",
+      "cta": "Call to action",
+      "ctaPh": "e.g. Order now",
+      "instructions": "Additional instructions"
+    },
+    "ctx": {
+      "communication": "Communication type",
+      "publisher": "Publisher",
+      "channels": "Channels",
+      "paid": "Paid or promotional ad",
+      "aiUsed": "AI used: yes",
+      "aiUsedNote": "Everything created in the Studio is disclosed as content prepared with AI assistance.",
+      "rulesTitle": "What the script will respect",
+      "disclosure": "Disclosure",
+      "verifiedOnly": "Only verified claims are stated as product benefits ({n}).",
+      "noFabrication": "No licence number, regulator approval, clinical proof, endorsement or testimonial is generated.",
+      "finalAnalysis": "After saving, the rendered video gets a full analysis and human review; the pre-check does not replace them."
+    },
+    "script": {
+      "provider": "How to write the script",
+      "template": "Deterministic template",
+      "templateBody": "Builds the scenes from your verified information only, with no AI request.",
+      "gemini": "Gemini",
+      "geminiBody": "One request to {model}. Estimated cost ≈ ${usd}. Used this month: {used}/{limit}.",
+      "geminiOff": "No Gemini key is configured on the server, or real requests are disabled in this environment.",
+      "oneRequest": "One request only, no automatic retry.",
+      "generate": "Write the script",
+      "rewrite": "Rewrite the whole script",
+      "concept": "Concept",
+      "by": {
+        "template": "From the template",
+        "gemini": "From Gemini",
+        "manual": "Edited manually"
+      },
+      "scene": "Scene {n}",
+      "regenerate": "Rewrite scene",
+      "narration": "Narration",
+      "onScreen": "On-screen text",
+      "visual": "Shot description",
+      "duration": "Duration (seconds)",
+      "caption": "Post caption",
+      "save": "Save edits",
+      "saved": "Script saved.",
+      "review": "Pre-check the script",
+      "reviewCount": "{n} notes",
+      "reviewClean": "No notes from the pre-check",
+      "reviewNote": "The pre-check is deterministic and uses no AI; it does not replace the final video analysis and human review."
+    },
+    "voice": {
+      "local": "Voice generated on your device",
+      "localBody": "An open-source Piper model runs in the browser and produces a real audio file. The text is sent nowhere; the model downloads once and is kept in the browser.",
+      "voice": "Voice",
+      "generate": "Generate narration for all scenes",
+      "again": "Generate again",
+      "downloading": "Downloading the voice model (once)",
+      "downloadNote": "The model is kept in the browser and not downloaded again.",
+      "failed": "The voice could not be generated. Check the connection for the first model download.",
+      "ownTitle": "Your own voice",
+      "ownBody": "Record the narration or upload a file; it plays from the start of the ad.",
+      "providers": "Voice providers",
+      "p": {
+        "local_piper": "Piper locally in the browser — Arabic (male voice) and English, free.",
+        "recorded": "Microphone recording — free.",
+        "uploaded": "Audio file upload — free.",
+        "gemini_tts": "Gemini TTS — preview models with no free tier at present; needs billing and a server adapter.",
+        "elevenlabs": "ElevenLabs — needs an API account and a server key.",
+        "heygen": "HeyGen — needs an API plan (not the website or ChatGPT plugin subscription)."
+      }
+    },
+    "render": {
+      "visuals": "Image for each scene",
+      "visualsBody": "Pick one of your photos for each scene, or a brand-colour background. The disclosure, logo and subtitles are added to every frame.",
+      "image": "Scene {n} image",
+      "brandBackground": "Brand-colour background",
+      "subtitles": "Subtitles for the narration",
+      "rate": "Voice speed",
+      "approaches": "Ways to create the visuals",
+      "a": {
+        "template": "Deterministic template from your photos and text (available, free) — not AI-generated footage.",
+        "image": "AI-generated images — needs a configured image provider; not configured.",
+        "video": "Generated video footage (Veo or Runway) — paid, needs billing; not configured.",
+        "avatar": "Virtual presenter (HeyGen) — needs an API plan; not configured."
+      },
+      "cta": "Render the video"
+    },
+    "accept": {
+      "title": "Advertisement title",
+      "script": "Script",
+      "voice": "Voice",
+      "render": "Rendering",
+      "format": "Format and length",
+      "noVoice": "No narration",
+      "body": "Saving creates a new advertisement with a first video version and starts its full analysis. No generated ad is ever approved automatically; it goes to human review as usual.",
+      "bodyReplacement": "Saving adds the video as a new version of the same advertisement and starts its analysis. The original version, its findings and decisions stay, and no approval carries over.",
+      "cta": "Save as a new ad and start analysis",
+      "ctaReplacement": "Save as a new version and start analysis"
+    },
+    "err": {
+      "save": "The draft could not be saved.",
+      "generic": "The request could not be completed.",
+      "accept": "The advertisement could not be saved.",
+      "provider_not_configured": "Gemini is not configured in this environment; use the deterministic template.",
+      "quota_exhausted": "This month's script quota is used up.",
+      "demo_quota": "Demo accounts have reached their daily limit.",
+      "job_in_progress": "A request is already running for this draft.",
+      "too_many_attempts": "Too many attempts for this draft.",
+      "provider_quota": "The provider refused the request for quota reasons.",
+      "fabricated": "The generated script was rejected because it contained a statement that must never be generated (licence, approval, proof or endorsement).",
+      "timeout": "The provider timed out."
+    },
+    "start": {
+      "create": "Create with AI",
+      "createBody": "Provide your product information and campaign requirements, and SALEEM will help you prepare the script, voiceover, visuals and video.",
+      "upload": "Upload and correct",
+      "uploadBody": "Upload an existing ad, identify regulatory problems, correct the content and prepare a revised version."
+    }
+  },
+  "fix3": {
+    "tts": "Generate voiceover from the corrected script",
+    "ttsDownloading": "Downloading the voice model… {p}%",
+    "ttsNote": "The voice is generated on your device with an open-source model and replaces the original audio entirely."
   }
 }

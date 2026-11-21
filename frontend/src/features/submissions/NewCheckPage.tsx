@@ -61,6 +61,7 @@ import { emptyContext, type ContextValue } from "@/features/promotions/model";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { InspectedMedia } from "@/lib/media";
 import { cn } from "@/lib/utils";
+import { StartChooser } from "@/features/studio/StartChooser";
 import {
   STEPS,
   categoryFor,
@@ -451,6 +452,9 @@ export function NewCheckPage() {
         description={t("wiz.subtitle")}
         className="mb-5"
       />
+      {!parentId &&
+        !addingVersion &&
+        (!orgId || ["owner", "admin", "creator"].includes(myRole ?? "")) && <StartChooser />}
       {target.data && (
         <p
           data-testid="new-version-banner"

@@ -222,14 +222,22 @@ function Methods({
     {
       key: "replacement",
       icon: <Clapperboard aria-hidden="true" />,
-      action: (
+      // D207: a replacement ad is built in SALEEM AI Studio (template rendering of the product's own assets) and
+      // saved as a new version of this advertisement. Generated footage still needs a video provider.
+      action: enabled ? (
+        <Button asChild variant="secondary">
+          <Link to="/studio" search={{ from: promotionId }} data-testid="fix-replacement-start">
+            {t("fix.method.replacement.cta")}
+          </Link>
+        </Button>
+      ) : (
         <Button disabled variant="secondary">
           {t("fix.method.replacement.cta")}
         </Button>
       ),
       status: (
-        <StatusChip tone="neutral" size="sm">
-          {t("fix.configRequired")}
+        <StatusChip tone="ready" size="sm">
+          {t("fix.available")}
         </StatusChip>
       ),
     },

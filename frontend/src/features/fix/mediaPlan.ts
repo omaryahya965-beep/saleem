@@ -29,6 +29,7 @@ export interface MediaEdits {
 
 export interface EditableFinding {
   evidence_type: string;
+  evidence_text?: string | null;
   t_start: number | string | null;
   t_end?: number | string | null;
 }
@@ -54,6 +55,51 @@ export function mergeRanges(ranges: Range[], duration: number): Range[] {
   return out;
 }
 
+/** Frames are sampled every few seconds, so a sighting says nothing about the seconds around it. */
+export const FRAME_GAP_S = 6;
+export const FRAME_PAD_S = 1.5;
+const normText = (s: string | null | undefined) =>
+  (s ?? "")
+    .replace(/[ً-ٟـ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * D207: cover ranges for on-screen claims. Sightings of the SAME text up to FRAME_GAP_S apart are one continuous
+ * appearance (the text stays on screen between sampled frames); each appearance is padded by FRAME_PAD_S and runs
+ * to the end when its last sighting is near the end. Found on the Nada correction: covering only ±1 s around the
+ * sampled frames left «النتيجة مضمونة خلال ٣ أيام» fully visible between 12 s and 14.5 s.
+ */
+export function coverRanges(findings: EditableFinding[], duration: number): Range[] {
+  const byText = new Map<string, number[]>();
+  for (const f of findings) {
+    const t = num(f.t_start);
+    if (f.evidence_type !== "frame" || t === null) continue;
+    const key = normText(f.evidence_text) || `@${t}`;
+    byText.set(key, [...(byText.get(key) ?? []), t]);
+  }
+  const out: Range[] = [];
+  for (const times of byText.values()) {
+    const ts = [...times].sort((a, b) => a - b);
+    let start = ts[0]!;
+    let last = ts[0]!;
+    const close = () => {
+      const end = duration - last <= FRAME_GAP_S / 2 ? duration : last + FRAME_PAD_S;
+      out.push({ start: Math.max(0, start - FRAME_PAD_S), end: Math.min(duration, end) });
+    };
+    for (const t of ts.slice(1)) {
+      if (t - last <= FRAME_GAP_S) last = t;
+      else {
+        close();
+        start = t;
+        last = t;
+      }
+    }
+    close();
+  }
+  return out;
+}
+
 /** Default edits from the findings: mute spoken claims, cover on-screen claims, add the disclosure. */
 export function defaultEdits(
   findings: EditableFinding[],
@@ -63,15 +109,7 @@ export function defaultEdits(
   const spoken = findings
     .filter((f) => f.evidence_type === "transcript" && num(f.t_start) !== null)
     .map((f) => ({ start: num(f.t_start)!, end: num(f.t_end) ?? num(f.t_start)! + 3 }));
-  const onScreen = mergeRanges(
-    findings
-      .filter((f) => f.evidence_type === "frame" && num(f.t_start) !== null)
-      .map((f) => ({
-        start: Math.max(0, num(f.t_start)! - 0.5),
-        end: num(f.t_end) ?? num(f.t_start)! + 1.5,
-      })),
-    duration,
-  );
+  const onScreen = mergeRanges(coverRanges(findings, duration), duration);
   return {
     mute: mergeRanges(spoken, duration),
     covers: onScreen.map((r) => ({ ...r, position: "middle", text: opts.replacement })),
@@ -123,7 +161,10 @@ export function isNoop(e: MediaEdits): boolean {
 }
 
 /** Human-readable summary stored with the correction job (audit). */
-export function editsSummary(e: MediaEdits, voice: "none" | "recorded" | "uploaded") {
+export function editsSummary(
+  e: MediaEdits,
+  voice: "none" | "recorded" | "uploaded" | "generated-local",
+) {
   return {
     muted_ranges: e.mute.map((r) => [r.start, r.end]),
     covered_ranges: e.covers.map((r) => [r.start, r.end, r.position]),

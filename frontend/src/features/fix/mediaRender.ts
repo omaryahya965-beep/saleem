@@ -79,7 +79,8 @@ export function drawFrame(
     const bandH = h * 0.18;
     const y =
       c.position === "top" ? h * 0.08 : c.position === "bottom" ? h * 0.74 : (h - bandH) / 2;
-    drawBand(ctx, w, h, y, bandH, c.text, "rgba(15, 23, 20, 0.92)");
+    // Fully opaque: a cover must hide the misleading text completely (D207 — 0.92 let it show through).
+    drawBand(ctx, w, h, y, bandH, c.text, "rgb(15, 23, 20)");
   }
   for (const o of activeAt(edits.overlays, t)) {
     const bandH = h * 0.07;

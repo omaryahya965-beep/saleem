@@ -1,7 +1,7 @@
 // SALEEM Fix — media correction editor (V2 completion §15.4–15.7, D198). Edits are pre-filled from the findings and
 // the corrected script; the marketer reviews them, optionally records or uploads a corrected voiceover, renders a
 // new video in the browser, and compares it with the original before accepting it as a new version.
-import { Mic, Plus, Square, Trash2, Upload, Wand2 } from "lucide-react";
+import { Mic, Plus, Square, Trash2, Upload, Volume2, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
@@ -26,6 +26,7 @@ import {
 } from "./mediaPlan";
 import { pickMime, renderCorrectedVideo, type RenderResult } from "./mediaRender";
 import { VIDEO_PROVIDERS, VOICE_PROVIDERS, startRecording } from "./providers";
+import { synthesize, voicesFor } from "@/features/studio/tts";
 
 export interface RenderedMedia {
   file: File;
@@ -62,7 +63,10 @@ export function MediaEditor({
   );
   const [useSubs, setUseSubs] = useState(true);
   const [voice, setVoice] = useState<Blob | null>(null);
-  const [voiceKind, setVoiceKind] = useState<"none" | "recorded" | "uploaded">("none");
+  const [voiceKind, setVoiceKind] = useState<"none" | "recorded" | "uploaded" | "generated-local">(
+    "none",
+  );
+  const [tts, setTts] = useState<number | null>(null);
   const [rec, setRec] = useState<Awaited<ReturnType<typeof startRecording>> | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<RenderResult | null>(null);
@@ -334,6 +338,36 @@ export function MediaEditor({
               {t("fix2.stopRecording")}
             </Button>
           )}
+          {/* D207: real speech generated on this device (open-source Piper voice), replacing the original audio. */}
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<Volume2 />}
+            disabled={!script.trim() || tts !== null}
+            loading={tts !== null}
+            data-testid="fix-tts"
+            onClick={async () => {
+              setTts(0);
+              try {
+                const lang = /[؀-ۿ]/.test(script) ? "ar" : "en";
+                const b = await synthesize(script, voicesFor(lang)[0]!.id, (p) =>
+                  setTts(p.total ? p.loaded / p.total : 0),
+                );
+                setVoice(b);
+                setVoiceKind("generated-local");
+                setEdits((x) => ({ ...x, replaceAudio: true }));
+                stale();
+              } catch {
+                toast.error(t("studio.voice.failed"));
+              } finally {
+                setTts(null);
+              }
+            }}
+          >
+            {tts !== null && tts > 0 && tts < 1
+              ? t("fix3.ttsDownloading", { p: Math.round(tts * 100) })
+              : t("fix3.tts")}
+          </Button>
           <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-border px-3 text-sm hover:bg-sunken">
             <Upload aria-hidden="true" className="size-4" />
             {t("fix2.uploadVoice")}
