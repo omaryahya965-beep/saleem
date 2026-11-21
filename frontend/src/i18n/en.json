@@ -1512,7 +1512,8 @@
       "communication_type_not_allowed": "This communication type is not allowed on this link.",
       "too_many_conditions": "At most 20 conditions.",
       "invalid_conditions": "Invalid conditions.",
-      "duplicate_of_active": "Cannot approve: the draft repeats an active rule."
+      "duplicate_of_active": "Cannot approve: the draft repeats an active rule.",
+      "media_unavailable": "No original video is available for this version."
     },
     "decision": {
       "approve": "Approve",
@@ -2684,6 +2685,11 @@
         "title": "Generate a replacement ad",
         "body": "Generating a replacement video or voice-over needs an authorised, configured generation provider. No integration is active in this release.",
         "cta": "Not configured"
+      },
+      "media": {
+        "title": "Edit the video in SALEEM",
+        "body": "Deterministic edits on the original footage: mute the problematic statements, cover on-screen text, add the disclosure and subtitles, and a corrected voiceover you record or upload. Produces a new video file at no cost.",
+        "cta": "Start video correction"
       }
     },
     "setup": {
@@ -3474,5 +3480,63 @@
     "products": "Products",
     "externalReviewer": "No advertisements shared with you",
     "externalReviewerBody": "The external reviewer role currently grants no access; only ads explicitly shared with you will appear here once sharing is enabled."
+  },
+  "fix2": {
+    "title": "Video correction",
+    "subtitle": "Edits are proposed from the findings and the corrected script. Review them, then render the corrected video; the original file is never changed.",
+    "mute": "Mute problematic speech (seconds)",
+    "covers": "Cover on-screen text",
+    "overlays": "Visible disclosure",
+    "addRange": "Add range",
+    "addOverlay": "Add disclosure",
+    "from": "From",
+    "to": "To",
+    "position": "Position",
+    "pos": {
+      "top": "Top",
+      "middle": "Middle",
+      "bottom": "Bottom"
+    },
+    "replacementText": "Replacement text (optional)",
+    "disclosureText": "Disclosure text",
+    "subtitles": "Subtitles with the corrected script ({n} segments)",
+    "voiceover": "Corrected voiceover",
+    "record": "Record from microphone",
+    "stopRecording": "Stop recording",
+    "uploadVoice": "Upload audio file",
+    "removeVoice": "Remove voiceover",
+    "replaceAudio": "Replace the original audio entirely",
+    "scriptToRead": "Corrected script to read in the voiceover:",
+    "providersTitle": "Voice and video providers",
+    "voice": {
+      "recorded": "Record your own voice in the browser — available, free.",
+      "uploaded": "Upload a pre-recorded voiceover — available, free.",
+      "gemini_tts": "Gemini TTS: needs an API key with billing and SALEEM_FIX_TTS_PROVIDER on the server; not configured.",
+      "heygen": "HeyGen: needs an API plan (not the website or ChatGPT plugin subscription) and a server key; not configured.",
+      "elevenlabs": "ElevenLabs: needs an API account and a server key; not configured."
+    },
+    "video": {
+      "veo": "Replacement video with Veo (Gemini API): paid, needs billing; not configured.",
+      "heygen_video": "Avatar video with the HeyGen API: needs an API plan; not configured.",
+      "runway": "Runway API: needs an account and key; not configured."
+    },
+    "render": "Render corrected video",
+    "renderAgain": "Render again",
+    "rendering": "Rendering… {p}%",
+    "format": "Output format: {f}",
+    "renderNote": "Rendering happens on your device while the video plays once (about its length). The video is not sent to any provider.",
+    "corrected": "Corrected video",
+    "rendered": "Corrected video ready. Compare it with the original before accepting.",
+    "acceptVideo": "Accepting uploads the corrected video as a new video version of the same advertisement and starts its analysis. The original stays and no approval carries over.",
+    "acceptVideoCta": "Accept corrected video as a new version",
+    "err": {
+      "generic": "The video could not be rendered.",
+      "no_edits": "No edits: the original video would not be offered as a corrected one.",
+      "recorder_unsupported": "Your browser cannot record video (MediaRecorder). Use a recent Chrome, Edge or Firefox.",
+      "source_unreadable": "The original video could not be read (link expired or file deleted).",
+      "render_empty": "The rendered file is empty; try again.",
+      "cancelled": "Rendering cancelled.",
+      "microphone": "Microphone access was not allowed."
+    }
   }
 }

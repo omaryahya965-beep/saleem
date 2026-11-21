@@ -120,12 +120,13 @@ export async function createJob(
     preferences: Record<string, unknown>;
     instructions: string;
     key: string;
+    method?: "text_correction" | "media_edit";
   },
 ) {
   return check(
     await rpc("create_correction_job", {
       _pid: pid,
-      _method: "text_correction",
+      _method: v.method ?? "text_correction",
       _findings: v.findings,
       _preferences: v.preferences as Json,
       _instructions: v.instructions || null,
@@ -162,16 +163,19 @@ export async function acceptJob(
     NewSubmissionInput,
     "kind" | "file" | "poster" | "durationSeconds" | "textContent" | "caption" | "parentId"
   >,
+  /** D198: a video rendered from the original footage. Without it, the corrected script becomes a text version. */
+  media?: { file: File; duration: number; summary: Record<string, unknown> } | null,
 ): Promise<string> {
-  check(await rpc("begin_accept_correction", { _id: job.id, _edited: edited as unknown as Json }));
+  const record = media ? { ...edited, media: media.summary } : edited;
+  check(await rpc("begin_accept_correction", { _id: job.id, _edited: record as unknown as Json }));
   let sid: string;
   try {
     sid = await createSubmission({
       ...base,
-      kind: "text",
-      file: null,
+      kind: media ? "video" : "text",
+      file: media?.file ?? null,
       poster: null,
-      durationSeconds: null,
+      durationSeconds: media ? Math.round(media.duration * 10) / 10 : null,
       textContent: [edited.script, ...edited.disclosures.filter((d) => !edited.script.includes(d))]
         .filter(Boolean)
         .join("\n"),

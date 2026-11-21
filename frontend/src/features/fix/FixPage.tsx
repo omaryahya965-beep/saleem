@@ -11,6 +11,7 @@ import {
   Sparkles,
   Upload,
   Wand2,
+  Film,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -47,6 +48,7 @@ import {
 import { groupFindings } from "@/features/reports/grouping";
 import { usePreflightText } from "@/features/review/model";
 import { cn } from "@/lib/utils";
+import { MediaEditor, type RenderedMedia } from "./MediaEditor";
 
 const PREFS = [
   "keep_product",
@@ -66,6 +68,21 @@ export function FixPage({ id }: { id: string }) {
   const current = p?.current_version_id ?? null;
   const report = useReport(current ?? "", Boolean(current));
   const [method, setMethod] = useState<"text" | null>(null);
+  const qcPage = useQueryClient();
+  const errPage = usePreflightText();
+  const [mediaKey] = useState(() => crypto.randomUUID());
+  const mediaJob = useMutation({
+    mutationFn: () =>
+      createJob(id, {
+        findings: (report.data?.findings ?? []).map((f) => f.id),
+        preferences: { media_only: true },
+        instructions: "",
+        key: mediaKey,
+        method: "media_edit",
+      }),
+    onSuccess: () => void qcPage.invalidateQueries({ queryKey: fixKeys.jobs(id) }),
+    onError: (e) => toast.error(errPage(e)),
+  });
 
   if (promo.isPending || can.isPending || jobs.isPending)
     return (
@@ -122,6 +139,13 @@ export function FixPage({ id }: { id: string }) {
           promotionId={id}
           enabled={Boolean(can.data?.ok)}
           onText={() => setMethod("text")}
+          mediaEnabled={
+            Boolean(can.data?.ok) &&
+            report.data?.submission.kind === "video" &&
+            Boolean(report.data?.mediaUrl)
+          }
+          onMedia={() => mediaJob.mutate()}
+          mediaBusy={mediaJob.isPending}
         />
       )}
       <p className="text-xs text-fg-muted">{t("fix.disclaimer")}</p>
@@ -133,10 +157,16 @@ function Methods({
   promotionId,
   enabled,
   onText,
+  mediaEnabled,
+  onMedia,
+  mediaBusy,
 }: {
   promotionId: string;
   enabled: boolean;
   onText: () => void;
+  mediaEnabled: boolean;
+  onMedia: () => void;
+  mediaBusy: boolean;
 }) {
   const { t } = useI18n();
   const cards = [
@@ -171,6 +201,25 @@ function Methods({
       ),
     },
     {
+      key: "media",
+      icon: <Film aria-hidden="true" />,
+      action: (
+        <Button
+          disabled={!mediaEnabled}
+          loading={mediaBusy}
+          onClick={onMedia}
+          data-testid="fix-media-start"
+        >
+          {t("fix.method.media.cta")}
+        </Button>
+      ),
+      status: (
+        <StatusChip tone="ready" size="sm">
+          {t("fix.available")}
+        </StatusChip>
+      ),
+    },
+    {
       key: "replacement",
       icon: <Clapperboard aria-hidden="true" />,
       action: (
@@ -186,7 +235,7 @@ function Methods({
     },
   ];
   return (
-    <div className="grid gap-4 lg:grid-cols-3" data-testid="fix-methods">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" data-testid="fix-methods">
       {cards.map((c) => (
         <Card key={c.key} className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2 [&>svg]:size-6">
@@ -464,6 +513,8 @@ function Review({
   const original = report?.submission;
   const originalScript =
     (report?.transcript ?? []).map((s) => s.text).join(" ") || original?.text_content || "";
+  const [media, setMedia] = useState<RenderedMedia | null>(null);
+  const canEditMedia = original?.kind === "video" && Boolean(report?.mediaUrl);
   const accept = useMutation({
     mutationFn: async () => {
       const { data: src } = await supabase
@@ -474,19 +525,24 @@ function Review({
         .eq("id", job.source_submission_id)
         .single();
       const edited: FixProposal = { ...proposal, caption, script };
-      return acceptJob(job, edited, {
-        userId: user!.id,
-        title: src?.title ?? "",
-        platform: src!.platform,
-        productCategory: src!.product_category,
-        isPaidAd: Boolean(src?.is_paid_ad),
-        hasWrittenContract: Boolean(src?.has_written_contract),
-        aiUsed: true,
-        licenseNo: src?.mawthooq_license_no ?? "",
-        promotionId,
-        orgId: src?.org_id ?? null,
-        campaignId: null,
-      });
+      return acceptJob(
+        job,
+        edited,
+        {
+          userId: user!.id,
+          title: src?.title ?? "",
+          platform: src!.platform,
+          productCategory: src!.product_category,
+          isPaidAd: Boolean(src?.is_paid_ad),
+          hasWrittenContract: Boolean(src?.has_written_contract),
+          aiUsed: true,
+          licenseNo: src?.mawthooq_license_no ?? "",
+          promotionId,
+          orgId: src?.org_id ?? null,
+          campaignId: null,
+        },
+        media,
+      );
     },
     onSuccess: () => {
       toast.success(t("fix.review.acceptedToast"));
@@ -645,8 +701,24 @@ function Review({
         </Card>
       )}
 
+      {canEditMedia && (
+        <MediaEditor
+          sourceUrl={report!.mediaUrl!}
+          duration={
+            Number(original?.duration_seconds) ||
+            Math.max(1, ...(report?.transcript ?? []).map((s) => s.end))
+          }
+          findings={(report?.findings ?? []).filter(
+            (f) => !job.selected_finding_ids.length || job.selected_finding_ids.includes(f.id),
+          )}
+          script={script}
+          lang={/[\u0600-\u06FF]/.test(script) ? "ar" : "en"}
+          onRendered={setMedia}
+        />
+      )}
+
       <Card className={cn("flex flex-col gap-3")}>
-        <p className="text-sm">{t("fix.review.acceptBody")}</p>
+        <p className="text-sm">{media ? t("fix2.acceptVideo") : t("fix.review.acceptBody")}</p>
         <p className="text-xs text-fg-muted">
           {t("fix.review.meta", {
             model: job.model ?? "—",
@@ -662,7 +734,7 @@ function Review({
             disabled={job.status !== "ready" || !(caption.trim() || script.trim())}
             onClick={() => accept.mutate()}
           >
-            {t("fix.review.accept")}
+            {media ? t("fix2.acceptVideoCta") : t("fix.review.accept")}
           </Button>
           <Button variant="secondary" onClick={onCancel}>
             {t("fix.review.discard")}
