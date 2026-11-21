@@ -1,0 +1,120 @@
+{
+ "checked_on": "2026-11-21",
+ "method": "HTTPS GET with redirects from the development machine; reachability only, not content verification",
+ "results": [
+  {
+   "url": "https://mc.gov.sa/DOC/ECV.pdf",
+   "status": 200,
+   "content_type": "application/pdf",
+   "error": null
+  },
+  {
+   "url": "https://laws.boe.gov.sa/BoeLaws/Laws/LawDetails/360de590-0286-4fa5-a243-aa9100c31979/1",
+   "status": null,
+   "content_type": null,
+   "error": "curl: (28) Failed to connect to laws.boe.gov.sa port 443 after 21472 ms: Could not connect"
+  },
+  {
+   "url": "https://mc.gov.sa/ar/mediacenter/News/Pages/14-09-23-01.aspx",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://mc.gov.sa/ar/mediacenter/News/Pages/21-09-25-01.aspx",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://gmedia.gov.sa/ar/services/licensing-for-providing-advertising-content-through-social-media-platforms-trusted",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://laws.boe.gov.sa/BoeLaws/Laws/LawDetails/ed5fdbc0-c183-4a8a-a8b7-a9ed004b5900/1",
+   "status": null,
+   "content_type": null,
+   "error": "curl: (28) Failed to connect to laws.boe.gov.sa port 443 after 21037 ms: Could not connect"
+  },
+  {
+   "url": "https://cma.gov.sa/RulesRegulations/Regulations/Documents/the_Capital_Market_Institutions_Regulations_ar.pdf",
+   "status": 200,
+   "content_type": "application/pdf",
+   "error": null
+  },
+  {
+   "url": "https://www.sama.gov.sa/ar-sa/LawsRegulations/ConsumerProtectionRules/Rules_for_Advertising_Products_and_Services_Provided_by_Financial_Institutions-AR.pdf",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.uqn.gov.sa/decisions-and-regulations/authorities/4000857",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.sfda.gov.sa/sites/default/files/2026-11/SFDA-Cosmatic5.pdf",
+   "status": 200,
+   "content_type": "application/pdf",
+   "error": null
+  },
+  {
+   "url": "https://www.sfda.gov.sa/sites/default/files/2024-03/FOODFEEDPISTCIDE.pdf",
+   "status": 200,
+   "content_type": "application/pdf",
+   "error": null
+  },
+  {
+   "url": "https://www.sfda.gov.sa/sites/default/files/2026-11/DREG612026.pdf",
+   "status": 200,
+   "content_type": "application/pdf",
+   "error": null
+  },
+  {
+   "url": "https://www.sfda.gov.sa/ar/regulations/19180",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.sfda.gov.sa/ar/news/19412",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.uqn.gov.sa/decisions-and-regulations/4001822",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.uqn.gov.sa/decisions-and-regulations/rules-and-regulations/4001839",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://www.uqn.gov.sa/decisions-and-regulations/4001816",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://pep.gov.sa/ar/node/666",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  },
+  {
+   "url": "https://dgp.sdaia.gov.sa/wps/portal/pdp/knowledgecenter/details/PDPL2",
+   "status": 200,
+   "content_type": "text/html",
+   "error": null
+  }
+ ]
+}

@@ -151,7 +151,7 @@ export interface AnalysisContext {
   sector: string | null;
   communicationType: "financial_promotion" | "general_commercial" | "creator_sponsored" | "internal";
   channels: string[];
-  distribution: "owned" | "paid_media" | "influencer" | null;
+  distribution: "owned" | "agency" | "paid_media" | "influencer" | null;
   creatorLicenseNo: string | null;
   audience: string[];
   market: string;
