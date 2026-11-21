@@ -8,9 +8,9 @@
 ## Current position
 
 - Phase: V2 completion on `feature/saleem-v2-completion` (PR to master, not merged). See the "V2 completion
-  report" in docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (70 requirements: V 51, I 5, P 10, B 2, L 2) and D186–D204.
+  report" in docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (70 requirements: V 54, I 4, P 8, B 2, L 2) and D186–D204.
 - Last run (2026-11-21, isolated stack `saleem_iso` only): lint 0 errors, frontend tsc, Deno check (all functions),
-  build, frontend 156 + backend 287 tests (3 skipped), 25 pgTAP files / 277 checks after an isolated db reset,
+  build, frontend 158 + backend 287 tests (3 skipped; workflows 6/6 after re-seed), 25 pgTAP files / 277 checks after an isolated db reset,
   Playwright 51/51, deterministic eval (recall 0.81, precision 1.0), nine-role browser walkthrough + 60 responsive
   views with 0 problems.
 - Next step: owner review of the PR. Production needs authorisation: back up, apply six migrations, deploy

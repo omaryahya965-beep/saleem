@@ -617,3 +617,6 @@ Format: decision — why — alternatives considered.
 - **D204. Demo rate-limit key (2026-11-21).** The client IP comes from `cf-connecting-ip`, then `X-Real-IP`, then
   the last `X-Forwarded-For` hop. The first `X-Forwarded-For` entry was client-controlled and let the per-IP limit
   be bypassed.
+- **D205. Partial analysis state (2026-11-21).** The advertisement header shows «مكتمل جزئياً» when the finished
+  run's coverage is partial (it reads the same cached report as the analysis tab). The conditional-approval
+  workspace was exercised end to end in the browser on the isolated stack.

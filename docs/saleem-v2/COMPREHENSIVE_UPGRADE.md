@@ -152,7 +152,7 @@ Migrations in this branch: `20261121100000_v2_governance_audit`, `20261121110000
 |---|---|---|---|---|---|---|---|---|
 | 6 | Header analysis state after completion | V | V | `PromotionPage.tsx` | — | E2E | pass | — |
 | 6 | Separate analysis and approval states | V | V | header chips | — | E2E | pass | — |
-| 6 | «Partially completed» analysis state | P | P | model only | — | — | — | Header still shows «مكتمل» for partial coverage |
+| 6 | «Partially completed» analysis state | P | V | `PromotionPage.tsx` (reads the cached report's coverage) | — | FT `analysis-state` | pass | — |
 | 6 | No duplicate paid analysis requests | V | V | `analyze` idempotency | — | BT | pass | — |
 | 5.1 | Semantic grouping, raw findings kept | V | V | `grouping.ts` | — | FT, E2E sample | pass | — |
 | 5.2 | Mawthooq rules not applied to own-channel company ads | V | V | `applicability.ts` | — | BT `mawthooq-applicability` (8) | pass | MAW scope still needs legal confirmation |
@@ -190,7 +190,7 @@ Migrations in this branch: `20261121100000_v2_governance_audit`, `20261121110000
 | 12.1–12.3 | Queue and direct assignment | V | V | — | — | pgTAP, WT | pass | — |
 | 13 | Decision dialog | V | V | — | — | FT | pass | Summary counts not filled from the page |
 | 14 | Requested-changes workflow | V | V | — | — | NA (`changes_requested` with reason) | pass | — |
-| 15 | Conditions workspace in the browser | I | I | — | — | pgTAP only | — | Not exercised end-to-end in the browser |
+| 15 | Conditions workspace in the browser | I | V | `ConditionsPanel.tsx` | — | browser on the isolated stack: marketer fulfils with evidence and submits, reviewer verifies, final approval recorded | pass (events `conditions_submitted` → `condition_verified` → `approved`) | Test ad used a labelled fixture analysis (no AI on the isolated stack) |
 | 16 | Version comparison | V | V | — | — | E2E | pass | — |
 | 17 / 8c | History timeline | P | V | `HistoryPanel.tsx` | 120000 | FT `history`, WT | pass | — |
 | 18 / 3c | Comments: threads, mentions, categories, links | B | V | `CommentsPanel.tsx`, `comments.ts` | 110000 | pgTAP p12, FT `comments` | pass | Attachments are links; no file upload inside comments |
@@ -238,9 +238,9 @@ Migrations in this branch: `20261121100000_v2_governance_audit`, `20261121110000
 | 32 | Nada sample report | V | V | — | — | E2E | pass | — |
 | 34 | Safe migrations | V | V | 6 new migrations, no edits to old ones | all | isolated `db reset` + pgTAP | pass | — |
 | 36 | Tests extended | V | V | +p14, +4 BT files, +1 FT file | — | full suite | pass | — |
-| 36.1–36.2 | Internal and partner workflow tests | P | P | `workflows.test.ts` | — | 5 pass, 1 skipped | — | Agency case skipped: no partner token on the isolated seed |
+| 36.1–36.2 | Internal and partner workflow tests | P | V | `workflows.test.ts` | — | 6/6 on the isolated stack, incl. agency via partner link | pass | API-level (same RPCs as the UI); partner browser upload not run |
 | 38 | Documentation | V | V | this file, DECISIONS D186–D204, SECURITY_AUDIT_V2, SALEEM_FIX_PROVIDERS, REGULATORY_VERIFICATION | — | — | — | — |
 
 "c" after a number refers to a section of the V2 completion request rather than `SALEEM_V2_UPGRADE.md`.
 
-**Counts (70 rows, by "Now"):** V 51 · I 5 · P 10 · B 2 · L 2 · N/A 0.
+**Counts (70 rows, by "Now"):** V 54 · I 4 · P 8 · B 2 · L 2 · N/A 0.
