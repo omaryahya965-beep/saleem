@@ -75,6 +75,8 @@ else if (cmd === "run") {
     shell: true,
     env: {
       ...process.env,
+      SALEEM_ISO: "1",
+      DEMO_STATE_DIR: join(iso, "demo"),
       SUPABASE_LOCAL_URL: env.API_URL,
       SUPABASE_LOCAL_ANON_KEY: env.ANON_KEY,
       SUPABASE_LOCAL_SERVICE_ROLE_KEY: env.SERVICE_ROLE_KEY,

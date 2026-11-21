@@ -12,11 +12,12 @@ const URL_ = process.env.SUPABASE_LOCAL_URL ?? "";
 const ANON = process.env.SUPABASE_LOCAL_ANON_KEY ?? "";
 const SERVICE = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? "";
 const root = path.resolve(__dirname, "../..");
-const credFile = path.join(root, "demo/.demo-credentials.json");
+const stateDir = path.resolve(root, process.env.DEMO_STATE_DIR ?? "demo");
+const credFile = path.join(stateDir, ".demo-credentials.json");
 const enabled = Boolean(URL_ && ANON && SERVICE && fs.existsSync(credFile) && /127\.0\.0\.1|localhost/.test(URL_));
 const cred = enabled ? (JSON.parse(fs.readFileSync(credFile, "utf8")) as { password: string; org_id: string }) : null;
-const partnerToken = enabled && fs.existsSync(path.join(root, "demo/.demo-partner-link"))
-  ? fs.readFileSync(path.join(root, "demo/.demo-partner-link"), "utf8").trim()
+const partnerToken = enabled && fs.existsSync(path.join(stateDir, ".demo-partner-link"))
+  ? fs.readFileSync(path.join(stateDir, ".demo-partner-link"), "utf8").trim()
   : null;
 
 const as = async (who: string): Promise<SupabaseClient> => {

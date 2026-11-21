@@ -39,7 +39,12 @@ export const PERSONAS = [
 ] as const;
 const P = (k: string) => PERSONAS.find((p) => p.key === k)!;
 
-const credFile = path.join(root, "demo/.demo-credentials.json");
+// DEMO_STATE_DIR (set by scripts/isolated-stack.mjs run) keeps another stack's credentials out of demo/.
+const stateDir = path.resolve(root, process.env.DEMO_STATE_DIR ?? "demo");
+if ((process.env.SALEEM_ISO === "1" || /[\\/]\.iso[\\/]/.test(stateDir)) && !/:544\d\d$/.test(new URL(URL_).host))
+  throw new Error(`refusing: isolated-stack state but ${URL_} is not the isolated stack`);
+fs.mkdirSync(stateDir, { recursive: true });
+const credFile = path.join(stateDir, ".demo-credentials.json");
 const password =
   process.env.DEMO_PASSWORD ||
   (fs.existsSync(credFile) ? (JSON.parse(fs.readFileSync(credFile, "utf8")).password as string) : randomBytes(12).toString("base64url"));
@@ -140,7 +145,7 @@ async function main() {
     ok(await (await as(P("partner").email)).rpc("partner_join", { _token: token, _accept_terms: true }), "partner_join");
     ok(await owner.rpc("decide_partner_access", { _org: orgId, _user: ids.partner!, _approve: true }), "partner access");
     fs.mkdirSync(path.dirname(credFile), { recursive: true });
-    fs.writeFileSync(path.join(root, "demo/.demo-partner-link"), token);
+    fs.writeFileSync(path.join(stateDir, ".demo-partner-link"), token);
   }
 
   // Sample ads by the marketer, created exactly like the app does (promotion row + text version).
@@ -237,7 +242,7 @@ async function main() {
 
   fs.mkdirSync(path.dirname(credFile), { recursive: true });
   fs.writeFileSync(credFile, JSON.stringify({ note: "Local demo only. Never commit.", password, org_id: orgId, users: PERSONAS.map((p) => p.email) }, null, 2));
-  console.log(JSON.stringify({ org_id: orgId, personas: PERSONAS.map((p) => `${p.key}:${p.role}`), ads: created.length, analysis: analysed, journey, credentials: "demo/.demo-credentials.json" }, null, 2));
+  console.log(JSON.stringify({ org_id: orgId, personas: PERSONAS.map((p) => `${p.key}:${p.role}`), ads: created.length, analysis: analysed, journey, credentials: path.relative(root, credFile) }, null, 2));
 }
 
 await main();

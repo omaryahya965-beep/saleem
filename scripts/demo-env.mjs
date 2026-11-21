@@ -1,5 +1,10 @@
 // Runs a command with the LOCAL Supabase keys from `supabase status -o env` (never printed, never written to disk).
 import { execFileSync, spawnSync } from "node:child_process";
+// D201: under scripts/isolated-stack.mjs run the isolated keys are already set; never swap them for the dev stack.
+if (process.env.SALEEM_ISO === "1") {
+  const r = spawnSync(process.argv[2], process.argv.slice(3), { stdio: "inherit", shell: true, env: process.env });
+  process.exit(r.status ?? 1);
+}
 const out = execFileSync("npx", ["supabase", "status", "--workdir", "backend", "-o", "env"], { encoding: "utf8", shell: true, stdio: ["ignore", "pipe", "ignore"] });
 const env = Object.fromEntries(out.split(/\r?\n/).map((l) => l.match(/^([A-Z_]+)="?([^"]*)"?$/)).filter(Boolean).map((m) => [m[1], m[2]]));
 const r = spawnSync(process.argv[2], process.argv.slice(3), {
