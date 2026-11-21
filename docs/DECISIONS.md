@@ -654,3 +654,22 @@ Format: decision — why — alternatives considered.
   model now fails at once with `provider_not_configured` instead of a 10-minute «stuck». (4) Approval (full or
   conditional) requires a completed analysis of the current version (`analysis_not_done` blocker); requesting
   changes and rejecting stay possible.
+- **D209. Public availability labels (2026-11-22).** The landing page and the sample describe only what was verified.
+  - **Script:** the free deterministic template, or Gemini when configured (provider-dependent).
+  - **Available:** Arabic and English voice generated on the device, and MP4 assembly from product photos, text and
+    disclosures.
+  - **Not configured:** fully generated footage and virtual presenters, labelled «paid provider, not configured»
+    instead of «coming soon».
+  - **SALEEM Fix:** described as in-browser correction that sends no video to a provider.
+  - The Create call to action opens the Studio.
+- **D210. Release preparation: rollbacks and plan (2026-11-22).** The 8 migrations pending since master had no
+  `rollbacks/*.down.sql` (a §2 hard rule). They are generated from a catalog diff of each migration on the isolated
+  stack (`scripts/rollback-from-catalog.mjs`) and reviewed. They restore master's function bodies and grants, and
+  bring the narrower CHECK constraints back `NOT VALID`, so rows written after the upgrade do not block a rollback.
+  Verified on the isolated stack:
+  - master plus the 8 equals a fresh install
+  - master plus the 8 plus every rollback in reverse equals master
+  - a rollback over post-upgrade data succeeds
+
+  The production steps (backup, migration check, secrets, functions, Vercel, smoke checks, rollback order) are in
+  docs/saleem-v2/RELEASE_PLAN.md. Nothing is run against the hosted project without the owner's approval.

@@ -16,9 +16,18 @@
   Browser walkthroughs: Studio create (real MP4 + local Arabic narration), Fix → Studio replacement, Nada correction
   (real corrected MP4, audio replaced, claim covered), external partner full video workflow + isolation.
 - **Production warning:** commit 2e13705 (on master) broke every video upload through the four-step wizard (poster
-  fetched from a revoked preview URL). Fixed here in 30ee60d; not deployed.
-- Next step: owner review; authorise (or not) the real-provider test plan in AI_STUDIO.md; production steps as in
-  SECURITY_AUDIT_V2.md plus migrations 20261121170000 and 20261121180000 and the `studio` function.
+  fetched from a revoked preview URL). Fixed here in 30ee60d, and isolated on `hotfix/wizard-video-upload`
+  (6119624, from master; wizard upload verified on the isolated stack); not merged or deployed.
+- Release preparation (2026-11-22, D209–D210): public availability labels match the verified Studio. Release plan in
+  docs/saleem-v2/RELEASE_PLAN.md:
+  - 8 pending migrations since master, dry-run upgrade identical to a fresh install
+  - rollback files for all 8, verified back to master's schema
+  - all 12 functions to deploy, secrets (`DEMO_IP_SALT` required)
+  - headers, browser probe, rollback steps
+- Gemini: `models.list` only (1 free request; `gemini-3.8-flash` available). The live journeys wait for the owner to
+  confirm that the Google project has no billing account (free tier).
+- Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
+  in RELEASE_PLAN.md §9.
 
 ## Status
 
