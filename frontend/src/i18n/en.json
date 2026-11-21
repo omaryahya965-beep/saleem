@@ -3570,5 +3570,18 @@
       "cancelled": "Rendering cancelled.",
       "microphone": "Microphone access was not allowed."
     }
+  },
+  "partner3": {
+    "title": "Organisations you are authorised for",
+    "body": "Only organisations that added you as a partner or external reviewer appear here. Internal organisation data and other partners' advertisements are never shown.",
+    "unnamed": "Organisation (name not available to your role)",
+    "access": {
+      "active": "Access active",
+      "pending": "Awaiting the organisation's approval"
+    },
+    "links": "{n} submission links",
+    "active": "{n} open advertisements",
+    "noLinks": "No submission link has been assigned to you yet. Ask the organisation to assign one.",
+    "open": "Open my workspace"
   }
 }

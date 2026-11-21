@@ -29,6 +29,7 @@ import { useUsage } from "@/features/settings/UsageMeter";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { OrgSettingsCard } from "./OrgSettingsCard";
+import { PartnerOrgs } from "./PartnerOrgs";
 import { PartnersCard } from "@/features/enterprise/PartnersCard";
 import { CampaignProgress, WorkspaceOverview, useWorkspaceOverview } from "./WorkspaceOverview";
 import {
@@ -37,6 +38,7 @@ import {
   createInvite,
   createOrg,
   errorCode,
+  fetchMyMemberships,
   fetchMyOrgs,
   fetchOrg,
   removeMember,
@@ -146,6 +148,18 @@ export function OrgsPage() {
   const qc = useQueryClient();
   const usage = useUsage();
   const orgs = useQuery({ queryKey: ["orgs"], queryFn: fetchMyOrgs });
+  const { user } = useAuth();
+  const memberships = useQuery({
+    queryKey: ["my-memberships", user?.id],
+    queryFn: fetchMyMemberships,
+    enabled: Boolean(user),
+  });
+  const memberOrgIds = (orgs.data ?? []).map((o) => o.id);
+  const externalOrgs = (memberships.data ?? []).some(
+    (m) =>
+      (m.role === "external_uploader" || m.role === "external_reviewer") &&
+      !memberOrgIds.includes(m.org_id),
+  );
   const [name, setName] = useState("");
   const create = useMutation({
     mutationFn: () => createOrg(name),
@@ -167,7 +181,9 @@ export function OrgsPage() {
       ) : orgs.isPending ? (
         <Skeleton className="h-24 w-full rounded-lg" />
       ) : orgs.data.length === 0 ? (
-        <EmptyState icon={<Building2 />} title={t("org.emptyTitle")} body={t("org.emptyBody")} />
+        externalOrgs ? null : (
+          <EmptyState icon={<Building2 />} title={t("org.emptyTitle")} body={t("org.emptyBody")} />
+        )
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {orgs.data.map((o) => (
@@ -186,6 +202,7 @@ export function OrgsPage() {
           ))}
         </div>
       )}
+      <PartnerOrgs memberOrgIds={memberOrgIds} />
       <Card className="flex flex-col gap-4">
         <CardTitle>{t("org.createTitle")}</CardTitle>
         {usage.data && !usage.data.orgs_allowed ? (

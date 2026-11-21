@@ -156,7 +156,8 @@ export function RolesPage() {
             ))}
           </span>
         </div>
-        <div className="overflow-x-auto">
+        {/* relative: the sr-only labels (position:absolute) must stay inside the scroller, else they widen the page. */}
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm" data-testid="permission-matrix">
             <thead>
               <tr className="text-fg-muted">
