@@ -18,6 +18,8 @@ if (!/localhost:3200/.test(base))
   );
 const out = arg("out", "studio-walkthrough");
 const lang = arg("lang", "ar");
+// --from <promotion id>: replacement ad for an existing advertisement (saved as its next version).
+const from = arg("from", null);
 const { password } = JSON.parse(
   readFileSync(arg("creds", ".iso/demo/.demo-credentials.json"), "utf8"),
 );
@@ -52,14 +54,24 @@ await page.waitForURL((u) => !u.pathname.startsWith("/login"), {
   timeout: 30000,
 });
 
-await step("new-chooser", async () => {
-  await page.goto(`${base}/new`);
-  await page.getByTestId("start-chooser").waitFor();
+await step(from ? "fix-replacement" : "new-chooser", async () => {
+  if (from) {
+    await page.goto(`${base}/promotions/${from}/fix`);
+    await page.getByTestId("fix-replacement-start").waitFor({ timeout: 30000 });
+  } else {
+    await page.goto(`${base}/new`);
+    await page.getByTestId("start-chooser").waitFor();
+  }
 });
 await step("brief", async () => {
-  await page.getByTestId("start-studio").click();
+  await page
+    .getByTestId(from ? "fix-replacement-start" : "start-studio")
+    .click();
   await page.getByTestId("studio").waitFor();
-  await page.getByTestId("studio-product-name").fill("كريم لمى (منتج تجريبي)");
+  if (!from)
+    await page
+      .getByTestId("studio-product-name")
+      .fill("كريم لمى (منتج تجريبي)");
   await page
     .getByLabel(/وصف المنتج|Product description/)
     .fill("كريم ترطيب يومي للبشرة الجافة");
@@ -143,7 +155,7 @@ await step("accept", async () => {
   await page.waitForURL(
     (u) =>
       u.pathname.startsWith("/checks/") ||
-      u.pathname.startsWith("/promotions/"),
+      (u.pathname.startsWith("/promotions/") && !u.pathname.endsWith("/fix")),
     { timeout: 180000 },
   );
   await page.waitForTimeout(3000);

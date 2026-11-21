@@ -27,7 +27,7 @@ import { BriefStep, ContextStep, DirectionStep } from "./BriefSteps";
 import { ScriptStep } from "./ScriptStep";
 import { AcceptStep, RenderStep, VoiceStep, type StudioMedia } from "./MediaSteps";
 
-export const STUDIO_STEPS = [
+const STUDIO_STEPS = [
   "brief",
   "direction",
   "context",
@@ -36,7 +36,7 @@ export const STUDIO_STEPS = [
   "render",
   "accept",
 ] as const;
-export type StudioStep = (typeof STUDIO_STEPS)[number];
+type StudioStep = (typeof STUDIO_STEPS)[number];
 
 export function StudioPage() {
   const { t } = useI18n();
@@ -77,7 +77,15 @@ export function StudioPage() {
 
   const brief = draft?.brief ?? replacementBrief(source.data) ?? DEFAULT_BRIEF;
   const [local, setLocal] = useState<StudioBrief>(brief);
-  useEffect(() => setLocal(brief), [draft?.id, source.data?.promotion.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A resumed draft replaces the form; a replacement source only FILLS EMPTY fields, so typing before the original
+  // advertisement has loaded is never lost (and the prefill is never lost to that race either).
+  useEffect(() => {
+    if (draft) setLocal(draft.brief);
+  }, [draft?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const rb = replacementBrief(source.data);
+    if (rb && !draft) setLocal((l) => fillEmpty(l, rb));
+  }, [source.data?.promotion.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ensure = useMutation({
     mutationFn: async (b: StudioBrief) => {
@@ -262,6 +270,21 @@ export function StudioPage() {
       </div>
     </Page>
   );
+}
+
+/** Fills the empty fields of the brief from the replacement source (never overwrites what the user typed). */
+function fillEmpty(l: StudioBrief, src: StudioBrief): StudioBrief {
+  return {
+    ...l,
+    instructions: l.instructions || src.instructions,
+    product: {
+      ...l.product,
+      name: l.product.name || src.product.name,
+      sector: l.product.sector ?? src.product.sector,
+    },
+    campaign: { ...l.campaign, name: l.campaign.name || src.campaign.name },
+    context: l === DEFAULT_BRIEF || l.context === DEFAULT_BRIEF.context ? src.context : l.context,
+  };
 }
 
 /** Pre-fills a replacement brief from the original advertisement (product, channels, context, caption). */
