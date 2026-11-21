@@ -10,7 +10,7 @@
 //  - the caller's IP (hashed) started fewer than DEMO_RATE_PER_HOUR sessions in the last hour (default 20).
 // Every issued session is logged (demo_sessions + audit_events). Roles and permissions are the app's own (org_can).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
-import { corsHeaders, json, log } from "../_shared/http.ts";
+import { clientIp, corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);
 export const DEMO_PERSONAS: Record<string, string> = {
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   if (!email) return json({ error: "unknown_persona" }, 400);
 
   const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || "unknown";
+  const ip = clientIp(req.headers);
   const ipHash = await sha256(`${env("DEMO_IP_SALT") ?? "saleem-demo"}:${ip}`);
   // D187: default matches the documented 20 sessions per IP and hour; production sets DEMO_RATE_PER_HOUR explicitly.
   const limit = Number(env("DEMO_RATE_PER_HOUR") ?? 20);
