@@ -75,9 +75,13 @@ Deno.serve(async (req: Request) => {
   }
 
   const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
-  const { data: existing } = await db.from("internal_rules").select("code").eq("org_id", orgId);
+  const { data: existing } = await db.from("internal_rules").select("code, title_ar, instruction_ar, status").eq("org_id", orgId);
+  // D196: re-running the extraction must not duplicate rules the organisation already has (any non-archived status).
+  const norm = (x: string) => x.normalize("NFKC").replace(/[ً-ٟـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/\s+/g, " ").trim().toLowerCase();
+  const known = new Set((existing ?? []).filter((r) => r.status !== "archived").flatMap((r) => [norm(String(r.title_ar)), norm(String(r.instruction_ar))]));
   const taken = new Set((existing ?? []).map((r) => r.code as string));
   const rows = drafts
+    .filter((d) => !known.has(norm(d.title_ar)) && !known.has(norm(d.instruction_ar)))
     .map((d) => {
       let code = d.code;
       for (let i = 2; taken.has(code); i++) code = `${d.code.slice(0, 21)}-${i}`;

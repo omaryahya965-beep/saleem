@@ -1511,7 +1511,8 @@
       "link_not_assigned": "This link is not assigned to your account.",
       "communication_type_not_allowed": "This communication type is not allowed on this link.",
       "too_many_conditions": "At most 20 conditions.",
-      "invalid_conditions": "Invalid conditions."
+      "invalid_conditions": "Invalid conditions.",
+      "duplicate_of_active": "Cannot approve: the draft repeats an active rule."
     },
     "decision": {
       "approve": "Approve",
@@ -3434,5 +3435,9 @@
       "own_claims": "Own drafts only.",
       "not_author": "Not the author of the claim."
     }
+  },
+  "rules2": {
+    "dupTitle": "Similar rules already exist",
+    "dupHint": "Warning only: nothing is deleted or replaced. A draft that repeats an active rule cannot be approved."
   }
 }

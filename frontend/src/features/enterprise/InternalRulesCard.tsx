@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DuplicateWarning } from "./DuplicateWarning";
 import { FileText, FileUp, Filter, Loader2, Plus, Search, Sparkles, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -450,6 +451,12 @@ export function InternalRulesCard({ orgId }: { orgId: string }) {
               dir="auto"
             />
           </Field>
+          <DuplicateWarning
+            orgId={orgId}
+            title={edit.title}
+            instruction={edit.instruction}
+            exclude={edit.id ?? null}
+          />
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="secondary" onClick={() => setEdit(null)}>
               {t("common.cancel")}

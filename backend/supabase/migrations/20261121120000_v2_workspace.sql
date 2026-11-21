@@ -83,3 +83,53 @@ begin
 end $$;
 revoke all on function public.set_fix_monthly_limit(uuid, int) from public, anon;
 grant execute on function public.set_fix_monthly_limit(uuid, int) to authenticated;
+
+-- ---- Company rules: duplicate detection (D196). Nothing is deleted or replaced. ------------------------------------
+-- Word-overlap (Jaccard) on lightly stemmed Arabic; ≥ 0.5 warns, ≥ 0.8 (or the same text) blocks approval.
+-- Light Arabic stemming: definite article and one-letter proclitics, ta marbuta.
+create or replace function public.ar_token(_w text)
+returns text language sql immutable set search_path = '' as $$
+  select regexp_replace(
+           case when length(_w) > 4 then regexp_replace(regexp_replace(_w, '^(وال|بال|فال|كال|لل|ال)', ''), '^[وبفلك](?=...)', '') else _w end,
+           'ة$', 'ه')
+$$;
+create or replace function public.text_overlap(_a text, _b text)
+returns numeric language sql immutable set search_path = '' as $$
+  with a as (select distinct public.ar_token(w) w from unnest(regexp_split_to_array(public.normalize_ar_sql(_a), '[^[:alnum:]ء-ي]+')) w where length(w) > 2),
+       b as (select distinct public.ar_token(w) w from unnest(regexp_split_to_array(public.normalize_ar_sql(_b), '[^[:alnum:]ء-ي]+')) w where length(w) > 2)
+  select case when (select count(*) from (select w from a union select w from b) u) = 0 then 0
+    else round((select count(*) from a join b using (w))::numeric / (select count(*) from (select w from a union select w from b) u), 3) end
+$$;
+create or replace function public.internal_rule_duplicates(_org uuid, _title text, _instruction text, _exclude uuid default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not (public.can_manage_internal_rules(_org) or public.is_org_member(_org)) then raise exception 'code:forbidden' using errcode = '42501'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', r.id, 'code', r.code, 'title_ar', r.title_ar, 'status', r.status,
+      'similarity', greatest(public.text_overlap(r.instruction_ar, _instruction), public.text_overlap(r.title_ar, _title))) order by r.status, r.code)
+    from public.internal_rules r
+    where r.org_id = _org and r.status <> 'archived' and r.id is distinct from _exclude
+      and (public.normalize_ar_sql(r.title_ar) = public.normalize_ar_sql(_title)
+           or public.text_overlap(r.instruction_ar, _instruction) >= 0.5)), '[]'::jsonb);
+end $$;
+revoke all on function public.internal_rule_duplicates(uuid, text, text, uuid) from public, anon;
+grant execute on function public.internal_rule_duplicates(uuid, text, text, uuid) to authenticated, service_role;
+
+-- Approval refuses a draft that repeats an ACTIVE rule (it would run twice); history and the active rule stay.
+create or replace function public.approve_internal_rule(_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare r public.internal_rules; _dup text;
+begin
+  select * into r from public.internal_rules where id = _id for update;
+  if r.id is null or not public.can_manage_internal_rules(r.org_id) then raise exception 'code:forbidden' using errcode = '42501'; end if;
+  if r.status <> 'draft' then raise exception 'code:invalid_status' using errcode = 'P0001'; end if;
+  if r.edited_by is null then raise exception 'code:edit_required' using errcode = 'P0001'; end if;
+  if r.edited_by = auth.uid() then raise exception 'code:separation_of_duties' using errcode = '42501'; end if;
+  select x.code into _dup from public.internal_rules x
+  where x.org_id = r.org_id and x.status = 'active' and x.id <> r.id
+    and (public.normalize_ar_sql(x.instruction_ar) = public.normalize_ar_sql(r.instruction_ar) or public.text_overlap(x.instruction_ar, r.instruction_ar) >= 0.8)
+  limit 1;
+  if _dup is not null then raise exception 'code:duplicate_of_active' using errcode = 'P0001', detail = _dup; end if;
+  update public.internal_rules set status = 'active', approved_by = auth.uid(), approved_at = now() where id = _id;
+  insert into public.audit_events (actor, action, target_table, target_id, meta)
+  values (auth.uid(), 'internal_rule.approve', 'internal_rules', _id::text, jsonb_build_object('org_id', r.org_id, 'code', r.code));
+end $$;
