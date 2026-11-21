@@ -7,13 +7,15 @@
 
 ## Current position
 
-- Phase: V2 comprehensive upgrade (SALEEM_V2_UPGRADE.md) implemented on integrate/pr-1-gemini — see
-  docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (checklist with statuses) and D170–D185.
-- Last run: lint (0 errors), tsc, Deno check, build, 145 frontend + 272 backend tests (local stack), 21 pgTAP suites
-  after a fresh db reset, 51 Playwright e2e, deterministic eval — all passing (2026-11-20).
-- Next step: user review; enable `saleem_fix` per workspace and test it with a Gemini key (paid call); legal
-  confirmation of MAW-03/04 scope (D171) and SFDA cosmetics drafts; apply the two new migrations to hosted only
-  after approval and a backup.
+- Phase: V2 completion on `feature/saleem-v2-completion` (PR to master, not merged). See the "V2 completion
+  report" in docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (70 requirements: V 51, I 5, P 10, B 2, L 2) and D186–D204.
+- Last run (2026-11-21, isolated stack `saleem_iso` only): lint 0 errors, frontend tsc, Deno check (all functions),
+  build, frontend 156 + backend 287 tests (3 skipped), 25 pgTAP files / 277 checks after an isolated db reset,
+  Playwright 51/51, deterministic eval (recall 0.81, precision 1.0), nine-role browser walkthrough + 60 responsive
+  views with 0 problems.
+- Next step: owner review of the PR. Production needs authorisation: back up, apply six migrations, deploy
+  functions, then set `DEMO_AI_DAILY_LIMIT`, lower `DEMO_RATE_PER_HOUR` and set `DEMO_IP_SALT`
+  (SECURITY_AUDIT_V2.md). Legal review of REGULATORY_VERIFICATION.md. Nada v3 needs an approved analysis run.
 
 ## Status
 
