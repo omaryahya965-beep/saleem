@@ -29,14 +29,8 @@ import { useUsage } from "@/features/settings/UsageMeter";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { OrgSettingsCard } from "./OrgSettingsCard";
-import { OrgRolesConfigCard } from "@/features/roles/OrgRolesConfigCard";
-import { FeatureFlagsCard } from "@/features/enterprise/FeatureFlagsCard";
-import { PresetsCard } from "@/features/enterprise/PresetsCard";
-import { RiskAcceptorsCard } from "@/features/enterprise/RiskPanel";
 import { PartnersCard } from "@/features/enterprise/PartnersCard";
-import { InternalRulesCard } from "@/features/enterprise/InternalRulesCard";
-import { SelfApprovalRulesCard } from "@/features/enterprise/SelfApproval";
-import { IntegrationsCard } from "@/features/enterprise/IntegrationsCard";
+import { CampaignProgress, WorkspaceOverview, useWorkspaceOverview } from "./WorkspaceOverview";
 import {
   acceptInvite,
   createCampaign,
@@ -296,9 +290,11 @@ export function OrgPage({ id }: { id: string }) {
   const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const manager = myRole === "owner" || myRole === "admin";
   const names = new Map(members.map((m) => [m.user_id, m.display_name || m.email || "—"]));
+  const overviewAllowed = ["owner", "admin", "compliance_lead", "viewer"].includes(myRole ?? "");
 
   return (
-    <Page className="flex flex-col gap-6">
+    <Page wide className="flex flex-col gap-6">
+      <OverviewData orgId={id} enabled={overviewAllowed} />
       <PageHeader
         eyebrow={
           <Link to="/org" className="text-sm text-green hover:underline">
@@ -330,10 +326,12 @@ export function OrgPage({ id }: { id: string }) {
               {t("org.invites")}
             </TabsTrigger>
           )}
+          {manager && <TabsTrigger value="partners">{t("team.partnersTab")}</TabsTrigger>}
+          <TabsTrigger value="settings">{t("team.settingsTab")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="flex flex-col gap-4 pt-5">
-          <Stats subs={submissions} />
+          {overviewAllowed ? <WorkspaceOverview orgId={id} /> : <Stats subs={submissions} />}
           <SubmissionList subs={submissions.slice(0, 20)} names={names} />
         </TabsContent>
 
@@ -356,10 +354,15 @@ export function OrgPage({ id }: { id: string }) {
                         <span className="min-w-0 flex-1">
                           <span className="block font-medium">{c.name}</span>
                           <span className="text-sm text-fg-muted">
-                            {[c.brand, c.starts_on && formatDate(c.starts_on)]
+                            {[
+                              c.brand,
+                              c.starts_on && formatDate(c.starts_on),
+                              c.ends_on && formatDate(c.ends_on),
+                            ]
                               .filter(Boolean)
                               .join(" · ")}
                           </span>
+                          <CampaignRow orgId={id} cid={c.id} enabled={overviewAllowed} />
                         </span>
                         <Badge>{t("org.checksCount", { n: cs.length })}</Badge>
                         {flagged > 0 && (
@@ -436,7 +439,12 @@ export function OrgPage({ id }: { id: string }) {
                       {m.email}
                     </span>
                   </span>
-                  {manager && m.user_id !== user?.id ? (
+                  {(m as { access_status?: string }).access_status === "pending" && (
+                    <Badge variant="outline">{t("team.pending")}</Badge>
+                  )}
+                  {manager &&
+                  m.user_id !== user?.id &&
+                  (m.role !== "owner" || myRole === "owner") ? (
                     <>
                       <label className="sr-only" htmlFor={`role-${m.user_id}`}>
                         {t("org.role")}
@@ -572,16 +580,30 @@ export function OrgPage({ id }: { id: string }) {
             )}
           </TabsContent>
         )}
+        {manager && (
+          <TabsContent value="partners" className="flex flex-col gap-4 pt-5">
+            <PartnersCard orgId={id} />
+          </TabsContent>
+        )}
+        <TabsContent value="settings" className="flex flex-col gap-4 pt-5">
+          <OrgSettingsCard orgId={id} canEdit={manager} />
+          <Card className="flex flex-col gap-2 text-sm">
+            <CardTitle>{t("team.elsewhere")}</CardTitle>
+            <p className="text-fg-muted">{t("team.elsewhereBody")}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="secondary">
+                <Link to="/roles">{t("rolesConfig.title")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="secondary">
+                <Link to="/features">{t("flags.pageTitle")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="secondary">
+                <Link to="/company-rules">{t("team.companyRulesLink")}</Link>
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
       </Tabs>
-      <OrgSettingsCard orgId={id} canEdit={manager} />
-      {manager && <OrgRolesConfigCard orgId={id} myRole={myRole} />}
-      {manager && <FeatureFlagsCard orgId={id} />}
-      {manager && <PresetsCard orgId={id} />}
-      {manager && <RiskAcceptorsCard orgId={id} />}
-      {manager && <PartnersCard orgId={id} />}
-      {manager && <InternalRulesCard orgId={id} />}
-      {manager && <SelfApprovalRulesCard orgId={id} />}
-      {manager && <IntegrationsCard orgId={id} />}
     </Page>
   );
 }
@@ -677,4 +699,15 @@ export function InvitePage({ token }: { token: string }) {
       </Card>
     </Page>
   );
+}
+
+/** Prefetches the overview (shared by the Overview and Campaigns tabs). */
+function OverviewData({ orgId, enabled }: { orgId: string; enabled: boolean }) {
+  useWorkspaceOverview(orgId, enabled);
+  return null;
+}
+function CampaignRow({ orgId, cid, enabled }: { orgId: string; cid: string; enabled: boolean }) {
+  const o = useWorkspaceOverview(orgId, enabled);
+  const c = o.data?.campaigns.find((x) => x.id === cid);
+  return c ? <CampaignProgress c={c} /> : null;
 }
