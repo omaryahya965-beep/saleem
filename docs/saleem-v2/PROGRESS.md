@@ -7,15 +7,18 @@
 
 ## Current position
 
-- Phase: V2 completion on `feature/saleem-v2-completion` (PR to master, not merged). See the "V2 completion
-  report" in docs/saleem-v2/COMPREHENSIVE_UPGRADE.md (70 requirements: V 54, I 4, P 8, B 2, L 2) and D186–D204.
-- Last run (2026-11-21, isolated stack `saleem_iso` only): lint 0 errors, frontend tsc, Deno check (all functions),
-  build, frontend 158 + backend 287 tests (3 skipped; workflows 6/6 after re-seed), 25 pgTAP files / 277 checks after an isolated db reset,
-  Playwright 51/51, deterministic eval (recall 0.81, precision 1.0), nine-role browser walkthrough + 60 responsive
-  views with 0 problems.
-- Next step: owner review of the PR. Production needs authorisation: back up, apply six migrations, deploy
-  functions, then set `DEMO_AI_DAILY_LIMIT`, lower `DEMO_RATE_PER_HOUR` and set `DEMO_IP_SALT`
-  (SECURITY_AUDIT_V2.md). Legal review of REGULATORY_VERIFICATION.md. Nada v3 needs an approved analysis run.
+- Phase: SALEEM AI Studio (D207) and partner/upload fixes (D208) on `feature/saleem-v2-completion`, on top of the
+  V2 completion (D186–D206). See docs/saleem-v2/AI_STUDIO.md (capability statuses, Gemini audit, real-provider
+  authorisation plan) and the "V2 completion report" in COMPREHENSIVE_UPGRADE.md.
+- Last run (2026-11-22, isolated stack `saleem_iso` only, no AI request): lint 0 errors, frontend tsc, Deno check
+  (all functions), build (13/13 prerendered), frontend 166 + backend 299 tests (2 skipped), 26 pgTAP files / 278
+  checks after an isolated db reset, Playwright 102/102 (suite ×2), deterministic eval (recall 0.81, precision 1.0).
+  Browser walkthroughs: Studio create (real MP4 + local Arabic narration), Fix → Studio replacement, Nada correction
+  (real corrected MP4, audio replaced, claim covered), external partner full video workflow + isolation.
+- **Production warning:** commit 2e13705 (on master) broke every video upload through the four-step wizard (poster
+  fetched from a revoked preview URL). Fixed here in 30ee60d; not deployed.
+- Next step: owner review; authorise (or not) the real-provider test plan in AI_STUDIO.md; production steps as in
+  SECURITY_AUDIT_V2.md plus migrations 20261121170000 and 20261121180000 and the `studio` function.
 
 ## Status
 

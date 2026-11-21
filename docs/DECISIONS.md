@@ -631,3 +631,26 @@ Format: decision — why — alternatives considered.
   correction, comparison and review. Evidence seeks the video, rule references come from the published rulebook,
   and the page says V2 was prepared manually for the demonstration. «/sample» is now prerendered. Invariants are in
   `public-sample.test.ts`; screenshots are in `docs/saleem-v2/screenshots/public-redesign/`.
+- **D207. SALEEM AI Studio (2026-11-21).** `/new` offers «create with AI» or «upload and correct». `/studio` is a
+  seven-step workspace: brief, direction, regulatory context, script, voice, rendering, acceptance. Script providers
+  are chosen explicitly: a deterministic `template` (no AI) or ONE quota-checked Gemini request (`studio`
+  function), validated against fabricated licences, approvals, evidence and endorsements. A deterministic
+  pre-generation review uses the claims engine. Voice is the open-source Piper model running in the browser
+  (`@diffusionstudio/vits-web`, MIT): a real WAV, the text never leaves the device, free. Recording and upload
+  remain. Gemini TTS, ElevenLabs and HeyGen are reported unavailable and are never faked. Video comes from a
+  deterministic template renderer (canvas + Web Audio + MediaRecorder) producing a real MP4; it is never presented
+  as AI footage. Acceptance goes through `createPromotion` + `createSubmission`, so analysis and human review follow
+  as usual and nothing is approved automatically. Drafts are creator-private with frozen results
+  (`studio_drafts`). Per-capability quotas live in `ai_usage` + `ai_allowance` (image/video default to 0). The Fix
+  «replacement» method opens the Studio and saves a new version. The video corrector can generate a replacement
+  narration locally. Covers hide on-screen text completely and continuously between sampled frames (both defects
+  were found by inspecting the corrected Nada MP4). The microphone is allowed for self (recording was blocked in
+  production), and the CSP permits local TTS.
+- **D208. Partner workflow and upload fixes (2026-11-21).** Found by the partner browser test: (1) every video upload
+  through the four-step wizard failed, because the poster was fetched from a preview URL the dropzone had already
+  revoked (introduced in 2e13705, on master); the stored poster Blob is used now. (2) Partners could not upload the
+  file or versions of their own advertisement (`/new?promotion=` was blocked by the role guard); allowed for
+  external uploaders on their own ad, with the server still checking ownership. (3) `analyze` without a configured
+  model now fails at once with `provider_not_configured` instead of a 10-minute «stuck». (4) Approval (full or
+  conditional) requires a completed analysis of the current version (`analysis_not_done` blocker); requesting
+  changes and rejecting stay possible.

@@ -7,13 +7,17 @@ paid service turned on.
 |---|---|---|---|
 | `text_correction` | The `fix` Edge Function asks the configured text model (Gemini) for a corrected caption and script | Works when `GEMINI_API_KEY` is set; counts toward the free-tier quota | Free tier, or the project's Gemini plan |
 | `media_edit` | Deterministic edit of the **original** video, rendered in the browser (canvas + Web Audio + MediaRecorder): mute ranges, cover bands over on-screen text, a visible disclosure overlay, subtitles with the corrected script, and an optional corrected voiceover that is recorded or uploaded | **Available.** Verified in Chromium: real MP4, about 15 s long, 768×1344 | None. Nothing is sent to a provider |
-| `replacement` | A newly generated video (avatar or generative) | **Not configured.** The RPC returns `provider_not_configured` | Paid (see below) |
+| `replacement` (D207) | Opens SALEEM AI Studio with the original ad as the brief: a template-rendered ad (product photos, text, local narration) saved as a new version | **Available** (template rendering). Generated footage or avatars: **not configured** | None for template rendering; generative video is paid |
+
+The full provider matrix, the Gemini audit and the real-provider authorisation plan are in
+[AI_STUDIO.md](AI_STUDIO.md).
 
 ## Voice providers (`frontend/src/features/fix/providers.ts`)
 
 | Id | Available | What it needs | Notes |
 |---|---|---|---|
-| `recorded` | Yes | Browser microphone permission | Local only. Arabic and English |
+| `local-piper` (D207) | Yes | Nothing: the open-source Piper voice runs in the browser; the model (~63 MB) downloads once from Hugging Face | Real WAV, replaces the original audio in the corrector. Arabic (male voice only) and English. The text stays on the device. Free |
+| `recorded` | Yes | Browser microphone permission (`Permissions-Policy: microphone=(self)` since D207; production previously blocked it) | Local only. Arabic and English |
 | `uploaded` | Yes | An audio file the browser can decode (mp3, m4a, wav, webm, ogg) | Local only |
 | `gemini_tts` | No | A Gemini API key on a **billed** project, plus server-side `SALEEM_FIX_TTS_PROVIDER=gemini_tts` and an Edge Function adapter (not written) | Gemini's TTS models are not on the free tier. Turning on billing needs the owner's authorisation |
 | `heygen` | No | A HeyGen **API** plan and `HEYGEN_API_KEY` as a server secret | The HeyGen website plan and the ChatGPT plugin do not include API access |
