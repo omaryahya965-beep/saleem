@@ -128,7 +128,7 @@ describe.skipIf(!enabled)("real workflows (local stack, demo org)", () => {
     // Business rule: one open promotion per partner at a time (a re-run finds the previous one still open).
     let pid = created.data as string | null;
     if (created.error) {
-      expect(created.error.message).toMatch(/one_at_a_time/);
+      expect(created.error.message).toMatch(/one_at_a_time|limit_reached/); // D174 renamed the code (configurable limit)
       const me0 = await uid(partner);
       pid = (await admin().from("promotions").select("id").eq("org_id", cred!.org_id).eq("owner_id", me0).order("created_at", { ascending: false }).limit(1).single()).data!.id;
     }
