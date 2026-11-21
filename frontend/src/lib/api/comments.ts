@@ -23,8 +23,9 @@ export const addComment = async (c: {
   body: string;
   anchor: Anchor | null;
   parentId?: string | null;
-  kind?: "general" | "change_request";
+  kind?: CommentKind;
   mentions?: string[];
+  links?: string[];
 }) =>
   check(
     await supabase.rpc("add_comment", {
@@ -35,7 +36,8 @@ export const addComment = async (c: {
       _parent: c.parentId ?? null,
       _kind: c.kind ?? "general",
       _mentions: c.mentions ?? [],
-    }),
+      _links: c.links ?? [],
+    } as never),
   ) as string;
 export const editComment = async (id: string, body: string) =>
   void check(await supabase.rpc("edit_comment", { _id: id, _body: body }));
@@ -80,3 +82,41 @@ export const drafts = {
     }
   },
 };
+
+// ---- V2 completion (D189): categories, eligible mention targets, author names/roles ----
+export type CommentKind =
+  "general" | "question" | "change_request" | "reviewer_feedback" | "legal_opinion" | "evidence";
+export const COMMENT_KINDS: CommentKind[] = [
+  "general",
+  "question",
+  "evidence",
+  "change_request",
+  "reviewer_feedback",
+  "legal_opinion",
+];
+export interface Participant {
+  user_id: string;
+  name: string | null;
+  email: string | null;
+  role: string;
+}
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  fn: string,
+  args: Record<string, unknown>,
+) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+/** People who can already read this advertisement (empty for external callers). */
+export const useParticipants = (pid: string) =>
+  useQuery({
+    queryKey: ["comment-participants", pid],
+    queryFn: async () => check(await rpc("comment_participants", { _pid: pid })) as Participant[],
+  });
+/** Authors' names and roles (externals receive roles only). */
+export const useCommentAuthors = (pid: string) =>
+  useQuery({
+    queryKey: ["comment-authors", pid],
+    queryFn: async () =>
+      check(await rpc("comment_authors", { _pid: pid })) as Record<
+        string,
+        { name: string | null; role: string | null }
+      >,
+  });

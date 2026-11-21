@@ -1003,7 +1003,8 @@
     "distributionOpt": {
       "owned": "Own channels",
       "paid_media": "Paid media",
-      "influencer": "Through a creator"
+      "influencer": "Through a creator",
+      "agency": "Agency, on the brand's channels"
     },
     "creatorLicense": "Creator's Mawthooq licence number",
     "creatorLicenseHint": "Required when publishing through a creator.",
@@ -3094,5 +3095,82 @@
       "conditions": "Conditions",
       "description": "Product or service description"
     }
+  },
+  "comments2": {
+    "newTitle": "New comment",
+    "replyTitle": "Reply to the thread",
+    "category": "Category",
+    "kind": {
+      "general": "Comment",
+      "question": "Question",
+      "evidence": "Evidence / document",
+      "change_request": "Change request",
+      "reviewer_feedback": "Reviewer feedback",
+      "legal_opinion": "Legal opinion"
+    },
+    "body": "Comment",
+    "placeholder": "Write a comment… use @ to mention a colleague",
+    "mentionTitle": "Mention",
+    "noParticipants": "No matching participants",
+    "mentionHint": "Only people who can already see this advertisement can be mentioned; a mention never grants access.",
+    "removeMention": "Remove mention of {name}",
+    "timestamp": "Video timestamp (optional)",
+    "links": "Evidence links, https (one per line)",
+    "send": "Post comment",
+    "sendReply": "Send reply",
+    "posted": "Comment posted.",
+    "readOnly": "Comments are read-only on this version or for this role.",
+    "filters": "Filter comments",
+    "state": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "allKinds": "All categories",
+    "mentionsMe": "Mentions of me",
+    "search": "Search comments",
+    "empty": "No comments here.",
+    "reply": "Reply",
+    "resolve": "Mark resolved",
+    "reopen": "Reopen",
+    "resolved": "Resolved",
+    "you": "You",
+    "adOwner": "Ad owner",
+    "member": "Member",
+    "decisionNotes": "Official decision notes ({n})",
+    "decisionNotesHint": "Immutable record, separate from the discussion. Full decisions are in the History tab."
+  },
+  "notif3": {
+    "comment_mention": "You were mentioned in a comment on «{title}»",
+    "comment_reply": "New reply to your comment on «{title}»",
+    "correction_ready": "SALEEM Fix proposal ready for «{title}»"
+  },
+  "info2": {
+    "snapshot": "Snapshot",
+    "product": "Product details",
+    "productStatus": "Product status",
+    "campaign": "Campaign details",
+    "campaignName": "Campaign",
+    "brand": "Brand",
+    "period": "Period",
+    "declarations": "Declarations recorded with version {n}",
+    "uploaded": "Uploaded",
+    "mawthooq": "Mawthooq licence",
+    "lastDecision": "Latest decision",
+    "openConditions": "Outstanding conditions"
+  },
+  "license": {
+    "status": {
+      "unverified": "Not checked",
+      "verified": "Checked by a reviewer",
+      "invalid": "Invalid",
+      "not_applicable": "Not applicable (organisation publication)"
+    },
+    "checkedAt": "Last checked {date}",
+    "manualNote": "Manual check: SALEEM does not query Mawthooq automatically. Record what you checked and how; it is not an approval.",
+    "result": "Result",
+    "note": "How did you check?",
+    "save": "Record check",
+    "saved": "Licence check recorded."
   }
 }

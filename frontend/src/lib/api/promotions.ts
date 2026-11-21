@@ -47,7 +47,7 @@ export const CHANNELS = [
   "print",
 ] as const;
 export const AUDIENCES = ["general", "youth", "professionals", "high_net_worth", "sme"] as const;
-export const DISTRIBUTIONS = ["owned", "paid_media", "influencer"] as const;
+export const DISTRIBUTIONS = ["owned", "agency", "paid_media", "influencer"] as const;
 /** D170: financial sectors plus non-financial industries (extensible: add a sector + its product types). */
 export const SECTORS = [
   "banking",
@@ -360,7 +360,11 @@ export async function getPromotion(id: string): Promise<PromotionBundle> {
     : null;
   const [campaign, members] = await Promise.all([
     p.campaign_id
-      ? supabase.from("campaigns").select("id, name, brand").eq("id", p.campaign_id).maybeSingle()
+      ? supabase
+          .from("campaigns")
+          .select("id, name, brand, starts_on, ends_on")
+          .eq("id", p.campaign_id)
+          .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     p.org_id
       ? supabase

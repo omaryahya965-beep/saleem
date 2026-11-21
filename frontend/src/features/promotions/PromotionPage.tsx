@@ -54,6 +54,7 @@ import { fetchHistory, fetchReasons, rk, type ReviewDecision } from "@/lib/api/r
 import { CheckPage } from "@/features/reports/CheckPage";
 import { ContextFields, type ContextValue } from "./ContextFields";
 import { pickVersion } from "./model";
+import { DeclarationsSection, ProductCampaignSections, WorkflowSection } from "./InfoSections";
 import { ReviewActions } from "@/features/review/ReviewActions";
 import { ConditionsPanel } from "@/features/review/ConditionsPanel";
 import { HistoryPanel } from "@/features/review/HistoryPanel";
@@ -439,6 +440,10 @@ function PromotionView({
             canEdit={canEdit && isLatest}
             currentVersion={latest}
             selected={version}
+            canCheckLicense={
+              ["owner", "admin", "compliance_lead"].includes(role ?? "") ||
+              (role === "reviewer" && p.assigned_reviewer_id === user?.id)
+            }
           />
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             <LinkedClaims
@@ -762,12 +767,14 @@ function InfoPanel({
   canEdit,
   currentVersion,
   selected,
+  canCheckLicense,
 }: {
   promotion: Promotion;
   bundle: PromotionBundle;
   canEdit: boolean;
   currentVersion: VersionSummary | null;
   selected: VersionSummary | null;
+  canCheckLicense: boolean;
 }) {
   const { t, lang } = useI18n();
   const { user } = useAuth();
@@ -946,29 +953,13 @@ function InfoPanel({
               <span className="text-sm text-fg-muted">{t("ws.info.packsHint")}</span>
             </InfoRow>
           </Section>
-          <Section title={t("ws.info.declarations")}>
-            {p.creator_license_no && (
-              <InfoRow label={t("promo.creatorLicense")}>
-                <bdi>{p.creator_license_no}</bdi>
-              </InfoRow>
-            )}
-            <InfoRow label={t("ws.info.declarationsNote")}>
-              <span className="text-sm text-fg-muted">{t("ws.info.declarationsHint")}</span>
-            </InfoRow>
-          </Section>
-          <Section title={t("ws.info.workflow")}>
-            <InfoRow label={t("ws.header.assignee")}>{person(p.assigned_reviewer_id)}</InfoRow>
-            <InfoRow label={t("ws.header.humanStatus")}>
-              {t(`promo.reviewStatus.${p.review_status}` as TKey)}
-            </InfoRow>
-            <InfoRow label={t("promo.reviewerNotes")}>
-              <span dir="auto" className="whitespace-pre-wrap">
-                {p.reviewer_notes || t("common.none")}
-              </span>
-            </InfoRow>
-            <InfoRow label={t("promo.fieldCreated")}>{date(p.created_at)}</InfoRow>
-            <InfoRow label={t("promo.fieldUpdated")}>{date(p.updated_at)}</InfoRow>
-          </Section>
+          <ProductCampaignSections bundle={bundle} />
+          <DeclarationsSection
+            promotion={p}
+            version={selected ?? currentVersion}
+            canCheckLicense={canCheckLicense}
+          />
+          <WorkflowSection promotion={p} versions={bundle.versions} person={person} />
         </div>
       )}
     </div>
