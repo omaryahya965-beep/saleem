@@ -54,6 +54,7 @@ export const ar = {
     comment_mention: "أُشير إليك في تعليق على «{title}»",
     comment_reply: "رد جديد على تعليقك في «{title}»",
     correction_ready: "اقتراح الإصلاح الذكي جاهز لـ «{title}»",
+    correction_accepted: "أُنشئ إصدار مصحح لـ «{title}» عبر الإصلاح الذكي؛ يُعاد فحصه قبل أي قرار",
   },
 };
 export const en = {
@@ -96,5 +97,6 @@ export const en = {
     comment_mention: "You were mentioned in a comment on «{title}»",
     comment_reply: "New reply to your comment on «{title}»",
     correction_ready: "SALEEM Fix proposal ready for «{title}»",
+    correction_accepted: "A corrected version of «{title}» was created with SALEEM Fix; it is re-analysed before any decision",
   },
 };

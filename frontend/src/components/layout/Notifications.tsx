@@ -29,6 +29,7 @@ function text(n: Notification, t: ReturnType<typeof useI18n>["t"]) {
     verdict?: string;
     org_name?: string;
     approved?: boolean;
+    accepted?: boolean;
     final?: boolean;
   };
   const title = p.title || t("dashboard.untitled");
@@ -39,6 +40,7 @@ function text(n: Notification, t: ReturnType<typeof useI18n>["t"]) {
       n: p.version_no ?? "—",
     });
   if (n.kind === "conditions_submitted") return t("notif2.conditions_submitted", { title });
+  if (n.kind === "correction_ready" && p.accepted) return t("notif3.correction_accepted", { title });
   if (n.kind === "comment_mention" || n.kind === "comment_reply" || n.kind === "correction_ready")
     return t(`notif3.${n.kind}` as never, { title });
   if (n.kind === "condition_returned") return t("notif2.condition_returned", { title });

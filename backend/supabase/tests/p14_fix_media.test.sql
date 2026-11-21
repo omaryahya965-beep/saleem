@@ -70,6 +70,19 @@ do $$ begin
 end $$;
 reset role;
 
+-- D199: an asynchronous proposal that becomes ready notifies the user who started it.
+set local role authenticated;
+select pg_temp.as_user('1e000000-0000-0000-0000-000000000002');
+select public.create_correction_job('4e000000-0000-0000-0000-000000000001', 'text_correction', '{}', '{}', null, 'media-key-0003');
+reset role;
+select set_config('request.jwt.claim.sub', '', true);
+update public.correction_jobs set status = 'generating' where idempotency_key = 'media-key-0003';
+update public.correction_jobs set status = 'ready', proposal = '{"caption": "x"}' where idempotency_key = 'media-key-0003';
+do $$ begin
+  if not exists (select 1 from public.notifications where user_id = '1e000000-0000-0000-0000-000000000002' and kind = 'correction_ready'
+                 and payload->>'promotion_id' = '4e000000-0000-0000-0000-000000000001') then raise exception 'no correction_ready notification'; end if;
+end $$;
+
 select pass('p14 SALEEM Fix media');
 select * from finish();
 rollback;

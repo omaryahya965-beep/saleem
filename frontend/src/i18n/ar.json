@@ -3176,7 +3176,8 @@
   "notif3": {
     "comment_mention": "أُشير إليك في تعليق على «{title}»",
     "comment_reply": "رد جديد على تعليقك في «{title}»",
-    "correction_ready": "اقتراح الإصلاح الذكي جاهز لـ «{title}»"
+    "correction_ready": "اقتراح الإصلاح الذكي جاهز لـ «{title}»",
+    "correction_accepted": "أُنشئ إصدار مصحح لـ «{title}» عبر الإصلاح الذكي؛ يُعاد فحصه قبل أي قرار"
   },
   "info2": {
     "snapshot": "لقطة ثابتة",
