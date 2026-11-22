@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   FileSearch,
+  UserRound,
 } from "lucide-react";
 import {
   Suspense,
@@ -37,7 +38,7 @@ import { useI18n, type TKey } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
 import { useIsAdmin } from "@/lib/api/roles";
 import { useOrgSettings } from "@/lib/api/promotions";
-import { useOrgPicker } from "@/features/libraries/orgPicker";
+import { PERSONAL, useOrgPicker } from "@/features/libraries/orgPicker";
 import { AppSidebar, NAV_ICONS, NavDrawer, isActive } from "./AppSidebar";
 import { DemoBanner } from "./DemoBanner";
 import { PublicLayout } from "@/features/public/PublicChrome";
@@ -88,6 +89,20 @@ function AccountMenu({ picker }: { picker: Picker }) {
   const initial = name?.[0] ?? user.email?.[0] ?? "?";
   const orgs = picker.orgs.data ?? [];
   const active = orgs.find((o) => o.id === picker.orgId);
+  const personal = picker.personal.data;
+  // D211: switching workspace drops every cached query except the workspace list itself, so data loaded in one
+  // workspace is never shown in another (the server still scopes every read).
+  const switchTo = (id: string) => {
+    if (id === (picker.mode === "personal" ? PERSONAL : picker.orgId)) return;
+    picker.setOrgId(id);
+    qc.removeQueries({
+      predicate: (q) =>
+        !["orgs", "my-memberships", "personal-workspace", "is-admin"].includes(
+          String(q.queryKey[0]),
+        ),
+    });
+    void navigate({ to: "/dashboard" });
+  };
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
@@ -112,6 +127,12 @@ function AccountMenu({ picker }: { picker: Picker }) {
               {user.email}
             </p>
             {/* Partners cannot read the organisation row: show their role even without its name. */}
+            {picker.mode === "personal" && personal && (
+              <p className="mt-1 text-xs text-fg-muted" data-testid="workspace-label">
+                {t("workspace.personal")}
+                {personal.is_demo ? ` · ${t("workspace.demo")}` : ""}
+              </p>
+            )}
             {(active || picker.role) && (
               <p className="mt-1 text-xs text-fg-muted">
                 {[active?.name, picker.role && t(`org.roles.${picker.role}` as TKey)]
@@ -120,19 +141,29 @@ function AccountMenu({ picker }: { picker: Picker }) {
               </p>
             )}
           </div>
-          {orgs.length > 1 && (
+          {orgs.length + (personal ? 1 : 0) > 1 && (
             <>
               <DropdownMenu.Separator className="my-1 h-px bg-border" />
               <DropdownMenu.Label className="px-3 py-1 text-xs text-fg-muted">
                 {t("appNav.switchOrg")}
               </DropdownMenu.Label>
-              {orgs.map((o) => (
+              {personal && (
                 <DropdownMenu.Item
-                  key={o.id}
-                  onSelect={() => picker.setOrgId(o.id)}
+                  onSelect={() => switchTo(PERSONAL)}
                   className={itemClass}
+                  data-testid="switch-personal"
                 >
-                  {o.id === picker.orgId ? (
+                  {picker.mode === "personal" ? (
+                    <Check aria-hidden="true" />
+                  ) : (
+                    <UserRound aria-hidden="true" />
+                  )}
+                  <span className="truncate">{t("workspace.personal")}</span>
+                </DropdownMenu.Item>
+              )}
+              {orgs.map((o) => (
+                <DropdownMenu.Item key={o.id} onSelect={() => switchTo(o.id)} className={itemClass}>
+                  {picker.mode === "organization" && o.id === picker.orgId ? (
                     <Check aria-hidden="true" />
                   ) : (
                     <Building2 aria-hidden="true" />
@@ -181,7 +212,12 @@ function useAppNav(picker: Picker): NavGroup[] {
   const features = (settings.data?.features ?? {}) as Record<string, unknown>;
   const flags = Object.fromEntries(Object.entries(features).map(([k, v]) => [k, v === true]));
   // Until memberships load, the role is unknown: show nothing rather than the personal-account menu.
-  if (picker.orgs.isPending || picker.mine.isPending || (picker.orgId && settings.isPending))
+  if (
+    picker.orgs.isPending ||
+    picker.mine.isPending ||
+    picker.personal.isPending ||
+    (picker.orgId && settings.isPending)
+  )
     return [];
   return buildNav({ role: picker.role, orgId: picker.orgId || null, flags, platformAdmin });
 }
@@ -220,6 +256,22 @@ export function SiteShell({ children }: { children: ReactNode }) {
     lastUser.current = user?.id;
   }, [user?.id, qcShell]);
   const groups = useAppNav(picker);
+  // D211: a signed-in user with neither an organisation nor a personal workspace chooses how to use SALEEM first
+  // (personal use, or an organisation). Invitation, partner, share and public pages are never redirected.
+  const goTo = useNavigate();
+  const needsOnboarding =
+    ready &&
+    Boolean(user) &&
+    !picker.orgs.isPending &&
+    !picker.mine.isPending &&
+    picker.personal.isSuccess &&
+    picker.mode === "personal" &&
+    !picker.personal.data;
+  useEffect(() => {
+    const app = ["/dashboard", "/promotions", "/new", "/studio", "/checks", "/ask", "/archive"];
+    if (needsOnboarding && app.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
+      void goTo({ to: "/welcome" });
+  }, [needsOnboarding, pathname, goTo]);
   // Route guard: a page outside the role's navigation is not rendered, even by typed URL (the server still filters
   // every query). Decided only once the navigation is known (memberships loaded), so nothing flashes.
   const page = pageForPath(pathname);
@@ -249,7 +301,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const appNav: NavItem[] = [
     ...primaryMobile(groups).map((i) => ({
       key: i.key,
-      label: t(`appNav.item.${i.key}` as TKey),
+      label: t((i.labelKey ?? `appNav.item.${i.key}`) as TKey),
       icon: NAV_ICONS[i.key],
       active: isActive(i, pathname),
       render: link(i.to),

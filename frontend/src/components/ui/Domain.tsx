@@ -43,6 +43,8 @@ export interface IssueV2 {
   /** Organisation brand-guideline rule (Phase 6.7): «سياسة داخلية», not regulation. */
   internalPolicy?: boolean;
   articleRef: string | null;
+  /** D211: the regulatory authority the rule belongs to (GMEDIA, MC, SDAIA, SFDA…), when known. */
+  authority?: string | null;
   /** official_text_opened | official_status_unconfirmed | secondary_only | internal */
   verification: string | null;
   missingInformation: string | null;

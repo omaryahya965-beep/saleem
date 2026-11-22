@@ -38,6 +38,7 @@ import { canSeePage } from "@/components/layout/navModel";
 import type { DashboardFilter, SubmissionListItem } from "@/lib/api/data";
 import { useSubmissions } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
+import { PersonalDashboard } from "@/features/personal/PersonalDashboard";
 
 const PAGE_SIZE = 10;
 const FILTERS: { value: DashboardFilter; label: TKey }[] = [
@@ -135,7 +136,15 @@ function ListSkeleton() {
   );
 }
 
+/** D211: the personal workspace has its own home («مساحتي الشخصية»); organisations keep the role dashboard. */
 export function DashboardPage() {
+  const picker = useOrgPicker();
+  if (picker.mode === "personal" && picker.personal.data)
+    return <PersonalDashboard workspace={picker.personal.data} />;
+  return <WorkDashboard />;
+}
+
+function WorkDashboard() {
   const { t, tn } = useI18n();
   const { user, ready } = useAuth();
   const navigate = useNavigate({ from: "/dashboard" });

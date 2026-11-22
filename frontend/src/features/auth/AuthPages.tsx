@@ -10,6 +10,7 @@ import {
   DEMO_LOGINS,
   signUp,
   updatePassword,
+  type AccountIntent,
   type AuthErrorKey,
 } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
@@ -69,7 +70,7 @@ function FormError({ code }: { code: AuthErrorKey | null }) {
 const linkCls = "font-medium text-green underline-offset-4 hover:underline";
 
 export function LoginPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/_app/login" });
   const [email, setEmail] = useState("");
@@ -78,7 +79,7 @@ export function LoginPage() {
   const [error, setError] = useState<AuthErrorKey | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const done = () => void navigate({ to: redirect ?? "/dashboard" });
+  const done = (to?: string) => void navigate({ to: to ?? redirect ?? "/dashboard" });
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -100,50 +101,82 @@ export function LoginPage() {
     }
   };
 
+  const form = (
+    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+      <FormError code={error} />
+      <Field label={t("auth.email")} error={fieldErr.email}>
+        <Input
+          type="email"
+          autoComplete="email"
+          dir="ltr"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rtl:text-end"
+        />
+      </Field>
+      <Field label={t("auth.password")} error={fieldErr.password}>
+        <Input
+          type="password"
+          autoComplete="current-password"
+          dir="ltr"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rtl:text-end"
+        />
+      </Field>
+      <Link to="/forgot-password" className={cn(linkCls, "-mt-1 self-start text-sm")}>
+        {t("auth.forgot")}
+      </Link>
+      <Button type="submit" block loading={busy === "form"}>
+        {t("auth.signIn")}
+      </Button>
+    </form>
+  );
+  const footer = (
+    <p className="text-center text-sm text-fg-muted">
+      {t("auth.noAccount")}{" "}
+      <Link to="/signup" className={linkCls}>
+        {t("auth.signUpLink")}
+      </Link>
+    </p>
+  );
+
+  if (!DEMO_LOGINS)
+    return (
+      <AuthLayout title={t("auth.signInTitle")} body={t("auth.signInBody")} footer={footer}>
+        {form}
+      </AuthLayout>
+    );
+
+  // D211: sign-in for existing users beside the two demo experiences (companies / individuals).
   return (
-    <AuthLayout
-      title={t("auth.signInTitle")}
-      body={t("auth.signInBody")}
-      footer={
-        <>
-          {t("auth.noAccount")}{" "}
-          <Link to="/signup" className={linkCls}>
-            {t("auth.signUpLink")}
-          </Link>
-        </>
-      }
-    >
-      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-        <FormError code={error} />
-        <Field label={t("auth.email")} error={fieldErr.email}>
-          <Input
-            type="email"
-            autoComplete="email"
-            dir="ltr"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rtl:text-end"
-          />
-        </Field>
-        <Field label={t("auth.password")} error={fieldErr.password}>
-          <Input
-            type="password"
-            autoComplete="current-password"
-            dir="ltr"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rtl:text-end"
-          />
-        </Field>
-        <Link to="/forgot-password" className={cn(linkCls, "-mt-1 self-start text-sm")}>
-          {t("auth.forgot")}
-        </Link>
-        <Button type="submit" block loading={busy === "form"}>
-          {t("auth.signIn")}
-        </Button>
-      </form>
-      {DEMO_LOGINS && <DemoRolePicker onSignedIn={done} />}
-    </AuthLayout>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-14" data-testid="login-page">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:gap-10">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-24">
+          <Card className="flex flex-col gap-6 sm:p-8">
+            <div className="flex flex-col items-start gap-4">
+              <Brand />
+              <div>
+                <h1
+                  className={cn(
+                    "text-2xl font-bold",
+                    lang === "ar" ? "font-display" : "tracking-tight",
+                  )}
+                >
+                  {t("auth.signInTitle")}
+                </h1>
+                <p className="mt-1 text-fg-muted">{t("auth.signInBody")}</p>
+              </div>
+            </div>
+            {form}
+          </Card>
+          {footer}
+        </div>
+        <Card className="sm:p-8">
+          <DemoRolePicker onSignedIn={done} />
+        </Card>
+      </div>
+    </div>
   );
 }
 
@@ -159,6 +192,7 @@ export function SignupPage() {
   const [error, setError] = useState<AuthErrorKey | null>(null);
   const [busy, setBusy] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [intent, setIntent] = useState<AccountIntent>("personal");
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -172,9 +206,9 @@ export function SignupPage() {
     setBusy(true);
     setError(null);
     try {
-      const { needsConfirmation } = await signUp(email.trim(), password, name.trim());
+      const { needsConfirmation } = await signUp(email.trim(), password, name.trim(), intent);
       if (needsConfirmation) setSentTo(email.trim());
-      else void navigate({ to: "/dashboard" });
+      else void navigate({ to: "/welcome" });
     } catch (err) {
       setError(authErrorKey(err));
     } finally {
@@ -211,6 +245,38 @@ export function SignupPage() {
     >
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError code={error} />
+        <fieldset className="flex flex-col gap-2" data-testid="signup-intent">
+          <legend className="mb-2 text-sm font-medium text-fg">{t("auth.intent.label")}</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(["personal", "organization"] as const).map((k) => (
+              <label
+                key={k}
+                className={cn(
+                  "flex cursor-pointer flex-col gap-1 rounded-[14px] border-2 p-3 text-start transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-green",
+                  intent === k
+                    ? k === "personal"
+                      ? "border-gold-deep bg-cream"
+                      : "border-forest bg-green-bg"
+                    : "border-border hover:border-border-strong",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="intent"
+                  value={k}
+                  checked={intent === k}
+                  onChange={() => setIntent(k)}
+                  className="sr-only"
+                  data-testid={`signup-intent-${k}`}
+                />
+                <span className="text-sm font-bold text-fg">{t(`auth.intent.${k}` as TKey)}</span>
+                <span className="text-xs leading-relaxed text-fg-muted">
+                  {t(`auth.intent.${k}Body` as TKey)}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <Field label={t("auth.displayName")} error={fieldErr.name}>
           <Input
             autoComplete="name"

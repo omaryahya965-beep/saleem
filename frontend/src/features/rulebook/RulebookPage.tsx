@@ -37,6 +37,8 @@ import {
 import { useI18n } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
 import { RulePacks } from "./RulePacks";
+import { AuthorityCoveragePanel } from "@/features/personal/AuthoritySelector";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { RegulatoryRuleItem } from "./saudiRulesCatalog";
 
 const AUTHORITIES = [
@@ -90,6 +92,9 @@ export function RulebookPage() {
   const [sector, setSector] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
   const [selectedRule, setSelectedRule] = useState<RegulatoryRuleItem | null>(null);
+  // D211: the personal workspace has no company rules; it sees what SALEEM can verify per authority first.
+  const picker = useOrgPicker();
+  const personal = picker.mode === "personal";
 
   // Cast rules to RegulatoryRuleItem with all enriched fields
   const rules = useMemo(() => {
@@ -106,7 +111,7 @@ export function RulebookPage() {
 
     for (const r of rules) {
       if (r.authority) authorities.add(r.authority);
-      if (r.review_state === "active" || r.is_active) active++;
+      if (r.review_state === "active") active++;
       else if (r.review_state === "pending_review") pending++;
       else draft++;
     }
@@ -147,7 +152,7 @@ export function RulebookPage() {
 
       // Status filter
       if (status !== "all") {
-        if (status === "active" && !(r.review_state === "active" || r.is_active)) return false;
+        if (status === "active" && !(r.review_state === "active")) return false;
         if (status === "pending_review" && r.review_state !== "pending_review") return false;
         if (status === "draft" && r.review_state !== "draft") return false;
         if (status === "superseded" && r.review_state !== "superseded") return false;
@@ -185,11 +190,13 @@ export function RulebookPage() {
           </span>
         }
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="secondary" icon={<ScrollText />}>
-              <Link to="/company-rules">{t("rulebook.addCompanyRules")}</Link>
-            </Button>
-          </div>
+          personal ? undefined : (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="secondary" icon={<ScrollText />}>
+                <Link to="/company-rules">{t("rulebook.addCompanyRules")}</Link>
+              </Button>
+            </div>
+          )
         }
       />
 
@@ -201,6 +208,8 @@ export function RulebookPage() {
           <p className="text-fg-muted">{t("rulebook.illustrativeBody")}</p>
         </div>
       </div>
+
+      <AuthorityCoveragePanel picked={authority} onPick={setAuthority} />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -355,7 +364,7 @@ export function RulebookPage() {
 
           <div className="flex flex-col gap-2.5" data-testid="rule-results">
             {filtered.map((r) => {
-              const isActive = r.review_state === "active" || r.is_active;
+              const isActive = r.review_state === "active";
               const isPending = r.review_state === "pending_review";
               const isArchived = r.review_state === "archived";
 
@@ -384,7 +393,7 @@ export function RulebookPage() {
                                 : "neutral"
                         }
                       >
-                        {r.review_state === "active" || r.is_active
+                        {r.review_state === "active"
                           ? "سارية ومطبقة"
                           : r.review_state === "pending_review"
                             ? "قيد المراجعة"
@@ -479,14 +488,14 @@ export function RulebookPage() {
               <Badge variant="outline">{selectedRule.authority_ar || selectedRule.authority}</Badge>
               <Badge
                 variant={
-                  selectedRule.review_state === "active" || selectedRule.is_active
+                  selectedRule.review_state === "active"
                     ? "green"
                     : selectedRule.review_state === "pending_review"
                       ? "amber"
                       : "neutral"
                 }
               >
-                {selectedRule.review_state === "active" || selectedRule.is_active
+                {selectedRule.review_state === "active"
                   ? "سارية ومطبقة نظامياً"
                   : selectedRule.review_state === "pending_review"
                     ? "قيد المراجعة القانونية"

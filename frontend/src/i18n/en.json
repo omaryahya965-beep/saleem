@@ -516,7 +516,7 @@
       "generic": "We couldn't complete that. Please try again."
     },
     "demo": {
-      "title": "Try SALEEM by role",
+      "title": "Try SALEEM",
       "hint": "Enter as any role in one click, in the isolated «SALEEM Demo Bank» workspace.",
       "explore": "Explore demo accounts",
       "dialogHint": "Each role sees only what its real permissions allow. No email or password needed.",
@@ -534,7 +534,26 @@
         "demo_not_seeded": "The demo data is not set up yet.",
         "generic": "Could not start the demo session. Try again."
       },
-      "banner": "Demo session — fictional «SALEEM Demo Bank» data; ends automatically after two hours."
+      "banner": "Demo session — fictional «SALEEM Demo Bank» data; ends automatically after two hours.",
+      "audienceHint": "Choose the experience that fits you. The data is fictional and no password is shown.",
+      "orgTitle": "Companies and organisations",
+      "orgBody": "Manage advertisements, teams, reviews and regulatory approvals in one workspace.",
+      "individualTitle": "Individuals and content creators",
+      "individualBody": "Create your ad content, check it and correct it with AI — no team or internal approval needed.",
+      "individualCreate": "Create an ad from your product photos and text",
+      "individualCheck": "Check it against the regulators you choose",
+      "individualFix": "Correct it with smart correction and compare versions",
+      "individualDownload": "Download it without waiting for an internal approval",
+      "individualEnter": "Enter my demo personal space",
+      "individualNote": "A shared demo personal space that belongs to no organisation. Results are automated and advisory, not regulatory clearance.",
+      "bannerPersonal": "Demo session — a shared demo personal space with fictional data; it ends automatically after two hours."
+    },
+    "intent": {
+      "label": "How will you use SALEEM?",
+      "personal": "Personal use",
+      "personalBody": "Creator, freelancer or individual: your own space, no team or approvals.",
+      "organization": "Company or organisation",
+      "organizationBody": "Teams, reviews and approvals. Create an organisation after signing up, or join by invitation."
     }
   },
   "rolesConfig": {
@@ -1346,7 +1365,9 @@
       "always_enabled": "Always on",
       "org_enabled": "Turned on by your organisation",
       "sector_default": "Default for your organisation's sector",
-      "default": "On by default"
+      "default": "On by default",
+      "personal_selected": "An authority you selected",
+      "personal_recommended": "An authority SALEEM recommended for your ad's context"
     },
     "checklistTitle": "Reviewer checklist ({n})"
   },
@@ -2257,7 +2278,9 @@
       "compliance": "Compliance",
       "organization": "Organization",
       "support": "Help",
-      "platform": "Platform admin"
+      "platform": "Platform admin",
+      "personal": "My space",
+      "personalHelp": "Help and rules"
     },
     "item": {
       "dashboard": "Overview",
@@ -2279,7 +2302,18 @@
       "adminMetrics": "Platform metrics",
       "adminRules": "Rule releases",
       "adminEval": "Engine evaluation",
-      "adminCalibration": "Calibration"
+      "adminCalibration": "Calibration",
+      "studio": "SALEEM Studio",
+      "settings": "Personal settings"
+    },
+    "personal": {
+      "dashboard": "Home",
+      "promotions": "My ads",
+      "new": "New ad",
+      "studio": "SALEEM Studio",
+      "rules": "Rulebook",
+      "ask": "Ask SALEEM",
+      "settings": "Personal settings"
     }
   },
   "aiProvider": {
@@ -3616,10 +3650,10 @@
     "hero": {
       "eyebrow": "From idea to approval",
       "title": "From idea to an advertisement ready for review and approval.",
-      "body": "An intelligent workspace that helps marketing and compliance teams create, check and correct advertising content, and manage review and approval before publishing.",
+      "body": "An AI workspace for content creators, individuals and marketing and compliance teams: create your ad, check it against Saudi regulations, correct it, and manage review and approval when you work in an organisation.",
       "ctaCheck": "Check your ad",
       "ctaSample": "Try the interactive report",
-      "note": "AI analysis is advisory, and the decision always belongs to an authorised person. SALEEM does not guarantee legal compliance.",
+      "note": "AI-assisted guidance that does not guarantee legal compliance. In organisations, an authorised person always decides.",
       "stageLabel": "Animated walkthrough of the fictional Nada Cream ad, from detection to review",
       "pause": "Pause walkthrough",
       "play": "Play walkthrough",
@@ -3895,6 +3929,39 @@
       "check": "Check an ad",
       "sample": "Interactive example",
       "demo": "Demo accounts"
+    },
+    "audiences": {
+      "eyebrow": "Who is SALEEM for?",
+      "title": "An experience for each audience: individuals and creators, and companies and organisations.",
+      "body": "The same AI, two different paths: a simple independent path for individuals, and a complete review and approval path for organisations.",
+      "step": {
+        "create": "Create",
+        "check": "Check",
+        "correct": "Correct",
+        "download": "Download",
+        "collaborate": "Collaborate",
+        "review": "Review",
+        "approve": "Approve"
+      },
+      "demo": "Try the demo",
+      "individual": {
+        "title": "Individuals and content creators",
+        "body": "Create your ad content, check it and correct it with AI — no team or internal approval needed.",
+        "noTeam": "A personal space with no team, company name or reviewer.",
+        "authorities": "Choose the regulators or let SALEEM recommend them, and see what the check really covers.",
+        "advisory": "Results are automated advice, not any government approval.",
+        "cta": "Start free as an individual",
+        "open": "Open my space"
+      },
+      "company": {
+        "title": "Companies and organisations",
+        "body": "Manage advertisements, teams, reviews and regulatory approvals in one workspace.",
+        "roles": "Nine roles with defined permissions, and external partners with restricted access.",
+        "approval": "Human review and approval flows; an authorised person always decides.",
+        "audit": "A complete decision and version record for every ad.",
+        "cta": "Create your organisation's space",
+        "open": "Open the workspace"
+      }
     }
   },
   "demo": {
@@ -4204,5 +4271,219 @@
     "tts": "Generate voiceover from the corrected script",
     "ttsDownloading": "Downloading the voice model… {p}%",
     "ttsNote": "The voice is generated on your device with an open-source model and replaces the original audio entirely."
+  },
+  "workspace": {
+    "personal": "My personal space",
+    "demo": "Demo"
+  },
+  "welcome": {
+    "title": "How will you use SALEEM?",
+    "body": "You can change this later, and you can have a personal space and an organisation membership together.",
+    "personal": {
+      "title": "My personal space",
+      "body": "Create, check, correct and download your ads yourself.",
+      "exists": "You already have a personal space.",
+      "open": "Open my personal space",
+      "name": "Display name (optional)",
+      "nameHint": "Shown only to you in your space.",
+      "noOrg": "No company name, registration or team needed.",
+      "noApproval": "No reviewer or internal approval: you check, correct and download yourself.",
+      "advisory": "Results are automated advice and do not mean any government approval.",
+      "create": "Create my personal space"
+    },
+    "organization": {
+      "title": "Company or organisation",
+      "body": "A workspace for your team: reviews, approvals and a decision record.",
+      "how": "Create a new organisation and become its owner, or ask your organisation's administrator to invite you.",
+      "open": "Open the workspace",
+      "create": "Create an organisation",
+      "invite": "Have an invitation? Open the link you received by email to join with the role assigned to you."
+    },
+    "demoForbidden": "Organisation demo accounts cannot create a personal space."
+  },
+  "personal": {
+    "hello": "Hello {name}",
+    "helloAnon": "Welcome",
+    "title": "My personal space",
+    "subtitle": "Create your ad, check it against Saudi regulations, correct it with AI, then download it.",
+    "actionsTitle": "What would you like to do?",
+    "action": {
+      "create": "Create an ad with AI",
+      "createBody": "From your product name, photos and verified benefits: script, voiceover and video.",
+      "check": "Check your ad",
+      "checkBody": "Upload a video, image or text and choose the regulators.",
+      "fix": "Smart correction",
+      "fixBody": "Correct “{title}” and create an improved version.",
+      "fixEmpty": "Check an ad first, then correct what it finds.",
+      "ask": "Ask SALEEM",
+      "askBody": "Do I need to disclose? When is a Mawthooq licence needed? How do I rewrite a claim?"
+    },
+    "advisory": "SALEEM's results are automated and advisory: they are not legal clearance or any government approval, and do not exempt you from applicable Saudi regulations.",
+    "recent": "My recent ads",
+    "library": "All my ads",
+    "emptyAds": "No ads yet. Start by creating an ad or checking an existing one.",
+    "version": "Version {n}",
+    "result": {
+      "none": "No file",
+      "running": "Checking",
+      "failed": "Check failed",
+      "ready": "No findings",
+      "needs_fixes": "Needs fixes",
+      "review": "Manual check"
+    },
+    "results": "Check results",
+    "emptyResults": "No check results yet.",
+    "drafts": "Drafts",
+    "emptyDrafts": "No drafts.",
+    "untitledDraft": "Untitled draft",
+    "studioDraft": "Studio draft",
+    "notAnalysed": "Not checked",
+    "allowance": "AI allowance this month",
+    "allowanceUnavailable": "Could not load the allowance.",
+    "capability": {
+      "analysis": "Ad checks",
+      "script": "Script writing",
+      "correction": "Text corrections",
+      "ask": "Ask SALEEM"
+    },
+    "allowanceDemo": "The demo account shares a limited daily allowance with other visitors.",
+    "allowanceNote": "The allowance renews on the first of each month. Voiceover and video assembly run on your device at no cost.",
+    "corrected": "Recently corrected",
+    "emptyCorrected": "No ads corrected yet.",
+    "method": {
+      "text_correction": "Text correction",
+      "media_edit": "Video edit",
+      "replacement": "Replacement ad"
+    },
+    "videos": "My saved videos",
+    "emptyVideos": "No saved videos.",
+    "seconds": "s"
+  },
+  "authority": {
+    "title": "Regulatory authorities",
+    "mode": "How to choose authorities",
+    "auto": "SALEEM recommends",
+    "manual": "I choose",
+    "autoHint": "SALEEM recommends the authorities linked to your ad's sector and publication context and checks it against their verified rules.",
+    "manualHint": "Choose one or more authorities. Your ad will be checked against the verified rules of the selected authorities only.",
+    "recommended": "Recommended:",
+    "recommendedShort": "Recommended",
+    "noneRecommended": "No authority recommended for this context.",
+    "useUsual": "Use my usual authorities",
+    "excludedWarning": "Your selection leaves out authorities that may apply to your ad: {list}. You may miss regulatory requirements.",
+    "noneSelected": "Choose at least one regulatory authority, or let SALEEM recommend them.",
+    "uncoveredNote": "SALEEM has no verified rules yet for: {list}. Their rules are drafts that have not been legally reviewed and are not applied, so no findings does not mean your ad meets their requirements.",
+    "verified": "{n} verified rules",
+    "draftOnly": "Drafts only ({n}) — not applied",
+    "noCoverage": "No coverage yet",
+    "browse": "Browse the rulebook",
+    "name": {
+      "GMEDIA": "General Authority for Media Regulation",
+      "MC": "Ministry of Commerce",
+      "SDAIA": "SDAIA (artificial intelligence)",
+      "SFDA": "Saudi Food and Drug Authority",
+      "SAMA": "Saudi Central Bank",
+      "CMA": "Capital Market Authority",
+      "IA": "Insurance Authority",
+      "MT": "Ministry of Tourism",
+      "REGA": "Real Estate General Authority",
+      "MOHU": "Ministry of Hajj and Umrah"
+    },
+    "scope": {
+      "GMEDIA": "Influencer and creator advertising, Mawthooq licence, content rules.",
+      "MC": "Commercial advertising, e-commerce and misleading claims.",
+      "SDAIA": "Disclosure of AI-generated or AI-edited content.",
+      "SFDA": "Food, medicines, cosmetics and medical devices.",
+      "SAMA": "Banking, finance and payment products.",
+      "CMA": "Securities and investment.",
+      "IA": "Insurance products.",
+      "MT": "Tourism and hospitality services.",
+      "REGA": "Real estate marketing.",
+      "MOHU": "Hajj and Umrah services."
+    },
+    "coverageTitle": "What SALEEM can check today",
+    "coverageBody": "Only verified rules are applied in automated checks. Drafts are shown for information and are not treated as requirements.",
+    "report": {
+      "title": "Authorities this ad was checked against",
+      "automatic": "Recommended automatically by SALEEM",
+      "manual": "Manual selection",
+      "checked": "Checked authorities",
+      "excluded": "Recommended authorities you left out: {list}. The ad was not checked against their rules.",
+      "change": "Change authorities and re-check"
+    }
+  },
+  "personalCheck": {
+    "sector": "Product or service sector",
+    "sectorHint": "Decides which authorities are recommended.",
+    "use": "Publication context",
+    "useOption": {
+      "own": "An ad for my own product or service",
+      "sponsored": "An ad or content sponsored by someone else",
+      "personal": "Personal content mentioning a product, unpaid"
+    },
+    "useHint": {
+      "own": "You promote your own product, shop or service.",
+      "sponsored": "You publish for another party for payment, a free product or commission: disclosure and a Mawthooq licence are usually required.",
+      "personal": "No payment or agreement. If anything was given in return, choose «sponsored by someone else»."
+    }
+  },
+  "personalAd": {
+    "badge": "Personal ad",
+    "created": "Created",
+    "activity": "Activity",
+    "reanalyze": "Re-check",
+    "reanalyzing": "The check started again.",
+    "reanalyzeFailed": "Could not start the check. Your monthly or demo allowance may be used up.",
+    "saved": "Authorities saved.",
+    "save": "Save",
+    "saveAndRecheck": "Save and re-check",
+    "changeHint": "The current version will be checked again against the new authorities.",
+    "download": "Download ad",
+    "downloadFailed": "Could not download the file.",
+    "downloadWarnTitle": "There are still unresolved findings",
+    "downloadWarnBody": "The automated check found {n} findings that are not addressed in this version.",
+    "downloadWarnNote": "You can download your ad without an internal approval, but the findings remain. SALEEM's results are automated advice: not any government approval or exemption from regulations.",
+    "fixFirst": "Fix first",
+    "downloadAnyway": "Download anyway",
+    "advisory": "Your personal ad needs no reviewer or internal approval. Results are automated and advisory: not legal clearance or any government approval, and no exemption from applicable Saudi regulations."
+  },
+  "personalAsk": {
+    "subtitle": "Ask about disclosure, licensing and claims. Answers come only from SALEEM's verified rules and your own ads.",
+    "scope": "SALEEM answers only from verified active rules and your personal ads — never drafts or any organisation's policies. Answers are guidance, not legal advice.",
+    "example": {
+      "disclose": "Do I need to disclose that this is a paid advertisement?",
+      "mawthooq": "When is a Mawthooq licence relevant?",
+      "cosmetic": "Can I advertise this cosmetic product?",
+      "rewrite": "How can I rewrite a «guaranteed results» claim?",
+      "sponsored": "What should I consider before posting sponsored content?"
+    },
+    "limited": {
+      "quota_exceeded": "Your Ask SALEEM allowance for this month is used up, so sources are listed without AI phrasing.",
+      "demo_quota": "The demo's daily allowance is used up, so sources are listed without AI phrasing."
+    }
+  },
+  "library": {
+    "subtitle": "Your ads, their corrected and generated versions and their check results. The original is always kept when a new version is created.",
+    "filter": "Filter ads",
+    "f": {
+      "all": "All",
+      "needs_fixes": "Needs fixes",
+      "ready": "No findings",
+      "pending": "Not checked",
+      "archived": "Archived"
+    },
+    "search": "Search my ads",
+    "empty": "No ads here",
+    "open": "Open",
+    "archive": "Archive",
+    "archiveConfirm": "Archive this ad? Its versions and files stay saved.",
+    "archiveReason": "Archived by its owner from the personal space",
+    "archived": "Ad archived."
+  },
+  "personalSettings": {
+    "title": "My personal space",
+    "body": "Your display name and the regulators whose rules you usually advertise under.",
+    "usual": "My usual authorities",
+    "usualHint": "Offered as a quick choice when you check a new ad. Never activates an unverified rule."
   }
 }

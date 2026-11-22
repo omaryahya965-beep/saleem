@@ -34,7 +34,10 @@ export const DEMO_EMAILS: Record<DemoPersona, string> = {
   external_reviewer: "extreviewer@demo.saleem.app",
   viewer: "viewer@demo.saleem.app",
 };
-export async function signInAsPersona(persona: DemoPersona) {
+/** D211: the individual / content-creator demo — a personal workspace only (no organisation, no role). */
+export const INDIVIDUAL_DEMO = "individual" as const;
+
+export async function signInAsPersona(persona: DemoPersona | typeof INDIVIDUAL_DEMO) {
   const client = await sb();
   const { data, error } = await client.functions.invoke("demo-login", { body: { persona } });
   if (error || !data?.token_hash) {
@@ -123,15 +126,23 @@ export async function signIn(email: string, password: string) {
   if (error) throw error;
 }
 
-export async function signUp(email: string, password: string, displayName: string) {
+/** How the new user means to use SALEEM (D211). Stored as a preference only: it grants nothing. */
+export type AccountIntent = "personal" | "organization";
+
+export async function signUp(
+  email: string,
+  password: string,
+  displayName: string,
+  intent: AccountIntent = "personal",
+) {
   const { data, error } = await (
     await sb()
   ).auth.signUp({
     email,
     password,
     options: {
-      data: { display_name: displayName },
-      emailRedirectTo: `${window.location.origin}/dashboard`,
+      data: { display_name: displayName, account_intent: intent },
+      emailRedirectTo: `${window.location.origin}/welcome`,
     },
   });
   if (error) throw error;

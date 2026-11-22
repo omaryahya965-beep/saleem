@@ -51,6 +51,8 @@ import { errorCode, fetchMyOrgs, fetchOrg } from "@/lib/api/features";
 import {
   createPromotion,
   dbErrorCode,
+  FINANCIAL_SECTORS,
+  SECTORS,
   deleteEmptyPromotion,
   useOrgSettings,
   usePromotion,
@@ -62,6 +64,8 @@ import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { InspectedMedia } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { StartChooser } from "@/features/studio/StartChooser";
+import { AuthoritySelector } from "@/features/personal/AuthoritySelector";
+import { setPromotionAuthorities, type Authority } from "@/lib/api/personal";
 import {
   STEPS,
   categoryFor,
@@ -140,6 +144,22 @@ export function NewCheckPage() {
     [products.data, context?.productId],
   );
   const addingVersion = Boolean(promotionParam);
+  // D211: a new advertisement in the personal workspace — its own context (sector, publication context) and the
+  // regulatory authorities to check it against (automatic recommendation or a manual selection).
+  const personalNew = !orgId && !promotionParam && !parentId;
+  const [pSector, setPSector] = useState<string>("other");
+  const [pUse, setPUse] = useState<"own" | "sponsored" | "personal">("own");
+  const [authorities, setAuthorities] = useState<Authority[] | null>(null);
+  const pCommunication =
+    pUse === "sponsored"
+      ? "creator_sponsored"
+      : FINANCIAL_SECTORS.has(pSector)
+        ? "financial_promotion"
+        : "general_commercial";
+  useEffect(() => {
+    if (pUse === "personal") setIsPaidAd(false);
+    if (pUse === "sponsored") setIsPaidAd(true);
+  }, [pUse]);
 
   useEffect(() => {
     if (!withContext) {
@@ -316,7 +336,26 @@ export function NewCheckPage() {
         "";
       let promotionId = promotionParam ?? null;
       let created = false;
-      if (!promotionId && withContext && context) {
+      if (!promotionId && personalNew) {
+        promotionId = await createPromotion(user.id, {
+          title: versionTitle,
+          sector: pSector,
+          orgId: null,
+          productId: null,
+          channels: [platform],
+          communicationType: pCommunication,
+          audience: ["general"],
+          isPaid: isPaidAd,
+          distribution: pUse === "sponsored" ? "influencer" : "owned",
+          creatorLicenseNo: license || null,
+          caption,
+          reviewerNotes: null,
+          campaignId: null,
+          deadlineAt: null,
+        });
+        created = true;
+        if (authorities !== null) await setPromotionAuthorities(promotionId, authorities);
+      } else if (!promotionId && withContext && context) {
         promotionId = await createPromotion(user.id, {
           ...context,
           isPaid: isPaidAd,
@@ -390,6 +429,8 @@ export function NewCheckPage() {
       if (kind !== "text" && !media) return t("newCheck.errFile");
       if (kind === "text" && !text.trim()) return t("newCheck.errText");
     }
+    if (s === 2 && personalNew && authorities !== null && authorities.length === 0)
+      return t("authority.noneSelected");
     if (s === 2 && withContext && issues.some((i) => i.level === "blocking"))
       return t("wiz.conflict.no_channels");
     if (s === 3 && !consent) return t("newCheck.errConsent");
@@ -736,7 +777,57 @@ export function NewCheckPage() {
                   )}
                 </div>
               )}
-              {context ? (
+              {personalNew ? (
+                <div className="flex flex-col gap-6" data-testid="personal-context">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field label={t("personalCheck.sector")} hint={t("personalCheck.sectorHint")}>
+                      <Select
+                        value={pSector}
+                        onChange={(e) => setPSector(e.target.value)}
+                        data-testid="personal-sector"
+                      >
+                        {SECTORS.map((x) => (
+                          <option key={x} value={x}>
+                            {t(`ws.sector.${x}` as TKey)}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label={t("personalCheck.use")}>
+                      <Select
+                        value={pUse}
+                        onChange={(e) => setPUse(e.target.value as typeof pUse)}
+                        data-testid="personal-use"
+                      >
+                        {(["own", "sponsored", "personal"] as const).map((x) => (
+                          <option key={x} value={x}>
+                            {t(`personalCheck.useOption.${x}` as TKey)}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </div>
+                  <p className="-mt-3 text-xs leading-relaxed text-fg-muted">
+                    {t(`personalCheck.useHint.${pUse}` as TKey)}
+                  </p>
+                  <div className="flex flex-col gap-2 border-t border-border pt-5">
+                    <h3 className="text-base font-bold">{t("authority.title")}</h3>
+                    <AuthoritySelector
+                      value={authorities}
+                      onChange={setAuthorities}
+                      usual={(active.personal.data?.default_authorities ?? []) as Authority[]}
+                      context={{
+                        sector: pSector,
+                        category,
+                        communicationType: pCommunication,
+                        channels: [platform],
+                        isPaid: isPaidAd,
+                        aiUsed,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : context ? (
                 <ContextFields
                   value={context}
                   onChange={(v) => {
@@ -768,14 +859,38 @@ export function NewCheckPage() {
                   </Row>
                   <Row label={t("newCheck.titleLabel")}>{title || caption.slice(0, 60) || "—"}</Row>
                   <Row label={t("newCheck.workspace")}>{org?.name ?? t("newCheck.personal")}</Row>
-                  <Row label={t("newCheck.campaign")}>{campaign?.name ?? t("newCheck.none")}</Row>
-                  <Row label={t("promo.product")}>{productName ?? t("promo.noProduct")}</Row>
+                  {!personalNew && (
+                    <>
+                      <Row label={t("newCheck.campaign")}>
+                        {campaign?.name ?? t("newCheck.none")}
+                      </Row>
+                      <Row label={t("promo.product")}>{productName ?? t("promo.noProduct")}</Row>
+                    </>
+                  )}
+                  {personalNew && (
+                    <>
+                      <Row label={t("personalCheck.use")}>
+                        {t(`personalCheck.useOption.${pUse}` as TKey)}
+                      </Row>
+                      <Row label={t("authority.title")}>
+                        {authorities === null
+                          ? t("authority.auto")
+                          : authorities.map((a) => t(`authority.name.${a}` as TKey)).join("، ")}
+                      </Row>
+                    </>
+                  )}
                   <Row label={t("ws.info.sector")}>
-                    {t(`ws.sector.${product?.sector ?? orgSector ?? "other"}` as TKey)}
+                    {t(
+                      `ws.sector.${personalNew ? pSector : (product?.sector ?? orgSector ?? "other")}` as TKey,
+                    )}
                     {!product && withContext && ` (${t("wiz.sum.orgSector")})`}
                   </Row>
                   <Row label={t("promo.communicationType")}>
-                    {context ? t(`promo.commType.${context.communicationType}` as TKey) : "—"}
+                    {context
+                      ? t(`promo.commType.${context.communicationType}` as TKey)
+                      : personalNew
+                        ? t(`promo.commType.${pCommunication}` as TKey)
+                        : "—"}
                   </Row>
                   <Row label={t("promo.channels")}>
                     {context?.channels.length

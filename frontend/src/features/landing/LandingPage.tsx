@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/api/auth";
 import { Container, Eyebrow } from "@/features/public/ui";
 import { cta } from "@/features/public/cta";
 import { HeroStage } from "./HeroStage";
+import { Audiences } from "./Audiences";
 import {
   BeforeAfter,
   Capabilities,
@@ -76,6 +77,7 @@ export function LandingPage() {
           </Container>
         </div>
       </section>
+      <Audiences signedIn={Boolean(user)} />
       <Journeys startTo={startTo} />
       <BeforeAfter />
       <Lifecycle />

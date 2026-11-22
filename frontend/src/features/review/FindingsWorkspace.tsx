@@ -468,6 +468,11 @@ function GroupCard({
               className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted"
               data-testid="citation"
             >
+              {lead.v2?.authority && lead.v2.authority !== "INTERNAL" && (
+                <span data-testid="finding-authority">
+                  <Badge variant="green">{t(`authority.name.${lead.v2.authority}` as TKey)}</Badge>
+                </span>
+              )}
               {lead.sourceName && <span>{lead.sourceName}</span>}
               {lead.v2?.articleRef && (
                 <span>
@@ -511,7 +516,7 @@ function GroupCard({
                 </p>
               </div>
             )}
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2" hidden={!ws?.promotion.org_id}>
               <ResponseSummary label={t("ws.findings.marketerResponse")} r={lastUploader} />
               <ResponseSummary label={t("ws.findings.reviewerAssessment")} r={lastReviewer} />
             </div>

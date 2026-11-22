@@ -293,6 +293,8 @@ export interface PromotionFilters {
   communicationType?: CommunicationType | "";
   q?: string;
   orgId?: string;
+  /** D211: only the caller's personal workspace (org_id is null; RLS limits it to their own). */
+  personal?: boolean;
 }
 
 const VERSION_COLS =
@@ -310,6 +312,7 @@ export async function listPromotions(f: PromotionFilters = {}): Promise<Promotio
   if (f.channel) q = q.contains("channels", [f.channel]);
   if (f.communicationType) q = q.eq("communication_type", f.communicationType);
   if (f.orgId) q = q.eq("org_id", f.orgId);
+  if (f.personal) q = q.is("org_id", null);
   const term = f.q?.trim();
   if (term) {
     const uuid = /^[0-9a-f-]{36}$/i.test(term);

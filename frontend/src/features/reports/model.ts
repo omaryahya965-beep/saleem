@@ -2,6 +2,13 @@ import type { IssueView } from "@/components/ui";
 import type { Lang, TKey } from "@/i18n";
 import type { Finding, RegulatorySource, Rule, RuleCheck } from "@/lib/api/data";
 
+/** D211: authority of the verified packs whose rules have no regulatory source row. */
+const PACK_AUTHORITY: Record<string, string> = {
+  "sa-gmedia-creators": "GMEDIA",
+  "sa-mc-ecommerce": "MC",
+  "sa-sdaia-ai": "SDAIA",
+};
+
 /** Maps DB findings + rules to the localized view model used by IssueCard and the timeline. */
 export function toIssueViews(
   findings: Finding[],
@@ -57,6 +64,10 @@ function issueV2(
     draftRule: f.rule_draft,
     internalPolicy: citation.internal_policy === true || f.rule_code.startsWith("INT-"),
     articleRef: citation.article_ref ?? rule?.article_ref ?? null,
+    authority:
+      (sourceId
+        ? (v2.sources.get(sourceId) as { authority?: string } | undefined)?.authority
+        : null) ?? (pack ? (PACK_AUTHORITY[pack] ?? null) : null),
     verification:
       pack === "sa-system"
         ? "internal"

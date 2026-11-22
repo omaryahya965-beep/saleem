@@ -20,6 +20,8 @@ import {
   ScrollText,
   Settings2,
   ShieldCheck,
+  Sparkles,
+  UserRound,
   History,
   Users,
   X,
@@ -46,6 +48,8 @@ export const NAV_ICONS: Record<NavKey, ReactNode> = {
   analytics: <BarChart3 />,
   audit: <History />,
   ask: <MessageCircleQuestion />,
+  studio: <Sparkles />,
+  settings: <UserRound />,
   adminMetrics: <Activity />,
   adminRules: <BookCheck />,
   adminEval: <FlaskConical />,
@@ -91,7 +95,7 @@ function Groups({
           </h2>
           {g.items.map((i) => {
             const active = isActive(i, pathname);
-            const label = t(`appNav.item.${i.key}` as TKey);
+            const label = t((i.labelKey ?? `appNav.item.${i.key}`) as TKey);
             return (
               <Link
                 key={i.key}

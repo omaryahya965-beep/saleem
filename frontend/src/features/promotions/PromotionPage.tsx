@@ -66,6 +66,7 @@ import { VariationsCard } from "@/features/enterprise/VariationsCard";
 import { LifecyclePanel } from "@/features/enterprise/LifecyclePanel";
 import { ReadabilityPanel } from "@/features/enterprise/ReadabilityPanel";
 import { cn } from "@/lib/utils";
+import { PersonalAdPanel } from "@/features/personal/PersonalAdPanel";
 
 export function PromotionPage({ id, v, t: startAt }: { id: string; v?: number; t?: number }) {
   const { t } = useI18n();
@@ -212,6 +213,8 @@ function PromotionView({
     !["approved", "rejected", "archived", "withdrawn"].includes(p.review_status),
   );
   const me = { userId: user?.id ?? null, orgRole: role, isOwner };
+  // D211: a personal advertisement (no organisation) has no human review workflow at all.
+  const personal = !p.org_id;
 
   return (
     <Tabs value={tab} onValueChange={setTab}>
@@ -223,12 +226,18 @@ function PromotionView({
                 {p.title}
               </h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span data-testid="review-status" className="inline-flex items-center gap-1.5">
-                  <span className="text-xs text-fg-muted">{t("ws.header.humanStatus")}</span>
-                  <StatusChip tone={reviewTone(p.review_status)} size="sm">
-                    {statusLabel}
-                  </StatusChip>
-                </span>
+                {personal ? (
+                  <span data-testid="personal-badge">
+                    <Badge variant="amber">{t("personalAd.badge")}</Badge>
+                  </span>
+                ) : (
+                  <span data-testid="review-status" className="inline-flex items-center gap-1.5">
+                    <span className="text-xs text-fg-muted">{t("ws.header.humanStatus")}</span>
+                    <StatusChip tone={reviewTone(p.review_status)} size="sm">
+                      {statusLabel}
+                    </StatusChip>
+                  </span>
+                )}
                 <span data-testid="analysis-status" className="inline-flex items-center gap-1.5">
                   <span className="text-xs text-fg-muted">{t("ws.header.analysisStatus")}</span>
                   <StatusChip tone={analysisTone[aState]} size="sm">
@@ -269,29 +278,51 @@ function PromotionView({
             )}
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 xl:grid-cols-6">
-            <Meta label={t("ws.header.product")}>
-              {product
-                ? (lang === "en" && product.name_en) || product.name_ar
-                : t("promo.noProduct")}
-            </Meta>
-            <Meta label={t("ws.header.campaign")}>{bundle.campaign?.name ?? t("common.none")}</Meta>
-            <Meta label={t("ws.header.creator")}>{person(latest?.user_id ?? p.owner_id, "—")}</Meta>
-            <Meta label={t("ws.header.assignee")}>{person(p.assigned_reviewer_id)}</Meta>
-            <Meta label={t("ws.header.deadline")}>
-              {p.deadline_at ? (
-                <span className={cn("inline-flex items-center gap-1", overdue && "text-red")}>
-                  <CalendarClock aria-hidden="true" className="size-3.5" />
-                  {formatDate(p.deadline_at)}
-                </span>
-              ) : (
-                t("common.none")
-              )}
-            </Meta>
-            <Meta label={t("ws.header.submitted")}>
-              {p.submitted_at ? formatDate(p.submitted_at) : t("common.none")}
-            </Meta>
-          </dl>
+          {personal ? (
+            <dl
+              className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4"
+              data-testid="personal-meta"
+            >
+              <Meta label={t("ws.info.sector")}>
+                {t(`ws.sector.${p.sector ?? "other"}` as TKey)}
+              </Meta>
+              <Meta label={t("promo.communicationType")}>
+                {t(`promo.commType.${p.communication_type}` as TKey)}
+              </Meta>
+              <Meta label={t("promo.channels")}>
+                {(p.channels ?? []).map((x) => t(`promo.channel.${x}` as TKey)).join("، ") || "—"}
+              </Meta>
+              <Meta label={t("personalAd.created")}>{formatDate(p.created_at)}</Meta>
+            </dl>
+          ) : (
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 xl:grid-cols-6">
+              <Meta label={t("ws.header.product")}>
+                {product
+                  ? (lang === "en" && product.name_en) || product.name_ar
+                  : t("promo.noProduct")}
+              </Meta>
+              <Meta label={t("ws.header.campaign")}>
+                {bundle.campaign?.name ?? t("common.none")}
+              </Meta>
+              <Meta label={t("ws.header.creator")}>
+                {person(latest?.user_id ?? p.owner_id, "—")}
+              </Meta>
+              <Meta label={t("ws.header.assignee")}>{person(p.assigned_reviewer_id)}</Meta>
+              <Meta label={t("ws.header.deadline")}>
+                {p.deadline_at ? (
+                  <span className={cn("inline-flex items-center gap-1", overdue && "text-red")}>
+                    <CalendarClock aria-hidden="true" className="size-3.5" />
+                    {formatDate(p.deadline_at)}
+                  </span>
+                ) : (
+                  t("common.none")
+                )}
+              </Meta>
+              <Meta label={t("ws.header.submitted")}>
+                {p.submitted_at ? formatDate(p.submitted_at) : t("common.none")}
+              </Meta>
+            </dl>
+          )}
 
           {versions.length > 0 && (
             <nav aria-label={t("promo.versions")} className="flex flex-wrap items-center gap-2">
@@ -356,7 +387,10 @@ function PromotionView({
             onTab={setTab}
           />
         )}
-        {isLatest && (
+        {isLatest && personal && (
+          <PersonalAdPanel promotion={p} latest={latest} report={report.data} />
+        )}
+        {isLatest && !personal && (
           <DecisionSummary
             promotion={p}
             versions={versions}
@@ -378,9 +412,11 @@ function PromotionView({
         <TabsList label={t("promo.versions")}>
           <TabsTrigger value="analysis">{t("ws.tab.analysis")}</TabsTrigger>
           <TabsTrigger value="info">{t("ws.tab.info")}</TabsTrigger>
-          <TabsTrigger value="comments">{t("ws.tab.comments")}</TabsTrigger>
+          {!personal && <TabsTrigger value="comments">{t("ws.tab.comments")}</TabsTrigger>}
           <TabsTrigger value="compare">{t("ws.tab.compare")}</TabsTrigger>
-          <TabsTrigger value="history">{t("ws.tab.history")}</TabsTrigger>
+          <TabsTrigger value="history">
+            {personal ? t("personalAd.activity") : t("ws.tab.history")}
+          </TabsTrigger>
         </TabsList>
       </Page>
 
@@ -452,20 +488,26 @@ function PromotionView({
               (role === "reviewer" && p.assigned_reviewer_id === user?.id)
             }
           />
-          <div className="mt-4 grid gap-4 xl:grid-cols-2">
-            <LinkedClaims
-              promotion={p}
-              current={latest}
-              canLink={
-                !p.is_demo &&
-                isLatest &&
-                (isOwner || ["owner", "admin", "reviewer", "creator"].includes(role ?? ""))
-              }
-            />
-            <VariationsCard promotion={p} canEdit={canEdit} />
-            <LifecyclePanel promotion={p} orgRole={role} isOwner={isOwner} />
-            <ReadabilityPanel promotion={p} />
-          </div>
+          {personal ? (
+            <div className="mt-4 grid gap-4 xl:grid-cols-2">
+              <ReadabilityPanel promotion={p} />
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-4 xl:grid-cols-2">
+              <LinkedClaims
+                promotion={p}
+                current={latest}
+                canLink={
+                  !p.is_demo &&
+                  isLatest &&
+                  (isOwner || ["owner", "admin", "reviewer", "creator"].includes(role ?? ""))
+                }
+              />
+              <VariationsCard promotion={p} canEdit={canEdit} />
+              <LifecyclePanel promotion={p} orgRole={role} isOwner={isOwner} />
+              <ReadabilityPanel promotion={p} />
+            </div>
+          )}
         </Page>
       </TabsContent>
     </Tabs>

@@ -43,10 +43,15 @@ function stateLabel(t: (k: TKey, v?: Record<string, string | number>) => string,
 }
 
 /** Coverage banner (first thing above the findings) and the draft-rules call to action. */
+/** D211: a report of a personal advertisement (a version without an organisation). */
+const isPersonalReport = (b: ReportBundle) => Boolean(b.submission) && !b.submission.org_id;
+
 export function CoverageBanner({ bundle }: { bundle: ReportBundle }) {
   const { t } = useI18n();
   const coverage = coverageOf(bundle);
-  const draftExcluded = bundle.ruleChecks.some((c) => c.reason_code === "draft_excluded");
+  // D211: personal reports explain draft coverage in the authorities panel (no workspace owner to enable drafts).
+  const draftExcluded =
+    !isPersonalReport(bundle) && bundle.ruleChecks.some((c) => c.reason_code === "draft_excluded");
   if (!coverage && !draftExcluded) return null;
   const gaps = coverageGaps(coverage);
   return (
@@ -246,6 +251,7 @@ export function RuleOutcomes({ bundle }: { bundle: ReportBundle }) {
       {/* 2. Applied Company Rules and Internal Policies */}
       <details
         data-testid="company-rules-applied"
+        hidden={isPersonalReport(bundle)}
         className="rounded-lg border border-border bg-surface px-4 py-3"
         open
       >

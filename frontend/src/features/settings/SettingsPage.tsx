@@ -30,8 +30,11 @@ import {
 import { useProfile } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 import { UsageMeter, useUsage } from "./UsageMeter";
+import { PersonalSettingsCard } from "@/features/personal/PersonalSettingsCard";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
 
 export function SettingsPage() {
+  const picker = useOrgPicker();
   const { t, lang, setLang } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -207,6 +210,8 @@ export function SettingsPage() {
               </div>
             </Card>
           </form>
+
+          {picker.personal.data && <PersonalSettingsCard workspace={picker.personal.data} />}
 
           <Card className="flex flex-col gap-3">
             <CardTitle>{t("settings.preferences")}</CardTitle>

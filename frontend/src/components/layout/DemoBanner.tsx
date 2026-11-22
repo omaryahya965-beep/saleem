@@ -4,6 +4,7 @@ import { FlaskConical } from "lucide-react";
 import { useEffect } from "react";
 import { useI18n } from "@/i18n";
 import { signOut, useAuth } from "@/lib/api/auth";
+import { useOrgPicker } from "@/features/libraries/orgPicker";
 
 /** Demo sessions end this long after sign-in (users flagged app_metadata.demo by the server-side seed). */
 export const DEMO_SESSION_MS = 2 * 60 * 60 * 1000;
@@ -15,6 +16,8 @@ export function DemoBanner() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const demo = user?.app_metadata?.["demo"] === true;
+  // D211: the individual demo is a personal workspace, not the fictional bank.
+  const personalDemo = useOrgPicker().personal.data?.is_demo === true;
   const started = user?.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : Date.now();
   useEffect(() => {
     if (!demo) return;
@@ -39,7 +42,7 @@ export function DemoBanner() {
       className="no-print flex items-center justify-center gap-2 bg-amber-bg px-4 py-1.5 text-xs text-amber-text [&_svg]:size-3.5"
     >
       <FlaskConical aria-hidden="true" />
-      {t("auth.demo.banner")}
+      {personalDemo ? t("auth.demo.bannerPersonal") : t("auth.demo.banner")}
     </div>
   );
 }

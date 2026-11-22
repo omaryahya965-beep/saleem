@@ -31,8 +31,16 @@ import { SavedViewsBar } from "@/features/libraries/SavedViewsBar";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { canSeePage } from "@/components/layout/navModel";
 import { promotionRows } from "@/features/libraries/model";
+import { PersonalLibrary } from "@/features/personal/PersonalLibrary";
 
+/** D211: the personal workspace has its own library («إعلاناتي»); organisations keep the advertisement list. */
 export function PromotionsListPage() {
+  const picker = useOrgPicker();
+  if (picker.mode === "personal" && picker.personal.data) return <PersonalLibrary />;
+  return <WorkPromotionsList />;
+}
+
+function WorkPromotionsList() {
   const { t, lang } = useI18n();
   const search = useSearch({ from: "/_app/promotions/" });
   const [status, setStatus] = useState<ReviewStatus | "">(

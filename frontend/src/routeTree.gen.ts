@@ -32,6 +32,7 @@ import { Route as AppSampleRouteImport } from './routes/_app/sample'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSignupRouteImport } from './routes/_app/signup'
 import { Route as AppStudioRouteImport } from './routes/_app/studio'
+import { Route as AppWelcomeRouteImport } from './routes/_app/welcome'
 import { Route as AppAdminCalibrationRouteImport } from './routes/_app/admin/calibration'
 import { Route as AppAdminEvalRouteImport } from './routes/_app/admin/eval'
 import { Route as AppAdminMetricsRouteImport } from './routes/_app/admin/metrics'
@@ -167,6 +168,11 @@ const AppStudioRoute = AppStudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWelcomeRoute = AppWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminCalibrationRoute = AppAdminCalibrationRouteImport.update({
   id: '/admin/calibration',
   path: '/admin/calibration',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/studio': typeof AppStudioRoute
+  '/welcome': typeof AppWelcomeRoute
   '/admin/calibration': typeof AppAdminCalibrationRoute
   '/admin/eval': typeof AppAdminEvalRoute
   '/admin/metrics': typeof AppAdminMetricsRoute
@@ -334,6 +341,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/signup': typeof AppSignupRoute
   '/studio': typeof AppStudioRoute
+  '/welcome': typeof AppWelcomeRoute
   '/': typeof AppIndexRoute
   '/admin/calibration': typeof AppAdminCalibrationRoute
   '/admin/eval': typeof AppAdminEvalRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signup': typeof AppSignupRoute
   '/_app/studio': typeof AppStudioRoute
+  '/_app/welcome': typeof AppWelcomeRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/calibration': typeof AppAdminCalibrationRoute
   '/_app/admin/eval': typeof AppAdminEvalRoute
@@ -427,6 +436,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/studio'
+    | '/welcome'
     | '/admin/calibration'
     | '/admin/eval'
     | '/admin/metrics'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/studio'
+    | '/welcome'
     | '/'
     | '/admin/calibration'
     | '/admin/eval'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/signup'
     | '/_app/studio'
+    | '/_app/welcome'
     | '/_app/'
     | '/_app/admin/calibration'
     | '/_app/admin/eval'
@@ -706,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStudioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/welcome': {
+      id: '/_app/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof AppWelcomeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/calibration': {
       id: '/_app/admin/calibration'
       path: '/admin/calibration'
@@ -870,6 +889,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignupRoute: typeof AppSignupRoute
   AppStudioRoute: typeof AppStudioRoute
+  AppWelcomeRoute: typeof AppWelcomeRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminCalibrationRoute: typeof AppAdminCalibrationRoute
   AppAdminEvalRoute: typeof AppAdminEvalRoute
@@ -914,6 +934,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSignupRoute: AppSignupRoute,
   AppStudioRoute: AppStudioRoute,
+  AppWelcomeRoute: AppWelcomeRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminCalibrationRoute: AppAdminCalibrationRoute,
   AppAdminEvalRoute: AppAdminEvalRoute,

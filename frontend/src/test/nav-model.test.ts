@@ -125,8 +125,32 @@ describe("navigation model (one table for sidebar and route guard)", () => {
     expect(keys("owner", ALL, true)).toContain("adminMetrics");
   });
 
-  it("personal accounts keep the creator journey and the archive", () => {
-    expect(keys(null)).toEqual(["dashboard", "promotions", "new", "archive", "rules"]);
+  it("the personal workspace has its own navigation and no enterprise page (D211)", () => {
+    expect(keys(null)).toEqual([
+      "dashboard",
+      "promotions",
+      "new",
+      "studio",
+      "rules",
+      "ask",
+      "settings",
+    ]);
+    for (const k of [
+      "queue",
+      "team",
+      "roles",
+      "features",
+      "analytics",
+      "audit",
+      "companyRules",
+      "claims",
+      "disclaimers",
+      "products",
+    ] as const)
+      expect(canSeePage(k, { role: null, flags: {}, platformAdmin: false })).toBe(false);
+    // The pre-v2 personal archive stays reachable (it is under «إعلاناتي»), Ask needs no organisation flag.
+    expect(canSeePage("archive", { role: null, flags: {}, platformAdmin: false })).toBe(true);
+    expect(canSeePage("ask", { role: null, flags: {}, platformAdmin: false })).toBe(true);
   });
 
   it("the route guard maps every guarded path to its page (detail pages inherit)", () => {

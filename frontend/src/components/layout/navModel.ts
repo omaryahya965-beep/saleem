@@ -19,6 +19,8 @@ export type NavKey =
   | "analytics"
   | "audit"
   | "ask"
+  | "studio"
+  | "settings"
   | "adminMetrics"
   | "adminRules"
   | "adminEval"
@@ -29,9 +31,12 @@ export interface NavEntry {
   to: string;
   /** Path prefixes that mark the entry active. */
   match: string[];
+  /** i18n key overriding appNav.item.<key> (personal workspace wording, D211). */
+  labelKey?: string;
 }
 export interface NavGroup {
-  key: "work" | "compliance" | "organization" | "support" | "platform";
+  key:
+    "work" | "compliance" | "organization" | "support" | "platform" | "personal" | "personalHelp";
   items: NavEntry[];
 }
 
@@ -101,8 +106,19 @@ export function canSeePage(
 ): boolean {
   if (key.startsWith("admin")) return platformAdmin;
   const flag = PAGE_FLAG[key];
-  if (flag && !flags[flag]) return false;
-  if (role === null) return ["dashboard", "promotions", "new", "archive", "rules"].includes(key);
+  if (flag && role !== null && !flags[flag]) return false;
+  // D211: the personal workspace (no organisation): its own pages, never enterprise ones. Ask SALEEM is personal-scoped.
+  if (role === null)
+    return [
+      "dashboard",
+      "promotions",
+      "new",
+      "archive",
+      "rules",
+      "studio",
+      "ask",
+      "settings",
+    ].includes(key);
   if (key === "archive") return false; // the pre-v2 archive belongs to personal accounts
   return PAGE_ROLES[key]?.(role) ?? false;
 }
@@ -130,8 +146,47 @@ export function pageForPath(pathname: string): NavKey | null {
   return table.find(([, p]) => pathname === p || pathname.startsWith(`${p}/`))?.[0] ?? null;
 }
 
+/**
+ * D211: the personal workspace's own navigation: home, my ads, check an ad, studio, rulebook, Ask SALEEM, personal
+ * settings. Smart correction is reached from each advertisement. No review queue, team, roles, campaigns, products,
+ * company rules, partners, legal, risk acceptance, organisation administration or analytics.
+ */
+export function buildPersonalNav(platformAdmin = false): NavGroup[] {
+  const p = (key: NavKey, to: string, ...match: string[]) => ({
+    ...e(key, to, ...match),
+    labelKey: `appNav.personal.${key}`,
+  });
+  const groups: NavGroup[] = [
+    {
+      key: "personal",
+      items: [
+        p("dashboard", "/dashboard"),
+        p("promotions", "/promotions", "/promotions", "/checks", "/archive"),
+        p("new", "/new"),
+        p("studio", "/studio"),
+      ],
+    },
+    {
+      key: "personalHelp",
+      items: [p("rules", "/rules"), p("ask", "/ask"), p("settings", "/settings")],
+    },
+  ];
+  if (platformAdmin)
+    groups.push({
+      key: "platform",
+      items: [
+        e("adminMetrics", "/admin/metrics"),
+        e("adminRules", "/admin/rules"),
+        e("adminEval", "/admin/eval"),
+        e("adminCalibration", "/admin/calibration"),
+      ],
+    });
+  return groups;
+}
+
 export function buildNav(input: NavInput): NavGroup[] {
   const { orgId } = input;
+  if (input.role === null && !orgId) return buildPersonalNav(input.platformAdmin);
   const see = (k: NavKey) => canSeePage(k, input);
   const groups: NavGroup[] = [];
   const push = (key: NavGroup["key"], items: (NavEntry | false)[]) => {
@@ -173,7 +228,7 @@ export function buildNav(input: NavInput): NavGroup[] {
 /** The four destinations in the mobile bottom bar; everything else is in the «القائمة» drawer. */
 export function primaryMobile(groups: NavGroup[]): NavEntry[] {
   const all = groups.flatMap((g) => g.items);
-  const order: NavKey[] = ["dashboard", "promotions", "new", "queue", "rules"];
+  const order: NavKey[] = ["dashboard", "promotions", "new", "studio", "queue", "rules"];
   return order
     .map((k) => all.find((i) => i.key === k))
     .filter((x): x is NavEntry => Boolean(x))

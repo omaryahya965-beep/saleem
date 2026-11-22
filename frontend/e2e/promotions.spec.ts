@@ -80,8 +80,11 @@ test("promotions list opens a promotion with its latest version", async ({
   await page.getByText("إعلان تمويل تجريبي").click();
   await expect(page).toHaveURL(new RegExp(`/promotions/${PID}`));
   await expect(page.getByRole("heading", { name: "إعلان تمويل تجريبي" })).toBeVisible();
-  // D177: approval state and automated-analysis state are shown separately.
-  await expect(page.getByTestId("review-status")).toContainText(tr(lang, "مسودة", "Draft"));
+  // D211: this mock is a personal advertisement (org_id null): no human review status, a personal badge instead.
+  await expect(page.getByTestId("personal-badge")).toContainText(
+    tr(lang, "إعلان شخصي", "Personal ad"),
+  );
+  await expect(page.getByTestId("review-status")).toHaveCount(0);
   await expect(page.getByTestId("analysis-status")).toContainText(tr(lang, "مكتمل", "Completed"));
   // Latest version (V2) is selected; the automated result never says "compliant".
   await expect(page.getByRole("button", { name: /V2|إ2|الإصدار 2|Version 2/ })).toHaveAttribute(
