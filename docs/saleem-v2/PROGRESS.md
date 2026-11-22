@@ -26,6 +26,13 @@
   - headers, browser probe, rollback steps
 - Gemini: `models.list` only (1 free request; `gemini-3.8-flash` available). The live journeys wait for the owner to
   confirm that the Google project has no billing account (free tier).
+- Personal accounts (2026-11-22, D211–D212): personal workspace, individual demo, onboarding, personal dashboard,
+  navigation, library and settings, and regulatory authority selection with verified coverage. Migration 20261122100000
+  (+ rollback). Verified on the isolated stack:
+  - pgTAP 27 files / 279 tests, Playwright 51/51, frontend 166, backend unit tests
+  - the browser walkthrough (scripts/personal-walkthrough.mjs) in ar/en, desktop/mobile
+  - registration and isolation probes
+  See docs/saleem-v2/PERSONAL_ACCOUNTS.md.
 - Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
   in RELEASE_PLAN.md §9.
 

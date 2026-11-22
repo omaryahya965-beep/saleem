@@ -673,3 +673,30 @@ Format: decision — why — alternatives considered.
 
   The production steps (backup, migration check, secrets, functions, Vercel, smoke checks, rollback order) are in
   docs/saleem-v2/RELEASE_PLAN.md. Nothing is run against the hosted project without the owner's approval.
+- **D211. Personal accounts and regulatory authority selection (2026-11-22).** Individuals get a personal workspace
+  (`personal_workspaces`). It is separate from organisation membership: not an organisation and not a tenth role. It
+  holds the existing personal promotions (`org_id is null`, owner only).
+  - **No approval path:** every enterprise review/approval RPC already refuses personal advertisements, and pgTAP p16
+    proves none can reach review, approval or an assigned reviewer.
+  - **Onboarding:** sign-up asks for personal or organisation use (a preference only). `/welcome` creates the personal
+    workspace or sends the user to the existing organisation creation. Invitations are unchanged.
+  - **Individual demo:** a new demo-login persona `individual`, with no membership and a personal workspace flagged
+    `is_demo` (the broker refuses it otherwise). It shares the demo AI cap.
+  - **Authorities:** a personal advertisement stores `selected_authorities` (null = automatic). The analysis enables the
+    packs of those authorities, or of the ones `recommend_authorities` suggests, and never draft rules. It records
+    what was checked, and the report warns about recommended authorities left out.
+  - **Allowances:** separate personal monthly allowances (analysis 30, script 20, correction 20, Ask 60).
+  - **Ask SALEEM:** personal mode uses verified active rules and the user's own advertisements only.
+  - **Interface:** a new sign-in page with two demo audiences, a personal dashboard, navigation, library and settings.
+    The advertisement page drops enterprise elements for personal ads and adds authorities, re-check and download
+    (with a warning for unresolved findings). Findings show their authority, and the landing page presents both
+    audiences.
+  - **Rulebook bug fixed:** drafts were labelled active, because `is_active` is true for every rule. Only
+    `review_state = active` counts now.
+
+  See docs/saleem-v2/PERSONAL_ACCOUNTS.md.
+- **D212. Test-only deterministic providers (2026-11-22).** `SALEEM_TEST_PROVIDER=deterministic` (set only by
+  `ISO_TEST_PROVIDER=1 node scripts/isolated-stack.mjs start`; refused on a hosted supabase.co URL) replaces
+  transcription and the model with empty, valid results and no network call. Only the deterministic rule engine
+  produces findings, and runs are labelled `deterministic-test`. It lets the complete personal journey be tested
+  without AI requests. It must never be set in production.

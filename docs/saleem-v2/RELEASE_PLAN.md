@@ -27,7 +27,7 @@ time it is run. Everything else was verified locally on the isolated stack (`scr
 4. Recommended: restore the three dump files into the isolated stack and run `npx supabase migration up --local
    --workdir .iso` on that copy. This repeats §4 on real production data, still locally.
 
-## 2. Every pending migration (8)
+## 2. Every pending migration (9; the ninth added by D211)
 
 Computed with `git diff --name-status origin/master..HEAD -- backend/supabase/migrations`. All 8 are new files and
 none of master's files were modified. The first six come from the V2 completion work and the last two from AI Studio.
@@ -42,6 +42,10 @@ none of master's files were modified. The first six come from the V2 completion 
 | 6 | `20261121150000_v2_rule_categories` | `internal_rules.category` (default `compliance_policy`), `internal_rule_versions.category`, 4 functions, 2 triggers | Existing rules get the default category | `…_v2_rule_categories.down.sql` |
 | 7 | `20261121170000_v2_ai_studio` | New tables `studio_drafts` and `ai_usage` (RLS on, owner/admin policies), 6 functions, 3 indexes on the new tables | New tables only | `…_v2_ai_studio.down.sql` |
 | 8 | `20261121180000_v2_approval_requires_analysis` | `approval_blockers` adds `analysis_not_done` | **Behaviour change**, see §3 | `…_v2_approval_requires_analysis.down.sql` |
+| 9 | `20261122100000_v2_personal_workspaces` | `personal_workspaces` (backfilled for users without membership or with personal content), `promotions.selected_authorities` (personal only), `recommend_authorities`, `authority_coverage`, personal AI allowances (+ `ask`), demo counters include the individual demo | New table and a nullable column; the `ai_usage` capability check is widened | `…_v2_personal_workspaces.down.sql` (verified back to the previous schema) |
+
+**Never set `SALEEM_TEST_PROVIDER` in production** (D212; it is refused on supabase.co URLs anyway). The demo seed now
+also creates `individual@demo.saleem.app`.
 
 Separately, master's three most recent migrations (`20261119110000`, `20261120100000`, `20261120110000`) have no
 rollback files. That gap predates this branch and is out of scope here.
