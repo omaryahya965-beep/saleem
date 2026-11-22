@@ -718,3 +718,16 @@ Format: decision — why — alternatives considered.
   workspace (2 hours) with copies of the template's sample ads, so visitors never see each other's uploads. Expired
   sessions are purged 26 hours later (files deleted, account banned) without deleting the immutable review audit.
   Concurrent sessions are capped, and the shared demo AI cap is unchanged.
+- **D216. Public rulebook reads the real rules correctly (2026-11-23).** Database rules carry their pack, not an
+  authority or sector code. The rulebook page filtered and counted on fields only its static fallback catalog had, so
+  filtering by GMEDIA showed nothing and the authority counter was 0. Each rule is now mapped (frontend, `enrich.ts`)
+  to its authority, rulebook sector and source verification. The sources are pack → `rule_packs.authority`, else the
+  regulatory source, and the source's verification and official status. All of these tables are public under RLS
+  (anon and authenticated).
+
+  Other fixes: the authority list gains IA and SALEEM system checks, and the sector list gains AI, insurance, Hajj and
+  system checks. Rule cards show the article reference and verification, and the filter dropdowns get accessible
+  labels.
+
+  Verified for signed-out, individual and enterprise users: 238 rules, 15 active, 9 authorities. GMEDIA shows 15
+  (10 verified + 5 drafts), SFDA 56 (drafts only). Drafts stay visible and inactive.

@@ -34,12 +34,42 @@ import {
   Skeleton,
   StatusChip,
 } from "@/components/ui";
-import { useI18n } from "@/i18n";
+import { useI18n, type TKey } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
 import { RulePacks } from "./RulePacks";
 import { AuthorityCoveragePanel } from "@/features/personal/RegulatoryCoverage";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
-import type { RegulatoryRuleItem } from "./saudiRulesCatalog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { enrichRules, type EnrichedRule, type PackRow, type SourceRow } from "./enrich";
+
+// D216: packs and sources are public (RLS: anon + authenticated); they give each database rule its authority,
+// sector and source verification.
+const untyped = supabase as unknown as { from: (t: string) => ReturnType<typeof supabase.from> };
+const usePacks = () =>
+  useQuery({
+    queryKey: ["rulebook-packs"],
+    queryFn: async () => {
+      const { data, error } = await untyped
+        .from("rule_packs")
+        .select("code, authority, name_ar, name_en");
+      if (error) throw error;
+      return (data ?? []) as unknown as PackRow[];
+    },
+    staleTime: 10 * 60_000,
+  });
+const useSources = () =>
+  useQuery({
+    queryKey: ["rulebook-sources"],
+    queryFn: async () => {
+      const { data, error } = await untyped
+        .from("regulatory_sources")
+        .select("id, authority, title_ar, title_en, url, status, verification");
+      if (error) throw error;
+      return (data ?? []) as unknown as SourceRow[];
+    },
+    staleTime: 10 * 60_000,
+  });
 
 const AUTHORITIES = [
   { id: "all", ar: "كافة الجهات", en: "All Authorities" },
@@ -52,6 +82,8 @@ const AUTHORITIES = [
   { id: "SDAIA", ar: "سدايا (SDAIA)", en: "SDAIA (Data & AI)" },
   { id: "MT", ar: "وزارة السياحة (MT)", en: "Ministry of Tourism (MT)" },
   { id: "MOHU", ar: "وزارة الحج والعمرة (MOHU)", en: "Hajj & Umrah (MOHU)" },
+  { id: "IA", ar: "هيئة التأمين (IA)", en: "Insurance Authority (IA)" },
+  { id: "INTERNAL", ar: "فحوص سَليم الداخلية", en: "SALEEM system checks" },
 ] as const;
 
 const STATUSES = [
@@ -79,6 +111,10 @@ const SECTORS = [
   { id: "TR", ar: "السياحة والسفر", en: "Tourism & Travel" },
   { id: "HOT", ar: "مرافق الضيافة", en: "Hospitality" },
   { id: "PD", ar: "حماية البيانات والتسويق", en: "Data Protection" },
+  { id: "AI", ar: "الذكاء الاصطناعي والتزييف العميق", en: "AI & Deepfakes" },
+  { id: "INS", ar: "التأمين", en: "Insurance" },
+  { id: "HAJ", ar: "الحج والعمرة", en: "Hajj & Umrah" },
+  { id: "SYS", ar: "فحوص سَليم الداخلية", en: "System checks" },
 ] as const;
 
 export function RulebookPage() {
@@ -91,15 +127,29 @@ export function RulebookPage() {
   const [status, setStatus] = useState<string>("all");
   const [sector, setSector] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
-  const [selectedRule, setSelectedRule] = useState<RegulatoryRuleItem | null>(null);
+  const [selectedRule, setSelectedRule] = useState<EnrichedRule | null>(null);
   // D211: the personal workspace has no company rules; it sees what SALEEM can verify per authority first.
   const picker = useOrgPicker();
   const personal = picker.mode === "personal";
 
-  // Cast rules to RegulatoryRuleItem with all enriched fields
-  const rules = useMemo(() => {
-    return (book.data?.rules ?? []) as unknown as RegulatoryRuleItem[];
-  }, [book.data]);
+  const packs = usePacks();
+  const sources = useSources();
+  const loading = book.isPending || packs.isPending || sources.isPending;
+  const failed = book.isError || packs.isError || sources.isError;
+  // D216: database rules mapped to authority, sector and source verification (see enrich.ts).
+  const rules: EnrichedRule[] = useMemo(() => {
+    if (!book.data || !packs.data || !sources.data) return [];
+    const label = (code: string) => {
+      const s = SECTORS.find((x) => x.id === code);
+      return s ? (lang === "en" ? s.en : s.ar) : "";
+    };
+    return enrichRules(
+      book.data.rules as unknown as Record<string, unknown>[],
+      packs.data,
+      sources.data,
+      label,
+    );
+  }, [book.data, packs.data, sources.data, lang]);
 
   // Summary counts
   const stats = useMemo(() => {
@@ -110,7 +160,8 @@ export function RulebookPage() {
     const authorities = new Set<string>();
 
     for (const r of rules) {
-      if (r.authority) authorities.add(r.authority);
+      if (r.authority && !["INTERNAL", "OTHER"].includes(String(r.authority)))
+        authorities.add(r.authority);
       if (r.review_state === "active") active++;
       else if (r.review_state === "pending_review") pending++;
       else draft++;
@@ -278,10 +329,14 @@ export function RulebookPage() {
         {/* Filter Dropdowns Grid */}
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-authority" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterAuthority")}
             </label>
-            <Select value={authority} onChange={(e) => setAuthority(e.target.value)}>
+            <Select
+              id="rb-authority"
+              value={authority}
+              onChange={(e) => setAuthority(e.target.value)}
+            >
               {AUTHORITIES.map((a) => (
                 <option key={a.id} value={a.id}>
                   {lang === "en" ? a.en : a.ar}
@@ -291,10 +346,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-status" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterStatus")}
             </label>
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <Select id="rb-status" value={status} onChange={(e) => setStatus(e.target.value)}>
               {STATUSES.map((s) => (
                 <option key={s.id} value={s.id}>
                   {lang === "en" ? s.en : s.ar}
@@ -304,10 +359,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-sector" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterSector")}
             </label>
-            <Select value={sector} onChange={(e) => setSector(e.target.value)}>
+            <Select id="rb-sector" value={sector} onChange={(e) => setSector(e.target.value)}>
               {SECTORS.map((sec) => (
                 <option key={sec.id} value={sec.id}>
                   {lang === "en" ? sec.en : sec.ar}
@@ -317,10 +372,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-severity" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterSeverity")}
             </label>
-            <Select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+            <Select id="rb-severity" value={severity} onChange={(e) => setSeverity(e.target.value)}>
               <option value="all">{t("rulebook.all")}</option>
               <option value="violation">مخالفة نظامية (Violation)</option>
               <option value="warning">تنبيه / تحذير (Warning)</option>
@@ -330,13 +385,17 @@ export function RulebookPage() {
       </Card>
 
       {/* Rules Catalog Table / List */}
-      {book.isError ? (
+      {failed ? (
         <ApiErrorState
           title={t("rulebook.loadError")}
-          error={book.error}
-          onRetry={() => void book.refetch()}
+          error={book.error ?? packs.error ?? sources.error}
+          onRetry={() => {
+            void book.refetch();
+            void packs.refetch();
+            void sources.refetch();
+          }}
         />
-      ) : book.isPending ? (
+      ) : loading ? (
         <Card className="flex flex-col gap-4 p-4">
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="flex gap-4 border-b border-border pb-3 last:border-b-0">
@@ -433,6 +492,14 @@ export function RulebookPage() {
                       ) : (
                         <span>{r.source_name}</span>
                       )}
+                      {r.article_ref && <span>{r.article_ref}</span>}
+                      {r.source_verification && (
+                        <span data-testid="rule-verification">
+                          <Badge variant="outline" className="text-[11px]">
+                            {t(`findingType.verification.${r.source_verification}` as TKey)}
+                          </Badge>
+                        </span>
+                      )}
                       {r.check_mode && (
                         <Badge variant="outline" className="text-[11px]">
                           {r.check_mode === "content"
@@ -486,6 +553,11 @@ export function RulebookPage() {
                 {selectedRule.code}
               </Badge>
               <Badge variant="outline">{selectedRule.authority_ar || selectedRule.authority}</Badge>
+              {selectedRule.source_verification && (
+                <Badge variant="outline">
+                  {t(`findingType.verification.${selectedRule.source_verification}` as TKey)}
+                </Badge>
+              )}
               <Badge
                 variant={
                   selectedRule.review_state === "active"
