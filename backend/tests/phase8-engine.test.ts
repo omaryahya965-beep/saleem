@@ -111,7 +111,7 @@ describe("scope", () => {
     expect(packs.find((p) => p.code === "sa-x")).toMatchObject({ reason: "org_enabled", include_drafts: true });
     expect(packs.find((p) => p.code === "sa-system")?.reason).toBe("always_enabled");
     expect(packs.find((p) => p.code === "sa-sama-advertising")?.reason).toBe("sector_default");
-    expect(enabledPacksFor(null, null, [], [])[0]?.reason).toBe("creator_default");
+    expect(enabledPacksFor(null, null, [{ code: "sa-x", default_sectors: [], enabled_by_default: false, always_enabled: false }], [])[0]?.reason).toBe("personal_all"); // D213
   });
   it("cross-sector triggers are specific", () => {
     const sig = (t: string) => computeSignals(extractTexts(sub(t), [], []), { product: null });

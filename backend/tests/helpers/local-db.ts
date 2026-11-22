@@ -4,7 +4,7 @@
 //   SUPABASE_LOCAL_ANON_KEY, SUPABASE_LOCAL_SERVICE_ROLE_KEY
 // Never point these at the hosted project: the guard below refuses non-local URLs.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { loadEnv } from "../../eval/lib.ts";
+import { isolatedDb } from "./db-guard.ts";
 
 export interface LocalDb {
   url: string;
@@ -18,18 +18,16 @@ export interface TestUser {
   email: string;
 }
 
-const env = loadEnv();
 
 export function isLocalUrl(url: string | undefined): boolean {
   return Boolean(url && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/.test(url));
 }
 
+/** D214: the ISOLATED test stack only (process environment set by isolated-stack.mjs run; never .env files). */
 export function localDb(): LocalDb | null {
-  const url = env("SUPABASE_LOCAL_URL");
-  const anonKey = env("SUPABASE_LOCAL_ANON_KEY");
-  const serviceKey = env("SUPABASE_LOCAL_SERVICE_ROLE_KEY");
-  if (!url || !anonKey || !serviceKey || !isLocalUrl(url)) return null;
-  return { url, anonKey, admin: createClient(url, serviceKey, { auth: { persistSession: false } }) };
+  const iso = isolatedDb();
+  if (!iso) return null;
+  return { url: iso.url, anonKey: iso.anonKey, admin: createClient(iso.url, iso.serviceKey, { auth: { persistSession: false } }) };
 }
 
 /** Creates a confirmed user with a random email and returns a client signed in as that user. */

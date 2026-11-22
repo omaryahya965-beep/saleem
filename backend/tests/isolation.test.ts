@@ -1,44 +1,26 @@
-// Isolation tests (RLS + storage + function auth) between two users. Two modes:
-//  • local (preferred): a local Supabase stack, users created on the fly — see tests/helpers/local-db.ts
-//    (SUPABASE_LOCAL_URL / _ANON_KEY / _SERVICE_ROLE_KEY). Function checks also need
-//    `npx supabase functions serve --workdir backend` and SUPABASE_LOCAL_FUNCTIONS=1.
-//  • live: two confirmed accounts on the configured project in backend/.env
-//    (TEST_USER_A_EMAIL / _PASSWORD, TEST_USER_B_EMAIL / _PASSWORD).
-// Skipped when neither is configured. Creates one submission + one storage object for user A and
-// removes the storage object at the end.
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+// Isolation tests (RLS + storage + function auth) between two users, on the ISOLATED test stack only (D214):
+// users are created on the fly — see tests/helpers/local-db.ts and helpers/db-guard.ts. Function checks also need
+// SUPABASE_LOCAL_FUNCTIONS=1. Skipped outside `node scripts/isolated-stack.mjs run`. Creates one submission + one
+// storage object for user A and removes the storage object at the end.
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadEnv } from "../eval/lib.ts";
 import { createUser, localDb } from "./helpers/local-db.ts";
 
-const env = loadEnv();
+// D214: the isolated test stack only. The former «live» mode (VITE_SUPABASE_URL + TEST_USER_* credentials) could reach
+// a hosted project and is removed.
 const local = localDb();
-const url = env("VITE_SUPABASE_URL");
-const key = env("VITE_SUPABASE_PUBLISHABLE_KEY");
-const creds = {
-  a: { email: env("TEST_USER_A_EMAIL"), password: env("TEST_USER_A_PASSWORD") },
-  b: { email: env("TEST_USER_B_EMAIL"), password: env("TEST_USER_B_PASSWORD") },
-};
-const live = Boolean(url && key && creds.a.email && creds.a.password && creds.b.email && creds.b.password);
-const enabled = Boolean(local) || live;
-const functionsAvailable = !local || env("SUPABASE_LOCAL_FUNCTIONS") === "1";
+const enabled = Boolean(local);
+const functionsAvailable = process.env["SUPABASE_LOCAL_FUNCTIONS"] === "1";
 
-async function signIn(c: { email?: string; password?: string }): Promise<{ db: SupabaseClient; id: string }> {
-  const db = createClient(url!, key!, { auth: { persistSession: false } });
-  const { data, error } = await db.auth.signInWithPassword({ email: c.email!, password: c.password! });
-  if (error || !data.user) throw error ?? new Error("sign-in failed");
-  return { db, id: data.user.id };
-}
-
-describe.skipIf(!enabled)(`isolation between two users (${local ? "local" : "live"})`, () => {
+describe.skipIf(!enabled)("isolation between two users (isolated stack)", () => {
   let A: { db: SupabaseClient; id: string };
   let B: { db: SupabaseClient; id: string };
   const sid = crypto.randomUUID();
   let path = "";
 
   beforeAll(async () => {
-    A = local ? await createUser(local, "iso-a") : await signIn(creds.a);
-    B = local ? await createUser(local, "iso-b") : await signIn(creds.b);
+    A = await createUser(local!, "iso-a");
+    B = await createUser(local!, "iso-b");
     path = `${A.id}/${sid}/original.jpg`;
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
     const up = await A.db.storage.from("media").upload(path, new Blob([jpeg], { type: "image/jpeg" }));

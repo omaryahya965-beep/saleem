@@ -7,10 +7,13 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
+import { isolatedDb } from "./helpers/db-guard.ts";
 
-const URL_ = process.env.SUPABASE_LOCAL_URL ?? "";
-const ANON = process.env.SUPABASE_LOCAL_ANON_KEY ?? "";
-const SERVICE = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? "";
+// D214: the isolated test stack only (see helpers/db-guard.ts); empty — and the suite skipped — otherwise.
+const ISO = isolatedDb();
+const URL_ = ISO?.url ?? "";
+const ANON = ISO?.anonKey ?? "";
+const SERVICE = ISO?.serviceKey ?? "";
 const root = path.resolve(__dirname, "../..");
 const stateDir = path.resolve(root, process.env.DEMO_STATE_DIR ?? "demo");
 const credFile = path.join(stateDir, ".demo-credentials.json");

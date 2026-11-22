@@ -3,10 +3,13 @@
 // also in a real organisation is refused), no credential in the response, every session audited.
 import { createClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
+import { isolatedDb } from "./helpers/db-guard.ts";
 
-const URL_ = process.env.SUPABASE_LOCAL_URL ?? "";
-const ANON = process.env.SUPABASE_LOCAL_ANON_KEY ?? "";
-const SERVICE = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? "";
+// D214: the isolated test stack only (see helpers/db-guard.ts); empty — and the suite skipped — otherwise.
+const ISO = isolatedDb();
+const URL_ = ISO?.url ?? "";
+const ANON = ISO?.anonKey ?? "";
+const SERVICE = ISO?.serviceKey ?? "";
 const fn = `${URL_}/functions/v1/demo-login`;
 const reachable = await (async () => {
   if (!URL_ || !/127\.0\.0\.1|localhost/.test(URL_)) return false;

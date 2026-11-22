@@ -7,10 +7,13 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import { ACTIONS, ORG_ROLES, type OrgRole } from "../../frontend/src/lib/permissions.ts";
+import { isolatedDb } from "./helpers/db-guard.ts";
 
-const URL_ = process.env.SUPABASE_LOCAL_URL ?? "";
-const ANON = process.env.SUPABASE_LOCAL_ANON_KEY ?? "";
-const SERVICE = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? "";
+// D214: the isolated test stack only (see helpers/db-guard.ts); empty — and the suite skipped — otherwise.
+const ISO = isolatedDb();
+const URL_ = ISO?.url ?? "";
+const ANON = ISO?.anonKey ?? "";
+const SERVICE = ISO?.serviceKey ?? "";
 const enabled = Boolean(URL_ && ANON && SERVICE && /127\.0\.0\.1|localhost/.test(URL_));
 
 const svc = () => createClient(URL_, SERVICE, { auth: { persistSession: false } });
