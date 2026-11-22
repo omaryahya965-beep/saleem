@@ -119,7 +119,9 @@ export type PackReason =
   | "personal_selected"
   | "personal_recommended"
   /** D213: a personal workspace considers every supported authority automatically. */
-  | "personal_all";
+  | "personal_all"
+  /** D217: every analysis considers every supported authority automatically. */
+  | "all_authorities";
 
 export interface RuleRow {
   id: string;

@@ -36,7 +36,6 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
-import { RulePacks } from "./RulePacks";
 import { AuthorityCoveragePanel } from "@/features/personal/RegulatoryCoverage";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { useQuery } from "@tanstack/react-query";
@@ -261,6 +260,9 @@ export function RulebookPage() {
       </div>
 
       <AuthorityCoveragePanel picked={authority} onPick={setAuthority} />
+      <p className="-mt-3 text-xs text-fg-muted" data-testid="rulebook-browse-only">
+        {t("rulebook.browseOnly")}
+      </p>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -688,7 +690,6 @@ export function RulebookPage() {
       </Dialog>
 
       {/* Sector Rule Packs section */}
-      {book.data && <RulePacks rules={book.data.rules} />}
     </Page>
   );
 }

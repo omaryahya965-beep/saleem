@@ -13,6 +13,7 @@ import { Badge, Skeleton } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { AUTHORITIES, fetchAuthorityCoverage, type AuthorityCoverage } from "@/lib/api/personal";
 import { cn } from "@/lib/utils";
+import { reasonKey } from "@/features/reports/model";
 
 export const useAuthorityCoverage = () =>
   useQuery({
@@ -134,6 +135,12 @@ export interface RunAuthority {
   manual: number;
   unable: number;
   failed_rules: string[];
+  /** D217 (absent on older runs): verified rules that apply, findings by severity, excluded rules and why. */
+  applicable?: number;
+  violations?: number;
+  warnings?: number;
+  excluded?: number;
+  excluded_reasons?: Record<string, number>;
 }
 export interface RunCoverage {
   mode: string;
@@ -196,6 +203,7 @@ export function RunCoverageTable({ run }: { run: RunCoverage | null }) {
               <th className="p-2.5 text-start font-medium">{t("coverageRun.col.status")}</th>
               <th className="p-2.5 text-start font-medium">{t("coverageRun.col.rules")}</th>
               <th className="p-2.5 text-start font-medium">{t("coverageRun.col.result")}</th>
+              <th className="p-2.5 text-start font-medium">{t("coverageRun.col.excluded")}</th>
             </tr>
           </thead>
           <tbody>
@@ -227,10 +235,21 @@ export function RunCoverageTable({ run }: { run: RunCoverage | null }) {
                 </td>
                 <td className="p-2.5 text-xs text-fg-muted">
                   {t("coverageRun.counts", { active: r.active_rules, drafts: r.draft_rules })}
+                  {r.applicable !== undefined && r.active_rules > 0 && (
+                    <span className="block">
+                      {t("coverageRun.applicableEvaluated", {
+                        applicable: r.applicable,
+                        evaluated: r.evaluated,
+                      })}
+                    </span>
+                  )}
                 </td>
                 <td className="p-2.5 text-xs">
                   {r.failed_rules.length ? (
                     <span className="text-red">
+                      {r.violations !== undefined &&
+                        t("coverageRun.severityCounts", { v: r.violations, w: r.warnings ?? 0 }) +
+                          " · "}
                       {t("coverageRun.failed", { list: r.failed_rules.join("، ") })}
                     </span>
                   ) : r.status === "evaluated" ? (
@@ -239,6 +258,32 @@ export function RunCoverageTable({ run }: { run: RunCoverage | null }) {
                     </span>
                   ) : r.status === "manual_verification" ? (
                     t("coverageRun.manualItems", { n: r.manual })
+                  ) : (
+                    "—"
+                  )}
+                  {r.manual > 0 && r.status === "evaluated" && (
+                    <span className="block text-amber-text">
+                      {t("coverageRun.manualItems", { n: r.manual })}
+                    </span>
+                  )}
+                </td>
+                <td className="p-2.5 text-xs text-fg-muted">
+                  {r.excluded ? (
+                    <details>
+                      <summary className="cursor-pointer">
+                        {t("coverageRun.excludedCount", { n: r.excluded })}
+                      </summary>
+                      <ul className="mt-1 flex flex-col gap-0.5">
+                        {Object.entries(r.excluded_reasons ?? {}).map(([reason, n]) => {
+                          const k = reasonKey(reason);
+                          return (
+                            <li key={reason}>
+                              {t(k.key, { signal: k.signal ?? "", code: k.code ?? "" })} ({n})
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </details>
                   ) : (
                     "—"
                   )}

@@ -13,7 +13,7 @@ const mk = (code: string, mode: RuleRow["check_mode"], extra: Partial<RuleRow> =
   title_ar: code, title_en: code, summary_ar: `فحص ${code}`, summary_en: null,
   check_kind: mode === "document" || mode === "workflow" ? "workflow" : mode === "hybrid" ? "hybrid" : "llm",
   deterministic_check: null, finding_type_on_fail: "potential_risk", default_severity: "violation", applicability: {}, content_triggers: [],
-  llm_instructions: "", review_state: "draft", check_mode: mode, evidence_policy_ar: `سياسة ${code}`, applicability_ar: "عام", rule_version: REL,
+  llm_instructions: "", review_state: "active", check_mode: mode, evidence_policy_ar: `سياسة ${code}`, applicability_ar: "عام", rule_version: REL,
   ...extra,
 });
 const RULES = [
@@ -21,7 +21,7 @@ const RULES = [
   mk("D1", "document"),
   mk("W1", "workflow"),
   mk("H1", "hybrid"),
-  mk("DUP", "content", { possible_duplicate_of: "SAMA-ADV-01" }),
+  mk("DUP", "content", { possible_duplicate_of: "SAMA-ADV-01", review_state: "draft" }),
   mk("OUT", "content", { applicability: { sectors: ["insurance"] } }),
 ];
 const sub = (text: string, kind: SubmissionData["kind"] = "text"): SubmissionData => ({
@@ -98,19 +98,20 @@ describe("check_mode", () => {
 });
 
 describe("scope", () => {
-  it("a possible duplicate draft is never applied, with the reason", () => {
+  it("a draft (here a possible duplicate) is never applied, with the reason (D217: drafts never produce findings)", () => {
     const r = run({ findings: [finding("DUP")] });
     expect(r.findings.some((f) => f.rule_code === "DUP")).toBe(false);
-    expect(rc(r, "DUP")).toMatchObject({ outcome: "not_applicable", reason: "possible_duplicate:SAMA-ADV-01" });
+    expect(rc(r, "DUP")).toMatchObject({ outcome: "not_applicable", reason: "draft_excluded" });
   });
   it("out-of-scope rules say why", () => {
     expect(rc(run(), "OUT")).toMatchObject({ outcome: "not_applicable", reason: "context:sector" });
   });
   it("reports the packs applied and why", () => {
     const packs = run().coverage.packs!;
-    expect(packs.find((p) => p.code === "sa-x")).toMatchObject({ reason: "org_enabled", include_drafts: true });
+    // D217: every pack is considered for an organisation too, never with drafts; org_rule_packs no longer narrows it.
+    expect(packs.find((p) => p.code === "sa-x")).toMatchObject({ reason: "all_authorities", include_drafts: false });
     expect(packs.find((p) => p.code === "sa-system")?.reason).toBe("always_enabled");
-    expect(packs.find((p) => p.code === "sa-sama-advertising")?.reason).toBe("sector_default");
+    expect(packs.find((p) => p.code === "sa-sama-advertising")?.reason).toBe("all_authorities");
     expect(enabledPacksFor(null, null, [{ code: "sa-x", default_sectors: [], enabled_by_default: false, always_enabled: false }], [])[0]?.reason).toBe("personal_all"); // D213
   });
   it("cross-sector triggers are specific", () => {

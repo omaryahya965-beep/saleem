@@ -5,7 +5,6 @@ import { Button, Card, CardTitle, Dialog, toast } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { triggerAnalysis, type ReportBundle } from "@/lib/api/data";
 import type { Promotion, VersionSummary } from "@/lib/api/promotions";
-import { RunCoverageTable, type RunCoverage } from "./RegulatoryCoverage";
 
 /**
  * D211/D213: what a personal advertisement offers instead of the enterprise review workflow — its read-only
@@ -24,9 +23,6 @@ export function PersonalAdPanel({
   const { t, lang } = useI18n();
   const qc = useQueryClient();
   const [confirmDownload, setConfirmDownload] = useState(false);
-  const run =
-    (report?.run?.step_outputs as { authorities?: RunCoverage | null } | null | undefined)
-      ?.authorities ?? null;
   const unresolved = (report?.findings ?? []).filter(
     (f) =>
       (f.severity === "violation" || f.severity === "warning") &&
@@ -92,8 +88,8 @@ export function PersonalAdPanel({
     <Card className="flex flex-col gap-4" data-testid="personal-ad-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <CardTitle>{t("authority.report.title")}</CardTitle>
-          <p className="text-xs text-fg-muted">{t("coverageRun.subtitle")}</p>
+          <CardTitle>{t("personalAd.panelTitle")}</CardTitle>
+          <p className="text-xs text-fg-muted">{t("personalAd.panelBody")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {done && (
@@ -120,7 +116,6 @@ export function PersonalAdPanel({
           )}
         </div>
       </div>
-      <RunCoverageTable run={done ? run : null} />
       <p
         className="flex items-start gap-2 text-xs leading-relaxed text-fg-muted"
         data-testid="personal-advisory"

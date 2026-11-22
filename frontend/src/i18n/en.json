@@ -426,7 +426,8 @@
       "document": "Document & Records Check",
       "workflow": "Workflow Approval Check",
       "hybrid": "Hybrid Check"
-    }
+    },
+    "browseOnly": "Filters here are for browsing the rulebook only and never change what is checked: every analysis considers every supported authority automatically and applies the verified rules that apply."
   },
   "landing": {
     "heroBody": "SALEEM checks your ad or post before you publish and tells you where the problem is, to the second — why it matters, and how to fix it.",
@@ -4451,7 +4452,9 @@
     "downloadWarnNote": "You can download your ad without an internal approval, but the findings remain. SALEEM's results are automated advice: not any government approval or exemption from regulations.",
     "fixFirst": "Fix first",
     "downloadAnyway": "Download anyway",
-    "advisory": "Your personal ad needs no reviewer or internal approval. Results are automated and advisory: not legal clearance or any government approval, and no exemption from applicable Saudi regulations."
+    "advisory": "Your personal ad needs no reviewer or internal approval. Results are automated and advisory: not legal clearance or any government approval, and no exemption from applicable Saudi regulations.",
+    "panelTitle": "Your ad",
+    "panelBody": "Re-check after any change, or download the ad. Regulatory coverage and findings are in the report below."
   },
   "personalAsk": {
     "subtitle": "Ask about disclosure, licensing and claims. Answers come only from SALEEM's verified rules and your own ads.",
@@ -4502,7 +4505,8 @@
       "authority": "Authority",
       "status": "Status",
       "rules": "Rules",
-      "result": "Result"
+      "result": "Result",
+      "excluded": "Excluded rules"
     },
     "status": {
       "evaluated": "Applicable and evaluated",
@@ -4515,6 +4519,11 @@
     "failed": "Findings: {list}",
     "noIssues": "No findings ({n} rules)",
     "manualItems": "{n} items to verify manually",
-    "note": "Automated, advisory check. «Not applicable» means its verified rules are outside your ad's context; «insufficient coverage» means no verified rules yet — not that the ad complies."
+    "note": "Automated, advisory check. «Not applicable» means its verified rules are outside your ad's context; «insufficient coverage» means no verified rules yet — not that the ad complies.",
+    "title": "Regulatory coverage of this check",
+    "howItWorks": "You chose no authority: SALEEM considered every supported regulator and decided the applicable rules from your ad's sector, its actual content, the platform, and whether it is paid or AI-edited. Only verified rules can produce findings; drafts are never applied.",
+    "applicableEvaluated": "Applicable: {applicable} · evaluated: {evaluated}",
+    "severityCounts": "{v} violations · {w} warnings",
+    "excludedCount": "{n} do not apply to your ad"
   }
 }

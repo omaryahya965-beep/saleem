@@ -22,8 +22,10 @@ describe("personal workspace: automatic multi-regulator analysis (D213)", () => 
     expect(packs.every((p) => !p.includeDrafts)).toBe(true);
     expect(packs.find((p) => p.code === "sa-bank")?.reason).toBe("personal_all");
   });
-  it("organisations keep their own pack settings", () => {
-    expect(enabledPacksFor("org-1", "banking", PACKS, []).map((p) => p.code).sort()).toEqual(["sa-gmedia-creators", "sa-mc-ecommerce", "sa-system"]);
+  it("organisations use the same scope: every pack, never drafts, whatever org_rule_packs says (D217)", () => {
+    const packs = enabledPacksFor("org-1", "banking", PACKS, [{ pack_code: "sa-bank", enabled: false, include_draft_rules: true }]);
+    expect(packs.map((p) => p.code).sort()).toEqual(["sa-bank", "sa-cos", "sa-gmedia-creators", "sa-mc-ecommerce", "sa-system"]);
+    expect(packs.every((p) => !p.includeDrafts)).toBe(true);
   });
   it("detects the content's sectors at word level", () => {
     expect(detectContentSectors([txt("تمويل شخصي بمعدل نسبة سنوية 4%")])).toContain("banking");

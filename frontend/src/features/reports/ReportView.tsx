@@ -42,6 +42,7 @@ import { countBySeverity, diffFindings, sortIssues, toIssueViews } from "./model
 import { CoverageBanner, RuleOutcomes, coverageOf } from "./RuleOutcomes";
 import { FindingsWorkspace, type WorkspaceContext } from "@/features/review/FindingsWorkspace";
 import { groupFindings } from "./grouping";
+import { RunCoverageTable, type RunCoverage } from "@/features/personal/RegulatoryCoverage";
 
 type Tone = "violation" | "warning" | "ready";
 
@@ -593,6 +594,8 @@ export function ReportView({
         </div>
       </div>
 
+      <RegulatoryCoverageSection bundle={bundle} />
+
       <RuleOutcomes bundle={bundle} />
 
       <Disclaimer className="border-t border-border pt-5" />
@@ -618,5 +621,31 @@ export function ReportView({
         }
       />
     </Page>
+  );
+}
+
+/**
+ * D217: the regulatory coverage of this analysis — every supported authority, considered automatically, for
+ * individuals and organisations alike. Plain-language summary first, then one row per authority.
+ */
+function RegulatoryCoverageSection({ bundle }: { bundle: ReportBundle }) {
+  const { t } = useI18n();
+  const run =
+    (bundle.run?.step_outputs as { authorities?: RunCoverage | null } | null | undefined)
+      ?.authorities ?? null;
+  return (
+    <section
+      aria-labelledby="reg-coverage"
+      className="flex flex-col gap-3"
+      data-testid="regulatory-coverage"
+    >
+      <div>
+        <h2 id="reg-coverage" className="text-lg font-bold">
+          {t("coverageRun.title")}
+        </h2>
+        <p className="text-sm text-fg-muted">{t("coverageRun.howItWorks")}</p>
+      </div>
+      <RunCoverageTable run={run} />
+    </section>
   );
 }

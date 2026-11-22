@@ -126,11 +126,9 @@ const rank = (f: DraftFinding) =>
 
 export function evaluate(input: EvaluateInput): EvaluateResult {
   const { texts, model } = input;
-  // D213: a personal advertisement is also checked against the rules of every sector its content points to, so the
-  // selected sector cannot hide applicable rules. Organisations keep their configured context.
-  const ctx = input.ctx.orgId
-    ? input.ctx
-    : { ...input.ctx, contentSectors: [...new Set([...(input.ctx.contentSectors ?? []), ...detectContentSectors(texts)])] };
+  // D213/D217: every advertisement (personal or organisation) is also checked against the rules of every sector its
+  // content points to, so a selected sector or product cannot hide applicable rules.
+  const ctx = { ...input.ctx, contentSectors: [...new Set([...(input.ctx.contentSectors ?? []), ...detectContentSectors(texts)])] };
   const modelOk = input.modelStatus === "ok" && model !== null;
   const signals = computeSignals(texts, ctx, modelOk ? model!.signals : []);
   const lib = input.library ?? { claims: [], disclaimers: [], linkedClaimIds: [], overrides: [] };

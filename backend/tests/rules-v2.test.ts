@@ -14,7 +14,10 @@ import { SchemaError } from "../supabase/functions/_shared/pipeline/schema.ts";
 import type { AnalysisContext, RuleRow, SubmissionData, TranscriptSegment } from "../supabase/functions/_shared/types.ts";
 import { releaseRules } from "../eval/rules-v2.ts";
 
-const RULES = releaseRules();
+// D217: drafts never produce findings for anyone. These engine tests exercise the SAMA advertising rules as they will
+// behave once legally verified and activated, so the fixture marks that pack active; the live data keeps them drafts.
+const RAW = releaseRules();
+const RULES = RAW.map((r) => (r.pack === "sa-sama-advertising" && r.review_state === "draft" ? { ...r, review_state: "active" as const } : r));
 const rule = (code: string) => RULES.find((r) => r.code === code)!;
 
 export const PASS_AD =
@@ -66,7 +69,8 @@ function run(text: string, opts: Parameters<typeof ctxFor>[0] & { segments?: Tra
   const segments = opts.segments ?? [];
   const onScreen = opts.onScreen ?? [];
   return evaluate({
-    ctx: ctxFor({ ...opts, caption: text }), rules: RULES, texts: extractTexts(s, segments, onScreen),
+    // drafts: false → the real release, whose SAMA rules are drafts (never applied, D217).
+    ctx: ctxFor({ ...opts, caption: text }), rules: opts.drafts === false ? RAW : RULES, texts: extractTexts(s, segments, onScreen),
     legacy: { submission: s, segments, onScreen, audioMode: opts.kind === "video" ? "speech" : null },
     model: opts.model === undefined ? model() : opts.model, modelStatus: opts.modelStatus ?? "ok",
     media: { transcriptionFailed: false, framesTotal: 0, framesAnalyzed: 0, batchesFailed: 0 },
@@ -108,13 +112,16 @@ describe("applicability", () => {
     expect(applicabilityMismatch({ any_of: [{ sectors: ["insurance"] }, { channels: ["instagram"] }] }, ctx)).toBeNull();
     expect(applicabilityMismatch({ any_of: [{ sectors: ["insurance"] }, { channels: ["tv_radio"] }] }, ctx)).toBe("context:sector");
   });
-  it("excludes drafts unless the org opted in, and records workflow rules", () => {
-    const off = selectRules(ctxFor({ drafts: false }), RULES);
-    expect(off.notApplicable.find((n) => n.rule.code === "SAMA-ADV-02")?.reason).toBe("draft_excluded");
+  it("never applies drafts, whatever the organisation opted into, and records workflow rules (D217)", () => {
+    // The real release (drafts): excluded even though the org row says include_draft_rules.
+    const real = selectRules(ctxFor(), RAW);
+    expect(real.notApplicable.find((n) => n.rule.code === "SAMA-ADV-02")?.reason).toBe("draft_excluded");
+    expect(real.applicable.some((r) => r.code.startsWith("SAMA-ADV"))).toBe(false);
     const on = selectRules(ctx, RULES);
     expect(on.applicable.some((r) => r.code === "SAMA-ADV-02")).toBe(true);
     expect(on.notApplicable.find((n) => n.rule.code === "SAMA-ADV-15")?.reason).toBe("workflow_rule");
-    expect(on.notApplicable.find((n) => n.rule.code === "CMA-CMI-33-FAIR")?.reason).toBe("pack_disabled");
+    // Every pack is considered: a CMA draft is out because it is a draft, not because its pack is off.
+    expect(on.notApplicable.find((n) => n.rule.code === "CMA-CMI-33-FAIR")?.reason).toBe("draft_excluded");
     // Personal creators keep the creator packs only.
     const personal = selectRules({ ...ctx, orgId: null, communicationType: "creator_sponsored", enabledPacks: [{ code: "sa-gmedia-creators", includeDrafts: false }, { code: "sa-system", includeDrafts: false }] }, RULES);
     expect(personal.applicable.map((r) => r.code)).toContain("MAW-01");
@@ -211,8 +218,7 @@ describe("acceptance cases (mocked model)", () => {
     const f = r.findings.find((x) => x.rule_code === "SAMA-ADV-03-8")!;
     expect(f.explanation_ar).toBeTruthy();
     expect(f.suggested_fix_ar).toBeTruthy();
-    expect(f.rule_draft).toBe(true);
-    expect(f.severity).toBe("warning"); // draft rules are capped
+    expect(f.rule_draft).toBe(false); // the fixture models the rule once verified and activated (D217)
   });
   it("case 3 — wrong number → confirmed_mismatch showing 4.2 and 4.5", () => {
     const r = run(PASS_AD.replace("4.5%", "4.2%"));
@@ -255,7 +261,7 @@ describe("acceptance cases (mocked model)", () => {
     for (const c of codes(clean)) expect(codes(injected)).toContain(c);
     expect(codes(injected)).toContain("SYS-INJECTION:potential_risk");
   });
-  it("drafts off → SAMA rules not applicable (draft_excluded), not an empty «no findings»", () => {
+  it("real (draft) SAMA rules → not applicable (draft_excluded), not an empty «no findings»", () => {
     const r = run(PASS_AD.replace("معدل النسبة السنوي 4.5% ", ""), { drafts: false });
     expect(check(r, "SAMA-ADV-03-8")).toMatchObject({ outcome: "not_applicable", reason: "draft_excluded" });
   });

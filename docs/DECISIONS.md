@@ -731,3 +731,15 @@ Format: decision — why — alternatives considered.
 
   Verified for signed-out, individual and enterprise users: 238 rules, 15 active, 9 authorities. GMEDIA shows 15
   (10 verified + 5 drafts), SFDA 56 (drafts only). Drafts stay visible and inactive.
+- **D217. One regulatory engine for individuals and organisations (2026-11-23).** Every analysis enables every
+  authority's packs (never drafts), and rule applicability decides what applies, using the selected sector plus the
+  sectors detected in the content. Only applicable rules are sent to the model.
+  - `org_rule_packs` no longer narrows or widens an analysis; the organisation pack and draft opt-in panel is removed
+    from the rulebook.
+  - Organisation overrides may narrow only internal policies (INT-*), never regulatory rules or system checks.
+  - Every report shows the per-authority coverage: applicable, evaluated, violations, warnings, manual checks, excluded
+    rules with reasons, and gaps.
+  - The rulebook states that its filters are for browsing only.
+  - Engine tests model SAMA rules as activated in their fixtures (the live data keeps them drafts).
+
+  See docs/saleem-v2/REGULATORY_ANALYSIS.md.

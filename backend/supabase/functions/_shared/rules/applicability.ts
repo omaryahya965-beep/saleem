@@ -88,35 +88,23 @@ export function applyTriggers(sel: Selection, signals: Set<string>): Selection {
 export const CREATOR_PACKS = ["sa-gmedia-creators", "sa-sdaia-ai", "sa-mc-ecommerce", "sa-system"];
 
 /**
- * Packs enabled for a run: personal promotions consider every pack (D213); org promotions use their
- * org_rule_packs rows, falling back to each pack's default (enabled_by_default and sector match).
+ * D217: every analysis — personal or organisation — considers EVERY supported authority's pack automatically.
+ * Rule applicability (sector selected and detected in the content, channels, paid status, AI use, communication
+ * type…) then decides which rules apply, and only those are sent to the model. Draft rules are never included:
+ * only verified, active rules can produce findings. Nobody selects, disables or excludes packs; org_rule_packs no
+ * longer changes the scope of an analysis. Signature kept for callers.
  */
 export function enabledPacksFor(
   orgId: string | null,
-  sector: string | null,
+  _sector: string | null,
   packs: { code: string; default_sectors: string[]; enabled_by_default: boolean; always_enabled: boolean; authority?: string }[],
-  orgRows: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[],
+  _orgRows: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[] = [],
 ): { code: string; includeDrafts: boolean; reason: PackReason }[] {
-  if (!orgId) {
-    // D213: a personal workspace considers EVERY supported authority automatically: all packs are enabled and rule
-    // applicability (sector — selected and detected in the content —, channels, paid status, AI use…) decides which
-    // rules apply. The user cannot select or exclude authorities. Draft rules are never included.
-    return packs.map((p) => ({
-      code: p.code,
-      includeDrafts: false,
-      reason: (p.always_enabled ? "always_enabled" : "personal_all") as PackReason,
-    }));
-  }
-  const rows = new Map(orgRows.map((r) => [r.pack_code, r]));
-  const out: { code: string; includeDrafts: boolean; reason: PackReason }[] = [];
-  for (const p of packs) {
-    const row = rows.get(p.code);
-    const byDefault = p.enabled_by_default && (p.default_sectors.length === 0 || (sector !== null && p.default_sectors.includes(sector)));
-    const enabled = p.always_enabled || (row ? row.enabled : byDefault);
-    const reason: PackReason = p.always_enabled ? "always_enabled" : row ? "org_enabled" : p.default_sectors.length ? "sector_default" : "default";
-    if (enabled) out.push({ code: p.code, includeDrafts: Boolean(row?.include_draft_rules), reason });
-  }
-  return out;
+  return packs.map((p) => ({
+    code: p.code,
+    includeDrafts: false,
+    reason: (p.always_enabled ? "always_enabled" : orgId ? "all_authorities" : "personal_all") as PackReason,
+  }));
 }
 
 /** Org override patch (narrow only): exclusions or disabling for one rule (M8 `org_rule_overrides`). */
@@ -141,7 +129,9 @@ export function applyOverrides(sel: Selection, ctx: AnalysisContext, overrides: 
     const p = byCode.get(rule.code);
     const excluded =
       p &&
-      !rule.code.startsWith("SYS-") &&
+      // D217: an organisation override may narrow only its OWN internal policies (INT-*); it can never exclude a
+      // regulatory rule or a SALEEM system check.
+      rule.code.startsWith("INT-") &&
       (p.disabled ||
         (p.exclude_channels?.length && ctx.channels.length > 0 && ctx.channels.every((c) => p.exclude_channels!.includes(c))) ||
         (p.exclude_product_types?.length && ctx.product && p.exclude_product_types.includes(ctx.product.productType)) ||

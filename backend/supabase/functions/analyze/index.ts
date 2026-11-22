@@ -182,12 +182,17 @@ async function loadLibrary(db: Db, orgId: string | null, promotionId: string | n
  * advertisement's sector (selected or detected in the content) and context point to.
  */
 const AUTHORITIES = ["GMEDIA", "MC", "SDAIA", "SFDA", "SAMA", "CMA", "IA", "MT", "REGA", "MOHU"] as const;
-function authorityCoverage(ctx: AnalysisContext, rules: RuleRow[], result: { ruleChecks: RuleCheckResult[]; contentSectors?: string[] }, aiUsed: boolean) {
-  if (ctx.orgId) return null;
+function authorityCoverage(
+  ctx: AnalysisContext,
+  rules: RuleRow[],
+  result: { ruleChecks: RuleCheckResult[]; contentSectors?: string[]; findings: { rule_code: string; severity: string }[] },
+  aiUsed: boolean,
+) {
   const packAuthority = ctx.packAuthority ?? {};
   const checks = new Map(result.ruleChecks.map((c) => [c.rule_id, c]));
   const contentSectors = result.contentSectors ?? [];
-  const selectedSector = ctx.sector ?? null;
+  // D217: the context sector is the advertisement's product sector when it has one (organisations), else the selected one.
+  const selectedSector = ctx.product?.sector ?? ctx.sector ?? null;
   const relevant = new Set(relevantAuthorities(ctx, [...expandSector(selectedSector), ...contentSectors], aiUsed));
   const MANUAL = new Set(["document_required", "reviewer_checklist", "workflow_rule"]);
   const authorities = AUTHORITIES.map((authority) => {
@@ -196,6 +201,11 @@ function authorityCoverage(ctx: AnalysisContext, rules: RuleRow[], result: { rul
     const drafts = own.filter((r) => r.review_state === "draft" || r.review_state === "legal_review").length;
     const ch = active.map((r) => checks.get(r.id)).filter((x): x is RuleCheckResult => Boolean(x));
     const failed = ch.filter((x) => x.outcome === "failed");
+    const failedCodes = new Set(failed.map((x) => x.rule_code));
+    const sev = result.findings.filter((f) => failedCodes.has(f.rule_code));
+    const excluded = ch.filter((x) => x.outcome === "not_applicable");
+    const reasons: Record<string, number> = {};
+    for (const x of excluded) { const k = x.reason ?? "other"; reasons[k] = (reasons[k] ?? 0) + 1; }
     const evaluated = ch.filter((x) => x.outcome === "passed" || x.outcome === "failed").length;
     const manual = ch.filter((x) => x.outcome === "unable_to_verify" && MANUAL.has(x.reason ?? "")).length;
     const unable = ch.filter((x) => x.outcome === "unable_to_verify" && !MANUAL.has(x.reason ?? "")).length;
@@ -218,10 +228,16 @@ function authorityCoverage(ctx: AnalysisContext, rules: RuleRow[], result: { rul
       manual,
       unable,
       failed_rules: failed.map((x) => x.rule_code),
+      applicable: ch.length - excluded.length,
+      violations: sev.filter((f) => f.severity === "violation").length,
+      warnings: sev.filter((f) => f.severity !== "violation").length,
+      excluded: excluded.length,
+      excluded_reasons: reasons,
     };
   });
   return {
     mode: "automatic_all",
+    scope: ctx.orgId ? "organization" : "personal",
     selected_sector: selectedSector,
     content_sectors: contentSectors,
     sector_mismatch: contentSectors.filter((s) => !expandSector(selectedSector).includes(s)),

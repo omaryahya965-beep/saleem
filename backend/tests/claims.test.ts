@@ -64,14 +64,14 @@ describe("disclaimers", () => {
 describe("org overrides", () => {
   const rules = releaseRules();
   const c = { ...ctx, channels: ["branch"], enabledPacks: [{ code: "sa-sama-advertising", includeDrafts: true }] };
-  it("narrow a rule out of scope (never into scope) and leave system rules alone", () => {
-    const sel = applyOverrides(selectRules(c, rules), c, [
+  it("can never exclude a regulatory rule (D217: internal policy never overrides mandatory regulation)", () => {
+    const base = selectRules(c, rules);
+    const sel = applyOverrides(base, c, [
       { rule_code: "SAMA-ADV-01", applicability_patch: { exclude_channels: ["branch"] } },
       { rule_code: "SAMA-ADV-02", applicability_patch: { disabled: true } },
     ]);
-    expect(sel.notApplicable.find((n) => n.rule.code === "SAMA-ADV-01")?.reason).toBe("org_override");
-    expect(sel.notApplicable.find((n) => n.rule.code === "SAMA-ADV-02")?.reason).toBe("org_override");
-    expect(sel.applicable.some((r) => r.code === "SAMA-ADV-03-9")).toBe(true);
+    expect(sel.notApplicable.some((n) => n.reason === "org_override")).toBe(false);
+    expect(sel.applicable.map((r) => r.code)).toEqual(base.applicable.map((r) => r.code));
   });
 });
 
