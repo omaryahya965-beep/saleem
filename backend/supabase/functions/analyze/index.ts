@@ -10,7 +10,8 @@
 // Progress, errors, models, prompt/rulebook versions, durations, tokens and cost are stored.
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
-import { evaluate, legacyFindingType, type MergedFinding } from "../_shared/pipeline/evaluate.ts";
+import { evaluate, legacyFindingType, type MergedFinding, type RuleCheckResult } from "../_shared/pipeline/evaluate.ts";
+import { expandSector, relevantAuthorities } from "../_shared/rules/sectors.ts";
 import { buildContext, extractTexts, type PackRow, type ProductRow, type PromotionRow } from "../_shared/pipeline/context.ts";
 import { ocrToOnScreen, type ModelOutputV2 } from "../_shared/pipeline/schema-v2.ts";
 import { matchCarryForward, type PrevFinding } from "../_shared/pipeline/carry.ts";
@@ -173,31 +174,58 @@ async function loadLibrary(db: Db, orgId: string | null, promotionId: string | n
   };
 }
 
-/** D211: deterministic authority recommendation (SQL recommend_authorities) for a personal promotion. */
-async function recommendAuthorities(db: Db, sub: SubV2, promotion: Record<string, unknown> | null, product: ProductRow | null): Promise<string[]> {
-  const s = sub as SubV2 & { product_category?: string | null; ai_used?: boolean | null; is_paid_ad?: boolean | null; platform?: string | null };
-  const channels = (promotion?.channels as string[] | null | undefined)?.length ? (promotion!.channels as string[]) : s.platform ? [s.platform] : [];
-  const { data } = await db.rpc("recommend_authorities", {
-    _sector: product?.sector ?? (promotion?.sector as string | null | undefined) ?? null,
-    _category: s.product_category ?? null,
-    _communication_type: (promotion?.communication_type as string | null | undefined) ?? null,
-    _channels: channels,
-    _is_paid: (promotion?.is_paid as boolean | null | undefined) ?? s.is_paid_ad ?? false,
-    _ai_used: s.ai_used ?? false,
-  });
-  return (data ?? []) as string[];
-}
-
-/** D211: what the run checked for a personal promotion — shown in the report with a warning for left-out authorities. */
-function authorityCoverage(ctx: AnalysisContext) {
+/**
+ * D213: read-only regulatory coverage of a personal promotion. Every supported authority is considered; per authority
+ * the run reports: evaluated (its verified rules were checked), manual_verification (only document/reviewer checks),
+ * unable_to_evaluate (checks could not run on the media), not_applicable (no verified rule applies to this context),
+ * insufficient_coverage (no verified active rule yet; drafts are never applied). `relevant` marks authorities the
+ * advertisement's sector (selected or detected in the content) and context point to.
+ */
+const AUTHORITIES = ["GMEDIA", "MC", "SDAIA", "SFDA", "SAMA", "CMA", "IA", "MT", "REGA", "MOHU"] as const;
+function authorityCoverage(ctx: AnalysisContext, rules: RuleRow[], result: { ruleChecks: RuleCheckResult[]; contentSectors?: string[] }, aiUsed: boolean) {
   if (ctx.orgId) return null;
-  const selected = ctx.selectedAuthorities ?? null;
-  const recommended = ctx.recommendedAuthorities ?? [];
+  const packAuthority = ctx.packAuthority ?? {};
+  const checks = new Map(result.ruleChecks.map((c) => [c.rule_id, c]));
+  const contentSectors = result.contentSectors ?? [];
+  const selectedSector = ctx.sector ?? null;
+  const relevant = new Set(relevantAuthorities(ctx, [...expandSector(selectedSector), ...contentSectors], aiUsed));
+  const MANUAL = new Set(["document_required", "reviewer_checklist", "workflow_rule"]);
+  const authorities = AUTHORITIES.map((authority) => {
+    const own = rules.filter((r) => r.pack && packAuthority[r.pack] === authority);
+    const active = own.filter((r) => r.review_state === "active");
+    const drafts = own.filter((r) => r.review_state === "draft" || r.review_state === "legal_review").length;
+    const ch = active.map((r) => checks.get(r.id)).filter((x): x is RuleCheckResult => Boolean(x));
+    const failed = ch.filter((x) => x.outcome === "failed");
+    const evaluated = ch.filter((x) => x.outcome === "passed" || x.outcome === "failed").length;
+    const manual = ch.filter((x) => x.outcome === "unable_to_verify" && MANUAL.has(x.reason ?? "")).length;
+    const unable = ch.filter((x) => x.outcome === "unable_to_verify" && !MANUAL.has(x.reason ?? "")).length;
+    const status = !active.length
+      ? "insufficient_coverage"
+      : evaluated
+        ? "evaluated"
+        : manual
+          ? "manual_verification"
+          : unable || ch.length < active.length
+            ? "unable_to_evaluate"
+            : "not_applicable";
+    return {
+      authority,
+      status,
+      relevant: relevant.has(authority),
+      active_rules: active.length,
+      draft_rules: drafts,
+      evaluated,
+      manual,
+      unable,
+      failed_rules: failed.map((x) => x.rule_code),
+    };
+  });
   return {
-    mode: selected === null ? "automatic" : "manual",
-    selected,
-    recommended,
-    excluded_recommended: selected === null ? [] : recommended.filter((a) => !selected.includes(a)),
+    mode: "automatic_all",
+    selected_sector: selectedSector,
+    content_sectors: contentSectors,
+    sector_mismatch: contentSectors.filter((s) => !expandSector(selectedSector).includes(s)),
+    authorities,
     packs: ctx.enabledPacks.map((p) => ({ code: p.code, reason: p.reason })),
   };
 }
@@ -214,10 +242,7 @@ async function loadContext(db: Db, sub: SubV2): Promise<AnalysisContext> {
     db.from("rule_packs").select("code, default_sectors, enabled_by_default, always_enabled, authority"),
     orgId ? db.from("org_rule_packs").select("pack_code, enabled, include_draft_rules").eq("org_id", orgId) : Promise.resolve({ data: [] }),
   ]);
-  // D211: a personal promotion is checked against its selected authorities, or the ones recommended for its context.
-  const recommended = orgId ? [] : await recommendAuthorities(db, sub, promotion, (productRes.data as ProductRow | null) ?? null);
   return buildContext({
-    recommended,
     submission: sub,
     promotion: (promotion as PromotionRow | null) ?? null,
     product: (productRes.data as ProductRow | null) ?? null,
@@ -606,7 +631,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
       dropped: merged.dropped,
       promotional: det.promotional,
       discount_codes: det.discountCodes,
-      authorities: authorityCoverage(ctx),
+      authorities: authorityCoverage(ctx, ruleRows, result, Boolean((sub as SubV2 & { ai_used?: boolean | null }).ai_used)),
     },
   });
   await timed("set_done", () => setProgress(db, sub.id, {

@@ -68,13 +68,13 @@ do $$ begin
   perform pg_temp.expect_error($q$insert into public.ai_usage (capability, provider) values ('ask', 'gemini')$q$, 'permission denied');
 end $$;
 
--- Personal promotion with a manual authority selection.
-insert into public.promotions (id, owner_id, org_id, title, communication_type, selected_authorities)
-values ('3e000000-0000-0000-0000-000000000001', '1e000000-0000-0000-0000-000000000001', null, 'Personal ad', 'creator_sponsored', array['GMEDIA', 'SFDA']);
+-- A personal promotion: its sector, never its authorities (D213: every authority is considered automatically).
+insert into public.promotions (id, owner_id, org_id, title, communication_type, sector)
+values ('3e000000-0000-0000-0000-000000000001', '1e000000-0000-0000-0000-000000000001', null, 'Personal ad', 'creator_sponsored', 'real_estate');
 do $$ begin
-  perform pg_temp.expect_error($q$insert into public.promotions (owner_id, title, selected_authorities) values ('1e000000-0000-0000-0000-000000000001', 'x', array['NOPE'])$q$, 'promotions_selected_authorities_check');
-  update public.promotions set selected_authorities = null where id = '3e000000-0000-0000-0000-000000000001';
-  update public.promotions set selected_authorities = array['MC'] where id = '3e000000-0000-0000-0000-000000000001';
+  -- No client can select or exclude authorities, by insert or update.
+  perform pg_temp.expect_error($q$insert into public.promotions (owner_id, title, selected_authorities) values ('1e000000-0000-0000-0000-000000000001', 'x', array['MC'])$q$, 'permission denied');
+  perform pg_temp.expect_error($q$update public.promotions set selected_authorities = array['MC'] where id = '3e000000-0000-0000-0000-000000000001'$q$, 'permission denied');
   -- No enterprise state can be written directly.
   perform pg_temp.expect_error($q$update public.promotions set review_status = 'approved' where id = '3e000000-0000-0000-0000-000000000001'$q$, 'permission denied');
 end $$;
@@ -108,9 +108,6 @@ do $$ begin
   if exists (select 1 from public.promotions where id = '3e000000-0000-0000-0000-000000000001') then raise exception 'personal promotion leaked'; end if;
   if exists (select 1 from public.submissions where id = '4e000000-0000-0000-0000-000000000001') then raise exception 'personal submission leaked'; end if;
   if exists (select 1 from public.personal_workspaces) then raise exception 'workspace leaked'; end if;
-  perform pg_temp.expect_error($q$update public.promotions set selected_authorities = null where id = '3e000000-0000-0000-0000-000000000001' returning 1$q$, 'expected');
-exception when others then
-  if sqlerrm not like 'expected % but the statement succeeded%' then raise; end if;
 end $$;
 do $$ begin
   update public.promotions set title = 'hijack' where id = '3e000000-0000-0000-0000-000000000001';
@@ -121,10 +118,10 @@ do $$ begin
   if exists (select 1 from public.promotions where id = '3e000000-0000-0000-0000-000000000001') then raise exception 'org member reads personal ad'; end if;
 end $$;
 
--- Authority selection is personal only: an organisation promotion keeps its rule-pack settings.
+-- Organisations cannot set it either (they keep their rule-pack settings).
 select pg_temp.as_user('1e000000-0000-0000-0000-000000000003');
 do $$ begin
-  perform pg_temp.expect_error($q$insert into public.promotions (owner_id, org_id, title, selected_authorities) values ('1e000000-0000-0000-0000-000000000003', '2e000000-0000-0000-0000-000000000001', 'org ad', array['MC'])$q$, 'promotions_selected_authorities_check');
+  perform pg_temp.expect_error($q$insert into public.promotions (owner_id, org_id, title, selected_authorities) values ('1e000000-0000-0000-0000-000000000003', '2e000000-0000-0000-0000-000000000001', 'org ad', array['MC'])$q$, 'permission denied');
 end $$;
 -- An enterprise sandbox demo persona cannot open a personal workspace (demo confinement).
 select pg_temp.as_user('1e000000-0000-0000-0000-000000000005');

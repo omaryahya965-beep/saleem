@@ -6,6 +6,7 @@ import type {
 } from "../types.ts";
 import { normalizeArabic } from "../rules/arabic.ts";
 import { applyOverrides, applyTriggers, selectRules, type NotApplicable, type RuleOverride } from "../rules/applicability.ts";
+import { detectContentSectors } from "../rules/sectors.ts";
 import { checkDisclaimers, matchClaims, type LibClaim, type LibDisclaimer } from "../claims/match.ts";
 import { CHECKS, type CheckResult } from "../rules/checks/index.ts";
 import { computeSignals } from "../rules/signals.ts";
@@ -77,6 +78,8 @@ export interface RuleCheckResult {
 export interface EvaluateResult {
   findings: MergedFinding[];
   ruleChecks: RuleCheckResult[];
+  /** D213: sectors detected in the content (personal advertisements). */
+  contentSectors?: string[];
   coverage: Coverage;
   overallStatus: OverallStatus;
   signals: string[];
@@ -122,7 +125,12 @@ const rank = (f: DraftFinding) =>
   (f.finding_type === "confirmed_mismatch" ? 4 : 0) + (f.severity === "violation" ? 2 : 0) + f.confidence + (f.source === "deterministic" ? 0.5 : 0);
 
 export function evaluate(input: EvaluateInput): EvaluateResult {
-  const { ctx, texts, model } = input;
+  const { texts, model } = input;
+  // D213: a personal advertisement is also checked against the rules of every sector its content points to, so the
+  // selected sector cannot hide applicable rules. Organisations keep their configured context.
+  const ctx = input.ctx.orgId
+    ? input.ctx
+    : { ...input.ctx, contentSectors: [...new Set([...(input.ctx.contentSectors ?? []), ...detectContentSectors(texts)])] };
   const modelOk = input.modelStatus === "ok" && model !== null;
   const signals = computeSignals(texts, ctx, modelOk ? model!.signals : []);
   const lib = input.library ?? { claims: [], disclaimers: [], linkedClaimIds: [], overrides: [] };
@@ -318,7 +326,7 @@ export function evaluate(input: EvaluateInput): EvaluateResult {
   }));
   const coverage: Coverage = { status: partial ? "partial" : "complete", items, packs };
 
-  return { findings, ruleChecks, coverage, overallStatus: overallStatusV2(findings, coverage, ruleChecks), signals: [...signals], dropped };
+  return { findings, ruleChecks, coverage, overallStatus: overallStatusV2(findings, coverage, ruleChecks), signals: [...signals], dropped, contentSectors: ctx.contentSectors };
 }
 
 /** §10: needs_fixes for a non-draft violation or a confirmed mismatch; review for anything else uncertain. */

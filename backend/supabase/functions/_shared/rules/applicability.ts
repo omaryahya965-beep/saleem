@@ -11,7 +11,9 @@ const any = (xs: string[] | undefined) => !xs || xs.length === 0 || xs.includes(
 /** Returns null when the grammar matches, else the reason (`context:<key>`, `audience_excluded`, `requires_product`). */
 export function applicabilityMismatch(a: Applicability, ctx: AnalysisContext): string | null {
   const sector = ctx.product?.sector ?? ctx.sector;
-  if (!any(a.sectors) && !(sector && a.sectors!.includes(sector))) return "context:sector";
+  // D213: a rule of a sector the CONTENT points to applies too, whatever sector was selected.
+  const sectors = [sector, ...(ctx.contentSectors ?? [])].filter((s): s is string => Boolean(s));
+  if (!any(a.sectors) && !sectors.some((s) => a.sectors!.includes(s))) return "context:sector";
   if (!any(a.regulators) && ctx.product && !a.regulators!.includes(ctx.product.regulator)) return "context:regulator";
   if (!any(a.communication_types) && !a.communication_types!.includes(ctx.communicationType)) return "context:communication_type";
   if (a.requires_product && !ctx.product) return "requires_product";
@@ -86,7 +88,7 @@ export function applyTriggers(sel: Selection, signals: Set<string>): Selection {
 export const CREATOR_PACKS = ["sa-gmedia-creators", "sa-sdaia-ai", "sa-mc-ecommerce", "sa-system"];
 
 /**
- * Packs enabled for a run: personal promotions get the creator defaults; org promotions use their
+ * Packs enabled for a run: personal promotions consider every pack (D213); org promotions use their
  * org_rule_packs rows, falling back to each pack's default (enabled_by_default and sector match).
  */
 export function enabledPacksFor(
@@ -94,26 +96,16 @@ export function enabledPacksFor(
   sector: string | null,
   packs: { code: string; default_sectors: string[]; enabled_by_default: boolean; always_enabled: boolean; authority?: string }[],
   orgRows: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[],
-  personal: { selected: string[] | null; recommended: string[] } = { selected: null, recommended: [] },
 ): { code: string; includeDrafts: boolean; reason: PackReason }[] {
   if (!orgId) {
-    // D211: a personal workspace analyses against the authorities the user selected, or (automatic) the creator
-    // defaults plus the authorities recommended for the advertisement's context. Draft rules are never included:
-    // an authority without verified rules adds no findings (the report says so instead).
-    const out = new Map<string, { code: string; includeDrafts: boolean; reason: PackReason }>();
-    if (personal.selected === null)
-      for (const code of CREATOR_PACKS) out.set(code, { code, includeDrafts: false, reason: "creator_default" });
-    const chosen = new Set(personal.selected ?? personal.recommended);
-    for (const p of packs) {
-      if (p.always_enabled) out.set(p.code, { code: p.code, includeDrafts: false, reason: "always_enabled" });
-      else if (p.authority && chosen.has(p.authority) && !out.has(p.code))
-        out.set(p.code, {
-          code: p.code,
-          includeDrafts: false,
-          reason: personal.selected === null ? "personal_recommended" : "personal_selected",
-        });
-    }
-    return [...out.values()];
+    // D213: a personal workspace considers EVERY supported authority automatically: all packs are enabled and rule
+    // applicability (sector — selected and detected in the content —, channels, paid status, AI use…) decides which
+    // rules apply. The user cannot select or exclude authorities. Draft rules are never included.
+    return packs.map((p) => ({
+      code: p.code,
+      includeDrafts: false,
+      reason: (p.always_enabled ? "always_enabled" : "personal_all") as PackReason,
+    }));
   }
   const rows = new Map(orgRows.map((r) => [r.pack_code, r]));
   const out: { code: string; includeDrafts: boolean; reason: PackReason }[] = [];

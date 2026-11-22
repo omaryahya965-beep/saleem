@@ -52,6 +52,9 @@ Deno.serve(async (req) => {
   const { count } = await db.from("demo_sessions").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
   if ((count ?? 0) >= limit) return json({ error: "rate_limited" }, 429);
 
+  // D215: the individual demo is per session — a fresh personal workspace for every visitor.
+  if (persona === "individual") return await individualSession(db, ipHash);
+
   // The user must exist and be confined to sandbox organisations.
   const { data: list, error: listErr } = await db.auth.admin.listUsers({ perPage: 1000 });
   if (listErr) return json({ error: "lookup_failed" }, 500);
@@ -79,3 +82,109 @@ Deno.serve(async (req) => {
   log("demo_login", { persona });
   return json({ token_hash: link.properties.hashed_token, persona }, 200);
 });
+
+// ---- D215: per-session individual demo -------------------------------------------------------------------------
+// Each «individual» demo login creates its own short-lived account (random email, random password that never leaves
+// the server) with a personal workspace flagged is_demo and expiring after DEMO_SESSION_HOURS (2). Visitors therefore
+// never see each other's uploads. The workspace is seeded with copies of the template account's text sample ads
+// (individual@demo.saleem.app, created by the demo seed; nobody signs in as it). Shared AI protections are kept:
+// is_demo personal workspaces count in the daily demo cap, and a session's data is purged only PURGE_AFTER_HOURS
+// (26) after it expired, so its usage still counts during the 24-hour window. DEMO_MAX_PERSONAL_SESSIONS caps
+// concurrent sessions (default 200).
+// deno-lint-ignore no-explicit-any
+type Db = ReturnType<typeof createClient<any>>;
+const SESSION_HOURS = 2;
+const PURGE_AFTER_HOURS = 26;
+
+/**
+ * Expired sessions (PURGE_AFTER_HOURS after expiry): their uploaded files are deleted and the account is banned for
+ * good. Rows are NOT deleted: review_events / review_decisions are an immutable audit log (forbid_mutation) that
+ * also covers personal versions, and weakening it is not this broker's call. A banned account can never sign in
+ * again and RLS keeps its rows unreadable by anyone else.
+ */
+async function purgeExpired(db: Db) {
+  const before = new Date(Date.now() - PURGE_AFTER_HOURS * 3600_000).toISOString();
+  const { data: expired } = await db.from("personal_workspaces").select("user_id")
+    .eq("is_demo", true).is("purged_at", null).not("expires_at", "is", null).lt("expires_at", before).limit(10);
+  for (const { user_id: uid } of (expired ?? []) as { user_id: string }[]) {
+    try {
+      const { data: subs } = await db.from("submissions").select("id, file_path, audio_path, thumbnail_path").eq("user_id", uid);
+      const sids = ((subs ?? []) as { id: string }[]).map((s) => s.id);
+      const { data: frames } = sids.length ? await db.from("frames").select("image_path").in("submission_id", sids) : { data: [] };
+      const paths = [
+        ...((subs ?? []) as Record<string, string | null>[]).flatMap((s) => [s.file_path, s.audio_path, s.thumbnail_path]),
+        ...((frames ?? []) as { image_path: string | null }[]).map((f) => f.image_path),
+      ].filter((p): p is string => Boolean(p) && !p!.startsWith("demo:"));
+      if (paths.length) await db.storage.from("media").remove(paths);
+      const { error: banErr } = await db.auth.admin.updateUserById(uid, { ban_duration: "876000h" });
+      if (banErr) throw banErr;
+      await db.from("personal_workspaces").update({ purged_at: new Date().toISOString() }).eq("user_id", uid);
+      log("demo_personal_purged", { files: paths.length });
+    } catch (e) {
+      log("demo_personal_purge_failed", { error: String(e).slice(0, 200) });
+    }
+  }
+}
+
+async function individualSession(db: Db, ipHash: string): Promise<Response> {
+  await purgeExpired(db);
+  const now = new Date().toISOString();
+  const { count: active } = await db.from("personal_workspaces").select("user_id", { count: "exact", head: true })
+    .eq("is_demo", true).gt("expires_at", now);
+  if ((active ?? 0) >= Number(env("DEMO_MAX_PERSONAL_SESSIONS") ?? 200)) return json({ error: "rate_limited" }, 429);
+
+  // The template account must exist and be a personal demo only (no organisation, not a platform admin).
+  const { data: list, error: listErr } = await db.auth.admin.listUsers({ perPage: 1000 });
+  if (listErr) return json({ error: "lookup_failed" }, 500);
+  const template = list.users.find((u) => u.email?.toLowerCase() === DEMO_PERSONAS.individual);
+  if (!template) return json({ error: "demo_not_seeded" }, 503);
+  const [{ data: tMembers }, { data: tWorkspace }] = await Promise.all([
+    db.from("org_members").select("org_id").eq("user_id", template.id),
+    db.from("personal_workspaces").select("is_demo").eq("user_id", template.id).maybeSingle(),
+  ]);
+  if ((tMembers ?? []).length || (tWorkspace as { is_demo?: boolean } | null)?.is_demo !== true) {
+    log("demo_login_refused", { persona: "individual", reason: "template_not_confined" });
+    return json({ error: "not_a_sandbox_user" }, 403);
+  }
+
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(9)), (b) => b.toString(16).padStart(2, "0")).join("");
+  const email = `individual-${rand}@demo.saleem.app`;
+  const password = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
+  const { data: created, error: cErr } = await db.auth.admin.createUser({
+    email, password, email_confirm: true,
+    user_metadata: { display_name: "صانع محتوى (تجريبي)" },
+    app_metadata: { demo: true, ephemeral: true },
+  });
+  if (cErr || !created?.user) return json({ error: "session_failed" }, 500);
+  const uid = created.user.id;
+  const expires = new Date(Date.now() + SESSION_HOURS * 3600_000).toISOString();
+  const { error: wErr } = await db.from("personal_workspaces").insert({ user_id: uid, display_name: "صانع محتوى (تجريبي)", is_demo: true, expires_at: expires });
+  if (wErr) {
+    await db.auth.admin.deleteUser(uid);
+    return json({ error: "session_failed" }, 500);
+  }
+
+  // Copies of the template's text sample ads (own rows of the new session; media is never copied).
+  const { data: ads } = await db.from("promotions")
+    .select("title, sector, channels, communication_type, audience, is_paid, distribution, caption, current_version_id")
+    .eq("owner_id", template.id).is("org_id", null).neq("review_status", "archived").limit(5);
+  for (const ad of (ads ?? []) as Record<string, unknown>[]) {
+    const { data: v } = await db.from("submissions").select("kind, title, caption, text_content, platform, product_category, is_paid_ad, has_written_contract, ai_used")
+      .eq("id", ad.current_version_id as string).maybeSingle();
+    if (!v || (v as { kind: string }).kind !== "text") continue;
+    const pid = crypto.randomUUID();
+    const { error: pErr } = await db.from("promotions").insert({
+      id: pid, owner_id: uid, org_id: null, title: ad.title, sector: ad.sector, channels: ad.channels,
+      communication_type: ad.communication_type, audience: ad.audience, is_paid: ad.is_paid, distribution: ad.distribution, caption: ad.caption,
+    });
+    if (pErr) continue;
+    await db.from("submissions").insert({ ...(v as Record<string, unknown>), id: crypto.randomUUID(), user_id: uid, promotion_id: pid, sha256: rand });
+  }
+
+  const { data: link, error: linkErr } = await db.auth.admin.generateLink({ type: "magiclink", email });
+  if (linkErr || !link?.properties?.hashed_token) return json({ error: "session_failed" }, 500);
+  await db.from("demo_sessions").insert({ persona: "individual", user_id: uid, ip_hash: ipHash });
+  await db.from("audit_events").insert({ actor: uid, action: "demo.session", target_table: "auth.users", target_id: uid, meta: { persona: "individual", ephemeral: true, expires_at: expires } });
+  log("demo_login", { persona: "individual", ephemeral: true });
+  return json({ token_hash: link.properties.hashed_token, persona: "individual" }, 200);
+}

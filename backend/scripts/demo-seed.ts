@@ -77,13 +77,13 @@ async function seedIndividual() {
   const id = await ensureUser(INDIVIDUAL as unknown as (typeof PERSONAS)[number]);
   const members = ok(await admin.from("org_members").select("org_id").eq("user_id", id), "individual memberships");
   if (members.length) throw new Error("the individual demo must not belong to any organisation");
-  ok(await admin.from("personal_workspaces").upsert({ user_id: id, display_name: INDIVIDUAL.name, is_demo: true, default_authorities: ["GMEDIA", "MC"] }), "personal workspace");
+  ok(await admin.from("personal_workspaces").upsert({ user_id: id, display_name: INDIVIDUAL.name, is_demo: true }), "personal workspace");
   const me = await as(INDIVIDUAL.email);
   // Two personal sample ads, created like the app does (owner-only promotion + text version; no organisation).
   const ads = [
-    { title: "كريم لمى — منشور سناب", sector: "cosmetics", category: "beauty", authorities: null,
+    { title: "كريم لمى — منشور سناب", sector: "cosmetics", category: "beauty",
       text: "إعلان مدفوع | كريم لمى للترطيب اليومي للبشرة الجافة. اطلبيه الآن من المتجر." },
-    { title: "متجر ورد — خصم نهاية الأسبوع", sector: "ecommerce", category: "other", authorities: ["GMEDIA", "MC"],
+    { title: "متجر ورد — خصم نهاية الأسبوع", sector: "ecommerce", category: "other",
       text: "خصم 50% على كل المنتجات! أفضل متجر في المملكة ونتائج مضمونة. اطلب الآن." },
   ];
   let created = 0;
@@ -93,7 +93,7 @@ async function seedIndividual() {
     const pid = crypto.randomUUID();
     ok(await me.from("promotions").insert({
       id: pid, owner_id: id, org_id: null, title: ad.title, sector: ad.sector, channels: ["snapchat"], communication_type: "creator_sponsored",
-      audience: ["general"], is_paid: true, distribution: "influencer", selected_authorities: ad.authorities,
+      audience: ["general"], is_paid: true, distribution: "influencer",
     }), "personal promotion");
     ok(await me.from("submissions").insert({
       id: crypto.randomUUID(), user_id: id, kind: "text", title: ad.title, caption: "", text_content: ad.text, platform: "snapchat",

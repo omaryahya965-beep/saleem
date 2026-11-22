@@ -117,7 +117,9 @@ export type PackReason =
   | "default"
   /** D211: personal workspace — an authority the user selected, or one SALEEM recommended (automatic mode). */
   | "personal_selected"
-  | "personal_recommended";
+  | "personal_recommended"
+  /** D213: a personal workspace considers every supported authority automatically. */
+  | "personal_all";
 
 export interface RuleRow {
   id: string;
@@ -179,9 +181,12 @@ export interface AnalysisContext {
   };
   brandAliases: string[];
   enabledPacks: { code: string; includeDrafts: boolean; reason?: PackReason }[];
-  /** D211: personal promotions — authorities the user selected (null = automatic) and the recommended ones. */
-  selectedAuthorities?: string[] | null;
+  /** D211: authorities relevant to a personal promotion (recommend_authorities over the selected + detected sectors). */
   recommendedAuthorities?: string[];
+  /** D213: sectors the advertisement content points to; rules of these sectors apply whatever sector was selected. */
+  contentSectors?: string[];
+  /** D213: pack code → authority, to report coverage per authority. */
+  packAuthority?: Record<string, string>;
   kind: "video" | "image" | "text" | "pdf";
 }
 

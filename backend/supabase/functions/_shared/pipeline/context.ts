@@ -17,8 +17,6 @@ export interface PromotionRow {
   market: string;
   is_paid: boolean | null;
   caption: string | null;
-  /** D211: personal promotions only — authorities chosen by the user; null = automatic. */
-  selected_authorities?: string[] | null;
 }
 export interface ProductRow {
   id: string;
@@ -76,13 +74,10 @@ export function buildContext(input: {
         }
       : null,
     brandAliases: input.orgSettings?.brand_aliases ?? [],
-    enabledPacks: enabledPacksFor(orgId, product?.sector ?? sector, input.packs, input.orgPacks, {
-      selected: p?.selected_authorities ?? null,
-      recommended: input.recommended ?? [],
-    }),
+    enabledPacks: enabledPacksFor(orgId, product?.sector ?? sector, input.packs, input.orgPacks),
     kind: s.kind,
-    selectedAuthorities: orgId ? null : (p?.selected_authorities ?? null),
     recommendedAuthorities: orgId ? [] : (input.recommended ?? []),
+    packAuthority: Object.fromEntries(input.packs.filter((x) => x.authority).map((x) => [x.code, x.authority!])),
   };
 }
 

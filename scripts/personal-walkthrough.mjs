@@ -105,36 +105,20 @@ await step(page, "check-details", async () => {
   await page.locator("button:visible", { hasText: "التالي" }).last().click();
   await page.getByTestId("personal-context").waitFor();
 });
-await step(page, "check-authorities", async () => {
-  await page.getByTestId("personal-sector").selectOption("cosmetics");
+await step(page, "check-sector", async () => {
+  // D213: the user chooses the SECTOR, never authorities. «General content» on purpose: the content is cosmetic,
+  // so the analysis must detect it and check the cosmetics rules anyway.
+  await page.getByTestId("personal-sector").selectOption("general");
   await page.getByTestId("personal-use").selectOption("sponsored");
-  await page.getByTestId("authority-recommended").waitFor();
-  report.checks.recommended = (
-    await page.getByTestId("authority-recommended").innerText()
-  ).replace(/\s+/g, " ");
-  await page.getByRole("radio", { name: "أختارها بنفسي" }).click();
-  await page.getByTestId("authority-options").waitFor();
-  // Keep GMEDIA, MC and SFDA; drop the others SALEEM recommended (SDAIA if present) → warning expected when one is left out.
-  for (const a of ["GMEDIA", "MC", "SFDA"]) {
-    const b = page.getByTestId(`authority-${a}`);
-    if ((await b.getAttribute("aria-checked")) !== "true") await b.click();
-  }
-  const sdaia = page.getByTestId("authority-SDAIA");
-  if ((await sdaia.getAttribute("aria-checked")) === "true")
-    await sdaia.click();
-  // Leave out GMEDIA on purpose to see the exclusion warning, then put it back.
-  await page.getByTestId("authority-GMEDIA").click();
-  report.checks.exclusionWarning = await page
-    .getByTestId("authority-excluded-warning")
-    .isVisible();
-  await shot(page, "check-authorities-warning");
-  await page.getByTestId("authority-GMEDIA").click();
-  report.checks.uncoveredNote = (
-    await page
-      .getByTestId("authority-uncovered")
-      .innerText()
-      .catch(() => "")
-  ).slice(0, 120);
+  await page.getByTestId("automatic-authorities").waitFor();
+  await page.getByTestId("authority-coverage").waitFor();
+  report.checks.noAuthorityChoice =
+    (await page.getByTestId("authority-options").count()) === 0 &&
+    (await page.getByRole("radio", { name: /أختارها بنفسي/ }).count()) === 0 &&
+    (await page
+      .getByRole("checkbox")
+      .filter({ hasText: /الهيئة|وزارة|هيئة/ })
+      .count()) === 0;
 });
 await step(page, "check-review", async () => {
   await page.locator("button:visible", { hasText: "التالي" }).last().click();
@@ -168,12 +152,29 @@ await step(page, "analysis", async () => {
   report.checks.noReviewStatus = !(await page
     .getByTestId("review-status")
     .count());
-  report.checks.checkedAuthorities = (
+  await page.getByTestId("run-coverage").waitFor({ timeout: 30000 });
+  report.checks.coverage = await page
+    .locator("[data-testid^=run-authority-]")
+    .evaluateAll((rows) =>
+      rows.map(
+        (r) =>
+          `${r.getAttribute("data-testid").replace("run-authority-", "")}:${r.getAttribute("data-status")}`,
+      ),
+    );
+  report.checks.sectorMismatch = (
     await page
-      .getByTestId("personal-checked-authorities")
+      .getByTestId("sector-mismatch")
       .innerText()
       .catch(() => "")
-  ).replace(/\s+/g, " ");
+  ).slice(0, 140);
+  report.checks.coverageGaps = (
+    await page
+      .getByTestId("coverage-gaps")
+      .innerText()
+      .catch(() => "")
+  ).slice(0, 140);
+  report.checks.noChangeAuthorities =
+    (await page.getByTestId("personal-change-authorities").count()) === 0;
   report.checks.findingAuthorityBadges = await page
     .getByTestId("finding-authority")
     .count();
@@ -276,7 +277,21 @@ for (const [lang, vp, tag] of [
   await s.page.goto(`${base}/promotions`);
   await s.page.getByTestId("personal-library").waitFor();
   await shot(s.page, `${tag}-library`);
+  // D215: every demo visit is its own workspace — the first session's ad must not be reachable from this one.
+  report.checks.libraryOfNewSession = report.checks.libraryOfNewSession ?? {};
+  report.checks.libraryOfNewSession[tag] = await s.page
+    .getByTestId("personal-library")
+    .locator("li")
+    .count();
   await s.page.goto(`${base}${report.adUrl}`);
+  await s.page.waitForTimeout(4000);
+  report.checks.otherSessionAdVisible =
+    report.checks.otherSessionAdVisible ?? {};
+  report.checks.otherSessionAdVisible[tag] =
+    (await s.page.getByTestId("personal-ad-panel").count()) > 0;
+  await shot(s.page, `${tag}-other-session-ad`);
+  await s.page.goto(`${base}/promotions`);
+  await s.page.getByTestId("personal-library").locator("li a").first().click();
   await s.page.getByTestId("personal-ad-panel").waitFor({ timeout: 30000 });
   await s.page.waitForTimeout(1200);
   await shot(s.page, `${tag}-ad`);
