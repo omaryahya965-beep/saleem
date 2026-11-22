@@ -33,6 +33,14 @@
   - the browser walkthrough (scripts/personal-walkthrough.mjs) in ar/en, desktop/mobile
   - registration and isolation probes
   See docs/saleem-v2/PERSONAL_ACCOUNTS.md.
+- Correction (2026-11-23, D213–D215):
+  - individuals choose the sector, never regulators; every authority is considered automatically, with
+    content-detected sectors and a read-only coverage table
+  - backend tests are guarded to the isolated stack
+  - the individual demo is per session
+  - migration 20261122110000 (+ rollback) is on the isolated stack only
+  Verified on the isolated stack: pgTAP 27/279, backend 27 files / 306 tests, Playwright 51/51, frontend 166, and the
+  browser walkthrough including the cross-session privacy checks.
 - Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
   in RELEASE_PLAN.md §9.
 

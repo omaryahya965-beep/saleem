@@ -1367,7 +1367,8 @@
       "sector_default": "Default for your organisation's sector",
       "default": "On by default",
       "personal_selected": "An authority you selected",
-      "personal_recommended": "An authority SALEEM recommended for your ad's context"
+      "personal_recommended": "An authority SALEEM recommended for your ad's context",
+      "personal_all": "Every authority is considered automatically"
     },
     "checklistTitle": "Reviewer checklist ({n})"
   },
@@ -2546,10 +2547,10 @@
       "workflow": "Workflow"
     },
     "sector": {
-      "banking": "Banking",
+      "banking": "Banking and financing",
       "finance_company": "Financing companies",
       "payments": "Payments & fintech",
-      "capital_market": "Capital markets",
+      "capital_market": "Investment and securities",
       "insurance": "Insurance",
       "cosmetics": "Cosmetics & personal care",
       "food_beverage": "Food & beverages",
@@ -2557,7 +2558,10 @@
       "tourism": "Tourism & hospitality",
       "ecommerce": "E-commerce",
       "retail": "Retail",
-      "other": "Other industries"
+      "other": "Other industries",
+      "healthcare": "Healthcare",
+      "real_estate": "Real estate",
+      "general": "General content"
     },
     "productType": {
       "personal_finance": "Personal finance",
@@ -4402,7 +4406,7 @@
       "MOHU": "Hajj and Umrah services."
     },
     "coverageTitle": "What SALEEM can check today",
-    "coverageBody": "Only verified rules are applied in automated checks. Drafts are shown for information and are not treated as requirements.",
+    "coverageBody": "Only verified rules are applied in automated checks. Drafts are shown for information and are not treated as requirements, so coverage is not complete.",
     "report": {
       "title": "Authorities this ad was checked against",
       "automatic": "Recommended automatically by SALEEM",
@@ -4413,8 +4417,8 @@
     }
   },
   "personalCheck": {
-    "sector": "Product or service sector",
-    "sectorHint": "Decides which authorities are recommended.",
+    "sector": "Advertisement sector",
+    "sectorHint": "SALEEM also analyses the content; if it points to another sector, those rules are checked too.",
     "use": "Publication context",
     "useOption": {
       "own": "An ad for my own product or service",
@@ -4425,7 +4429,9 @@
       "own": "You promote your own product, shop or service.",
       "sponsored": "You publish for another party for payment, a free product or commission: disclosure and a Mawthooq licence are usually required.",
       "personal": "No payment or agreement. If anything was given in return, choose «sponsored by someone else»."
-    }
+    },
+    "automatic": "You do not choose regulators: SALEEM considers every supported authority automatically and decides the applicable rules from the sector, the actual content, the publisher, paid status, AI use and the publication context.",
+    "allAuthorities": "Every supported authority — automatically"
   },
   "personalAd": {
     "badge": "Personal ad",
@@ -4485,5 +4491,30 @@
     "body": "Your display name and the regulators whose rules you usually advertise under.",
     "usual": "My usual authorities",
     "usualHint": "Offered as a quick choice when you check a new ad. Never activates an unverified rule."
+  },
+  "coverageRun": {
+    "subtitle": "Every supported authority was considered automatically. The table shows what was applied and what could not be evaluated.",
+    "notYet": "Regulatory coverage appears once the automated check is complete.",
+    "mismatch": "You chose «{selected}», but the content also points to: {detected}. The ad was checked against those sectors' rules too.",
+    "gaps": "Authorities that apply to your ad but have no verified rules in SALEEM yet: {list}. Their requirements were not checked — review them yourself.",
+    "relevant": "Applies to your ad",
+    "col": {
+      "authority": "Authority",
+      "status": "Status",
+      "rules": "Rules",
+      "result": "Result"
+    },
+    "status": {
+      "evaluated": "Applicable and evaluated",
+      "manual_verification": "Applicable — manual verification",
+      "not_applicable": "Not applicable",
+      "insufficient_coverage": "Insufficient verified coverage",
+      "unable_to_evaluate": "Unable to evaluate"
+    },
+    "counts": "{active} verified · {drafts} draft (not applied)",
+    "failed": "Findings: {list}",
+    "noIssues": "No findings ({n} rules)",
+    "manualItems": "{n} items to verify manually",
+    "note": "Automated, advisory check. «Not applicable» means its verified rules are outside your ad's context; «insufficient coverage» means no verified rules yet — not that the ad complies."
   }
 }

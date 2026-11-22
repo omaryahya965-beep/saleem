@@ -52,7 +52,6 @@ import {
   createPromotion,
   dbErrorCode,
   FINANCIAL_SECTORS,
-  SECTORS,
   deleteEmptyPromotion,
   useOrgSettings,
   usePromotion,
@@ -64,8 +63,7 @@ import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { InspectedMedia } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { StartChooser } from "@/features/studio/StartChooser";
-import { AuthoritySelector } from "@/features/personal/AuthoritySelector";
-import { setPromotionAuthorities, type Authority } from "@/lib/api/personal";
+import { AuthorityCoveragePanel } from "@/features/personal/RegulatoryCoverage";
 import {
   STEPS,
   categoryFor,
@@ -80,6 +78,21 @@ import {
 } from "./wizard";
 
 type Stage = "hashing" | "extracting" | "uploading" | "saving";
+
+/** D213: the sectors an individual chooses from (the analysis also detects sectors from the content itself). */
+const PERSONAL_SECTORS = [
+  "banking",
+  "capital_market",
+  "cosmetics",
+  "food_beverage",
+  "healthcare",
+  "tourism",
+  "ecommerce",
+  "retail",
+  "real_estate",
+  "general",
+  "other",
+] as const;
 
 export function NewCheckPage() {
   const { t, lang } = useI18n();
@@ -144,12 +157,11 @@ export function NewCheckPage() {
     [products.data, context?.productId],
   );
   const addingVersion = Boolean(promotionParam);
-  // D211: a new advertisement in the personal workspace — its own context (sector, publication context) and the
-  // regulatory authorities to check it against (automatic recommendation or a manual selection).
+  // D213: a new advertisement in the personal workspace — its sector and publication context. Every supported
+  // regulatory authority is considered automatically; the user never selects or excludes authorities.
   const personalNew = !orgId && !promotionParam && !parentId;
   const [pSector, setPSector] = useState<string>("other");
   const [pUse, setPUse] = useState<"own" | "sponsored" | "personal">("own");
-  const [authorities, setAuthorities] = useState<Authority[] | null>(null);
   const pCommunication =
     pUse === "sponsored"
       ? "creator_sponsored"
@@ -354,7 +366,6 @@ export function NewCheckPage() {
           deadlineAt: null,
         });
         created = true;
-        if (authorities !== null) await setPromotionAuthorities(promotionId, authorities);
       } else if (!promotionId && withContext && context) {
         promotionId = await createPromotion(user.id, {
           ...context,
@@ -429,8 +440,6 @@ export function NewCheckPage() {
       if (kind !== "text" && !media) return t("newCheck.errFile");
       if (kind === "text" && !text.trim()) return t("newCheck.errText");
     }
-    if (s === 2 && personalNew && authorities !== null && authorities.length === 0)
-      return t("authority.noneSelected");
     if (s === 2 && withContext && issues.some((i) => i.level === "blocking"))
       return t("wiz.conflict.no_channels");
     if (s === 3 && !consent) return t("newCheck.errConsent");
@@ -786,7 +795,7 @@ export function NewCheckPage() {
                         onChange={(e) => setPSector(e.target.value)}
                         data-testid="personal-sector"
                       >
-                        {SECTORS.map((x) => (
+                        {PERSONAL_SECTORS.map((x) => (
                           <option key={x} value={x}>
                             {t(`ws.sector.${x}` as TKey)}
                           </option>
@@ -810,21 +819,12 @@ export function NewCheckPage() {
                   <p className="-mt-3 text-xs leading-relaxed text-fg-muted">
                     {t(`personalCheck.useHint.${pUse}` as TKey)}
                   </p>
-                  <div className="flex flex-col gap-2 border-t border-border pt-5">
-                    <h3 className="text-base font-bold">{t("authority.title")}</h3>
-                    <AuthoritySelector
-                      value={authorities}
-                      onChange={setAuthorities}
-                      usual={(active.personal.data?.default_authorities ?? []) as Authority[]}
-                      context={{
-                        sector: pSector,
-                        category,
-                        communicationType: pCommunication,
-                        channels: [platform],
-                        isPaid: isPaidAd,
-                        aiUsed,
-                      }}
-                    />
+                  <div
+                    className="flex flex-col gap-3 border-t border-border pt-5"
+                    data-testid="automatic-authorities"
+                  >
+                    <p className="text-sm leading-relaxed">{t("personalCheck.automatic")}</p>
+                    <AuthorityCoveragePanel compact />
                   </div>
                 </div>
               ) : context ? (
@@ -872,11 +872,7 @@ export function NewCheckPage() {
                       <Row label={t("personalCheck.use")}>
                         {t(`personalCheck.useOption.${pUse}` as TKey)}
                       </Row>
-                      <Row label={t("authority.title")}>
-                        {authorities === null
-                          ? t("authority.auto")
-                          : authorities.map((a) => t(`authority.name.${a}` as TKey)).join("، ")}
-                      </Row>
+                      <Row label={t("authority.title")}>{t("personalCheck.allAuthorities")}</Row>
                     </>
                   )}
                   <Row label={t("ws.info.sector")}>

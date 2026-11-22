@@ -27,7 +27,7 @@ time it is run. Everything else was verified locally on the isolated stack (`scr
 4. Recommended: restore the three dump files into the isolated stack and run `npx supabase migration up --local
    --workdir .iso` on that copy. This repeats §4 on real production data, still locally.
 
-## 2. Every pending migration (9; the ninth added by D211)
+## 2. Every pending migration (10; the ninth added by D211, the tenth by D213/D215)
 
 Computed with `git diff --name-status origin/master..HEAD -- backend/supabase/migrations`. All 8 are new files and
 none of master's files were modified. The first six come from the V2 completion work and the last two from AI Studio.
@@ -43,6 +43,10 @@ none of master's files were modified. The first six come from the V2 completion 
 | 7 | `20261121170000_v2_ai_studio` | New tables `studio_drafts` and `ai_usage` (RLS on, owner/admin policies), 6 functions, 3 indexes on the new tables | New tables only | `…_v2_ai_studio.down.sql` |
 | 8 | `20261121180000_v2_approval_requires_analysis` | `approval_blockers` adds `analysis_not_done` | **Behaviour change**, see §3 | `…_v2_approval_requires_analysis.down.sql` |
 | 9 | `20261122100000_v2_personal_workspaces` | `personal_workspaces` (backfilled for users without membership or with personal content), `promotions.selected_authorities` (personal only), `recommend_authorities`, `authority_coverage`, personal AI allowances (+ `ask`), demo counters include the individual demo | New table and a nullable column; the `ai_usage` capability check is widened | `…_v2_personal_workspaces.down.sql` (verified back to the previous schema) |
+
+| 10 | `20261122110000_v2_personal_sector_demo` | Locks `selected_authorities` (null only, client writes revoked), widens the promotion sector vocabulary (healthcare, real_estate, general; `NOT VALID`), updates `recommend_authorities`, adds `personal_workspaces.expires_at` / `purged_at` | Clears any `selected_authorities` values; new nullable columns | `…_v2_personal_sector_demo.down.sql` (verified; also restores the column grants) |
+
+New optional secret: `DEMO_MAX_PERSONAL_SESSIONS` (default 200 concurrent individual demo sessions).
 
 **Never set `SALEEM_TEST_PROVIDER` in production** (D212; it is refused on supabase.co URLs anyway). The demo seed now
 also creates `individual@demo.saleem.app`.

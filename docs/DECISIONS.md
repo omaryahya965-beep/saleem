@@ -700,3 +700,21 @@ Format: decision — why — alternatives considered.
   transcription and the model with empty, valid results and no network call. Only the deterministic rule engine
   produces findings, and runs are labelled `deterministic-test`. It lets the complete personal journey be tested
   without AI requests. It must never be set in production.
+- **D213. Individuals choose the sector, never regulators (2026-11-23).** Supersedes the D211 authority selection.
+  - **Every authority, automatically:** a personal analysis enables every rule pack, and rule applicability decides
+    what applies. Draft rules are never applied.
+  - **Content-detected sectors:** deterministic, whole-word detection over the caption, text, speech and on-screen
+    text. Those sectors' rules apply whatever sector was selected, and a mismatch is reported.
+  - **Read-only coverage:** the run records each authority's status (evaluated / manual verification / not
+    applicable / insufficient verified coverage / unable to evaluate), with rule counts and failed rules. Applicable
+    authorities without verified rules are shown as gaps.
+  - **No exclusion through the API:** `promotions.selected_authorities` can no longer be written by clients
+    (migration 20261122110000).
+- **D214. Backend tests only touch the isolated stack (2026-11-23).** A vitest setup file fails the whole run if any
+  database target in the environment is not `127.0.0.1:544xx` with `SALEEM_ISO=1`. Database settings are never read
+  from `.env` files, and the hosted «live» isolation mode is removed. Cause: `backend/.env` points
+  `SUPABASE_LOCAL_URL` at the development database, and a plain `npm test` wrote two test users and an ad there.
+- **D215. Per-session individual demo (2026-11-23).** Every individual demo login gets its own short-lived account and
+  workspace (2 hours) with copies of the template's sample ads, so visitors never see each other's uploads. Expired
+  sessions are purged 26 hours later (files deleted, account banned) without deleting the immutable review audit.
+  Concurrent sessions are capped, and the shared demo AI cap is unchanged.

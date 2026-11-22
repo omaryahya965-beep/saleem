@@ -1,144 +1,153 @@
-# Personal accounts and regulatory authority selection (D211–D212)
+# Personal accounts and automatic multi-regulator analysis (D211–D215)
 
-SALEEM now serves two audiences with two different experiences:
+SALEEM serves two audiences with two different experiences:
 
 | | Individuals and content creators | Companies and organisations |
 | --- | --- | --- |
 | Workspace | A **personal workspace** (`personal_workspaces`): the user's own advertisements (`promotions.org_id is null`, `owner_id = user`) | An organisation (`organizations`, `org_members`) |
 | Roles | None. It is not a tenth role | The nine organisation roles, unchanged |
-| Workflow | Draft → content → automated analysis → correction → re-analysis → download | Create → check → correct → collaborate → review → approve |
+| Workflow | Upload → sector and publication context → automatic multi-regulator analysis → findings and evidence → smart correction → version comparison → re-analysis → download | Create → check → correct → collaborate → review → approve |
 | Human approval | None, and none can be produced (every review/approval RPC refuses a personal advertisement) | Required, by an authorised person |
-| Regulators | Chosen per advertisement (automatic recommendation or manual selection) | The organisation's rule-pack settings |
+| Regulators | **All supported authorities, automatically.** The user chooses the sector, never authorities | The organisation's rule-pack settings |
 
 One user can have both a personal workspace and organisation memberships. The account menu switches between them,
 and switching drops cached data so nothing from one workspace shows in the other.
 
-## What was built
+## Regulatory analysis for individuals (D213)
 
-- **Sign-in page** (`/login`): sign-in for existing users beside «جرّب سَليم», with two audiences.
-  - «الشركات والمؤسسات» shows the four main roles (organisation admin, marketer, compliance reviewer, external
-    partner), plus the five other roles on request, each with its responsibilities.
-  - «الأفراد وصنّاع المحتوى» opens the individual demo.
-  - Sessions come from the existing `demo-login` broker, so no password reaches the browser.
-- **Individual demo** (`individual@demo.saleem.app`, demo-login persona `individual`):
-  - a personal workspace flagged `is_demo`, and **no** organisation membership (demo-login refuses it otherwise)
-  - shares the demo AI cap with the enterprise sandbox
-- **Registration and onboarding**:
-  - Sign-up asks for «استخدام شخصي» or «شركة أو مؤسسة», stored as a preference only.
-  - `/welcome` creates the personal workspace (`ensure_personal_workspace`: never an organisation, membership or
-    role), or sends the user to the existing «create an organisation» page. Invitations are unchanged.
-  - A signed-in user with neither workspace is sent to `/welcome`.
+- **The user never selects or excludes regulators.**
+  - The check flow asks for the **sector** (banking and financing, investment, cosmetics, food and beverages,
+    healthcare, tourism, e-commerce, retail, real estate, general content, other) and the **publication context**
+    (own product or service / sponsored by someone else / unpaid personal content), plus paid status, AI use and the
+    Mawthooq licence.
+  - A read-only panel shows what SALEEM can verify per authority.
+- **Every supported authority is considered.** A personal analysis enables every rule pack (GMEDIA, MC, SDAIA, SFDA,
+  SAMA, CMA, IA, MT, REGA, MOHU and the system checks). Rule applicability then decides what applies: sector, channels,
+  paid status, AI use, communication type, distribution.
+- **Draft and unverified rules are never applied.**
+- **The content decides too.**
+  - SALEEM detects the sectors the content points to (caption, post text, speech, on-screen text). This is
+    deterministic, whole-word keyword detection, with no model involved.
+  - The rules of those sectors apply whatever sector was selected, so a wrong or convenient sector cannot hide
+    applicable rules.
+  - A mismatch is shown to the user: «اخترت قطاع … لكن محتوى الإعلان يشير أيضاً إلى …».
+- **No exclusion through the API.** `promotions.selected_authorities` (D211) can no longer be written by any client
+  (column privileges revoked, the constraint allows only null), and the analysis ignores it.
+- **Read-only coverage per authority** (`analysis_runs.step_outputs.authorities`):
+
+  | Status | Meaning |
+  | --- | --- |
+  | evaluated (منطبقة وفُحصت) | its verified rules were checked |
+  | manual verification (تحتاج تحققاً يدوياً) | only document or reviewer checks apply |
+  | not applicable (لا تنطبق) | no verified rule fits this ad's context |
+  | insufficient verified coverage (تغطية معتمدة غير كافية) | no verified active rule yet; drafts are never applied |
+  | unable to evaluate (تعذّر التقييم) | checks could not run on the media |
+
+  Each row shows verified and draft rule counts and the rules with findings. Authorities that apply to the ad are
+  marked, and those among them **without** verified rules are listed as an explicit gap: «لم تُفحص متطلباتها، فراجعها
+  بنفسك».
+- **Coverage today:** GMEDIA (10 verified rules), MC (1) and SDAIA (1). Every other authority shows insufficient
+  coverage; the interface never implies complete coverage.
+
+## Per-session individual demo (D215)
+
+- **A fresh account per visit.** Each «ادخل مساحتي الشخصية التجريبية» creates a new short-lived account
+  (`individual-<random>@demo.saleem.app`, a random password that never leaves the server). It gets a personal
+  workspace flagged `is_demo` and expiring after 2 hours, seeded with copies of the template account's text sample
+  ads.
+- **Privacy:** visitors never see each other's uploads. RLS is per account, and the browser test confirms a second
+  session cannot open the first session's ad.
+- **The template** (`individual@demo.saleem.app`, created by the demo seed) is never signed into. demo-login refuses
+  if it has any organisation membership or no demo workspace.
+- **Shared AI protections are kept:**
+  - demo workspaces count in the daily demo AI cap
+  - at most `DEMO_MAX_PERSONAL_SESSIONS` (default 200) sessions can be active
+  - the per-IP rate limit (`DEMO_RATE_PER_HOUR`) still applies
+- **Purge:** 26 hours after expiry (so the 24-hour AI cap still counts the session), the session's uploaded files are
+  deleted and the account is banned permanently.
+  - Rows are **not** deleted, because `review_events` / `review_decisions` are an immutable audit log that also covers
+    personal versions.
+  - The banned account can never sign in again, and RLS keeps its rows unreadable by anyone else.
+  - Deleting them would need a decision on audit immutability for demo data.
+
+## Test isolation (D214)
+
+- **Guard:** `backend/tests/helpers/db-guard.ts` is a vitest setup file. The run **fails immediately** if any database
+  target in the environment (`SUPABASE_LOCAL_URL`, `SUPABASE_URL`, `TEST_SUPABASE_URL`) is not the isolated stack:
+  `http://127.0.0.1:544xx` together with `SALEEM_ISO=1`.
+- **No `.env` reading:** database settings come only from the process environment, never from `backend/.env`, which
+  points at the development database.
+- **No live mode:** the former «live» isolation mode (hosted URL + test-user credentials) is removed.
+- **Running:**
+  - database suites run only under `node scripts/isolated-stack.mjs run -- npm --workspace backend test`
+  - a plain `npm test` skips them without connecting anywhere
+
+## What else was built (D211)
+
+- **Sign-in page:** sign-in beside «جرّب سَليم».
+  - «الشركات والمؤسسات» shows the four main roles plus the five others on request, with their responsibilities.
+  - «الأفراد وصنّاع المحتوى» opens the per-session demo.
+  - No password reaches the browser.
+- **Registration and onboarding:** sign-up asks for personal or organisation use (a preference only). `/welcome`
+  creates the personal workspace, or leads to the existing organisation creation. Invitations are unchanged.
 - **Personal dashboard** «مساحتي الشخصية»:
-  - four actions: create with AI (Studio), check an ad, smart correction, Ask SALEEM
-  - recent ads, check results, drafts, recent corrections, saved videos, and the monthly AI allowance
-  - all read from the server; no hard-coded figures
-- **Personal navigation**: الرئيسية، إعلاناتي، إعلان جديد، استوديو سَليم، دليل القواعد، اسأل سَليم، الإعدادات الشخصية.
-  There are no enterprise pages, and the route guard refuses them by URL too.
-- **Checking an ad** (`/new`, step «السياق والنشر»):
-  - fields: sector, publication context (own product / sponsored by someone else / unpaid personal content), and the
-    regulatory authorities
-  - authorities can be **automatic** (`recommend_authorities`, the same function the analysis uses) or **manual**
-    (one or more)
-  - each authority shows its verified coverage: «N قاعدة معتمدة», «مسودات فقط — لا تُطبّق» or «لا تغطية بعد»
-  - leaving out a recommended authority shows a warning, and choosing an authority without verified rules explains
-    that no findings does not mean compliance
-  - no organisation, campaign, reviewer, deadline or product is asked for
-- **Analysis**: a personal advertisement is checked against the packs of its selected (or recommended) authorities.
-  Draft rules are **never** applied. The run records `step_outputs.authorities`: mode, selected, recommended,
-  excluded-recommended and packs.
-- **Advertisement page**:
-  - a personal badge instead of a human review status
-  - the authorities checked, with «change and re-check» and a warning for left-out authorities
-  - re-check
-  - download, with a dialog listing unresolved findings first
-  - an advisory notice
-  - each finding shows its **authority**, article reference, verification level, official source and rule link
-  - no comments tab, reviewer slots, company-rules section, lifecycle or claim linking
-- **Smart correction**: the existing SALEEM Fix, unchanged (`can_fix_promotion` already allows the owner of a personal
-  advertisement), including the Studio replacement.
-- **Library** «إعلاناتي»: filters (needs fixes / no findings / not checked / archived), search, open, smart correction,
-  archive (`archive_promotion` allows a personal owner). Versions and original media are always kept.
-- **Rulebook**: a coverage panel per authority (click to filter). It also fixes a bug: drafts were labelled «سارية
-  ومطبقة» because every rule row has `is_active = true`; only `review_state = 'active'` counts now.
-- **Ask SALEEM (personal)**: answers only from verified active rules and the user's own personal advertisements, with
-  example questions. A model answer counts against the personal «ask» allowance and the demo cap.
-- **Allowances (personal, monthly)**:
-  - analysis 30, script 20, text correction 20, Ask 60
-  - generated image/video 0 (no provider configured)
-  - local voice and video assembly are free
-  - demo users also share the daily demo cap (now counting individual-demo analyses, corrections, Studio scripts and
-    Ask)
-- **Landing page**: an «لمن سَليم؟» section with the individual (create · check · correct · download) and company
-  (create · check · correct · collaborate · review · approve) paths and their calls to action. The hero addresses both
-  audiences.
+  - four actions: create (Studio), check, smart correction, Ask SALEEM
+  - recent ads, results, drafts, recent corrections, saved videos and the monthly AI allowance
+  - all read from the server
+- **Navigation, library and settings:** personal navigation, the «إعلاناتي» library (filters, archive) and personal
+  settings (display name).
+- **Advertisement page** for personal ads:
+  - the coverage table, re-check, and download with a warning for unresolved findings
+  - findings show their authority, article reference, verification level, official source, evidence, timestamp and
+    suggested fix
+  - no enterprise review elements
+- **Smart correction:** the existing SALEEM Fix, including the Studio replacement.
+- **Ask SALEEM:** answers only from verified active rules and the user's own ads.
+- **Allowances (personal, monthly):** analysis 30, script 20, correction 20, Ask 60. Generated media is 0 (no
+  provider configured).
+- **Landing page:** presents both audiences.
+- **Rulebook:** the coverage panel, and the fix for drafts wrongly labelled «سارية ومطبقة».
 
-## Data model and security (migration `20261122100000_v2_personal_workspaces`, rollback included)
+## Migrations (rollbacks included)
 
-- **`personal_workspaces`**: RLS lets a user read only their own row. Writes go only through
-  `ensure_personal_workspace` and `save_personal_preferences`. `is_demo` is service-role only. Existing users with no
-  membership, or with personal content, were backfilled.
-- **`promotions.selected_authorities`**: a check constraint allows valid authorities only, **and only when `org_id` is
-  null**.
-- **`recommend_authorities(...)`**: a deterministic SQL function. **`authority_coverage()`** returns public coverage
-  per authority.
-- **`ai_allowance`**: personal limits, plus `ask` as a capability. `personal_ai_allowances()` returns the user's own.
-- **`is_demo_sandbox_user` / `demo_ai_runs_today`**: now include the individual demo.
+- `20261122100000_v2_personal_workspaces` (D211)
+- `20261122110000_v2_personal_sector_demo` (D213/D215):
+  - `selected_authorities` locked to null and not writable by clients
+  - the sector vocabulary gains healthcare, real_estate and general
+  - `recommend_authorities` covers the new sectors
+  - `personal_workspaces.expires_at` and `purged_at`
 
-pgTAP `p16_personal_workspaces.test.sql` proves:
+The development database has the first one only (applied with your approval on 2026-11-22). The second has been
+applied only on the isolated stack.
 
-- a user sees only their own workspace, and personal use grants no membership
-- `is_demo` cannot be set by a client
-- another personal user and an organisation reviewer cannot read a personal advertisement
-- every review/approval RPC leaves a personal advertisement in `draft`, with no reviewer
-- `review_status` cannot be written by a client
-- authority selection is refused on organisation advertisements
-- an enterprise demo persona cannot open a personal workspace
-- the allowances and the coverage are correct
-
-## Test-only deterministic providers (D212)
-
-- **Switch:** `SALEEM_TEST_PROVIDER=deterministic` makes transcription and the model step return empty, valid results
-  with no network call, so only the deterministic rule engine produces findings.
-- **Labelling:** runs are recorded as `deterministic-test`.
-- **Safety:** refused when `SUPABASE_URL` is a hosted `supabase.co` project.
-- **Enabling:** `ISO_TEST_PROVIDER=1 node scripts/isolated-stack.mjs start` turns it on for the isolated stack only.
-- **Production:** never set this secret.
-
-## Manual testing (isolated stack)
+## Manual testing (isolated stack, no AI request)
 
 ```bash
-ISO_TEST_PROVIDER=1 node scripts/isolated-stack.mjs start     # deterministic analyses, no AI request
-node scripts/isolated-stack.mjs run -- npm run demo:seed       # creates the individual demo and two personal ads
+ISO_TEST_PROVIDER=1 node scripts/isolated-stack.mjs start      # deterministic test providers (D212)
+node scripts/isolated-stack.mjs run -- npm run demo:seed       # creates the individual template and its sample ads
 eval "$(npx supabase status --workdir "$(pwd)/.iso" -o env | grep -E '^(API_URL|ANON_KEY)=')"
 cd frontend && VITE_SUPABASE_URL="$API_URL" VITE_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY" npx vite --port 3200
-node scripts/personal-walkthrough.mjs --out <dir>              # the full journey with screenshots (from the repo root)
+node scripts/personal-walkthrough.mjs --out <dir>              # the full journey, from the repo root
 ```
 
 By hand:
 
-1. Open `/login`, choose «الأفراد وصنّاع المحتوى», then «ادخل مساحتي الشخصية التجريبية».
-2. «افحص إعلانك»: upload a video. In step 3, choose a sector and publication context, then try both automatic and
-   manual authorities.
-3. Open the advertisement:
-   - check the findings' authorities
-   - «غيّر الجهات وأعد الفحص»
-   - «الإصلاح الذكي» → «تصحيح الفيديو» → render → accept, which creates a new version
-   - the comparison tab
-   - «نزّل الإعلان», which shows the warning first
-4. «إعلاناتي», «دليل القواعد» (coverage), «اسأل سَليم» (examples).
-5. Sign up a new user with «استخدام شخصي», then `/welcome`, which leads to an empty personal workspace.
+1. Open `/login`, choose «الأفراد وصنّاع المحتوى», then enter. You get a new, private workspace.
+2. Check an ad: upload a video, then choose a sector (try «محتوى عام» for a cosmetics ad).
+3. Open the ad:
+   - the coverage table: statuses, the SFDA gap, the sector mismatch
+   - the findings with their authorities
+   - smart correction, then comparison, re-check, and download (with the warning)
 
 Screenshots: `docs/saleem-v2/screenshots/personal/`.
 
 ## Limitations
 
-- **Verified coverage is narrow.** Today only GMEDIA (10 rules), MC (1) and SDAIA (1) have verified active rules.
-  SFDA, SAMA, CMA, MT, REGA and others are drafts and are not applied. The UI says so wherever an authority is chosen.
-- **Studio for individuals** is the existing Studio. Product facts are entered per ad; there is no reusable personal
-  product library yet.
-- **Personal activity tab** reuses the version history panel. It shows versions and analyses (personal advertisements
-  have no review events).
-- **The shared individual demo** is one account: visitors can see each other's demo ads, as with the enterprise
-  sandbox. Sessions end after two hours.
+- **Verified coverage is narrow** (GMEDIA, MC, SDAIA). Other authorities need their rules legally reviewed and
+  activated.
+- **Sector detection** is keyword-based (Arabic and English). It can over-detect (for example «كريم» as a name), which
+  only adds rules to check and never removes any.
+- **Expired demo sessions** keep their text rows (unreadable, account banned) because the review audit is immutable.
+- **Studio for individuals** has no reusable personal product library.
 - **Workflow test in deterministic mode:** `backend/tests/workflows.test.ts` needs the default isolated mode. In
-  deterministic mode analyses complete with findings, and the approval then waits for reviewer responses.
+  deterministic mode, analyses complete with findings that then wait for reviewer responses.

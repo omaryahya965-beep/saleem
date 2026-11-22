@@ -37,7 +37,7 @@ import {
 import { useI18n } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
 import { RulePacks } from "./RulePacks";
-import { AuthorityCoveragePanel } from "@/features/personal/AuthoritySelector";
+import { AuthorityCoveragePanel } from "@/features/personal/RegulatoryCoverage";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import type { RegulatoryRuleItem } from "./saudiRulesCatalog";
 

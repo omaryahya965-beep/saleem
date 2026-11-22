@@ -73,46 +73,11 @@ export async function fetchAuthorityCoverage(): Promise<AuthorityCoverage[]> {
   fail(error);
   return (data as AuthorityCoverage[]) ?? [];
 }
-export interface RecommendInput {
-  sector: string | null;
-  category: string | null;
-  communicationType: string | null;
-  channels: string[];
-  isPaid: boolean;
-  aiUsed: boolean;
-}
-export async function recommendAuthorities(i: RecommendInput): Promise<Authority[]> {
-  const { data, error } = await rpc("recommend_authorities", {
-    _sector: i.sector,
-    _category: i.category,
-    _communication_type: i.communicationType,
-    _channels: i.channels,
-    _is_paid: i.isPaid,
-    _ai_used: i.aiUsed,
-  });
-  fail(error);
-  return (data as Authority[]) ?? [];
-}
 export async function fetchPersonalAllowances(): Promise<PersonalAllowances | null> {
   const { data, error } = await rpc("personal_ai_allowances");
   fail(error);
   return (data as PersonalAllowances | null) ?? null;
 }
-/** Sets (manual) or clears (null = automatic) the authorities of the caller's own personal promotion. */
-export async function setPromotionAuthorities(
-  promotionId: string,
-  authorities: Authority[] | null,
-) {
-  const { error } = await from("promotions")
-    .update({ selected_authorities: authorities } as never)
-    .eq("id", promotionId);
-  fail(error);
-}
-
-/** Authorities a manual selection leaves out although SALEEM recommends them for this context. */
-export const excludedRecommended = (selected: Authority[] | null, recommended: Authority[]) =>
-  selected === null ? [] : recommended.filter((a) => !selected.includes(a));
-
 export interface PersonalCorrection {
   id: string;
   promotion_id: string;
