@@ -743,3 +743,7 @@ Format: decision — why — alternatives considered.
   - Engine tests model SAMA rules as activated in their fixtures (the live data keeps them drafts).
 
   See docs/saleem-v2/REGULATORY_ANALYSIS.md.
+- **D218. Rulebook grouped by authority (2026-11-23).** Rules are shown in collapsible sections per authority, each
+  labelled with total, active, pending and archived counts. All sections start collapsed; a click toggles one, and a
+  search expands the sections with matches. This is visual only: it has no effect on rule selection or analysis.
+  Pending now excludes archived rules (MOHU's 4 rules are archived, not pending).

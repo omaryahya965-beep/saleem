@@ -427,7 +427,13 @@
       "workflow": "Workflow Approval Check",
       "hybrid": "Hybrid Check"
     },
-    "browseOnly": "Filters here are for browsing the rulebook only and never change what is checked: every analysis considers every supported authority automatically and applies the verified rules that apply."
+    "browseOnly": "Filters here are for browsing the rulebook only and never change what is checked: every analysis considers every supported authority automatically and applies the verified rules that apply.",
+    "group": {
+      "total": "{n} rules",
+      "active": "{n} active",
+      "pending": "{n} pending",
+      "archived": "{n} archived"
+    }
   },
   "landing": {
     "heroBody": "SALEEM checks your ad or post before you publish and tells you where the problem is, to the second — why it matters, and how to fix it.",

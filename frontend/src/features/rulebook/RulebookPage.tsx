@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   Clock,
   ExternalLink,
   Eye,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import {
   Badge,
@@ -225,6 +227,138 @@ export function RulebookPage() {
 
   const version = book.data?.version?.version_label;
 
+  // D218: the rule list is grouped by authority in collapsible sections (visual only: no effect on analysis).
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleGroup = (a: string) =>
+    setExpanded((cur) => {
+      const next = new Set(cur);
+      if (next.has(a)) next.delete(a);
+      else next.add(a);
+      return next;
+    });
+  const groups = useMemo(() => {
+    const order = AUTHORITIES.filter((a) => a.id !== "all").map((a) => a.id as string);
+    const by = new Map<string, EnrichedRule[]>();
+    for (const r of filtered)
+      by.set(String(r.authority), [...(by.get(String(r.authority)) ?? []), r]);
+    return [...by.entries()]
+      .sort((a, b) => (order.indexOf(a[0]) + 1 || 99) - (order.indexOf(b[0]) + 1 || 99))
+      .map(([authority, list]) => {
+        const meta = AUTHORITIES.find((x) => x.id === authority);
+        return {
+          authority,
+          labelAr: meta?.ar ?? authority,
+          labelEn: meta?.en ?? authority,
+          rules: list,
+          active: list.filter((r) => r.review_state === "active").length,
+          archived: list.filter((r) => r.review_state === "archived").length,
+        };
+      });
+  }, [filtered]);
+  const ruleCard = (r: EnrichedRule) => {
+    const isActive = r.review_state === "active";
+    const isPending = r.review_state === "pending_review";
+    const isArchived = r.review_state === "archived";
+
+    return (
+      <Card
+        key={r.code}
+        className="flex flex-col justify-between gap-3 p-4 transition-all hover:border-green/40 hover:shadow-xs sm:flex-row sm:items-center"
+      >
+        <div className="flex flex-1 flex-col gap-2 min-w-0">
+          {/* Header line: Code, Authority, Status, Severity */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Badge mono className="font-semibold">
+              {r.code}
+            </Badge>
+            <Badge variant="outline" className="bg-sunken/50">
+              {r.authority || "جهة تنظيمية"}
+            </Badge>
+            <Badge
+              variant={
+                isActive ? "green" : isPending ? "amber" : isArchived ? "outline" : "neutral"
+              }
+            >
+              {r.review_state === "active"
+                ? "سارية ومطبقة"
+                : r.review_state === "pending_review"
+                  ? "قيد المراجعة"
+                  : r.review_state === "superseded"
+                    ? "مستبدلة"
+                    : r.review_state === "archived"
+                      ? "معطّلة"
+                      : "مسودة بحثية"}
+            </Badge>
+            {r.sector_ar && <span className="text-fg-muted font-medium">· {r.sector_ar}</span>}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-base font-bold text-fg leading-snug" dir="auto">
+            {lang === "en" ? r.title_en : r.title_ar}
+          </h3>
+
+          {/* Legal reference and official source link */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
+            {r.article_ref && (
+              <span className="font-medium text-fg">
+                المادة: <span dir="ltr">{r.article_ref}</span>
+              </span>
+            )}
+            {r.source_url ? (
+              <a
+                href={r.source_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-green hover:underline"
+              >
+                <span>{r.source_name || "المصدر الرسمي"}</span>
+                <ExternalLink aria-hidden="true" className="size-3" />
+              </a>
+            ) : (
+              <span>{r.source_name}</span>
+            )}
+            {r.article_ref && <span>{r.article_ref}</span>}
+            {r.source_verification && (
+              <span data-testid="rule-verification">
+                <Badge variant="outline" className="text-[11px]">
+                  {t(`findingType.verification.${r.source_verification}` as TKey)}
+                </Badge>
+              </span>
+            )}
+            {r.check_mode && (
+              <Badge variant="outline" className="text-[11px]">
+                {r.check_mode === "content"
+                  ? "فحص محتوى"
+                  : r.check_mode === "document"
+                    ? "فحص وثائق"
+                    : r.check_mode === "workflow"
+                      ? "إجرائي"
+                      : "مركب"}
+              </Badge>
+            )}
+          </div>
+
+          {/* Applicability snippet */}
+          {r.applicability_ar && (
+            <p className="line-clamp-1 text-xs text-fg-muted" dir="auto">
+              <strong>نطاق الانطباق:</strong> {r.applicability_ar}
+            </p>
+          )}
+        </div>
+
+        {/* Actions column */}
+        <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t border-border pt-2 sm:border-t-0 sm:pt-0">
+          <StatusChip tone={r.default_severity} size="sm">
+            {t(`severity.${r.default_severity}`)}
+          </StatusChip>
+          <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
+            {t("rulebook.detailsBtn")}
+          </Button>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <Page className="flex flex-col gap-6">
       {/* Page Header with Company Rules Action */}
@@ -424,115 +558,60 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-2.5" data-testid="rule-results">
-            {filtered.map((r) => {
-              const isActive = r.review_state === "active";
-              const isPending = r.review_state === "pending_review";
-              const isArchived = r.review_state === "archived";
-
+            {groups.map((g) => {
+              const open = expanded.has(g.authority) || (q.trim() !== "" && g.rules.length > 0);
               return (
-                <Card
-                  key={r.code}
-                  className="flex flex-col justify-between gap-3 p-4 transition-all hover:border-green/40 hover:shadow-xs sm:flex-row sm:items-center"
+                <section
+                  key={g.authority}
+                  className="rounded-[16px] border border-border bg-card"
+                  data-testid={`rule-group-${g.authority}`}
                 >
-                  <div className="flex flex-1 flex-col gap-2 min-w-0">
-                    {/* Header line: Code, Authority, Status, Severity */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <Badge mono className="font-semibold">
-                        {r.code}
-                      </Badge>
-                      <Badge variant="outline" className="bg-sunken/50">
-                        {r.authority || "جهة تنظيمية"}
-                      </Badge>
-                      <Badge
-                        variant={
-                          isActive
-                            ? "green"
-                            : isPending
-                              ? "amber"
-                              : isArchived
-                                ? "outline"
-                                : "neutral"
-                        }
-                      >
-                        {r.review_state === "active"
-                          ? "سارية ومطبقة"
-                          : r.review_state === "pending_review"
-                            ? "قيد المراجعة"
-                            : r.review_state === "superseded"
-                              ? "مستبدلة"
-                              : r.review_state === "archived"
-                                ? "معطّلة"
-                                : "مسودة بحثية"}
-                      </Badge>
-                      {r.sector_ar && (
-                        <span className="text-fg-muted font-medium">· {r.sector_ar}</span>
-                      )}
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-base font-bold text-fg leading-snug" dir="auto">
-                      {lang === "en" ? r.title_en : r.title_ar}
-                    </h3>
-
-                    {/* Legal reference and official source link */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
-                      {r.article_ref && (
-                        <span className="font-medium text-fg">
-                          المادة: <span dir="ltr">{r.article_ref}</span>
-                        </span>
-                      )}
-                      {r.source_url ? (
-                        <a
-                          href={r.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-green hover:underline"
-                        >
-                          <span>{r.source_name || "المصدر الرسمي"}</span>
-                          <ExternalLink aria-hidden="true" className="size-3" />
-                        </a>
-                      ) : (
-                        <span>{r.source_name}</span>
-                      )}
-                      {r.article_ref && <span>{r.article_ref}</span>}
-                      {r.source_verification && (
-                        <span data-testid="rule-verification">
-                          <Badge variant="outline" className="text-[11px]">
-                            {t(`findingType.verification.${r.source_verification}` as TKey)}
-                          </Badge>
-                        </span>
-                      )}
-                      {r.check_mode && (
-                        <Badge variant="outline" className="text-[11px]">
-                          {r.check_mode === "content"
-                            ? "فحص محتوى"
-                            : r.check_mode === "document"
-                              ? "فحص وثائق"
-                              : r.check_mode === "workflow"
-                                ? "إجرائي"
-                                : "مركب"}
+                  <h3>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls={`rule-group-panel-${g.authority}`}
+                      onClick={() => toggleGroup(g.authority)}
+                      data-testid={`rule-group-toggle-${g.authority}`}
+                      className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3.5 text-start hover:bg-sunken/40 focus-visible:outline-2 focus-visible:outline-green rounded-[16px]"
+                    >
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={cn(
+                          "size-4 shrink-0 text-fg-muted transition-transform",
+                          open && "rotate-180",
+                        )}
+                      />
+                      <span className="min-w-0 flex-1 font-bold">
+                        {lang === "en" ? g.labelEn : g.labelAr}
+                      </span>
+                      <span className="flex flex-wrap items-center gap-1.5 text-xs">
+                        <Badge variant="outline">
+                          {t("rulebook.group.total", { n: g.rules.length })}
                         </Badge>
-                      )}
+                        <Badge variant="green">{t("rulebook.group.active", { n: g.active })}</Badge>
+                        <Badge variant="amber">
+                          {t("rulebook.group.pending", {
+                            n: g.rules.length - g.active - g.archived,
+                          })}
+                        </Badge>
+                        {g.archived > 0 && (
+                          <Badge variant="outline">
+                            {t("rulebook.group.archived", { n: g.archived })}
+                          </Badge>
+                        )}
+                      </span>
+                    </button>
+                  </h3>
+                  {open && (
+                    <div
+                      id={`rule-group-panel-${g.authority}`}
+                      className="flex flex-col gap-2.5 border-t border-border p-3"
+                    >
+                      {g.rules.map(ruleCard)}
                     </div>
-
-                    {/* Applicability snippet */}
-                    {r.applicability_ar && (
-                      <p className="line-clamp-1 text-xs text-fg-muted" dir="auto">
-                        <strong>نطاق الانطباق:</strong> {r.applicability_ar}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Actions column */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t border-border pt-2 sm:border-t-0 sm:pt-0">
-                    <StatusChip tone={r.default_severity} size="sm">
-                      {t(`severity.${r.default_severity}`)}
-                    </StatusChip>
-                    <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
-                      {t("rulebook.detailsBtn")}
-                    </Button>
-                  </div>
-                </Card>
+                  )}
+                </section>
               );
             })}
           </div>
