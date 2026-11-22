@@ -92,10 +92,29 @@ export const CREATOR_PACKS = ["sa-gmedia-creators", "sa-sdaia-ai", "sa-mc-ecomme
 export function enabledPacksFor(
   orgId: string | null,
   sector: string | null,
-  packs: { code: string; default_sectors: string[]; enabled_by_default: boolean; always_enabled: boolean }[],
+  packs: { code: string; default_sectors: string[]; enabled_by_default: boolean; always_enabled: boolean; authority?: string }[],
   orgRows: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[],
+  personal: { selected: string[] | null; recommended: string[] } = { selected: null, recommended: [] },
 ): { code: string; includeDrafts: boolean; reason: PackReason }[] {
-  if (!orgId) return CREATOR_PACKS.map((code) => ({ code, includeDrafts: false, reason: "creator_default" as const }));
+  if (!orgId) {
+    // D211: a personal workspace analyses against the authorities the user selected, or (automatic) the creator
+    // defaults plus the authorities recommended for the advertisement's context. Draft rules are never included:
+    // an authority without verified rules adds no findings (the report says so instead).
+    const out = new Map<string, { code: string; includeDrafts: boolean; reason: PackReason }>();
+    if (personal.selected === null)
+      for (const code of CREATOR_PACKS) out.set(code, { code, includeDrafts: false, reason: "creator_default" });
+    const chosen = new Set(personal.selected ?? personal.recommended);
+    for (const p of packs) {
+      if (p.always_enabled) out.set(p.code, { code: p.code, includeDrafts: false, reason: "always_enabled" });
+      else if (p.authority && chosen.has(p.authority) && !out.has(p.code))
+        out.set(p.code, {
+          code: p.code,
+          includeDrafts: false,
+          reason: personal.selected === null ? "personal_recommended" : "personal_selected",
+        });
+    }
+    return [...out.values()];
+  }
   const rows = new Map(orgRows.map((r) => [r.pack_code, r]));
   const out: { code: string; includeDrafts: boolean; reason: PackReason }[] = [];
   for (const p of packs) {

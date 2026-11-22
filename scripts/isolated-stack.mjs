@@ -8,7 +8,14 @@
 //   node scripts/isolated-stack.mjs env     print the isolated API URL (keys are read by run-iso, never printed)
 //   node scripts/isolated-stack.mjs run -- <cmd>   run a command with SUPABASE_LOCAL_* pointing at the isolated stack
 //   node scripts/isolated-stack.mjs stop    stop the isolated stack (its data is disposable)
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
@@ -19,7 +26,8 @@ const dst = join(iso, "supabase");
 const cmd = process.argv[2] ?? "start";
 
 function sync() {
-  if (!existsSync(join(src, "config.toml"))) throw new Error("run from the repository root");
+  if (!existsSync(join(src, "config.toml")))
+    throw new Error("run from the repository root");
   mkdirSync(dst, { recursive: true });
   for (const d of ["migrations", "tests", "functions"]) {
     rmSync(join(dst, d), { recursive: true, force: true });
@@ -32,8 +40,15 @@ function sync() {
   if (existsSync(fenv) && process.env.ISO_ALLOW_REAL_AI !== "1")
     writeFileSync(
       fenv,
-      readFileSync(fenv, "utf8").replace(/^GEMINI_API_KEY=.*$/m, "GEMINI_API_KEY=") +
-        "\nDEMO_AI_DAILY_LIMIT=0\n",
+      readFileSync(fenv, "utf8").replace(
+        /^GEMINI_API_KEY=.*$/m,
+        "GEMINI_API_KEY=",
+      ) +
+        // D211: ISO_TEST_PROVIDER=1 runs analyses with the deterministic test providers (no network call, runs
+        // labelled «deterministic-test»); the demo cap then counts those free runs. Otherwise analyses fail fast.
+        (process.env.ISO_TEST_PROVIDER === "1"
+          ? "\nSALEEM_TEST_PROVIDER=deterministic\nDEMO_AI_DAILY_LIMIT=30\n"
+          : "\nDEMO_AI_DAILY_LIMIT=0\n"),
     );
   // Same configuration, different project and ports (+100), heavy optional services off.
   let cfg = readFileSync(join(src, "config.toml"), "utf8")
@@ -41,23 +56,38 @@ function sync() {
     .replace(/\b543(2\d)\b/g, (_, d) => `544${d}`)
     .replace(/^inspector_port = 8083$/m, "inspector_port = 8183");
   for (const section of ["studio", "analytics", "realtime"])
-    cfg = cfg.replace(new RegExp(`(\\[${section}\\]\\r?\\n)enabled = true`), "$1enabled = false");
+    cfg = cfg.replace(
+      new RegExp(`(\\[${section}\\]\\r?\\n)enabled = true`),
+      "$1enabled = false",
+    );
   writeFileSync(join(dst, "config.toml"), cfg);
 }
 const supa = (...args) => {
-  const r = spawnSync("npx", ["supabase", ...args, "--workdir", `"${iso}"`], { stdio: "inherit", shell: true });
+  const r = spawnSync("npx", ["supabase", ...args, "--workdir", `"${iso}"`], {
+    stdio: "inherit",
+    shell: true,
+  });
   if (r.status) process.exit(r.status);
 };
 function isoEnv() {
-  const out = execFileSync("npx", ["supabase", "status", "--workdir", `"${iso}"`, "-o", "env"], {
-    encoding: "utf8",
-    shell: true,
-    stdio: ["ignore", "pipe", "ignore"],
-  });
-  const env = Object.fromEntries(
-    out.split(/\r?\n/).map((l) => l.match(/^([A-Z_]+)="?([^"]*)"?$/)).filter(Boolean).map((m) => [m[1], m[2]]),
+  const out = execFileSync(
+    "npx",
+    ["supabase", "status", "--workdir", `"${iso}"`, "-o", "env"],
+    {
+      encoding: "utf8",
+      shell: true,
+      stdio: ["ignore", "pipe", "ignore"],
+    },
   );
-  if (!/:544\d\d/.test(env.API_URL ?? "")) throw new Error(`refusing: ${env.API_URL} is not the isolated stack`);
+  const env = Object.fromEntries(
+    out
+      .split(/\r?\n/)
+      .map((l) => l.match(/^([A-Z_]+)="?([^"]*)"?$/))
+      .filter(Boolean)
+      .map((m) => [m[1], m[2]]),
+  );
+  if (!/:544\d\d/.test(env.API_URL ?? ""))
+    throw new Error(`refusing: ${env.API_URL} is not the isolated stack`);
   return env;
 }
 

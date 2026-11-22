@@ -19,7 +19,7 @@ import type { LibClaim, LibDisclaimer } from "../_shared/claims/match.ts";
 import { audioCost, textCost } from "../_shared/pipeline/cost.ts";
 import { isRateLimited, rateLimitFromEnv, RATE_WINDOW_MS } from "../_shared/pipeline/rate-limit.ts";
 import { PROMPT_VERSION } from "../_shared/pipeline/schema.ts";
-import { analysisProvider, config, hasGeminiKey, transcriptionProvider } from "../_shared/providers/index.ts";
+import { analysisProvider, config, hasGeminiKey, testProviderMode, transcriptionProvider } from "../_shared/providers/index.ts";
 import { ProviderError } from "../_shared/providers/types.ts";
 import { errorToken } from "../_shared/providers/errors.ts";
 import { runDeterministicChecks } from "../_shared/rules/deterministic.ts";
@@ -173,6 +173,35 @@ async function loadLibrary(db: Db, orgId: string | null, promotionId: string | n
   };
 }
 
+/** D211: deterministic authority recommendation (SQL recommend_authorities) for a personal promotion. */
+async function recommendAuthorities(db: Db, sub: SubV2, promotion: Record<string, unknown> | null, product: ProductRow | null): Promise<string[]> {
+  const s = sub as SubV2 & { product_category?: string | null; ai_used?: boolean | null; is_paid_ad?: boolean | null; platform?: string | null };
+  const channels = (promotion?.channels as string[] | null | undefined)?.length ? (promotion!.channels as string[]) : s.platform ? [s.platform] : [];
+  const { data } = await db.rpc("recommend_authorities", {
+    _sector: product?.sector ?? (promotion?.sector as string | null | undefined) ?? null,
+    _category: s.product_category ?? null,
+    _communication_type: (promotion?.communication_type as string | null | undefined) ?? null,
+    _channels: channels,
+    _is_paid: (promotion?.is_paid as boolean | null | undefined) ?? s.is_paid_ad ?? false,
+    _ai_used: s.ai_used ?? false,
+  });
+  return (data ?? []) as string[];
+}
+
+/** D211: what the run checked for a personal promotion — shown in the report with a warning for left-out authorities. */
+function authorityCoverage(ctx: AnalysisContext) {
+  if (ctx.orgId) return null;
+  const selected = ctx.selectedAuthorities ?? null;
+  const recommended = ctx.recommendedAuthorities ?? [];
+  return {
+    mode: selected === null ? "automatic" : "manual",
+    selected,
+    recommended,
+    excluded_recommended: selected === null ? [] : recommended.filter((a) => !selected.includes(a)),
+    packs: ctx.enabledPacks.map((p) => ({ code: p.code, reason: p.reason })),
+  };
+}
+
 /** Builds the AnalysisContext from the promotion, its product, org settings and pack settings. */
 async function loadContext(db: Db, sub: SubV2): Promise<AnalysisContext> {
   const { data: promotion } = sub.promotion_id
@@ -182,10 +211,13 @@ async function loadContext(db: Db, sub: SubV2): Promise<AnalysisContext> {
   const [productRes, settingsRes, packsRes, orgPacksRes] = await Promise.all([
     promotion?.product_id ? db.from("products").select("*").eq("id", promotion.product_id).maybeSingle() : Promise.resolve({ data: null }),
     orgId ? db.from("org_settings").select("sector, brand_aliases").eq("org_id", orgId).maybeSingle() : Promise.resolve({ data: null }),
-    db.from("rule_packs").select("code, default_sectors, enabled_by_default, always_enabled"),
+    db.from("rule_packs").select("code, default_sectors, enabled_by_default, always_enabled, authority"),
     orgId ? db.from("org_rule_packs").select("pack_code, enabled, include_draft_rules").eq("org_id", orgId) : Promise.resolve({ data: [] }),
   ]);
+  // D211: a personal promotion is checked against its selected authorities, or the ones recommended for its context.
+  const recommended = orgId ? [] : await recommendAuthorities(db, sub, promotion, (productRes.data as ProductRow | null) ?? null);
   return buildContext({
+    recommended,
     submission: sub,
     promotion: (promotion as PromotionRow | null) ?? null,
     product: (productRes.data as ProductRow | null) ?? null,
@@ -574,6 +606,7 @@ async function runPipeline(db: Db, sub: SubV2, runId: string) {
       dropped: merged.dropped,
       promotional: det.promotional,
       discount_codes: det.discountCodes,
+      authorities: authorityCoverage(ctx),
     },
   });
   await timed("set_done", () => setProgress(db, sub.id, {
@@ -616,7 +649,7 @@ async function tryRule(db: SupabaseClient, userId: string, input: Record<string,
   if (!sub || sub.is_demo || sub.status !== "done") return json({ error: "not found" }, 404);
   const { data: promo } = sub.promotion_id ? await db.from("promotions").select("org_id").eq("id", sub.promotion_id).maybeSingle() : { data: null };
   if (((promo?.org_id as string | null) ?? sub.org_id) !== rule.org_id) return json({ error: "not found" }, 404);
-  if (!hasGeminiKey(env)) return json({ status: "unavailable", reason: "no_model_key" }, 200);
+  if (!hasGeminiKey(env) && !testProviderMode(env)) return json({ status: "unavailable", reason: "no_model_key" }, 200);
 
   const [ctx, transcript, lastRun] = await Promise.all([
     loadContext(db, sub),
@@ -670,7 +703,7 @@ Deno.serve(async (req: Request) => {
 
   // D207: without a configured model there is nothing to run — fail at once with a clear code instead of leaving the
   // version queued until the 10-minute watchdog («stuck_timeout»). No provider request is made.
-  if (!hasGeminiKey(env)) {
+  if (!hasGeminiKey(env) && !testProviderMode(env)) {
     await db.from("submissions").update({ status: "failed", error_message: "code:provider_not_configured" }).eq("id", sub.id).neq("status", "done");
     return json({ status: "failed", error: "code:provider_not_configured" }, 503);
   }
@@ -701,10 +734,16 @@ Deno.serve(async (req: Request) => {
       const { data: used } = await db.rpc("demo_ai_runs_today");
       if (Number(used ?? 0) >= Number(env("DEMO_AI_DAILY_LIMIT") ?? 40)) return json({ error: "demo_quota" }, 429);
     }
+    // D211: a personal workspace has its own monthly analysis allowance (ai_allowance with org null).
+    if (!sub.org_id) {
+      const { data: allowance } = await db.rpc("ai_allowance", { _org: null, _capability: "analysis", _user: userId });
+      if ((allowance as { ok?: boolean } | null)?.ok === false) return json({ error: "code:quota_exceeded" }, 429);
+    }
   }
 
   // --- Run row: reuse the latest unfinished run so steps resume.
   const cfg = config(env);
+  const testMode = testProviderMode(env);
   let run = latestRun.data;
   if (!run || run.status === "done") {
     const created = await db
@@ -713,16 +752,18 @@ Deno.serve(async (req: Request) => {
         submission_id: sub.id,
         rulebook_version_id: version?.id ?? null,
         rulebook_version: version?.version_label ?? null,
-        llm_model: cfg.llmModel,
-        llm_provider: cfg.llmProvider,
-        asr_model: sub.kind === "video" ? cfg.transcriptionModel : null,
-        asr_provider: sub.kind === "video" ? cfg.transcriptionProvider : null,
+        llm_model: testMode ? "deterministic-test" : cfg.llmModel,
+        llm_provider: testMode ? "test" : cfg.llmProvider,
+        asr_model: sub.kind === "video" ? (testMode ? "deterministic-test" : cfg.transcriptionModel) : null,
+        asr_provider: sub.kind === "video" ? (testMode ? "test" : cfg.transcriptionProvider) : null,
         prompt_version: PROMPT_VERSION,
       })
       .select("id, status")
       .single();
     if (created.error) return json({ error: "could not create run" }, 500);
     run = created.data;
+    if (!sub.org_id)
+      await db.from("ai_usage").insert({ org_id: null, user_id: userId, capability: "analysis", provider: testMode ? "test" : cfg.llmProvider, model: testMode ? "deterministic-test" : cfg.llmModel });
   } else {
     await db.from("analysis_runs").update({ status: "running", error: null }).eq("id", run.id);
   }

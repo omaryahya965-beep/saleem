@@ -69,6 +69,42 @@ async function ensureUser(p: (typeof PERSONAS)[number]): Promise<string> {
   return created.user!.id;
 }
 
+// D211: the individual / content-creator demo. NOT in PERSONAS (those become sandbox organisation members): a personal
+// workspace only, flagged is_demo so it shares the demo AI cap and is the only thing demo-login lets it reach.
+export const INDIVIDUAL = { key: "individual", email: "individual@demo.saleem.app", name: "صانعة محتوى (تجريبي)", role: null } as const;
+
+async function seedIndividual() {
+  const id = await ensureUser(INDIVIDUAL as unknown as (typeof PERSONAS)[number]);
+  const members = ok(await admin.from("org_members").select("org_id").eq("user_id", id), "individual memberships");
+  if (members.length) throw new Error("the individual demo must not belong to any organisation");
+  ok(await admin.from("personal_workspaces").upsert({ user_id: id, display_name: INDIVIDUAL.name, is_demo: true, default_authorities: ["GMEDIA", "MC"] }), "personal workspace");
+  const me = await as(INDIVIDUAL.email);
+  // Two personal sample ads, created like the app does (owner-only promotion + text version; no organisation).
+  const ads = [
+    { title: "كريم لمى — منشور سناب", sector: "cosmetics", category: "beauty", authorities: null,
+      text: "إعلان مدفوع | كريم لمى للترطيب اليومي للبشرة الجافة. اطلبيه الآن من المتجر." },
+    { title: "متجر ورد — خصم نهاية الأسبوع", sector: "ecommerce", category: "other", authorities: ["GMEDIA", "MC"],
+      text: "خصم 50% على كل المنتجات! أفضل متجر في المملكة ونتائج مضمونة. اطلب الآن." },
+  ];
+  let created = 0;
+  for (const ad of ads) {
+    const have = ok(await admin.from("promotions").select("id").eq("owner_id", id).is("org_id", null).eq("title", ad.title).maybeSingle(), "personal lookup");
+    if (have) continue;
+    const pid = crypto.randomUUID();
+    ok(await me.from("promotions").insert({
+      id: pid, owner_id: id, org_id: null, title: ad.title, sector: ad.sector, channels: ["snapchat"], communication_type: "creator_sponsored",
+      audience: ["general"], is_paid: true, distribution: "influencer", selected_authorities: ad.authorities,
+    }), "personal promotion");
+    ok(await me.from("submissions").insert({
+      id: crypto.randomUUID(), user_id: id, kind: "text", title: ad.title, caption: "", text_content: ad.text, platform: "snapchat",
+      product_category: ad.category, is_paid_ad: true, has_written_contract: true, ai_used: false, promotion_id: pid,
+      sha256: randomBytes(16).toString("hex"),
+    }), "personal submission");
+    created++;
+  }
+  return { user: INDIVIDUAL.email, ads_created: created };
+}
+
 async function as(email: string): Promise<SupabaseClient> {
   const c = createClient(URL_, ANON, { auth: { persistSession: false } });
   ok(await c.auth.signInWithPassword({ email, password }), `signIn ${email}`);
@@ -223,6 +259,8 @@ async function main() {
     const v = ok(await admin.from("submissions").select("status").eq("id", p.current_version_id!).single(), "version");
     if (!["done", "failed"].includes(v.status)) return (journey[title] = `skipped: analysis ${v.status}`);
     if (p.review_status !== "draft") return (journey[title] = `kept: ${p.review_status}`);
+    // D208: an approval needs a completed analysis of the current version; a failed one stops at «submitted».
+    if (target === "approved" && v.status !== "done") target = "pending";
     ok(await marketer.rpc("submit_promotion", { _pid: p.id, _note: "جاهز للمراجعة", _ack_failed: v.status === "failed" }), "submit");
     if (target !== "pending") {
       ok(await lead.rpc("assign_reviewer", { _pid: p.id, _user: reviewerId }), "assign");
@@ -240,8 +278,11 @@ async function main() {
   await step("تمويل سليم — إعلان مكتمل", "approved");
   await step("بطاقة سليم الائتمانية — بلا رسوم", "pending");
 
+  const personal = await seedIndividual();
+
   fs.mkdirSync(path.dirname(credFile), { recursive: true });
-  fs.writeFileSync(credFile, JSON.stringify({ note: "Local demo only. Never commit.", password, org_id: orgId, users: PERSONAS.map((p) => p.email) }, null, 2));
+  fs.writeFileSync(credFile, JSON.stringify({ note: "Local demo only. Never commit.", password, org_id: orgId, users: [...PERSONAS.map((p) => p.email), INDIVIDUAL.email] }, null, 2));
+  console.log(JSON.stringify({ individual: personal }));
   console.log(JSON.stringify({ org_id: orgId, personas: PERSONAS.map((p) => `${p.key}:${p.role}`), ads: created.length, analysis: analysed, journey, credentials: path.relative(root, credFile) }, null, 2));
 }
 

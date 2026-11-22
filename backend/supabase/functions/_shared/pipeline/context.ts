@@ -17,6 +17,8 @@ export interface PromotionRow {
   market: string;
   is_paid: boolean | null;
   caption: string | null;
+  /** D211: personal promotions only — authorities chosen by the user; null = automatic. */
+  selected_authorities?: string[] | null;
 }
 export interface ProductRow {
   id: string;
@@ -35,6 +37,7 @@ export interface PackRow {
   default_sectors: string[];
   enabled_by_default: boolean;
   always_enabled: boolean;
+  authority?: string;
 }
 
 export function buildContext(input: {
@@ -44,6 +47,8 @@ export function buildContext(input: {
   orgSettings: { sector: string | null; brand_aliases: string[] } | null;
   packs: PackRow[];
   orgPacks: { pack_code: string; enabled: boolean; include_draft_rules: boolean }[];
+  /** D211: authorities recommended for this context (recommend_authorities), used by personal promotions. */
+  recommended?: string[];
 }): AnalysisContext {
   const { submission: s, promotion: p, product } = input;
   const orgId = p?.org_id ?? s.org_id ?? null;
@@ -71,8 +76,13 @@ export function buildContext(input: {
         }
       : null,
     brandAliases: input.orgSettings?.brand_aliases ?? [],
-    enabledPacks: enabledPacksFor(orgId, product?.sector ?? sector, input.packs, input.orgPacks),
+    enabledPacks: enabledPacksFor(orgId, product?.sector ?? sector, input.packs, input.orgPacks, {
+      selected: p?.selected_authorities ?? null,
+      recommended: input.recommended ?? [],
+    }),
     kind: s.kind,
+    selectedAuthorities: orgId ? null : (p?.selected_authorities ?? null),
+    recommendedAuthorities: orgId ? [] : (input.recommended ?? []),
   };
 }
 

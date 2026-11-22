@@ -109,7 +109,15 @@ export interface Applicability {
 
 /** A rule row of the active release, joined with its source status (for guideline capping). */
 /** Why a pack is applied to a run (shown in the report): creator default, always on, org choice, sector default. */
-export type PackReason = "creator_default" | "always_enabled" | "org_enabled" | "sector_default" | "default";
+export type PackReason =
+  | "creator_default"
+  | "always_enabled"
+  | "org_enabled"
+  | "sector_default"
+  | "default"
+  /** D211: personal workspace — an authority the user selected, or one SALEEM recommended (automatic mode). */
+  | "personal_selected"
+  | "personal_recommended";
 
 export interface RuleRow {
   id: string;
@@ -171,6 +179,9 @@ export interface AnalysisContext {
   };
   brandAliases: string[];
   enabledPacks: { code: string; includeDrafts: boolean; reason?: PackReason }[];
+  /** D211: personal promotions — authorities the user selected (null = automatic) and the recommended ones. */
+  selectedAuthorities?: string[] | null;
+  recommendedAuthorities?: string[];
   kind: "video" | "image" | "text" | "pdf";
 }
 

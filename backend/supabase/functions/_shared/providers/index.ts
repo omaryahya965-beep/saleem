@@ -5,6 +5,8 @@
 
 import { GeminiAnalysis, GeminiTranscription, GEMINI_DEFAULT_MODEL } from "./gemini.ts";
 import { ProviderError, type AnalysisProvider, type TranscriptionProvider } from "./types.ts";
+import { DeterministicAnalysis, DeterministicTranscription, testProviderMode } from "./deterministic.ts";
+export { testProviderMode } from "./deterministic.ts";
 
 export type Env = (key: string) => string | undefined;
 
@@ -40,9 +42,11 @@ function requireKey(env: Env): string {
 }
 
 export function transcriptionProvider(env: Env): TranscriptionProvider {
+  if (testProviderMode(env)) return new DeterministicTranscription();
   return new GeminiTranscription(requireKey(env), config(env).transcriptionModel, { thinkingLevel: env("GEMINI_THINKING_LEVEL"), fallbackModel: env("GEMINI_FALLBACK_MODEL") });
 }
 
 export function analysisProvider(env: Env): AnalysisProvider {
+  if (testProviderMode(env)) return new DeterministicAnalysis();
   return new GeminiAnalysis(requireKey(env), config(env).llmModel, { storageUrl: env("SUPABASE_URL"), thinkingLevel: env("GEMINI_THINKING_LEVEL"), fallbackModel: env("GEMINI_FALLBACK_MODEL") });
 }

@@ -7,6 +7,7 @@
 //  - the persona is in the allow-list below (fixed emails under @demo.saleem.app);
 //  - the user exists and EVERY one of its memberships is in a registered sandbox org (demo_sandbox_orgs), so a demo
 //    login can never reach a real customer organisation, and the user is not a platform admin;
+//  - the «individual» persona instead has NO membership at all and a personal workspace flagged is_demo (D211);
 //  - the caller's IP (hashed) started fewer than DEMO_RATE_PER_HOUR sessions in the last hour (default 20).
 // Every issued session is logged (demo_sessions + audit_events). Roles and permissions are the app's own (org_can).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
@@ -23,6 +24,8 @@ export const DEMO_PERSONAS: Record<string, string> = {
   external_uploader: "partner@demo.saleem.app",
   external_reviewer: "extreviewer@demo.saleem.app",
   viewer: "viewer@demo.saleem.app",
+  // D211: the individual / content-creator demo. A personal workspace only: no organisation, no role.
+  individual: "individual@demo.saleem.app",
 };
 
 async function sha256(s: string): Promise<string> {
@@ -54,13 +57,17 @@ Deno.serve(async (req) => {
   if (listErr) return json({ error: "lookup_failed" }, 500);
   const user = list.users.find((u) => u.email?.toLowerCase() === email);
   if (!user) return json({ error: "demo_not_seeded" }, 503);
-  const [{ data: members }, { data: sandboxes }, { data: platformAdmin }] = await Promise.all([
+  const [{ data: members }, { data: sandboxes }, { data: platformAdmin }, { data: personal }] = await Promise.all([
     db.from("org_members").select("org_id").eq("user_id", user.id),
     db.from("demo_sandbox_orgs").select("org_id"),
     db.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin"),
+    db.from("personal_workspaces").select("is_demo").eq("user_id", user.id).maybeSingle(),
   ]);
   const sandbox = new Set((sandboxes ?? []).map((s) => s.org_id));
-  if (!members?.length || members.some((m) => !sandbox.has(m.org_id)) || (platformAdmin ?? []).length) {
+  const confined = persona === "individual"
+    ? !members?.length && personal?.is_demo === true
+    : Boolean(members?.length) && !members!.some((m) => !sandbox.has(m.org_id));
+  if (!confined || (platformAdmin ?? []).length) {
     log("demo_login_refused", { persona, reason: "not_confined_to_sandbox" });
     return json({ error: "not_a_sandbox_user" }, 403);
   }

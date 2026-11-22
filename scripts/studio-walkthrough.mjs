@@ -47,7 +47,11 @@ const step = async (name, fn) => {
 };
 
 await page.goto(`${base}/login`);
-await page.fill('input[type="email"]', "marketer@demo.saleem.app");
+// --email: any seeded demo user (D211: individual@demo.saleem.app runs the personal workspace journey).
+await page.fill(
+  'input[type="email"]',
+  arg("email", "marketer@demo.saleem.app"),
+);
 await page.fill('input[type="password"]', password);
 await page.locator('form button[type="submit"]').click();
 await page.waitForURL((u) => !u.pathname.startsWith("/login"), {
