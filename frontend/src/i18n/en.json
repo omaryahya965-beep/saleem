@@ -545,8 +545,8 @@
       "individualFix": "Correct it with smart correction and compare versions",
       "individualDownload": "Download it without waiting for an internal approval",
       "individualEnter": "Enter my demo personal space",
-      "individualNote": "A shared demo personal space that belongs to no organisation. Results are automated and advisory, not regulatory clearance.",
-      "bannerPersonal": "Demo session — a shared demo personal space with fictional data; it ends automatically after two hours."
+      "individualNote": "A demo personal space private to your session: it belongs to no organisation, no other visitor can see it, and its files are deleted after it ends. Results are automated and advisory, not regulatory clearance.",
+      "bannerPersonal": "Demo session — your own demo personal space with fictional data; it ends automatically after two hours."
     },
     "intent": {
       "label": "How will you use SALEEM?",
