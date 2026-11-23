@@ -4,7 +4,7 @@
 //   - "gemini":   ONE structured request (no automatic retry), quota-checked per organisation and capability, validated
 //                 against invented claims; usage recorded in ai_usage.
 // "review" runs the deterministic claims engine on the script (no AI request). Nothing here creates an advertisement.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient, userClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { TEXT_PRICES, textCost } from "../_shared/pipeline/cost.ts";
@@ -36,11 +36,8 @@ Deno.serve(async (req: Request) => {
   const provider = body.provider === "gemini" ? "gemini" : "template";
   if (!draftId) return json({ error: "code:draft_required" }, 400);
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-  const admin = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = userClient(token);
+  const admin = serviceClient();
   const { data: me } = await db.auth.getUser(token);
   const { data: draft } = await db.from("studio_drafts").select("*").eq("id", draftId).maybeSingle();
   if (!draft || !me.user || draft.created_by !== me.user.id) return json({ error: "code:not_found" }, 404);

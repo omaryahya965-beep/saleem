@@ -3,7 +3,7 @@
 // features.internal_rules on. Uses the configured model (same provider and model as analysis) when an API key is
 // set; otherwise one draft per directive sentence, marked heuristic_draft. Every draft starts as status 'draft'
 // and must be edited and approved by a person before it runs. Never drafts regulatory rules.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient, userClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { cleanDrafts, DRAFT_SCHEMA, heuristicDrafts, type DraftRule } from "../_shared/rules/internal.ts";
@@ -47,10 +47,7 @@ Deno.serve(async (req: Request) => {
   const guidelineId = typeof body.guideline_id === "string" ? body.guideline_id : null;
   if (!orgId || !guidelineId) return json({ error: "org_id and guideline_id are required" }, 400);
 
-  const asUser = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const asUser = userClient(token);
   const { data: allowed } = await asUser.rpc("can_manage_internal_rules", { _org: orgId });
   if (allowed !== true) return json({ error: "code:forbidden" }, 403);
   const { data: guideline } = await asUser.from("brand_guidelines").select("id, text_ar").eq("id", guidelineId).eq("org_id", orgId).maybeSingle();
@@ -74,7 +71,7 @@ Deno.serve(async (req: Request) => {
     source = "heuristic_draft";
   }
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const { data: existing } = await db.from("internal_rules").select("code, title_ar, instruction_ar, status").eq("org_id", orgId);
   // D196: re-running the extraction must not duplicate rules the organisation already has (any non-archived status).
   const norm = (x: string) => x.normalize("NFKC").replace(/[ً-ٟـ]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/\s+/g, " ").trim().toLowerCase();

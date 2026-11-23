@@ -5,7 +5,7 @@
 //   GET /api/v1/versions/{id}/findings         scope findings:read   (latest analysis run)
 //   GET /api/v1/promotions/{id}/decisions      scope decisions:read  (sealed decisions with hashes)
 // Every query is limited to the key's organisation. Write endpoints are not available yet (D133).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -16,7 +16,7 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "GET") return json({ error: "code:not_supported" }, 405);
   const key = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!key.startsWith("slm_")) return json({ error: "code:invalid_key" }, 401);
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const { data: check } = await db.rpc("api_key_check", { _key: key, _limit: 60 });
   const k = (check ?? {}) as { ok?: boolean; reason?: string; org_id?: string; scopes?: string[]; key_id?: string };
   if (!k.ok) return json({ error: `code:${k.reason ?? "invalid_key"}` }, k.reason === "rate_limited" ? 429 : 401);

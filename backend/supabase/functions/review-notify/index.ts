@@ -2,7 +2,7 @@
 // POST { promotion_id } with the caller's JWT, right after a successful review action. Sends each pending
 // review_* notification of that promotion once (emailed_at), respecting profiles.notify_email.
 // The caller must be able to read the promotion; recipients only ever get their own notifications.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient, userClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { emailProvider, reviewEmail, type ReviewKind } from "../_shared/notify.ts";
 
@@ -19,14 +19,11 @@ Deno.serve(async (req: Request) => {
   if (!promotionId) return json({ error: "promotion_id is required" }, 400);
 
   // Access check with the caller's own rights (RLS), then send with the service role.
-  const asUser = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const asUser = userClient(token);
   const { data: promo } = await asUser.from("promotions").select("id, title").eq("id", promotionId).maybeSingle();
   if (!promo) return json({ error: "not found" }, 404);
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const since = new Date(Date.now() - 15 * 60_000).toISOString();
   const { data: pending } = await db
     .from("notifications")

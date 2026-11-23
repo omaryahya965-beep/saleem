@@ -4,6 +4,7 @@
 // browser with canvas.captureStream + Web Audio + MediaRecorder (same approach as the SALEEM Fix editor). Nothing is
 // sent to any provider and nothing is charged. This is template rendering, not AI-generated footage.
 import { pickMime } from "@/features/fix/mediaRender";
+import { recordStream, wrapText } from "@/lib/canvas";
 
 export type Aspect = "9:16" | "16:9" | "1:1";
 export interface RenderScene {
@@ -73,31 +74,6 @@ export function sceneAt(
   return { i: 0, u: 0 };
 }
 
-function wrap(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  max: number,
-  maxLines: number,
-): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (ctx.measureText(next).width > max && cur) {
-      lines.push(cur);
-      cur = w;
-    } else cur = next;
-  }
-  if (cur) lines.push(cur);
-  if (lines.length > maxLines) {
-    const kept = lines.slice(0, maxLines);
-    kept[maxLines - 1] = `${kept[maxLines - 1]}…`;
-    return kept;
-  }
-  return lines;
-}
-
 const isRtl = (s: string) => /[؀-ۿ]/.test(s);
 
 function roundRect(
@@ -158,7 +134,7 @@ function drawBackground(
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.direction = isRtl(title) ? "rtl" : "ltr";
-    wrap(ctx, title, w * 0.8, 2).forEach((l, i, all) =>
+    wrapText(ctx, title, w * 0.8, 2, true).forEach((l, i, all) =>
       ctx.fillText(l, w / 2, h * 0.36 + (i - (all.length - 1) / 2) * Math.min(w, h) * 0.11),
     );
   }
@@ -189,7 +165,7 @@ export function drawStudioFrame(
   if (scene.onScreen) {
     ctx.font = `bold ${Math.round(m * 0.058)}px ${FONT}`;
     ctx.direction = isRtl(scene.onScreen) ? "rtl" : "ltr";
-    const lines = wrap(ctx, scene.onScreen, w * 0.78, 3);
+    const lines = wrapText(ctx, scene.onScreen, w * 0.78, 3, true);
     const lh = m * 0.075;
     const bandH = lines.length * lh + m * 0.06;
     const y = h * 0.62 - bandH / 2;
@@ -211,7 +187,7 @@ export function drawStudioFrame(
   if (input.subtitles && scene.narration) {
     ctx.font = `${Math.round(m * 0.038)}px ${FONT}`;
     ctx.direction = isRtl(scene.narration) ? "rtl" : "ltr";
-    const lines = wrap(ctx, scene.narration, w * 0.86, 2);
+    const lines = wrapText(ctx, scene.narration, w * 0.86, 2, true);
     const lh = m * 0.05;
     const bh = lines.length * lh + m * 0.03;
     const y = h - bh - h * 0.05;
@@ -267,16 +243,7 @@ export async function renderStudioVideo(input: RenderInput): Promise<RenderOutpu
     ...canvas.captureStream(30).getVideoTracks(),
     ...dest.stream.getAudioTracks(),
   ]);
-  const recorder = new MediaRecorder(stream, {
-    mimeType: mime.mimeType,
-    videoBitsPerSecond: 5_000_000,
-  });
-  const chunks: Blob[] = [];
-  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-  const done = new Promise<Blob>(
-    (resolve) =>
-      (recorder.onstop = () => resolve(new Blob(chunks, { type: mime.mimeType.split(";")[0] }))),
-  );
+  const { recorder, done } = recordStream(stream, mime.mimeType, 5_000_000);
   drawStudioFrame(ctx, input, w, h, 0);
   await audio.resume();
   recorder.start(250);

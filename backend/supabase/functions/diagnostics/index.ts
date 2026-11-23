@@ -1,7 +1,7 @@
 // SALEEM diagnostics — admin-only health check of the Gemini configuration.
 // POST with an admin user's JWT. Returns ONLY non-secret facts: whether GEMINI_API_KEY is set, the
 // configured model, the HTTP status + classified error code of a models.get probe, and usage totals.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { classifyProviderError } from "../_shared/providers/errors.ts";
 import { config, hasGeminiKey } from "../_shared/providers/index.ts";
@@ -19,7 +19,7 @@ async function probe(model: string, key: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   const { data: auth } = token ? await db.auth.getUser(token) : { data: null };
   if (!auth?.user) return json({ error: "invalid session" }, 401);

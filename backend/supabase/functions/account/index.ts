@@ -2,7 +2,7 @@
 // POST { action: "delete", confirm: "<the user's email>" } with the user's JWT.
 // Deletes the user's media, submissions (cascading findings, transcripts, runs, logs, shares),
 // organizations they solely own, and finally the auth user (cascading profile, roles, notifications).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -10,7 +10,7 @@ const env = (k: string) => Deno.env.get(k);
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
 
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "missing authorization" }, 401);

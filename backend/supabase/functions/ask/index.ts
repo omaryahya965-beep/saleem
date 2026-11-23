@@ -7,7 +7,7 @@
 // Personal mode (no org_id, D211): the caller's personal workspace is required; sources are VERIFIED ACTIVE rules only
 // (never drafts, never any organisation's internal policies) and the caller's own personal advertisements. A model
 // answer counts against the personal «ask» allowance and, for demo users, the shared demo AI cap.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient, userClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { ASK_INSTRUCTIONS, orFilter, plainAnswer, terms, type AskSource } from "../_shared/ask.ts";
@@ -25,10 +25,7 @@ Deno.serve(async (req: Request) => {
   const lang: "ar" | "en" = body.lang === "en" ? "en" : "ar";
   if (question.length < 3) return json({ error: "code:question_required" }, 400);
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const db = userClient(token);
   const { data: me } = await db.auth.getUser(token);
   if (!me?.user) return json({ error: "missing authorization" }, 401);
 
@@ -73,7 +70,7 @@ Deno.serve(async (req: Request) => {
   const geminiKey = env("GEMINI_API_KEY")?.trim();
   if (sources.length && geminiKey && hasGeminiKey(env)) {
     // Personal answers are metered (monthly «ask» allowance; demo users also share the daily demo cap).
-    const admin = orgId ? null : createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    const admin = orgId ? null : serviceClient();
     if (admin) {
       const { data: allowance } = await db.rpc("ai_allowance", { _org: null, _capability: "ask" });
       if ((allowance as { ok?: boolean } | null)?.ok === false) limited = "quota_exceeded";

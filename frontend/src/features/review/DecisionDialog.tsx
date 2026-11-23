@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/review";
 import { cn } from "@/lib/utils";
 import { usePreflightText } from "./model";
+import { RejectionReasonsField } from "./RejectionReasonsField";
 
 const OPTIONS: { kind: DecisionKind; icon: React.ReactNode; approval: boolean }[] = [
   { kind: "approve", icon: <CheckCircle2 aria-hidden="true" />, approval: true },
@@ -58,9 +59,9 @@ export function DecisionDialog({
   const [comment, setComment] = useState("");
   const [conditions, setConditions] = useState<ConditionInput[]>([{ description: "" }]);
   const needsReasons = decision === "reject" || decision === "request_changes";
-  const otherPicked = (reasons.data ?? []).some((r) => r.is_other && picked.includes(r.id));
   const approveOk = pre.data?.approveOk !== false;
   const filledConditions = conditions.filter((c) => c.description.trim());
+  const otherPicked = (reasons.data ?? []).some((r) => r.is_other && picked.includes(r.id));
   const invalid =
     !decision ||
     (needsReasons && !picked.length && !other.trim()) ||
@@ -186,24 +187,13 @@ export function DecisionDialog({
         </fieldset>
 
         {needsReasons && (
-          <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-sm font-medium">{t("review.reasons")}</legend>
-            {(reasons.data ?? []).map((r) => (
-              <Checkbox
-                key={r.id}
-                label={lang === "en" ? r.label_en : r.label_ar}
-                checked={picked.includes(r.id)}
-                onChange={(e) =>
-                  setPicked((x) => (e.target.checked ? [...x, r.id] : x.filter((y) => y !== r.id)))
-                }
-              />
-            ))}
-            {(otherPicked || !picked.length) && (
-              <Field label={t("review.reasonOther")} className="mt-2">
-                <Input value={other} onChange={(e) => setOther(e.target.value)} dir="auto" />
-              </Field>
-            )}
-          </fieldset>
+          <RejectionReasonsField
+            reasons={reasons.data ?? []}
+            picked={picked}
+            setPicked={setPicked}
+            other={other}
+            setOther={setOther}
+          />
         )}
 
         {decision === "conditional_approve" && (

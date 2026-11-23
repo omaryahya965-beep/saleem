@@ -10,7 +10,7 @@
 //  - the «individual» persona instead has NO membership at all and a personal workspace flagged is_demo (D211);
 //  - the caller's IP (hashed) started fewer than DEMO_RATE_PER_HOUR sessions in the last hour (default 20).
 // Every issued session is logged (demo_sessions + audit_events). Roles and permissions are the app's own (org_can).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { clientIp, corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
   const email = DEMO_PERSONAS[persona];
   if (!email) return json({ error: "unknown_persona" }, 400);
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const ip = clientIp(req.headers);
   const ipHash = await sha256(`${env("DEMO_IP_SALT") ?? "saleem-demo"}:${ip}`);
   // D187: default matches the documented 20 sessions per IP and hour; production sets DEMO_RATE_PER_HOUR explicitly.
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 // (26) after it expired, so its usage still counts during the 24-hour window. DEMO_MAX_PERSONAL_SESSIONS caps
 // concurrent sessions (default 200).
 // deno-lint-ignore no-explicit-any
-type Db = ReturnType<typeof createClient<any>>;
+type Db = ReturnType<typeof serviceClient>;
 const SESSION_HOURS = 2;
 const PURGE_AFTER_HOURS = 26;
 

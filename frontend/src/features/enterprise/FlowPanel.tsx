@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { usePreflightText } from "@/features/review/model";
+import { RejectionReasonsField } from "@/features/review/RejectionReasonsField";
 import {
   canActOnStep,
   decideStep,
@@ -225,24 +226,13 @@ function StepDecisionDialog({
           </Select>
         </Field>
         {needsReasons && (
-          <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-sm font-medium">{t("review.reasons")}</legend>
-            {(reasons.data ?? []).map((r) => (
-              <Checkbox
-                key={r.id}
-                label={lang === "en" ? r.label_en : r.label_ar}
-                checked={picked.includes(r.id)}
-                onChange={(e) =>
-                  setPicked((x) => (e.target.checked ? [...x, r.id] : x.filter((y) => y !== r.id)))
-                }
-              />
-            ))}
-          </fieldset>
-        )}
-        {needsReasons && (otherPicked || !picked.length) && (
-          <Field label={t("review.reasonOther")}>
-            <Input value={other} onChange={(e) => setOther(e.target.value)} dir="auto" />
-          </Field>
+          <RejectionReasonsField
+            reasons={reasons.data ?? []}
+            picked={picked}
+            setPicked={setPicked}
+            other={other}
+            setOther={setOther}
+          />
         )}
         {needsReasons && (
           <Checkbox

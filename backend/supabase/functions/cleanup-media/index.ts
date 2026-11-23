@@ -6,7 +6,8 @@
 //    more than 24 h ago, and orphaned uploads (no submission row) older than 24 h.
 // Deployed with verify_jwt = false because the cron caller has no JWT; both paths are verified here.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -45,7 +46,7 @@ async function purge(db: SupabaseClient, sub: { id: string; user_id: string | nu
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const body = await req.json().catch(() => ({}));
 
   try {

@@ -4,6 +4,7 @@
 // voiceover, and records canvas + audio with MediaRecorder. The result is a real, new media file; nothing is sent
 // to any provider and nothing is charged. Rendering takes about the length of the video.
 import { activeAt, isNoop, type MediaEdits } from "./mediaPlan";
+import { recordStream, wrapText } from "@/lib/canvas";
 
 export interface RenderResult {
   blob: Blob;
@@ -45,25 +46,10 @@ function drawBand(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.direction = /[؀-ۿ]/.test(text) ? "rtl" : "ltr";
-  wrap(ctx, text, w * 0.9).forEach((line, i, all) =>
+  wrapText(ctx, text, w * 0.9, 3).forEach((line, i, all) =>
     ctx.fillText(line, w / 2, y + bandH / 2 + (i - (all.length - 1) / 2) * bandH * 0.45),
   );
   void h;
-}
-
-function wrap(ctx: CanvasRenderingContext2D, text: string, max: number): string[] {
-  const words = text.split(/\s+/);
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (ctx.measureText(next).width > max && cur) {
-      lines.push(cur);
-      cur = w;
-    } else cur = next;
-  }
-  if (cur) lines.push(cur);
-  return lines.slice(0, 3);
 }
 
 export function drawFrame(
@@ -148,16 +134,7 @@ export async function renderCorrectedVideo(opts: {
     ...canvas.captureStream(30).getVideoTracks(),
     ...dest.stream.getAudioTracks(),
   ]);
-  const recorder = new MediaRecorder(stream, {
-    mimeType: mime.mimeType,
-    videoBitsPerSecond: 4_000_000,
-  });
-  const chunks: Blob[] = [];
-  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-  const done = new Promise<Blob>(
-    (resolve) =>
-      (recorder.onstop = () => resolve(new Blob(chunks, { type: mime.mimeType.split(";")[0] }))),
-  );
+  const { recorder, done } = recordStream(stream, mime.mimeType, 4_000_000);
 
   // Gain automation relative to the audio clock at play start.
   const schedule = (t0: number) => {

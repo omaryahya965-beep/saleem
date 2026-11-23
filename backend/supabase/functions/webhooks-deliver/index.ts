@@ -1,7 +1,7 @@
 // SALEEM webhooks-deliver (Phase 7.2/7.3) — sends queued webhook / Slack / Teams deliveries.
 // Called every minute by pg_cron (invoke_webhooks_deliver) with header x-cron-secret. Webhooks are signed with
 // HMAC-SHA256 (x-saleem-signature, x-saleem-timestamp); failures retry with backoff (webhook_attempt).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { bodyFor, sign, type Delivery } from "../_shared/webhooks.ts";
 
@@ -10,7 +10,7 @@ const env = (k: string) => Deno.env.get(k);
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
   const secret = req.headers.get("x-cron-secret") ?? "";
   const { data: ok } = await db.rpc("verify_cron_secret", { _secret: secret });
   if (!secret || ok !== true) return json({ error: "forbidden" }, 403);

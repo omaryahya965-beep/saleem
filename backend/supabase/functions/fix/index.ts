@@ -3,7 +3,7 @@
 // generate: ONE Gemini request (no automatic retry of a chargeable call), validated against invented licences,
 // approvals, clinical evidence and endorsements, stored as a plan + proposal for the user to review. Nothing here
 // creates a version or approves anything: the user accepts explicitly and the new version is analysed afresh.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient, userClient } from "../_shared/clients.ts";
 import { corsHeaders, json, log } from "../_shared/http.ts";
 import { config, hasGeminiKey } from "../_shared/providers/index.ts";
 import { TEXT_PRICES, textCost } from "../_shared/pipeline/cost.ts";
@@ -32,11 +32,8 @@ Deno.serve(async (req: Request) => {
   if (!jobId) return json({ error: "code:job_required" }, 400);
 
   // Reads as the caller (RLS); writes with the service role only after the checks below.
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-  const admin = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = userClient(token);
+  const admin = serviceClient();
   const { data: me } = await db.auth.getUser(token);
   const { data: job } = await db.from("correction_jobs").select("*").eq("id", jobId).maybeSingle();
   if (!job || !me.user || job.created_by !== me.user.id) return json({ error: "code:not_found" }, 404);

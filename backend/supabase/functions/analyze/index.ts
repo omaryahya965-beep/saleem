@@ -9,7 +9,8 @@
 //   4. merge        — validate rule codes, downgrade weak evidence, dedupe within 3 s, status
 // Progress, errors, models, prompt/rulebook versions, durations, tokens and cost are stored.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.117.3";
+import { serviceClient } from "../_shared/clients.ts";
 import { evaluate, legacyFindingType, type MergedFinding, type RuleCheckResult } from "../_shared/pipeline/evaluate.ts";
 import { expandSector, relevantAuthorities } from "../_shared/rules/sectors.ts";
 import { buildContext, extractTexts, type PackRow, type ProductRow, type PromotionRow } from "../_shared/pipeline/context.ts";
@@ -722,7 +723,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-  const db = createClient(env("SUPABASE_URL")!, env("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const db = serviceClient();
 
   // --- Auth: verify the JWT and resolve the user (the gateway also verifies the signature).
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
