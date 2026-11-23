@@ -747,3 +747,14 @@ Format: decision — why — alternatives considered.
   labelled with total, active, pending and archived counts. All sections start collapsed; a click toggles one, and a
   search expands the sections with matches. This is visual only: it has no effect on rule selection or analysis.
   Pending now excludes archived rules (MOHU's 4 rules are archived, not pending).
+- **D219. Owner reverted the 2026-11-23 redesign and rule activation; rulebook back to the flat list (2026-11-23).**
+  The redesign (dashboard, five-entry sidebar, traced logo, demo chip, authority accordion) and the verified activation
+  batch were reverted at the owner's request (commits 2a1b483 and c63b99d, reverted by 13c48c5 and 3b67590). No
+  migration from them was applied to the development database.
+  - **Rulebook:** back to the flat list with stat cards and the «تفاصيل ومصدر القاعدة» window (the D217 page). The
+    owner preferred it to the D218 accordion.
+  - **Correct counts:** archived rules no longer count as pending (238 total, 15 active, 219 pending).
+  - **No invented text:** the window no longer fills missing data with invented text (a fixed review date, generic
+    applicability or evidence wording). Missing fields read «غير محددة في السجل».
+  - **No coverage cards:** the authority coverage cards above the list are removed, matching the owner's reference.
+  - **Flaky test fixed:** the backend viewer test now picks a promotion that has a version.

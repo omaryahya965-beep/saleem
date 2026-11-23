@@ -148,7 +148,8 @@ describe.skipIf(!enabled)("real workflows (local stack, demo org)", () => {
   }, 60_000);
 
   it("viewer: reads the organisation's records; every write is rejected by the server", async () => {
-    const list = (await viewer.from("promotions").select("id").eq("org_id", cred!.org_id)).data ?? [];
+    // A promotion with a version: other suites leave version-less promotions, whose comment call fails as not_found.
+    const list = (await viewer.from("promotions").select("id").eq("org_id", cred!.org_id).not("current_version_id", "is", null)).data ?? [];
     expect(list.length).toBeGreaterThan(0);
     const any = list[0]!.id;
     const sid = (await admin().from("promotions").select("current_version_id").eq("id", any).single()).data!.current_version_id;
