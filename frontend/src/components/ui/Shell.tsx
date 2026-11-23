@@ -49,7 +49,7 @@ export function Brand({
   size?: "sm" | "md" | "lg";
 }) {
   const { t } = useI18n();
-  const h = { sm: "h-6", md: "h-7", lg: "h-11" }[size];
+  const h = { sm: "h-[26px]", md: "h-8", lg: "h-12" }[size];
   const word = inverse ? LOGO_COLORS.cream : LOGO_COLORS.word;
   const green = inverse ? LOGO_COLORS.greenOnDark : LOGO_COLORS.green;
   // The gold stroke keeps the logo's soft top-to-bottom sheen (sampled from the supplied artwork).
@@ -63,7 +63,9 @@ export function Brand({
         viewBox={compact ? MARK_VIEWBOX : LOGO_VIEWBOX}
         role="img"
         aria-label={t("brand.name")}
-        className={cn(h, "w-auto shrink-0")}
+        // The dots under «ي» hang below the letters, so the wordmark's visual centre sits above the box centre:
+        // nudge it down so it lines up with the navigation text beside it.
+        className={cn(h, "w-auto shrink-0", !compact && "translate-y-[12%]")}
       >
         <defs>
           <linearGradient id={goldId} x1="0" y1="0" x2="0" y2="1">
