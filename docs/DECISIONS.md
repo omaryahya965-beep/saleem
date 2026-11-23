@@ -758,3 +758,10 @@ Format: decision — why — alternatives considered.
     applicability or evidence wording). Missing fields read «غير محددة في السجل».
   - **No coverage cards:** the authority coverage cards above the list are removed, matching the owner's reference.
   - **Flaky test fixed:** the backend viewer test now picks a promotion that has a version.
+- **D220. Rulebook page restored exactly as in 85716c7 (2026-11-23, owner's request).** `RulebookPage.tsx` and
+  `RulePacks.tsx` are byte-for-byte the 85716c7 versions (pre-D216), so the page looks the way it did on 2026-11-20.
+  - **Displayed status vs analysis:** this version counts and labels a rule «سارية ومطبقة» when `is_active` is true,
+    so it shows 238 active, 0 pending and 0 authorities. The analysis engine is unchanged (D217) and applies only
+    rules with `review_state = 'active'` (15).
+  - **Packs panel:** the restored org pack and draft panel no longer changes what an analysis applies.
+  - `enrich.ts` and its unit test stay in the tree, unused by the page.
