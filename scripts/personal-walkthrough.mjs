@@ -252,7 +252,7 @@ await step(page, "library", async () => {
 });
 await step(page, "rulebook-coverage", async () => {
   await page.goto(`${base}/rules`);
-  await page.getByTestId("authority-coverage").waitFor({ timeout: 30000 });
+  await page.getByTestId("rule-results").waitFor({ timeout: 30000 }); // rules grouped by authority (D224)
 });
 await step(page, "ask", async () => {
   await page.goto(`${base}/ask`);
