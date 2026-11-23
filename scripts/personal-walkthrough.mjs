@@ -252,7 +252,8 @@ await step(page, "library", async () => {
 });
 await step(page, "rulebook-coverage", async () => {
   await page.goto(`${base}/rules`);
-  await page.getByTestId("authority-coverage").waitFor({ timeout: 30000 });
+  // D219: the rulebook is one accordion per authority (the coverage cards above it were removed).
+  await page.getByTestId("rule-results").waitFor({ timeout: 30000 });
 });
 await step(page, "ask", async () => {
   await page.goto(`${base}/ask`);

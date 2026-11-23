@@ -9,7 +9,11 @@ import { useOrgPicker } from "@/features/libraries/orgPicker";
 /** Demo sessions end this long after sign-in (users flagged app_metadata.demo by the server-side seed). */
 export const DEMO_SESSION_MS = 2 * 60 * 60 * 1000;
 
-/** Marks a demo session (fictional data) and signs it out when it expires. Nothing for real users. */
+/**
+ * Demo sessions: signs the session out when it expires (unchanged security model, D211/D215) and marks it with a
+ * compact «تجريبي» chip in the top bar. The full-width banner on every page was removed (D219): demo identification
+ * stays at entry (login), in the account menu and in this chip. Nothing for real users.
+ */
 export function DemoBanner() {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -36,13 +40,17 @@ export function DemoBanner() {
   }, [demo, started, navigate, qc]);
   if (!demo) return null;
   return (
-    <div
-      role="status"
-      data-testid="demo-banner"
-      className="no-print flex items-center justify-center gap-2 bg-amber-bg px-4 py-1.5 text-xs text-amber-text [&_svg]:size-3.5"
+    <span
+      data-testid="demo-chip"
+      title={personalDemo ? t("auth.demo.chipTitlePersonal") : t("auth.demo.chipTitle")}
+      className="no-print hidden h-7 items-center gap-1 rounded-full border border-gold/50 bg-amber-bg px-2.5 text-xs font-medium text-amber-text sm:inline-flex [&_svg]:size-3.5"
     >
       <FlaskConical aria-hidden="true" />
-      {personalDemo ? t("auth.demo.bannerPersonal") : t("auth.demo.banner")}
-    </div>
+      {t("auth.demo.chip")}
+      <span className="sr-only">
+        {" — "}
+        {personalDemo ? t("auth.demo.chipTitlePersonal") : t("auth.demo.chipTitle")}
+      </span>
+    </span>
   );
 }
