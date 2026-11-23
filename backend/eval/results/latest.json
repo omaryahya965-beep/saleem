@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-23T17:16:59.782Z",
+  "at": "2026-11-21T08:37:02.568Z",
   "llm_model": null,
   "prompt_version": "v4-2026-11",
   "summary": {
@@ -131,7 +131,7 @@
     {
       "id": "slimming-tea",
       "title": "شاي تنحيف بادعاءات وكود دون إفصاح",
-      "ms": 2,
+      "ms": 3,
       "cost_usd": 0,
       "outcome": {
         "MAW-01": "hit",
@@ -500,7 +500,7 @@
     {
       "id": "supplement-cure",
       "title": "مكمل يدّعي علاج السكري دون إفصاح",
-      "ms": 0,
+      "ms": 1,
       "cost_usd": 0,
       "outcome": {
         "MAW-01": "hit",

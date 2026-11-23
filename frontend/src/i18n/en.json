@@ -475,9 +475,7 @@
       "notSpecified": "Not specified in the record",
       "sector": "Sector",
       "lastVerified": "Last verified",
-      "notApplied": "Not applied in automatic checks until approved.",
-      "officialText": "Official text of the provision",
-      "reviewedBy": "Approved by"
+      "notApplied": "Not applied in automatic checks until approved."
     }
   },
   "landing": {

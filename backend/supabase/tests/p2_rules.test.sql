@@ -9,26 +9,16 @@ declare _v2 uuid := '22222222-2222-2222-2222-222222222222';
 begin
   if (select id from public.rulebook_versions where is_active) <> _v2 then raise exception 'v2 release not active'; end if;
   if (select count(*) from public.rules where rulebook_version_id = _v2) <> 51 + 187 then raise exception 'unexpected rule count'; end if;
-  -- D220: a regulatory rule is active (or marked reviewed) ONLY with its verbatim official text, a named reviewer and a
-  -- verified source; everything else stays draft or archived.
-  if exists (select 1 from public.rules where pack is not null and pack not in ('sa-gmedia-creators', 'sa-sdaia-ai', 'sa-mc-ecommerce', 'sa-system')
-             and (review_state = 'active' or legal_status = 'legally_reviewed')
-             and (coalesce(official_text_ar, '') = '' or legal_reviewed_by is null or legal_reviewed_at is null or not source_verified
-                  or review_state <> 'active' or legal_status <> 'legally_reviewed')) then
-    raise exception 'a regulatory rule is active or reviewed without official text, reviewer and verified source'; end if;
+  if exists (select 1 from public.rules where code like 'SA-%' and (review_state = 'active' or legal_status = 'legally_reviewed')) then raise exception 'a CSV rule is active or marked reviewed'; end if;
   if exists (select 1 from public.rules where code like 'SA-HAJ-%' and review_state <> 'archived') then raise exception 'HAJ rules must stay disabled'; end if;
   -- Phase 8 mapping: pending only, flags only NEW drafts, changes no status (docs/saleem-v2/legal/SAMA_CMA_MAPPING.md).
   if exists (select 1 from public.rule_mappings where status <> 'pending' or classification = 'verified_equivalent') then raise exception 'mapping decided without a reviewer'; end if;
-  -- D220: a flagged duplicate is a CSV rule that stays a draft or is archived — never activated.
-  if exists (select 1 from public.rules where possible_duplicate_of is not null and (review_state not in ('draft', 'archived') or code not like 'SA-%')) then raise exception 'duplicate flag on an active or old rule'; end if;
-  -- D220 verified batch: SAMA's 30 advertising rules + SA-BANK-022 and CMA's 25 non-duplicate rules are active; the 45
-  -- flagged duplicates are archived; no SAMA/CMA rule is left in another state.
-  if (select count(*) from public.rules r join public.rule_packs p on p.code = r.pack where r.rulebook_version_id = _v2 and p.authority in ('SAMA', 'CMA') and r.review_state = 'active') <> 56 then
-    raise exception 'unexpected number of active SAMA/CMA rules'; end if;
-  if (select count(*) from public.rules r join public.rule_packs p on p.code = r.pack where r.rulebook_version_id = _v2 and p.authority in ('SAMA', 'CMA') and r.review_state = 'archived' and r.possible_duplicate_of is not null) <> 45 then
-    raise exception 'unexpected number of archived SAMA/CMA duplicates'; end if;
-  if exists (select 1 from public.rules r join public.rule_packs p on p.code = r.pack where r.rulebook_version_id = _v2 and p.authority in ('SAMA', 'CMA') and r.review_state not in ('active', 'archived')) then
-    raise exception 'a SAMA/CMA rule is left unreviewed'; end if;
+  if exists (select 1 from public.rules where possible_duplicate_of is not null and (review_state <> 'draft' or code not like 'SA-%')) then raise exception 'duplicate flag on a non-draft or old rule'; end if;
+  if (select count(*) from public.rules where pack in ('sa-sama-advertising', 'sa-cma-securities') and review_state <> 'draft' and rulebook_version_id = '22222222-2222-2222-2222-222222222222') > 0 then raise exception 'old SAMA/CMA status changed'; end if;
+  -- Every SAMA/CMA rule is a draft, unverified, without official text.
+  if exists (select 1 from public.rules where (code like 'SAMA-%' or code like 'CMA-%')
+             and (review_state <> 'draft' or source_verified or official_text_ar is not null)) then
+    raise exception 'a regulatory rule is not a plain draft'; end if;
   -- Existing creator rules unchanged (codes, instructions, severities) and still active.
   if exists (
     select 1 from public.rules a join public.rules b on b.code = a.code and b.rulebook_version_id = _v2
@@ -95,9 +85,7 @@ reset role;
 -- Direct writes cannot activate a regulatory rule without review data (constraint).
 do $$ begin
   begin
-    update public.rules set review_state = 'active'
-    where id = (select id from public.rules where review_state = 'draft' and official_text_ar is null
-                  and pack not in ('sa-gmedia-creators', 'sa-sdaia-ai', 'sa-mc-ecommerce', 'sa-system') limit 1);
+    update public.rules set review_state = 'active' where code = 'SAMA-ADV-01';
     raise exception 'constraint missing';
   exception when check_violation then null; end;
 end $$;

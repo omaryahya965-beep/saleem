@@ -104,14 +104,6 @@ describe.skipIf(!enabled)("real workflows (local stack, demo org)", () => {
     const ack = v2.status.startsWith("failed");
     expect(await errOf(marketer.rpc("submit_promotion", { _pid: ad.pid, _note: "عدّلت المعدل", _ack_failed: ack }))).toBeNull();
     expect(await errOf(reviewer.rpc("open_review", { _pid: ad.pid }))).toBeNull();
-    // D220: with SAMA's advertising rules active, the finance ad can get findings; approval needs a reviewer response
-    // to each open finding of the latest run (missing_reviewer_responses otherwise), as in the real review screen.
-    const run = (
-      await admin().from("analysis_runs").select("id").eq("submission_id", v2.sid).order("started_at", { ascending: false }).limit(1)
-    ).data?.[0];
-    const open = run ? ((await admin().from("findings").select("id").eq("run_id", run.id)).data ?? []) : [];
-    for (const f of open)
-      expect(await errOf(reviewer.rpc("respond_finding", { _finding: f.id, _action: "correction_verified", _comment: "روجع" }))).toBeNull();
     expect(await errOf(reviewer.rpc("decide_promotion", { _pid: ad.pid, _decision: "approve", _comment: "مطابق" }))).toBeNull();
     expect(await statusOf(ad.pid)).toBe("approved");
     const { data, error } = await reviewer.rpc("verify_decision_chain", { _pid: ad.pid });

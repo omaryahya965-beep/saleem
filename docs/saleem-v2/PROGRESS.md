@@ -54,13 +54,6 @@
     screenshots/d219/
   - personal-walkthrough (full check → correction → re-check journey)
   - check-demo-personas (9 roles)
-- Verified activation batch 1 (2026-11-23, D220): 71 active rules, up from 15.
-  - SAMA and CMA rules activated from their official Arabic texts, 45 duplicates archived, COM-01 completed, wrong and
-    dead links fixed.
-  - Migration 20261123100000 is on the isolated stack only.
-  - The development database needs your approval for this migration.
-  - 118 drafts are waiting for their official texts (SFDA, MC, REGA, MT, SDAIA, GMEDIA): see
-    legal/RULE_REVIEW_RECORD.md.
 - Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
   in RELEASE_PLAN.md §9.
 
