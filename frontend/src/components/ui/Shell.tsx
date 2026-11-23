@@ -49,7 +49,7 @@ export function Brand({
   size?: "sm" | "md" | "lg";
 }) {
   const { t } = useI18n();
-  const h = { sm: "h-7", md: "h-9", lg: "h-14" }[size];
+  const h = { sm: "h-6", md: "h-7", lg: "h-11" }[size];
   const word = inverse ? LOGO_COLORS.cream : LOGO_COLORS.word;
   const green = inverse ? LOGO_COLORS.greenOnDark : LOGO_COLORS.green;
   // The gold stroke keeps the logo's soft top-to-bottom sheen (sampled from the supplied artwork).
