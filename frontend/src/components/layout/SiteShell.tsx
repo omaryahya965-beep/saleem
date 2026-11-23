@@ -357,7 +357,15 @@ export function SiteShell({ children }: { children: ReactNode }) {
   ];
 
   // D206: the public landing and sample have their own marketing chrome (for visitors and signed-in users alike).
-  if (pathname === "/" || pathname === "/sample" || pathname.startsWith("/sample/"))
+  // D223: a visitor opening the rulebook from the landing page keeps that same chrome (signed-in users see it in
+  // the app shell, with their navigation).
+  const publicRulebook = !user && (pathname === "/rules" || pathname.startsWith("/rules/"));
+  if (
+    pathname === "/" ||
+    pathname === "/sample" ||
+    pathname.startsWith("/sample/") ||
+    publicRulebook
+  )
     return <PublicLayout>{children}</PublicLayout>;
 
   return (

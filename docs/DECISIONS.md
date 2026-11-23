@@ -793,3 +793,6 @@ Format: decision — why — alternatives considered.
   - **Results higher up:** recent results come next, with a status summary shown once something has been checked.
     The next step and the AI allowance sit beside them.
   - **Phones:** the upload area comes right after the headline.
+- **D223. Visitors see the rulebook in the public chrome (2026-11-23).** A signed-out visitor who opens «الدليل التنظيمي»
+  from the landing page keeps the landing page's header (navigation, «ابدأ الآن», width) instead of switching to the
+  app shell. Signed-in users still see the rulebook inside the app with their own navigation.
