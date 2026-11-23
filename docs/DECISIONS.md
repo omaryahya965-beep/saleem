@@ -765,3 +765,20 @@ Format: decision — why — alternatives considered.
     rules with `review_state = 'active'` (15).
   - **Packs panel:** the restored org pack and draft panel no longer changes what an analysis applies.
   - `enrich.ts` and its unit test stay in the tree, unused by the page.
+- **D221. New logo, no demo banner, compliance-first personal home and five-entry personal sidebar (2026-11-23,
+  owner's request).** The rulebook stays as in D220 (85716c7), and no rule is activated.
+  - **Logo:** the owner's new logo has a forest-green wordmark, a green lower stroke and a gold upper stroke. It was
+    traced from its alpha channel into SVG paths (`scripts/brand/`; source in `docs/brand/`).
+    - Brand inks are sampled from the artwork, and the gold keeps the artwork's light top-to-bottom sheen.
+    - Used by `<Brand>`: light, inverse (cream, mint, gold) and compact variants.
+    - Also used for the favicon, the apple-touch icon and the PWA icons.
+  - **Demo banner:** the full-width «جلسة تجريبية…» banner is removed for every account (individual and enterprise
+    demos). A small «تجريبي» chip sits in the top bar. Expiry, sign-out and isolation are unchanged.
+  - **Personal home:** checking an ad against the rules is the primary action: the hero «افحص إعلانك الآن» and the
+    dominant first card. Smart correction, Ask SALEEM and AI creation follow.
+  - **Recent results:** real thumbnails and finding counts, plus the next step and a usage summary. An uploaded
+    version that was never analysed reads «لم يُفحص بعد».
+  - **Personal sidebar:**
+    - Entries: الرئيسية, إعلاناتي, إعلان جديد, then المساعدة والقواعد: دليل القواعد, اسأل سليم.
+    - Studio is reached from «إعلان جديد» and from the home page. Personal settings are in the account menu.
+    - Enterprise navigation is unchanged.

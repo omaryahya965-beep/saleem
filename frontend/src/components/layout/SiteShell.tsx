@@ -372,6 +372,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         sidebar={signedIn ? <AppSidebar groups={groups} pathname={pathname} /> : undefined}
         actions={
           <>
+            {signedIn && <DemoBanner />}
             <LanguageToggle />
             {signedIn && (
               <Suspense fallback={<span className="size-11" />}>
@@ -383,7 +384,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
         }
         mobileActionBar={<div data-slot ref={setSlot} />}
       >
-        {signedIn && <DemoBanner />}
         {signedIn && blocked ? <NotForRole /> : children}
       </AppShell>
     </ActionBarContext.Provider>

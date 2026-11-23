@@ -45,7 +45,7 @@ export function WelcomePage() {
         data-testid="welcome-page"
       >
         <div className="flex flex-col items-start gap-3">
-          <Brand />
+          <Brand size="lg" />
           <h1
             className={cn("text-3xl font-bold", lang === "ar" ? "font-display" : "tracking-tight")}
           >

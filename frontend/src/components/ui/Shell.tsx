@@ -1,7 +1,15 @@
 import { Languages } from "lucide-react";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
+import {
+  LOGO_COLORS,
+  LOGO_VIEWBOX,
+  MARK_GOLD_PATH,
+  MARK_GREEN_PATH,
+  MARK_VIEWBOX,
+  WORDMARK_PATH,
+} from "./brandPaths";
 
 /** LanguageToggle — switches AR ⇄ EN; the label is shown in the target language. */
 export function LanguageToggle({ className }: { className?: string }) {
@@ -24,29 +32,49 @@ export function LanguageToggle({ className }: { className?: string }) {
   );
 }
 
-/** Brand — wordmark with the س mark. */
-export function Brand({ className, inverse }: { className?: string; inverse?: boolean }) {
-  const { t, lang } = useI18n();
+/**
+ * Brand — the SALEEM logo (Arabic wordmark «سليم» and the check symbol), traced from the supplied logo
+ * (docs/brand/saleem-logo-source.png → scripts/brand/build-brand.mjs). Brand inks: forest green, and gold with the logo's light sheen; `inverse` for dark surfaces.
+ * `compact` shows the symbol alone where the wordmark is too large.
+ */
+export function Brand({
+  className,
+  inverse,
+  compact,
+  size = "md",
+}: {
+  className?: string;
+  inverse?: boolean;
+  compact?: boolean;
+  size?: "sm" | "md" | "lg";
+}) {
+  const { t } = useI18n();
+  const h = { sm: "h-7", md: "h-9", lg: "h-14" }[size];
+  const word = inverse ? LOGO_COLORS.cream : LOGO_COLORS.word;
+  const green = inverse ? LOGO_COLORS.greenOnDark : LOGO_COLORS.green;
+  // The gold stroke keeps the logo's soft top-to-bottom sheen (sampled from the supplied artwork).
+  const goldId = `saleem-gold-${useId().replace(/:/g, "")}`;
+  const [goldTop, goldBottom] = inverse
+    ? [LOGO_COLORS.goldOnDark, LOGO_COLORS.goldOnDark]
+    : [LOGO_COLORS.goldTop, LOGO_COLORS.goldBottom];
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <span
-        aria-hidden="true"
-        className={cn(
-          "grid size-9 place-items-center rounded-[10px] font-display text-xl leading-none font-bold",
-          inverse ? "bg-mint text-ink" : "bg-green text-white",
-        )}
+    <span className={cn("inline-flex items-center", className)} data-testid="brand-logo">
+      <svg
+        viewBox={compact ? MARK_VIEWBOX : LOGO_VIEWBOX}
+        role="img"
+        aria-label={t("brand.name")}
+        className={cn(h, "w-auto shrink-0")}
       >
-        س
-      </span>
-      <span
-        className={cn(
-          "text-2xl leading-none font-bold",
-          lang === "ar" ? "font-display" : "font-sans text-xl tracking-wide",
-          inverse ? "text-paper" : "text-fg",
-        )}
-      >
-        {t("brand.name")}
-      </span>
+        <defs>
+          <linearGradient id={goldId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={goldTop} />
+            <stop offset="1" stopColor={goldBottom} />
+          </linearGradient>
+        </defs>
+        {!compact && <path fill={word} fillRule="evenodd" d={WORDMARK_PATH} />}
+        <path fill={green} fillRule="evenodd" d={MARK_GREEN_PATH} />
+        <path fill={`url(#${goldId})`} fillRule="evenodd" d={MARK_GOLD_PATH} />
+      </svg>
     </span>
   );
 }

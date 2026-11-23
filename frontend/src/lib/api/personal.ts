@@ -120,3 +120,69 @@ export async function listSavedVideos(userId: string): Promise<SavedVideo[]> {
   fail(error);
   return (data as SavedVideo[]) ?? [];
 }
+
+/** D219: what the personal dashboard shows per recent advertisement (all real rows; RLS: own versions only). */
+export interface VersionCard {
+  id: string;
+  kind: string | null;
+  durationSeconds: number | null;
+  previewUrl: string | null;
+  /** Findings of the version's latest analysis run (null when it was never analysed). */
+  violations: number | null;
+  warnings: number | null;
+}
+/** Preview (signed thumbnail), duration and finding counts of the latest run, for a few versions. */
+export async function fetchVersionCards(ids: string[]): Promise<Map<string, VersionCard>> {
+  const out = new Map<string, VersionCard>();
+  if (!ids.length) return out;
+  const [subs, runs] = await Promise.all([
+    supabase
+      .from("submissions")
+      .select("id, kind, duration_seconds, thumbnail_path, media_deleted_at")
+      .in("id", ids),
+    supabase
+      .from("analysis_runs")
+      .select("id, submission_id, started_at")
+      .in("submission_id", ids)
+      .order("started_at", { ascending: false }),
+  ]);
+  fail(subs.error);
+  fail(runs.error);
+  const latest = new Map<string, string>();
+  for (const r of runs.data ?? [])
+    if (!latest.has(r.submission_id)) latest.set(r.submission_id, r.id);
+  const runIds = [...latest.values()];
+  const counts = new Map<string, { violation: number; warning: number }>();
+  if (runIds.length) {
+    const f = await supabase.from("findings").select("run_id, severity").in("run_id", runIds);
+    fail(f.error);
+    for (const row of f.data ?? []) {
+      const c = counts.get(row.run_id) ?? { violation: 0, warning: 0 };
+      c[row.severity] += 1;
+      counts.set(row.run_id, c);
+    }
+  }
+  const rows = subs.data ?? [];
+  const paths = rows
+    .filter((r) => r.thumbnail_path && !r.media_deleted_at)
+    .map((r) => r.thumbnail_path as string);
+  const urls = new Map<string, string>();
+  if (paths.length) {
+    const { data } = await supabase.storage.from("media").createSignedUrls(paths, 3600);
+    for (const s of data ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  for (const r of rows) {
+    const run = latest.get(r.id);
+    const c = run ? (counts.get(run) ?? { violation: 0, warning: 0 }) : null;
+    out.set(r.id, {
+      id: r.id,
+      kind: r.kind,
+      durationSeconds: r.duration_seconds,
+      previewUrl:
+        r.thumbnail_path && !r.media_deleted_at ? (urls.get(r.thumbnail_path) ?? null) : null,
+      violations: c ? c.violation : null,
+      warnings: c ? c.warning : null,
+    });
+  }
+  return out;
+}
