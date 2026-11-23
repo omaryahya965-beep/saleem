@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import ar from "./ar.json";
-import en from "./en.json";
 
 export type Lang = "ar" | "en";
 export type Dir = "rtl" | "ltr";
@@ -22,7 +21,19 @@ type Leaves<T, P extends string = ""> = {
 export type TKey = Leaves<typeof ar>;
 export type TParams = Record<string, string | number>;
 
-const dictionaries: Record<Lang, unknown> = { ar, en };
+// Arabic (the default and the fallback) ships in the main bundle; English is a separate chunk loaded only when the
+// visitor uses English, so Arabic visitors never download it.
+const dictionaries: Record<Lang, unknown> = { ar, en: undefined };
+let englishLoad: Promise<void> | null = null;
+/** Loads a language's dictionary (no-op for Arabic or when already loaded). */
+export function loadDictionary(lang: Lang): Promise<void> {
+  if (lang === "ar" || dictionaries.en) return Promise.resolve();
+  englishLoad ??= import("./en.json").then((m) => {
+    dictionaries.en = m.default;
+  });
+  return englishLoad;
+}
+const isLoaded = (lang: Lang) => lang === "ar" || Boolean(dictionaries.en);
 const STORAGE_KEY = "saleem-lang";
 
 function lookup(dict: unknown, key: string): string | undefined {
@@ -46,7 +57,7 @@ export function translate(lang: Lang, key: TKey, params?: TParams): string {
   );
 }
 
-export function localeOf(lang: Lang): string {
+function localeOf(lang: Lang): string {
   // Gregorian calendar + Latin digits keep dates, times and hashes consistent across languages.
   return lang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB";
 }
@@ -87,6 +98,17 @@ export function I18nProvider({
 }) {
   const [lang, setLangState] = useState<Lang>(() => initialLang ?? readInitialLang());
   const dir: Dir = lang === "ar" ? "rtl" : "ltr";
+  // Re-render once the selected language's dictionary has arrived (English only).
+  const [, setLoaded] = useState(() => isLoaded(lang));
+  useEffect(() => {
+    if (isLoaded(lang)) return;
+    let live = true;
+    void loadDictionary(lang).then(() => live && setLoaded(true));
+    return () => {
+      live = false;
+    };
+  }, [lang]);
+  const ready = isLoaded(lang);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -99,7 +121,8 @@ export function I18nProvider({
     } catch {
       // ignore
     }
-    setLangState(l);
+    // Switch once the dictionary is there, so the page never blanks while English loads.
+    void loadDictionary(l).then(() => setLangState(l));
   }, []);
 
   const value = useMemo<I18n>(() => {
@@ -135,8 +158,12 @@ export function I18nProvider({
         return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n)} ${unit}`;
       },
     };
-  }, [lang, dir, setLang]);
+    // `ready` is a dependency so the functions are rebuilt (and consumers re-render) once English arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, dir, setLang, ready]);
 
+  // While English loads (a fraction of a second, first use only) nothing is rendered rather than a mixed language.
+  if (!ready) return null;
   return (
     <I18nContext.Provider value={value}>
       <DirectionProvider dir={dir}>{children}</DirectionProvider>
