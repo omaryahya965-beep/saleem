@@ -806,3 +806,16 @@ Format: decision — why — alternatives considered.
   - **Counts:** the authority count now shows 9 instead of 0.
   - **Labels:** filter labels are tied to their dropdowns.
   - **Unchanged:** the stat cards and the active label.
+- **D225. Deep cleanup (2026-11-24, branch `chore/saleem-deep-cleanup`).**
+  - **Removed after a repo-wide reference check:**
+    - 2 unused components and 12 dead exports
+    - 45 already-merged i18n patch modules and 6 obsolete debug scripts
+    - an unused devDependency and a stale `roadmap.md`
+  - **Consolidated:**
+    - Edge Function Supabase clients, in `_shared/clients.ts`
+    - the two renderers' text-wrap and recorder, in `lib/canvas.ts`
+    - the rejection-reasons field
+  - **Faster first load:** English is lazily loaded, so first-load JS drops 19% (gzip).
+  - **Additive FK indexes:** migration 20261124090000 (+ rollback), on the isolated stack only.
+  - **No regressions:** no change to RLS, roles, quotas, the regulatory engine or rule states. Report:
+    `docs/SALEEM_DEEP_CLEANUP_REPORT.md`.

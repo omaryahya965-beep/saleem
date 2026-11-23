@@ -79,3 +79,7 @@ demo/.demo-partner-link
 
 # Isolated test stack (scripts/isolated-stack.mjs)
 /.iso/
+
+# Generated (TypeScript incremental cache, Playwright HTML report)
+*.tsbuildinfo
+playwright-report/

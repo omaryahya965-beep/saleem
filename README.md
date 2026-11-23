@@ -62,14 +62,17 @@ flowchart LR
 |---|---|
 | الواجهة | React 19 + TypeScript، ‏Vite، ‏TanStack Router/Query، ‏Tailwind CSS v4، منشورة على **Vercel** |
 | الخلفية | **Supabase**: ‏PostgreSQL + RLS، المصادقة، التخزين، Edge Functions، ومهام مجدولة |
-| التحليل | تفريغ صوتي (Whisper)، نموذج رؤية ولغة، وقواعد عربية ثابتة تعمل بدون نموذج |
+| التحليل | Gemini (الكلام والإطارات والنص)، وقواعد عربية ثابتة تعمل بدون نموذج، ومحرك قواعد يطبّق القواعد السارية لكل الجهات تلقائياً |
 | اللغة | العربية أولاً (RTL) مع الإنجليزية |
 | الاختبارات | Vitest للوحدات، Playwright للواجهة (عربي/إنجليزي، حاسوب/جوال)، ومجموعة تقييم للدقة |
 
 ```text
-frontend/   الواجهة: الصفحات في src/features، مكونات التصميم في src/components/ui، الترجمة في src/i18n
-backend/    Supabase: migrations للقاعدة، functions للتحليل، eval لقياس الدقة، tests
-docs/       القرارات، التشغيل، نظام التصميم، والتقرير النهائي
+frontend/   الواجهة: الصفحات في src/features، مكونات التصميم في src/components/ui، الوصول للبيانات في src/lib/api،
+            الترجمة في src/i18n (ar.json هو المرجع؛ en.json يُحمَّل عند الحاجة)
+backend/    Supabase: migrations (+ rollbacks)، functions (Edge Functions، والمشترك في functions/_shared)،
+            tests (Vitest) و supabase/tests (pgTAP)، eval لقياس دقة التحليل
+scripts/    أدوات التطوير: المكدّس المعزول للاختبارات، جولات المتصفح، توليد البيانات والشعار
+docs/       القرارات، خطة V2 وتقدمها، السجلات القانونية — الفهرس في docs/README.md
 ```
 
 </div>
@@ -79,29 +82,37 @@ docs/       القرارات، التشغيل، نظام التصميم، وال
 
 <br/>
 
-المتطلبات: Node 22، مشروع Supabase، ومفتاح Gemini (المزوّد الوحيد للتحليل).
-
-إعداد Gemini والمتغيرات والقيود ونتائج الاختبار: [`docs/GEMINI_INTEGRATION.md`](docs/GEMINI_INTEGRATION.md).
+المتطلبات: Node 22، و Docker (لـ Supabase المحلي). مفتاح Gemini اختياري: بدونه تعمل التحليلات بمزوّد اختبار حتمي
+لا يرسل أي طلب (انظر [`docs/GEMINI_INTEGRATION.md`](docs/GEMINI_INTEGRATION.md)).
 
 ```bash
 npm ci
 cp backend/.env.example backend/.env                                        # VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY
 cp backend/supabase/functions/.env.example backend/supabase/functions/.env  # GEMINI_API_KEY + GEMINI_MODEL (server-side)
-npx supabase link --project-ref <ref> --workdir backend
-npx supabase db push --workdir backend
-npx supabase secrets set --env-file backend/supabase/functions/.env --workdir backend
-npx supabase functions deploy --workdir backend
-npm run dev        # http://localhost:3000
+npx supabase start --workdir backend           # قاعدة التطوير المحلية (المنافذ 5432x)
+npm run demo:seed                              # الحسابات التجريبية (الأفراد والأدوار التسعة)
+npm run dev                                    # http://localhost:3000
 ```
 
-| الأمر | الوظيفة |
-|---|---|
-| `npm test` | اختبارات الوحدات |
-| `npm --workspace frontend run e2e` | اختبارات الواجهة (Playwright) |
-| `npm --workspace backend run eval` | قياس دقة التحليل على حالات معروفة |
-| `npm run demo:seed` | مساحة «بنك سليم التجريبي» محلياً بسبعة أدوار (كلمة المرور في `demo/.demo-credentials.json` غير المتتبَّع) |
+**الاختبارات تعمل على مكدّس معزول فقط** (`saleem_iso`، المنافذ 5442x) حتى لا تُمسّ بيانات قاعدة التطوير:
 
-**النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. التفاصيل في [`FINAL_REPORT.md`](docs/saleem-v2/progress/FINAL_REPORT.md) §5.
+```bash
+ISO_TEST_PROVIDER=1 node scripts/isolated-stack.mjs start     # مزوّد اختبار حتمي، بلا أي طلب ذكاء اصطناعي
+node scripts/isolated-stack.mjs test                           # pgTAP (RLS والصلاحيات وسلامة القواعد)
+node scripts/isolated-stack.mjs run -- npm --workspace backend test
+npm --workspace frontend run test                              # وحدات الواجهة
+npm --workspace frontend run e2e                               # Playwright: عربي/إنجليزي، حاسوب/جوال
+npm run lint && npm --workspace frontend exec tsc -- --noEmit -p . && npm run build
+npx --yes deno@2 check backend/supabase/functions/*/index.ts
+npm --workspace backend run eval -- --deterministic-only       # دقة التحليل على حالات معروفة
+```
+
+جولات المتصفح الكاملة (على المكدّس المعزول عبر Vite على 3200): `scripts/personal-walkthrough.mjs` (رحلة الفرد كاملة)
+و `scripts/check-demo-personas.mjs` (الأدوار التسعة).
+
+**النشر:** الواجهة على Vercel (Root Directory: `frontend`، المتغيرات `VITE_*` فقط)، والخلفية على Supabase. الخطوات
+والـ migrations المعلّقة وطريقة التراجع في [`docs/saleem-v2/RELEASE_PLAN.md`](docs/saleem-v2/RELEASE_PLAN.md). لا يُنشر
+شيء ولا تُطبَّق migrations على المشروع المستضاف دون موافقة صريحة.
 
 **أسرار Vault المطلوبة في قاعدة البيانات:** مهمة حذف الوسائط المجدولة (`saleem-cleanup-media`) تقرأ عنوان المشروع من سر Vault اسمه `project_url` (عنوان API للمشروع)، إضافةً إلى `cleanup_cron_secret` الذي تنشئه الـ migrations تلقائياً. أنشئه مرة واحدة من SQL Editor:
 `select vault.create_secret('<project API URL>', 'project_url');` — إن لم يوجد، تتخطى المهمة التشغيل وتسجّل ملاحظة بدل استدعاء مشروع خاطئ.
@@ -116,6 +127,7 @@ npm run dev        # http://localhost:3000
 - [`docs/saleem-v2/progress/FINAL_REPORT.md`](docs/saleem-v2/progress/FINAL_REPORT.md): ما تم بناؤه، والتحقق، ودليل النشر
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): كل قرار مع أسبابه والبدائل
 - [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md): دليل المشروع للمطوّرين
+- [`docs/README.md`](docs/README.md): فهرس التوثيق (الحالي والتاريخي)
 
 </details>
 

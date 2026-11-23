@@ -60,7 +60,6 @@ saleem/
 ├── package.json                 workspaces + أوامر عامة (dev, build, test)
 ├── AGENTS.md                    إرشادات المشروع المختصرة
 ├── README.md                    تعريف المشروع بالعربي أولاً
-├── roadmap.md                   خطة المراحل الأولى (مربعاتها غير مؤشَّرة رغم أن معظمها نُفّذ)
 ├── .github/workflows/ci.yml     CI: typecheck, lint, test, audit, build, deno check, e2e
 ├── docs/                        قرارات، تشغيل، تصميم، تقرير نهائي، صور، تقارير Lighthouse
 ├── scripts/                     ~21 سكربت مساعد (prerender، صور الشاشة، مقاطع اصطناعية، TTS...)
@@ -286,7 +285,7 @@ npm run dev                                      # http://localhost:3000
 
 **عدم اتساق ونقاط خطرة لاحظتها:**
 1. docs/ARCHITECTURE.md (حُذف) قديم: يذكر Anthropic وRealtime وحالات `needs_review/needs_fix` بينما الكود يستخدم `ready/review/needs_fixes`، ويقول إن `rules.id` نص بينما هو uuid ويوجد عمود `code` منفصل، ويرتّب خطوات الـ pipeline بغير ترتيبها الفعلي (الفعلي: transcribe ثم llm ثم deterministic ثم merge).
-2. وكذلك [roadmap.md](roadmap.md) كل مربعاته غير مؤشَّرة، وفيه أرقام قديمة (640px وغيرها).
+2. حُذف roadmap.md القديم (2026-11-24) لأن مربعاته غير مؤشَّرة وأرقامه قديمة؛ فهرس التوثيق في [docs/README.md](docs/README.md).
 3. **جدول `ai_settings`** غير مستخدم: الجدول موجود، لكن الكود يقرأ النماذج من متغيرات البيئة فقط ([providers/index.ts](backend/supabase/functions/_shared/providers/index.ts)). هذا شبه dead schema.
 4. **Rate limit** في [analyze/index.ts:382](backend/supabase/functions/analyze/index.ts#L382) يعدّ الـ submissions **المنشأة** في الساعة، لا مرات التحليل، ويستخدم `>` لا `>=`، فيسمح فعلياً بـ 31.
 5. `fail_stuck_submissions` تكتب رسالة خطأ عربية حرفية، بينما بقية المسار يكتب رموزاً بصيغة `code:...` تترجمها الواجهة، فقد تظهر الرسالة بالعربية في الواجهة الإنجليزية.
