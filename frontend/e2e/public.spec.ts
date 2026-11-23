@@ -133,7 +133,17 @@ test("compliance log and public verification", async ({ page, lang }) => {
 test("rulebook search and categories", async ({ page, lang }) => {
   await page.goto("/rules");
   await appReady(page);
+  // D224: rules are listed under their authority; a click opens the authority's rules.
+  await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByTestId("rule-group-toggle-GMEDIA").click();
   await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toBeVisible();
+  await page.getByTestId("rule-group-toggle-GMEDIA").click();
+  await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toHaveCount(
+    0,
+  );
+  // Searching opens the matching authorities.
   await page.getByRole("searchbox").fill("COM-01");
   await expect(page.getByTestId("rule-results").getByText("COM-01", { exact: true })).toBeVisible();
   await expect(page.getByTestId("rule-results").getByText("MAW-01", { exact: true })).toHaveCount(

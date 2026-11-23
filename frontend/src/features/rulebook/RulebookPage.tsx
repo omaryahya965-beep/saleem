@@ -3,12 +3,14 @@ import {
   ArrowUpRight,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   Clock,
   ExternalLink,
   Eye,
   FileCheck2,
   Filter,
   Info,
+  Landmark,
   Layers,
   Plus,
   Scale,
@@ -38,6 +40,38 @@ import { useI18n } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
 import { RulePacks } from "./RulePacks";
 import type { RegulatoryRuleItem } from "./saudiRulesCatalog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import { enrichRules, type EnrichedRule, type PackRow, type SourceRow } from "./enrich";
+
+// Packs and sources are public (RLS: anon + authenticated); they give each database rule its authority and sector,
+// so the authority and sector filters and the authority groups work (D216 mapping).
+const untyped = supabase as unknown as { from: (t: string) => ReturnType<typeof supabase.from> };
+const usePacks = () =>
+  useQuery({
+    queryKey: ["rulebook-packs"],
+    queryFn: async () => {
+      const { data, error } = await untyped
+        .from("rule_packs")
+        .select("code, authority, name_ar, name_en");
+      if (error) throw error;
+      return (data ?? []) as unknown as PackRow[];
+    },
+    staleTime: 10 * 60_000,
+  });
+const useSources = () =>
+  useQuery({
+    queryKey: ["rulebook-sources"],
+    queryFn: async () => {
+      const { data, error } = await untyped
+        .from("regulatory_sources")
+        .select("id, authority, title_ar, title_en, url, status, verification");
+      if (error) throw error;
+      return (data ?? []) as unknown as SourceRow[];
+    },
+    staleTime: 10 * 60_000,
+  });
 
 const AUTHORITIES = [
   { id: "all", ar: "كافة الجهات", en: "All Authorities" },
@@ -50,6 +84,8 @@ const AUTHORITIES = [
   { id: "SDAIA", ar: "سدايا (SDAIA)", en: "SDAIA (Data & AI)" },
   { id: "MT", ar: "وزارة السياحة (MT)", en: "Ministry of Tourism (MT)" },
   { id: "MOHU", ar: "وزارة الحج والعمرة (MOHU)", en: "Hajj & Umrah (MOHU)" },
+  { id: "IA", ar: "هيئة التأمين (IA)", en: "Insurance Authority (IA)" },
+  { id: "INTERNAL", ar: "فحوص سَليم الداخلية", en: "SALEEM system checks" },
 ] as const;
 
 const STATUSES = [
@@ -77,6 +113,10 @@ const SECTORS = [
   { id: "TR", ar: "السياحة والسفر", en: "Tourism & Travel" },
   { id: "HOT", ar: "مرافق الضيافة", en: "Hospitality" },
   { id: "PD", ar: "حماية البيانات والتسويق", en: "Data Protection" },
+  { id: "AI", ar: "الذكاء الاصطناعي والتزييف العميق", en: "AI & Deepfakes" },
+  { id: "INS", ar: "التأمين", en: "Insurance" },
+  { id: "HAJ", ar: "الحج والعمرة", en: "Hajj & Umrah" },
+  { id: "SYS", ar: "فحوص سَليم الداخلية", en: "System checks" },
 ] as const;
 
 export function RulebookPage() {
@@ -91,10 +131,18 @@ export function RulebookPage() {
   const [severity, setSeverity] = useState<string>("all");
   const [selectedRule, setSelectedRule] = useState<RegulatoryRuleItem | null>(null);
 
-  // Cast rules to RegulatoryRuleItem with all enriched fields
-  const rules = useMemo(() => {
-    return (book.data?.rules ?? []) as unknown as RegulatoryRuleItem[];
-  }, [book.data]);
+  const packs = usePacks();
+  const sources = useSources();
+  // Database rules mapped to their authority, sector and source (enrich.ts); without packs/sources yet, as they are.
+  const rules: EnrichedRule[] = useMemo(() => {
+    const raw = (book.data?.rules ?? []) as unknown as Record<string, unknown>[];
+    if (!packs.data || !sources.data) return raw as unknown as EnrichedRule[];
+    const label = (code: string) => {
+      const s = SECTORS.find((x) => x.id === code);
+      return s ? (lang === "en" ? s.en : s.ar) : "";
+    };
+    return enrichRules(raw, packs.data, sources.data, label);
+  }, [book.data, packs.data, sources.data, lang]);
 
   // Summary counts
   const stats = useMemo(() => {
@@ -105,7 +153,8 @@ export function RulebookPage() {
     const authorities = new Set<string>();
 
     for (const r of rules) {
-      if (r.authority) authorities.add(r.authority);
+      if (r.authority && !["INTERNAL", "OTHER"].includes(String(r.authority)))
+        authorities.add(r.authority);
       if (r.review_state === "active" || r.is_active) active++;
       else if (r.review_state === "pending_review") pending++;
       else draft++;
@@ -169,6 +218,129 @@ export function RulebookPage() {
   }, [rules, q, authority, status, sector, severity]);
 
   const version = book.data?.version?.version_label;
+
+  // Rules grouped under their authority, in the filter's order; a group opens on click (several can be open).
+  // Searching or choosing one authority opens the matching groups.
+  const groups = useMemo(() => {
+    const order = AUTHORITIES.map((a) => a.id as string);
+    const by = new Map<string, EnrichedRule[]>();
+    for (const r of filtered) {
+      const k = String(r.authority || "OTHER");
+      by.set(k, [...(by.get(k) ?? []), r]);
+    }
+    return [...by.entries()]
+      .sort((x, y) => (order.indexOf(x[0]) + 1 || 99) - (order.indexOf(y[0]) + 1 || 99))
+      .map(([code, list]) => {
+        const meta = AUTHORITIES.find((a) => a.id === code);
+        return { code, label: meta ? (lang === "en" ? meta.en : meta.ar) : code, rules: list };
+      });
+  }, [filtered, lang]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const searching = q.trim() !== "" || authority !== "all";
+  const isOpen = (code: string) => searching || expanded.has(code);
+  const toggle = (code: string) =>
+    setExpanded((cur) => {
+      const next = new Set(cur);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+
+  const ruleCard = (r: EnrichedRule) => {
+    const isActive = r.review_state === "active" || r.is_active;
+    const isPending = r.review_state === "pending_review";
+    const isArchived = r.review_state === "archived";
+
+    return (
+      <Card
+        key={r.code}
+        className="flex flex-col justify-between gap-3 p-4 transition-all hover:border-green/40 hover:shadow-xs sm:flex-row sm:items-center"
+      >
+        <div className="flex flex-1 flex-col gap-2 min-w-0">
+          {/* Header line: Code, Authority, Status, Severity */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Badge mono className="font-semibold">
+              {r.code}
+            </Badge>
+            <Badge variant="outline" className="bg-sunken/50">
+              {r.authority || "جهة تنظيمية"}
+            </Badge>
+            <Badge
+              variant={
+                isActive ? "green" : isPending ? "amber" : isArchived ? "outline" : "neutral"
+              }
+            >
+              {r.review_state === "active" || r.is_active
+                ? "سارية ومطبقة"
+                : r.review_state === "pending_review"
+                  ? "قيد المراجعة"
+                  : r.review_state === "superseded"
+                    ? "مستبدلة"
+                    : r.review_state === "archived"
+                      ? "معطّلة"
+                      : "مسودة بحثية"}
+            </Badge>
+            {r.sector_ar && <span className="text-fg-muted font-medium">· {r.sector_ar}</span>}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-base font-bold text-fg leading-snug" dir="auto">
+            {lang === "en" ? r.title_en : r.title_ar}
+          </h3>
+
+          {/* Legal reference and official source link */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
+            {r.article_ref && (
+              <span className="font-medium text-fg">
+                المادة: <span dir="ltr">{r.article_ref}</span>
+              </span>
+            )}
+            {r.source_url ? (
+              <a
+                href={r.source_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-green hover:underline"
+              >
+                <span>{r.source_name || "المصدر الرسمي"}</span>
+                <ExternalLink aria-hidden="true" className="size-3" />
+              </a>
+            ) : (
+              <span>{r.source_name}</span>
+            )}
+            {r.check_mode && (
+              <Badge variant="outline" className="text-[11px]">
+                {r.check_mode === "content"
+                  ? "فحص محتوى"
+                  : r.check_mode === "document"
+                    ? "فحص وثائق"
+                    : r.check_mode === "workflow"
+                      ? "إجرائي"
+                      : "مركب"}
+              </Badge>
+            )}
+          </div>
+
+          {/* Applicability snippet */}
+          {r.applicability_ar && (
+            <p className="line-clamp-1 text-xs text-fg-muted" dir="auto">
+              <strong>نطاق الانطباق:</strong> {r.applicability_ar}
+            </p>
+          )}
+        </div>
+
+        {/* Actions column */}
+        <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t border-border pt-2 sm:border-t-0 sm:pt-0">
+          <StatusChip tone={r.default_severity} size="sm">
+            {t(`severity.${r.default_severity}`)}
+          </StatusChip>
+          <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
+            {t("rulebook.detailsBtn")}
+          </Button>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <Page className="flex flex-col gap-6">
@@ -269,10 +441,14 @@ export function RulebookPage() {
         {/* Filter Dropdowns Grid */}
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-authority" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterAuthority")}
             </label>
-            <Select value={authority} onChange={(e) => setAuthority(e.target.value)}>
+            <Select
+              id="rb-authority"
+              value={authority}
+              onChange={(e) => setAuthority(e.target.value)}
+            >
               {AUTHORITIES.map((a) => (
                 <option key={a.id} value={a.id}>
                   {lang === "en" ? a.en : a.ar}
@@ -282,10 +458,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-status" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterStatus")}
             </label>
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <Select id="rb-status" value={status} onChange={(e) => setStatus(e.target.value)}>
               {STATUSES.map((s) => (
                 <option key={s.id} value={s.id}>
                   {lang === "en" ? s.en : s.ar}
@@ -295,10 +471,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-sector" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterSector")}
             </label>
-            <Select value={sector} onChange={(e) => setSector(e.target.value)}>
+            <Select id="rb-sector" value={sector} onChange={(e) => setSector(e.target.value)}>
               {SECTORS.map((sec) => (
                 <option key={sec.id} value={sec.id}>
                   {lang === "en" ? sec.en : sec.ar}
@@ -308,10 +484,10 @@ export function RulebookPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-fg-muted">
+            <label htmlFor="rb-severity" className="text-xs font-medium text-fg-muted">
               {t("rulebook.filterSeverity")}
             </label>
-            <Select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+            <Select id="rb-severity" value={severity} onChange={(e) => setSeverity(e.target.value)}>
               <option value="all">{t("rulebook.all")}</option>
               <option value="violation">مخالفة نظامية (Violation)</option>
               <option value="warning">تنبيه / تحذير (Warning)</option>
@@ -353,108 +529,52 @@ export function RulebookPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2.5" data-testid="rule-results">
-            {filtered.map((r) => {
-              const isActive = r.review_state === "active" || r.is_active;
-              const isPending = r.review_state === "pending_review";
-              const isArchived = r.review_state === "archived";
-
+          <div className="flex flex-col gap-3" data-testid="rule-results">
+            {groups.map((g) => {
+              const open = isOpen(g.code);
               return (
-                <Card
-                  key={r.code}
-                  className="flex flex-col justify-between gap-3 p-4 transition-all hover:border-green/40 hover:shadow-xs sm:flex-row sm:items-center"
+                <section
+                  key={g.code}
+                  data-testid={`rule-group-${g.code}`}
+                  className={cn(
+                    "overflow-hidden rounded-[16px] border bg-card transition-colors",
+                    open ? "border-green/30" : "border-border",
+                  )}
                 >
-                  <div className="flex flex-1 flex-col gap-2 min-w-0">
-                    {/* Header line: Code, Authority, Status, Severity */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <Badge mono className="font-semibold">
-                        {r.code}
+                  <h2>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls={`rule-group-panel-${g.code}`}
+                      onClick={() => toggle(g.code)}
+                      data-testid={`rule-group-toggle-${g.code}`}
+                      className="flex w-full items-center gap-3 px-4 py-3.5 text-start outline-none hover:bg-sunken/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green sm:px-5"
+                    >
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-bg text-green [&_svg]:size-5">
+                        <Landmark aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1 font-bold text-fg">{g.label}</span>
+                      <Badge variant="outline">
+                        {g.rules.length} {lang === "en" ? "rules" : "قاعدة"}
                       </Badge>
-                      <Badge variant="outline" className="bg-sunken/50">
-                        {r.authority || "جهة تنظيمية"}
-                      </Badge>
-                      <Badge
-                        variant={
-                          isActive
-                            ? "green"
-                            : isPending
-                              ? "amber"
-                              : isArchived
-                                ? "outline"
-                                : "neutral"
-                        }
-                      >
-                        {r.review_state === "active" || r.is_active
-                          ? "سارية ومطبقة"
-                          : r.review_state === "pending_review"
-                            ? "قيد المراجعة"
-                            : r.review_state === "superseded"
-                              ? "مستبدلة"
-                              : r.review_state === "archived"
-                                ? "معطّلة"
-                                : "مسودة بحثية"}
-                      </Badge>
-                      {r.sector_ar && (
-                        <span className="text-fg-muted font-medium">· {r.sector_ar}</span>
-                      )}
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={cn(
+                          "size-5 shrink-0 text-fg-muted transition-transform",
+                          open && "rotate-180",
+                        )}
+                      />
+                    </button>
+                  </h2>
+                  {open && (
+                    <div
+                      id={`rule-group-panel-${g.code}`}
+                      className="flex flex-col gap-2.5 border-t border-border bg-sunken/30 p-3"
+                    >
+                      {g.rules.map(ruleCard)}
                     </div>
-
-                    {/* Title */}
-                    <h3 className="text-base font-bold text-fg leading-snug" dir="auto">
-                      {lang === "en" ? r.title_en : r.title_ar}
-                    </h3>
-
-                    {/* Legal reference and official source link */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
-                      {r.article_ref && (
-                        <span className="font-medium text-fg">
-                          المادة: <span dir="ltr">{r.article_ref}</span>
-                        </span>
-                      )}
-                      {r.source_url ? (
-                        <a
-                          href={r.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-green hover:underline"
-                        >
-                          <span>{r.source_name || "المصدر الرسمي"}</span>
-                          <ExternalLink aria-hidden="true" className="size-3" />
-                        </a>
-                      ) : (
-                        <span>{r.source_name}</span>
-                      )}
-                      {r.check_mode && (
-                        <Badge variant="outline" className="text-[11px]">
-                          {r.check_mode === "content"
-                            ? "فحص محتوى"
-                            : r.check_mode === "document"
-                              ? "فحص وثائق"
-                              : r.check_mode === "workflow"
-                                ? "إجرائي"
-                                : "مركب"}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Applicability snippet */}
-                    {r.applicability_ar && (
-                      <p className="line-clamp-1 text-xs text-fg-muted" dir="auto">
-                        <strong>نطاق الانطباق:</strong> {r.applicability_ar}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Actions column */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t border-border pt-2 sm:border-t-0 sm:pt-0">
-                    <StatusChip tone={r.default_severity} size="sm">
-                      {t(`severity.${r.default_severity}`)}
-                    </StatusChip>
-                    <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
-                      {t("rulebook.detailsBtn")}
-                    </Button>
-                  </div>
-                </Card>
+                  )}
+                </section>
               );
             })}
           </div>

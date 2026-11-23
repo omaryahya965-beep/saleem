@@ -796,3 +796,13 @@ Format: decision — why — alternatives considered.
 - **D223. Visitors see the rulebook in the public chrome (2026-11-23).** A signed-out visitor who opens «الدليل التنظيمي»
   from the landing page keeps the landing page's header (navigation, «ابدأ الآن», width) instead of switching to the
   app shell. Signed-in users still see the rulebook inside the app with their own navigation.
+- **D224. Rulebook (85716c7 look) grouped under authorities, filters working (2026-11-23, owner's request).**
+  - **Authority groups:** below the filters, each authority is listed with its number of rules. A click opens its
+    rules (same rule cards and details window), and several can be open at once. Searching or choosing one
+    authority opens the matching groups.
+  - **Filters fixed:** database rules are mapped to their authority and sector (`enrich.ts`), so the authority and
+    sector filters work. The authority list gains IA and SALEEM system checks; the sector list gains AI, insurance,
+    Hajj and system checks.
+  - **Counts:** the authority count now shows 9 instead of 0.
+  - **Labels:** filter labels are tied to their dropdowns.
+  - **Unchanged:** the stat cards and the active label.
