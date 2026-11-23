@@ -236,7 +236,3 @@ export async function acceptDraft(id: string, promotionId: string, submissionId:
   });
   fail(error);
 }
-export async function discardDraft(id: string) {
-  const { error } = await rpc("discard_studio_draft", { _id: id });
-  fail(error);
-}

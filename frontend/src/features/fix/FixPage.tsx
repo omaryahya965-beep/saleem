@@ -752,8 +752,3 @@ function Review({
     </div>
   );
 }
-
-export function FixNotFound() {
-  const { t } = useI18n();
-  return <EmptyState icon={<Sparkles />} title={t("fix.title")} body={t("fix.unavailable")} />;
-}

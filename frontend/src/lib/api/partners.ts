@@ -38,34 +38,8 @@ export const prk = {
   pending: (org: string) => ["partner-members", org] as const,
 };
 
-export const usePartnerInfo = (token: string) =>
-  useQuery({
-    queryKey: prk.info(token),
-    queryFn: async () =>
-      check(await supabase.rpc("partner_link_info", { _token: token })) as unknown as PartnerInfo,
-  });
-
 export const joinPartner = async (token: string) =>
   check(await supabase.rpc("partner_join", { _token: token, _accept_terms: true }));
-
-export const createPartnerPromotion = async (
-  token: string,
-  i: {
-    title: string;
-    productId: string | null;
-    channels: string[];
-    communicationType: CommunicationType;
-  },
-) =>
-  check(
-    await supabase.rpc("partner_create_promotion", {
-      _token: token,
-      _title: i.title,
-      _product: i.productId,
-      _channels: i.channels,
-      _communication_type: i.communicationType,
-    }),
-  );
 
 /** «إرسالاتي»: the partner's own promotions in that organisation (RLS: owner only). */
 export const useMyPartnerPromotions = (org: string | undefined, userId: string | undefined) =>
@@ -112,20 +86,6 @@ export const usePartnerLinks = (org: string) =>
       ) as PartnerLink[],
   });
 
-export const createPartnerLink = async (
-  org: string,
-  i: { label: string; products: string[]; channels: string[]; intro: string; terms: string },
-) =>
-  check(
-    await supabase.rpc("create_partner_link", {
-      _org: org,
-      _label: i.label,
-      _products: i.products,
-      _channels: i.channels,
-      _intro: i.intro.trim() || null,
-      _terms: i.terms,
-    }),
-  );
 export const setLinkActive = async (id: string, active: boolean) => {
   check(await supabase.rpc("set_partner_link_active", { _id: id, _active: active }));
 };

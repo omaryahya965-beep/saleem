@@ -54,8 +54,6 @@ export const COMMENT_REQUIRED = new Set<ResponseAction>([
   "clarification_required",
   "reply",
 ]);
-/** Finding statuses that count as "assessed by the reviewer" or "answered by the uploader". */
-export const RESOLVED_STATUSES = new Set(["resolved", "verified", "not_required", "dismissed"]);
 
 function check<T>(res: {
   data: T;

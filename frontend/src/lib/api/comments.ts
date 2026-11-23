@@ -39,8 +39,7 @@ export const addComment = async (c: {
       _links: c.links ?? [],
     } as never),
   ) as string;
-export const editComment = async (id: string, body: string) =>
-  void check(await supabase.rpc("edit_comment", { _id: id, _body: body }));
+
 export const resolveComment = async (id: string, resolved: boolean) =>
   void check(await supabase.rpc("resolve_comment", { _id: id, _resolved: resolved }));
 export const deleteComment = async (id: string) =>

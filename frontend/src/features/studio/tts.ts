@@ -86,13 +86,3 @@ export async function synthesize(
     onProgress?.({ loaded: p.loaded, total: p.total }),
   );
 }
-
-/** True when the voice model is already cached in this browser (no download needed). */
-export async function isVoiceCached(voiceId: LocalVoice["id"]): Promise<boolean> {
-  try {
-    const { stored } = await import("@diffusionstudio/vits-web");
-    return (await stored()).includes(voiceId);
-  } catch {
-    return false;
-  }
-}

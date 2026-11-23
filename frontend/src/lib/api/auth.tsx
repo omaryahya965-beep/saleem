@@ -23,17 +23,6 @@ export const ADVANCED_PERSONAS = [
 export const DEMO_PERSONAS = [...ESSENTIAL_PERSONAS, ...ADVANCED_PERSONAS] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number];
 
-export const DEMO_EMAILS: Record<DemoPersona, string> = {
-  owner: "owner@demo.saleem.app",
-  admin: "orgadmin@demo.saleem.app",
-  compliance_lead: "lead@demo.saleem.app",
-  reviewer: "reviewer@demo.saleem.app",
-  legal: "legal@demo.saleem.app",
-  creator: "marketer@demo.saleem.app",
-  external_uploader: "partner@demo.saleem.app",
-  external_reviewer: "extreviewer@demo.saleem.app",
-  viewer: "viewer@demo.saleem.app",
-};
 /** D211: the individual / content-creator demo — a personal workspace only (no organisation, no role). */
 export const INDIVIDUAL_DEMO = "individual" as const;
 

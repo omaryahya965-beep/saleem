@@ -17,16 +17,6 @@ function check<T>(res: { data: T; error: { message: string } | null }): NonNulla
   return res.data as NonNullable<T>;
 }
 
-export const CLAIM_STATUSES = [
-  "draft",
-  "pending_review",
-  "approved",
-  "changes_requested",
-  "rejected",
-  "expired",
-  "archived",
-] as const;
-
 export const fetchClaims = async (orgId: string) =>
   check(
     await supabase
@@ -97,8 +87,6 @@ export const claimFromFinding = async (
       _approve: approve,
     }),
   ) as string;
-export const extendClaimScope = async (claim: string, pid: string) =>
-  check(await supabase.rpc("claim_extend_scope", { _claim: claim, _pid: pid })) as string;
 
 /** Uploads a substantiation file to the private evidence bucket ({org}/claims/{claimKey}/{file}). */
 export async function uploadEvidence(orgId: string, file: File): Promise<Substantiation> {

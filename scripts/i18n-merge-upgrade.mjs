@@ -1,5 +1,6 @@
 // Deep-merges a bilingual message module ({ ar: {...}, en: {...} }) into frontend/src/i18n/{ar,en}.json.
-// Usage: node scripts/i18n-merge-upgrade.mjs frontend/src/i18n/upgrade/<area>.mjs
+// Usage: node scripts/i18n-merge-upgrade.mjs <module.mjs>   (write the module outside the repo or delete it once merged:
+// ar.json and en.json are the source of truth)
 // Keeps both files in the same key order so the parity test stays meaningful; refuses one-sided keys.
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
