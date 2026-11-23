@@ -782,3 +782,14 @@ Format: decision — why — alternatives considered.
     - Entries: الرئيسية, إعلاناتي, إعلان جديد, then المساعدة والقواعد: دليل القواعد, اسأل سليم.
     - Studio is reached from «إعلان جديد» and from the home page. Personal settings are in the account menu.
     - Enterprise navigation is unchanged.
+- **D222. Personal home redesign (2026-11-23, owner's request).** The page is rebuilt around a single check panel.
+  - **Check panel:**
+    - A short headline: «افحص إعلانك قبل أن تنشره».
+    - A plain explanation and the three steps of a check: upload, comparison with every authority's rules, fixing.
+    - An upload area (opens /new) that lists the accepted formats and says active rules apply automatically.
+  - **Removed duplication:** the large «افحص إعلانك بالقواعد» card, which repeated the hero button, and the
+    decorative video mock-up.
+  - **Supporting tools:** smart correction, Ask SALEEM and AI creation become a compact row below the panel.
+  - **Results higher up:** recent results come next, with a status summary shown once something has been checked.
+    The next step and the AI allowance sit beside them.
+  - **Phones:** the upload area comes right after the headline.

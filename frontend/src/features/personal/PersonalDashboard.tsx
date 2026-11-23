@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  BookOpen,
   CircleCheck,
   Eye,
   FilePenLine,
@@ -13,8 +12,6 @@ import {
   Info,
   Lightbulb,
   MessageCircleQuestion,
-  Mic,
-  Play,
   Scale,
   ScanSearch,
   ShieldCheck,
@@ -22,10 +19,11 @@ import {
   TriangleAlert,
   Type,
   Upload,
+  CloudUpload,
   Wand2,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Brand, Card, ErrorState, Page, ProgressBar, Skeleton, StatusChip } from "@/components/ui";
+import { Card, ErrorState, Page, ProgressBar, Skeleton, StatusChip } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { useAuth } from "@/lib/api/auth";
 import { listPromotions, type PromotionListItem } from "@/lib/api/promotions";
@@ -65,7 +63,7 @@ const rowLink =
   "flex items-center gap-2.5 rounded-[12px] px-2 py-2 text-sm hover:bg-sunken focus-visible:outline-2 focus-visible:outline-green";
 
 /**
- * «مساحتي الشخصية» (D211, redesigned D219): the individual's home. Checking an advertisement against the applicable
+ * «مساحتي الشخصية» (D211, redesigned D219 and D222): the individual's home. Checking an advertisement against the applicable
  * Saudi rules is the primary action (hero + dominant card); smart correction, Ask SALEEM and the AI Studio are
  * supporting actions, in that order. Below: the user's own recent results (real previews and finding counts of the
  * latest run), the next step, a compact usage summary, corrections, drafts and saved videos — all read from the
@@ -166,91 +164,111 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
     (videos.data ?? []).length > 0;
 
   return (
-    <Page className="flex flex-col gap-6 sm:gap-8">
-      {/* Primary: check an advertisement against the rules */}
+    <Page className="flex flex-col gap-6">
+      {/* 1. The check panel: what SALEEM does, how, and the one primary action */}
       <section
         data-testid="personal-dashboard"
         aria-labelledby="personal-hero-title"
-        className="relative overflow-hidden rounded-[28px] border border-green/10 bg-[linear-gradient(135deg,var(--color-cream)_30%,var(--color-green-bg))] px-5 py-7 sm:px-9 sm:py-10"
+        className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_24px_60px_-40px_rgb(7_33_26/0.45)]"
       >
-        <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-          <div className="flex flex-col items-start gap-4">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-green">
-              <ShieldCheck aria-hidden="true" className="size-4" />
-              {t("personal.home.hero.eyebrow")}
-              <span className="font-normal text-fg-muted">
-                · {name ? t("personal.hello", { name }) : t("personal.helloAnon")}
-              </span>
-            </p>
-            <h1
-              id="personal-hero-title"
-              className={cn("text-3xl leading-tight font-bold text-ink sm:text-[2.5rem]", display)}
-            >
-              {t("personal.home.hero.title")}
-            </h1>
-            <p className="max-w-xl text-base leading-relaxed text-ink/75">
-              {t("personal.home.hero.body")}
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <Link
-                to="/new"
-                data-testid="personal-hero-check"
-                className="inline-flex h-13 items-center gap-2.5 rounded-full bg-green px-7 text-base font-bold text-white shadow-[0_10px_24px_-12px_rgb(11_110_79/0.8)] transition-colors hover:bg-green-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green [&_svg]:size-5"
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr]">
+          <div className="p-6 pb-5 sm:p-9 sm:pb-6 lg:col-start-1 lg:row-start-1">
+            <div className="flex flex-col gap-3">
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-green-bg px-2.5 py-1 font-medium text-green">
+                  <ShieldCheck aria-hidden="true" className="size-3.5" />
+                  {t("personal.home2.eyebrow")}
+                </span>
+                <span className="text-fg-muted">
+                  {name ? t("personal.hello", { name }) : t("personal.helloAnon")}
+                </span>
+              </p>
+              <h1
+                id="personal-hero-title"
+                className={cn("text-3xl leading-snug font-bold text-ink sm:text-4xl", display)}
               >
-                <Upload aria-hidden="true" />
-                {t("personal.home.hero.cta")}
-              </Link>
-              <Link
-                to="/rules"
-                className="inline-flex h-13 items-center gap-2 rounded-full px-4 text-sm font-medium text-green hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-green [&_svg]:size-4"
-              >
-                <BookOpen aria-hidden="true" />
-                {t("personal.home.hero.rules")}
-              </Link>
+                {t("personal.home2.titleA")}{" "}
+                <span className="text-green">{t("personal.home2.titleB")}</span>
+              </h1>
+              <p className="max-w-2xl leading-relaxed text-fg-muted">{t("personal.home2.body")}</p>
             </div>
-            <ul className="mt-1 flex flex-col gap-2 text-sm text-ink/80">
-              {(["content", "authorities", "evidence"] as const).map((k) => (
-                <li key={k} className="flex items-start gap-2">
-                  <CircleCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-green" />
-                  {t(`personal.home.hero.point.${k}` as TKey)}
+          </div>
+
+          <div className="flex border-y border-border lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:border-y-0 bg-[linear-gradient(165deg,var(--color-green-bg),var(--color-cream)_70%)] p-5 sm:p-7 lg:border-t-0 lg:border-s">
+            <Link
+              to="/new"
+              data-testid="personal-check"
+              className="group flex w-full flex-col items-center justify-center gap-4 rounded-[22px] border-2 border-dashed border-green/30 bg-white/75 px-6 py-8 text-center transition-colors hover:border-green/70 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green"
+            >
+              <span className="grid size-16 place-items-center rounded-full bg-green text-white shadow-[0_12px_28px_-12px_rgb(11_110_79/0.9)] transition-transform group-hover:-translate-y-0.5 [&_svg]:size-7">
+                <CloudUpload aria-hidden="true" />
+              </span>
+              <span className="flex flex-col gap-1">
+                <span className={cn("text-xl font-bold text-ink", display)}>
+                  {t("personal.home2.drop.title")}
+                </span>
+                <span className="text-sm text-fg-muted">{t("personal.home2.drop.body")}</span>
+              </span>
+              <span className="flex flex-wrap justify-center gap-1.5">
+                {formats.map(([k, icon]) => (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-1 text-xs text-fg-muted [&_svg]:size-3.5"
+                  >
+                    {icon}
+                    {t(`personal.home2.drop.${k}` as TKey)}
+                  </span>
+                ))}
+              </span>
+              <span className="inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-full bg-green px-6 font-bold text-white transition-colors group-hover:bg-green-hover">
+                {t("personal.home2.drop.cta")}
+                <ArrowLeft aria-hidden="true" className="size-4 ltr:rotate-180" />
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-fg-muted">
+                <ShieldCheck aria-hidden="true" className="size-3.5 text-green" />
+                {t("personal.home2.drop.note")}
+              </span>
+            </Link>
+          </div>
+
+          <div className="p-6 pt-5 sm:p-9 sm:pt-0 lg:col-start-1 lg:row-start-2">
+            <h2 className="mb-3 text-xs font-semibold text-fg-muted">
+              {t("personal.home2.steps")}
+            </h2>
+            <ol className="grid gap-3 sm:grid-cols-3">
+              {steps.map(([k, icon], i) => (
+                <li
+                  key={k}
+                  className="flex gap-3 rounded-[18px] border border-border bg-paper/60 p-4"
+                >
+                  <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-white text-green shadow-[0_2px_8px_-2px_rgb(7_33_26/0.25)] [&_svg]:size-[18px]">
+                    {icon}
+                    <span className="absolute -end-1 -top-1 grid size-5 place-items-center rounded-full bg-green text-[11px] font-bold text-white">
+                      {i + 1}
+                    </span>
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-bold text-ink">
+                      {t(`personal.home2.${k}.title` as TKey)}
+                    </span>
+                    <span className="text-xs leading-relaxed text-fg-muted">
+                      {t(`personal.home2.${k}.body` as TKey)}
+                    </span>
+                  </span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
-          <HeroVisual />
         </div>
       </section>
 
-      {/* Four actions in priority order: check (dominant), smart correction, Ask SALEEM, Studio */}
-      <section aria-labelledby="personal-actions">
-        <h2 id="personal-actions" className="sr-only">
-          {t("personal.home.actions")}
+      {/* 2. Supporting tools, deliberately smaller than the check */}
+      <section aria-labelledby="personal-tools">
+        <h2 id="personal-tools" className="mb-3 text-sm font-bold text-ink">
+          {t("personal.home2.tools")}
         </h2>
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
-          <Link
-            to="/new"
-            data-testid="personal-check"
-            className="group flex min-h-40 flex-col justify-between gap-4 rounded-[22px] bg-forest p-6 sm:min-h-44 text-white shadow-[0_16px_40px_-24px_rgb(7_33_26/0.9)] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green sm:col-span-3 lg:col-span-1"
-          >
-            <span className="flex items-center justify-between">
-              <span className="grid size-12 place-items-center rounded-full bg-white/10 text-mint [&_svg]:size-6">
-                <ScanSearch aria-hidden="true" />
-              </span>
-              <ArrowLeft
-                aria-hidden="true"
-                className="size-5 text-mint transition-transform group-hover:-translate-x-1 ltr:rotate-180 ltr:group-hover:translate-x-1"
-              />
-            </span>
-            <span className="flex flex-col gap-1.5">
-              <span className={cn("text-xl font-bold", display)}>
-                {t("personal.home.action.check")}
-              </span>
-              <span className="text-sm leading-relaxed text-white/75">
-                {t("personal.home.action.checkBody")}
-              </span>
-            </span>
-          </Link>
-          <ActionCard
+        <div className="grid gap-3 md:grid-cols-3">
+          <ToolCard
             to={fixTarget ? `/promotions/${fixTarget.id}/fix` : "/promotions"}
             icon={<Wand2 />}
             title={t("personal.home.action.fix")}
@@ -261,14 +279,14 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
             }
             testId="personal-fix"
           />
-          <ActionCard
+          <ToolCard
             to="/ask"
             icon={<MessageCircleQuestion />}
             title={t("personal.home.action.ask")}
             body={t("personal.home.action.askBody")}
             testId="personal-ask"
           />
-          <ActionCard
+          <ToolCard
             to="/studio"
             icon={<Sparkles />}
             title={t("personal.home.action.create")}
@@ -278,10 +296,10 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
         </div>
       </section>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      {/* 3. Results first, then the next step and the allowance */}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-6">
-          {/* Recent results */}
-          <Card className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className={cn("text-lg font-bold", display)}>
                 {t("personal.home.recent.title")}
@@ -289,12 +307,33 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
               {list.length > 0 && (
                 <Link
                   to="/promotions"
-                  className="rounded-sm text-sm font-medium text-green hover:underline focus-visible:outline-2 focus-visible:outline-green"
+                  className="inline-flex items-center gap-1 rounded-sm text-sm font-medium text-green hover:underline focus-visible:outline-2 focus-visible:outline-green"
                 >
                   {t("personal.home.recent.all")}
+                  <ArrowLeft aria-hidden="true" className="size-3.5 ltr:rotate-180" />
                 </Link>
               )}
             </div>
+            {analysed.length > 0 && (
+              <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="personal-usage">
+                {usage.map(([k, n, icon, tone]) => (
+                  <div
+                    key={k}
+                    className="flex flex-col gap-1.5 rounded-[14px] bg-sunken/70 px-3 py-2.5"
+                  >
+                    <dt className="flex items-center gap-1.5 text-xs text-fg-muted [&_svg]:size-3.5">
+                      <span className={tone} aria-hidden="true">
+                        {icon}
+                      </span>
+                      {t(`personal.home.usage.${k}` as TKey)}
+                    </dt>
+                    <dd className={cn("text-2xl leading-none font-bold tabular-nums", tone)}>
+                      {n}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
             {promos.isPending ? (
               <Skeleton className="h-56" />
             ) : promos.isError ? (
@@ -302,7 +341,10 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
             ) : list.length === 0 ? (
               <FirstSteps />
             ) : (
-              <ul className="flex flex-col gap-1" data-testid="personal-recent">
+              <ul
+                className="-mx-2 flex flex-col divide-y divide-border"
+                data-testid="personal-recent"
+              >
                 {recent.map((p) => {
                   const r = personalResult(p);
                   const card = p.current ? cards.data?.get(p.current.id) : undefined;
@@ -310,12 +352,17 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
                     (r.key === "ready" || r.key === "needs_fixes" || r.key === "review") &&
                     card &&
                     card.violations !== null;
+                  const chip = (
+                    <StatusChip tone={r.tone} size="sm">
+                      {t(`personal.result.${r.key}` as TKey)}
+                    </StatusChip>
+                  );
                   return (
                     <li key={p.id}>
                       <Link
                         to="/promotions/$id"
                         params={{ id: p.id }}
-                        className="group flex items-center gap-3 rounded-[16px] border border-transparent p-2 transition-colors hover:border-border hover:bg-sunken/60 focus-visible:outline-2 focus-visible:outline-green sm:gap-4"
+                        className="group flex items-center gap-3 rounded-[16px] px-2 py-3 transition-colors hover:bg-sunken/60 focus-visible:outline-2 focus-visible:outline-green sm:gap-4"
                       >
                         <Thumb card={card} title={p.title} kind={p.current?.kind ?? null} />
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -336,18 +383,9 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
                                   })}
                             </span>
                           )}
-                          {/* Phones: the status goes under the title so the title keeps the width. */}
-                          <span className="mt-1 sm:hidden">
-                            <StatusChip tone={r.tone} size="sm">
-                              {t(`personal.result.${r.key}` as TKey)}
-                            </StatusChip>
-                          </span>
+                          <span className="mt-1 sm:hidden">{chip}</span>
                         </span>
-                        <span className="hidden sm:block">
-                          <StatusChip tone={r.tone} size="sm">
-                            {t(`personal.result.${r.key}` as TKey)}
-                          </StatusChip>
-                        </span>
+                        <span className="hidden sm:block">{chip}</span>
                       </Link>
                     </li>
                   );
@@ -355,7 +393,7 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
               </ul>
             )}
           </Card>
-          {/* Corrections and comparisons, drafts, saved videos: compact, only when there is something */}
+
           {hasLists && (
             <div className="grid items-start gap-6 md:grid-cols-2">
               {(corrections.data ?? []).length > 0 && (
@@ -428,25 +466,24 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
           )}
         </div>
 
-        <div className="flex flex-col gap-6">
-          {/* Next step */}
+        <aside className="flex flex-col gap-6">
           {next && (
             <section
               aria-labelledby="personal-next"
-              className="flex flex-col gap-3 rounded-[20px] border border-gold/40 bg-cream p-5"
+              className="flex flex-col gap-3 rounded-[22px] bg-forest p-5 text-white"
               data-testid="personal-next"
             >
               <h2
                 id="personal-next"
-                className="flex items-center gap-2 text-sm font-bold text-gold-deep"
+                className="flex items-center gap-2 text-sm font-bold text-gold"
               >
                 <Lightbulb aria-hidden="true" className="size-4" />
                 {t("personal.home.next.title")}
               </h2>
-              <p className="text-sm leading-relaxed text-ink">{next.body}</p>
+              <p className="text-sm leading-relaxed text-white/85">{next.body}</p>
               <Link
                 to={next.to}
-                className="inline-flex h-10 items-center gap-2 self-start rounded-full bg-ink px-4 text-sm font-medium text-paper hover:bg-ink-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green"
+                className="inline-flex h-10 items-center gap-2 self-start rounded-full bg-white px-4 text-sm font-bold text-forest hover:bg-cream focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
               >
                 {next.cta}
                 <ArrowLeft aria-hidden="true" className="size-4 ltr:rotate-180" />
@@ -454,31 +491,6 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
             </section>
           )}
 
-          {/* Usage summary */}
-          <Card className="flex flex-col" data-testid="personal-usage">
-            <h2 className={cn("mb-1 text-lg font-bold", display)}>
-              {t("personal.home.usage.title")}
-            </h2>
-            {promos.isPending ? (
-              <Skeleton className="h-32" />
-            ) : (
-              <dl className="flex flex-col divide-y divide-border">
-                {usage.map(([k, n, icon, tone]) => (
-                  <div key={k} className="flex items-center gap-3 py-2.5">
-                    <span className={cn("[&_svg]:size-4", tone)} aria-hidden="true">
-                      {icon}
-                    </span>
-                    <dt className="flex-1 text-sm text-fg-muted">
-                      {t(`personal.home.usage.${k}` as TKey)}
-                    </dt>
-                    <dd className={cn("text-xl font-bold tabular-nums", tone)}>{n}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </Card>
-
-          {/* AI allowance (compact) */}
           <Card className="flex flex-col gap-3" data-testid="personal-allowance">
             <h2 className="text-sm font-bold">{t("personal.allowance")}</h2>
             {allowances.isPending ? (
@@ -509,7 +521,7 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
               {workspace.is_demo ? t("personal.allowanceDemo") : t("personal.allowanceNote")}
             </p>
           </Card>
-        </div>
+        </aside>
       </div>
 
       <p className="flex items-start gap-2 text-xs leading-relaxed text-fg-muted">
@@ -519,6 +531,17 @@ export function PersonalDashboard({ workspace }: { workspace: PersonalWorkspace 
     </Page>
   );
 }
+
+const steps: [string, ReactNode][] = [
+  ["step1", <Upload key="i" />],
+  ["step2", <Scale key="i" />],
+  ["step3", <Wand2 key="i" />],
+];
+const formats: [string, ReactNode][] = [
+  ["video", <Film key="i" />],
+  ["image", <ImageIcon key="i" />],
+  ["text", <Type key="i" />],
+];
 
 function MiniList({
   title,
@@ -603,55 +626,8 @@ function FirstSteps() {
   );
 }
 
-/**
- * Illustration of what a check inspects — no result, score or finding is shown, so nothing is fabricated: an ad
- * preview and the four inputs SALEEM really analyses (speech, on-screen text and caption, frames, applicable rules).
- */
-function HeroVisual() {
-  const { t } = useI18n();
-  const rows: [string, ReactNode][] = [
-    ["speech", <Mic key="i" />],
-    ["text", <Type key="i" />],
-    ["frames", <Film key="i" />],
-    ["rules", <Scale key="i" />],
-  ];
-  return (
-    <figure aria-hidden="true" className="relative mx-auto hidden w-full max-w-md md:block">
-      <div className="rounded-[22px] border border-white/80 bg-white/70 p-3 shadow-[0_30px_60px_-35px_rgb(7_33_26/0.6)]">
-        <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[16px] bg-[linear-gradient(140deg,var(--color-forest-2),var(--color-green))]">
-          <div className="absolute inset-x-6 bottom-5 h-1.5 rounded-full bg-white/20">
-            <div className="h-full w-2/5 rounded-full bg-mint" />
-          </div>
-          <span className="grid size-14 place-items-center rounded-full bg-white/90 text-forest shadow-lg">
-            <Play className="size-6 translate-x-0.5" fill="currentColor" />
-          </span>
-          <span className="absolute end-3 top-3 grid size-10 place-items-center rounded-full bg-white/95 shadow">
-            <Brand compact size="sm" className="[&_svg]:h-6" />
-          </span>
-        </div>
-        <div className="mt-3 flex flex-col gap-1.5">
-          <p className="px-1 text-xs font-medium text-fg-muted">
-            {t("personal.home.hero.visual.caption")}
-          </p>
-          {rows.map(([k, icon]) => (
-            <div
-              key={k}
-              className="flex items-center gap-2.5 rounded-[12px] bg-white px-3 py-2 text-sm text-ink"
-            >
-              <span className="grid size-7 place-items-center rounded-full bg-green-bg text-green [&_svg]:size-3.5">
-                {icon}
-              </span>
-              <span className="flex-1">{t(`personal.home.hero.visual.${k}` as TKey)}</span>
-              <ScanSearch className="size-4 text-green/60" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </figure>
-  );
-}
-
-function ActionCard({
+/** A supporting tool: compact and horizontal, so the check panel stays the primary action. */
+function ToolCard({
   to,
   icon,
   title,
@@ -668,21 +644,19 @@ function ActionCard({
     <Link
       to={to}
       data-testid={testId}
-      className="group flex flex-col justify-between gap-3 rounded-[22px] border border-border bg-card p-5 sm:min-h-44 sm:gap-4 text-ink transition-[transform,border-color] hover:-translate-y-0.5 hover:border-green/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green"
+      className="group flex items-center gap-3.5 rounded-[18px] border border-border bg-card p-4 transition-colors hover:border-green/40 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green"
     >
-      <span className="flex items-center justify-between">
-        <span className="grid size-11 place-items-center rounded-full bg-green-bg text-green [&_svg]:size-5">
-          {icon}
-        </span>
-        <ArrowLeft
-          aria-hidden="true"
-          className="size-4 text-fg-muted transition-transform group-hover:-translate-x-0.5 ltr:rotate-180"
-        />
+      <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-green-bg text-green [&_svg]:size-5">
+        {icon}
       </span>
-      <span className="flex flex-col gap-1">
-        <span className="text-base font-bold">{title}</span>
-        <span className="line-clamp-3 text-sm leading-relaxed text-fg-muted">{body}</span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="font-bold text-ink">{title}</span>
+        <span className="line-clamp-2 text-xs leading-relaxed text-fg-muted">{body}</span>
       </span>
+      <ArrowLeft
+        aria-hidden="true"
+        className="size-4 shrink-0 text-fg-muted transition-transform group-hover:-translate-x-0.5 ltr:rotate-180 ltr:group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }
