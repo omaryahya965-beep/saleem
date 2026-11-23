@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ScanSearch, Sparkles } from "lucide-react";
 import { useI18n } from "@/i18n";
 
-/** D219: checking an existing ad (this page) is shown first; creating one in the AI Studio second. */
 export function StartChooser() {
   const { t } = useI18n();
   return (
@@ -30,7 +29,7 @@ export function StartChooser() {
       </Link>
       <div
         aria-current="true"
-        className="order-first flex items-start gap-4 rounded-lg border-2 border-green bg-green-bg/40 p-5"
+        className="flex items-start gap-4 rounded-lg border-2 border-green bg-green-bg/40 p-5"
       >
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-green text-white">
           <ScanSearch aria-hidden="true" className="size-5" />

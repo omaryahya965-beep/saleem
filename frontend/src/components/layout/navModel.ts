@@ -147,10 +147,8 @@ export function pageForPath(pathname: string): NavKey | null {
 }
 
 /**
- * D211/D219: the personal workspace's own navigation — five entries: home, my ads, new ad, rulebook, Ask SALEEM.
- * The AI Studio stays available through «إعلان جديد» (its start chooser) and the dashboard, and that entry stays
- * highlighted inside the Studio; personal settings are in the account menu. Smart correction is reached from each
- * advertisement. No review queue, team, roles, campaigns, products,
+ * D211: the personal workspace's own navigation: home, my ads, check an ad, studio, rulebook, Ask SALEEM, personal
+ * settings. Smart correction is reached from each advertisement. No review queue, team, roles, campaigns, products,
  * company rules, partners, legal, risk acceptance, organisation administration or analytics.
  */
 export function buildPersonalNav(platformAdmin = false): NavGroup[] {
@@ -164,12 +162,13 @@ export function buildPersonalNav(platformAdmin = false): NavGroup[] {
       items: [
         p("dashboard", "/dashboard"),
         p("promotions", "/promotions", "/promotions", "/checks", "/archive"),
-        p("new", "/new", "/new", "/studio"),
+        p("new", "/new"),
+        p("studio", "/studio"),
       ],
     },
     {
       key: "personalHelp",
-      items: [p("rules", "/rules"), p("ask", "/ask")],
+      items: [p("rules", "/rules"), p("ask", "/ask"), p("settings", "/settings")],
     },
   ];
   if (platformAdmin)

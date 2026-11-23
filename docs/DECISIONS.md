@@ -747,33 +747,3 @@ Format: decision — why — alternatives considered.
   labelled with total, active, pending and archived counts. All sections start collapsed; a click toggles one, and a
   search expands the sections with matches. This is visual only: it has no effect on rule selection or analysis.
   Pending now excludes archived rules (MOHU's 4 rules are archived, not pending).
-- **D219. Compliance-first personal home, simplified sidebar, new logo, authority accordion rulebook (2026-11-23).**
-  - **Personal home:** the hero and the dominant first action are «افحص إعلانك بالقواعد», opening /new. Then smart
-    correction, Ask SALEEM and AI Studio, in that order.
-  - **Real data only:** recent results show real thumbnails and finding counts from the latest run, plus the next
-    step, a usage summary and the AI allowance. Corrections, drafts and saved videos are listed only when they exist.
-  - **Status fix:** an uploaded version that was never analysed (`queued`) now shows «لم يُفحص بعد», not «قيد الفحص».
-  - **Personal sidebar:** five entries (home, my ads, new ad, rulebook, Ask SALEEM). Studio stays reachable from
-    «إعلان جديد», whose entry stays active inside the Studio, and from the dashboard. Settings are in the account
-    menu. Enterprise navigation is unchanged.
-  - **Demo banner removed:** the full-width demo banner is gone from every page, for the individual and the
-    enterprise demo. A compact «تجريبي» chip is in the top bar, and the demo stays identified at login and in the
-    account menu. Expiry, sign-out and isolation are unchanged.
-  - **Logo:** the supplied logo was traced to SVG paths with flat brand inks (`scripts/brand/`, source in
-    `docs/brand/`). It is used by `<Brand>` in the light, inverse and compact variants, and for the favicon,
-    apple-touch and PWA icons.
-  - **Rulebook:** the authority coverage cards above the list are removed, so each authority appears once, as an
-    accordion header with its counts.
-    - Rules expand in place; the dialog is gone, and so are its invented fallbacks: a fixed «last verified» date and
-      generic applicability and evidence text.
-    - Statuses come only from data:
-      - «سارية»: active, the only rules ever applied
-      - «تحتاج مراجعة»: a draft whose official source was opened and is in force, or `pending_review`
-      - «قيد التحقق»: any other draft
-    - Every label is translated. The authority filter and search open their sections. Expand all / collapse all is
-      added.
-  - **Rule review record:** `scripts/rule-review-record.mjs` (read-only) writes per-rule evidence and blockers to
-    `docs/saleem-v2/legal/RULE_REVIEW_RECORD.md`.
-    - Result: 219 rules are not active, and none is ready for legal sign-off. All 219 lack the official Arabic text
-      and a reviewer, and 183 have an unconfirmed source.
-    - No rule was activated or marked verified (hard rule 2.1).

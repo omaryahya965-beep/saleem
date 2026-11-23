@@ -1,6 +1,6 @@
 // One-click demo, all nine roles, in a real browser against the real local stack (demo-login broker + database):
 // login page → «استكشاف الحسابات التجريبية» → «الدخول بهذا الدور» → dashboard. Checks per role: the session is that
-// role (account menu), its navigation, the demo chip, reload keeps the session, sign-out ends it.
+// role (account menu), its navigation, the demo banner, reload keeps the session, sign-out ends it.
 // Server-side enforcement of every forbidden action is tested by pgTAP p8_roles_matrix and backend workflows.test.ts.
 // Needs: npm run demo:seed, functions served with DEMO_MODE=true, a build with VITE_DEMO_LOGIN=true on baseURL.
 // Usage: node scripts/check-demo-personas.mjs [baseURL]
@@ -15,7 +15,7 @@ const EXPECT = {
   owner: { has: ["team", "roles", "features", "queue", "new"], not: [] },
   admin: { has: ["team", "roles", "features", "queue"], not: [] },
   compliance_lead: { has: ["queue", "companyRules", "analytics", "audit"], not: ["features", "new"] },
-  reviewer: { has: ["queue", "rules"], not: ["features", "companyRules", "new", "audit"] }, // D168: no audit page
+  reviewer: { has: ["queue", "rules", "audit"], not: ["features", "companyRules", "new"] },
   legal: { has: ["queue", "rules"], not: ["features", "new", "analytics"] },
   creator: { has: ["new", "promotions"], not: ["queue", "features", "audit"] },
   external_uploader: { has: ["promotions"], not: ["team", "roles", "claims", "new", "audit", "queue"] },
@@ -42,7 +42,7 @@ for (const [role, exp] of Object.entries(EXPECT)) {
     const nav = await page.locator("[data-testid=app-sidebar] a").evaluateAll((as) => as.map((a) => a.dataset.testid.replace("nav-", "")));
     for (const k of exp.has) if (!nav.includes(k)) out.push(`missing nav ${k}`);
     for (const k of exp.not) if (nav.includes(k)) out.push(`unexpected nav ${k}`);
-    if ((await page.getByTestId("demo-chip").count()) !== 1) out.push("no demo chip");
+    if (!(await page.getByTestId("demo-banner").isVisible())) out.push("no demo banner");
     await page.getByTestId("account-menu").click();
     const who = await page.getByTestId("account-menu-content").innerText();
     if (!who.includes(LABEL[role])) out.push(`account menu lacks role «${LABEL[role]}»`);

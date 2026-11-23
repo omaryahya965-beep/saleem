@@ -2,7 +2,6 @@ import { Languages } from "lucide-react";
 import type { ReactNode } from "react";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { LOGO_COLORS, LOGO_VIEWBOX, MARK_PATH, MARK_VIEWBOX, WORDMARK_PATH } from "./brandPaths";
 
 /** LanguageToggle — switches AR ⇄ EN; the label is shown in the target language. */
 export function LanguageToggle({ className }: { className?: string }) {
@@ -25,37 +24,29 @@ export function LanguageToggle({ className }: { className?: string }) {
   );
 }
 
-/**
- * Brand — the SALEEM logo (Arabic wordmark «سليم» and the check symbol), traced from the supplied logo
- * (docs/brand/saleem-logo-source.png → scripts/brand/build-brand.mjs). Flat brand inks; `inverse` for dark surfaces.
- * `compact` shows the symbol alone where the wordmark is too large.
- */
-export function Brand({
-  className,
-  inverse,
-  compact,
-  size = "md",
-}: {
-  className?: string;
-  inverse?: boolean;
-  compact?: boolean;
-  size?: "sm" | "md" | "lg";
-}) {
-  const { t } = useI18n();
-  const h = { sm: "h-7", md: "h-9", lg: "h-14" }[size];
-  const word = inverse ? LOGO_COLORS.cream : LOGO_COLORS.word;
-  const mark = inverse ? LOGO_COLORS.markOnDark : LOGO_COLORS.mark;
+/** Brand — wordmark with the س mark. */
+export function Brand({ className, inverse }: { className?: string; inverse?: boolean }) {
+  const { t, lang } = useI18n();
   return (
-    <span className={cn("inline-flex items-center", className)} data-testid="brand-logo">
-      <svg
-        viewBox={compact ? MARK_VIEWBOX : LOGO_VIEWBOX}
-        role="img"
-        aria-label={t("brand.name")}
-        className={cn(h, "w-auto shrink-0")}
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "grid size-9 place-items-center rounded-[10px] font-display text-xl leading-none font-bold",
+          inverse ? "bg-mint text-ink" : "bg-green text-white",
+        )}
       >
-        {!compact && <path fill={word} fillRule="evenodd" d={WORDMARK_PATH} />}
-        <path fill={mark} fillRule="evenodd" d={MARK_PATH} />
-      </svg>
+        س
+      </span>
+      <span
+        className={cn(
+          "text-2xl leading-none font-bold",
+          lang === "ar" ? "font-display" : "font-sans text-xl tracking-wide",
+          inverse ? "text-paper" : "text-fg",
+        )}
+      >
+        {t("brand.name")}
+      </span>
     </span>
   );
 }

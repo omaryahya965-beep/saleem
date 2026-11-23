@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayStatus, enrichRules } from "@/features/rulebook/enrich";
+import { enrichRules } from "@/features/rulebook/enrich";
 
 // D216: database rules carry a pack, not an authority; the public rulebook must map them.
 const PACKS = [
@@ -47,17 +47,5 @@ describe("rulebook enrichment", () => {
     expect(out[0]!.source_url).toBe("https://example.org/m");
     expect(out[2]!.source_verification).toBe("internal");
     expect(out[1]!.review_state).toBe("draft");
-  });
-  it("derives the display status from real data only (D219)", () => {
-    const st = (review_state: string, source_verification: string | null) =>
-      displayStatus({ review_state, source_verification } as Parameters<typeof displayStatus>[0]);
-    expect(st("active", "official_text_opened")).toBe("active");
-    // A draft is never shown as active, whatever its source.
-    expect(st("draft", "official_text_opened")).toBe("needs_review");
-    expect(st("draft", "official_status_unconfirmed")).toBe("verifying");
-    expect(st("draft", null)).toBe("verifying");
-    expect(st("pending_review", "secondary_only")).toBe("needs_review");
-    expect(st("archived", "official_text_opened")).toBe("archived");
-    expect(st("superseded", null)).toBe("superseded");
   });
 });

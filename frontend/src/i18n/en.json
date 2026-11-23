@@ -381,7 +381,7 @@
   },
   "rulebook": {
     "title": "Regulatory Rulebook",
-    "subtitle": "Saudi advertising rules grouped by authority, with the article, official source and status of each rule.",
+    "subtitle": "Official advertising regulations and compliance requirements in the Kingdom of Saudi Arabia.",
     "version": "Version {v}",
     "illustrative": "Illustrative – pending legal review",
     "illustrativeShort": "Illustrative",
@@ -431,51 +431,8 @@
     "group": {
       "total": "{n} rules",
       "active": "{n} active",
-      "pending": "{n} being verified or reviewed",
-      "archived": "{n} archived",
-      "none": "No active rules yet"
-    },
-    "notice": "SALEEM automatically applies active rules only, and considers every authority without you choosing. Rules being verified or awaiting review are shown for transparency and are not applied until a legal reviewer approves them.",
-    "stat": {
-      "total": "Total rules",
-      "active": "Active rules",
-      "activeHint": "Applied in automatic checks",
-      "verifying": "Being verified",
-      "verifyingHint": "Official source being verified",
-      "needsReview": "Needs review",
-      "needsReviewHint": "Official source, awaiting legal approval",
-      "authorities": "Authorities"
-    },
-    "display": {
-      "active": "Active",
-      "needs_review": "Needs review",
-      "verifying": "Being verified",
-      "superseded": "Superseded",
-      "archived": "Archived"
-    },
-    "filter": {
-      "allAuthorities": "All authorities",
-      "allStatuses": "All statuses",
-      "allSectors": "All sectors",
-      "violation": "Violation",
-      "warning": "Warning",
-      "reset": "Reset filters"
-    },
-    "showing": "{n} of {total} rules",
-    "expandAll": "Expand all",
-    "collapseAll": "Collapse all",
-    "rule": {
-      "article": "Article",
-      "officialSource": "Official source",
-      "openSource": "Open the official source",
-      "verification": "Source verification",
-      "severity": "Severity",
-      "more": "Details",
-      "less": "Hide details",
-      "notSpecified": "Not specified in the record",
-      "sector": "Sector",
-      "lastVerified": "Last verified",
-      "notApplied": "Not applied in automatic checks until approved."
+      "pending": "{n} pending",
+      "archived": "{n} archived"
     }
   },
   "landing": {
@@ -596,10 +553,7 @@
       "individualDownload": "Download it without waiting for an internal approval",
       "individualEnter": "Enter my demo personal space",
       "individualNote": "A demo personal space private to your session: it belongs to no organisation, no other visitor can see it, and its files are deleted after it ends. Results are automated and advisory, not regulatory clearance.",
-      "bannerPersonal": "Demo session — your own demo personal space with fictional data; it ends automatically after two hours.",
-      "chip": "Demo",
-      "chipTitle": "Demo account for a fictional bank — example data, not real",
-      "chipTitlePersonal": "A demo space private to your session — example ads, not real"
+      "bannerPersonal": "Demo session — your own demo personal space with fictional data; it ends automatically after two hours."
     },
     "intent": {
       "label": "How will you use SALEEM?",
@@ -4386,8 +4340,7 @@
       "failed": "Check failed",
       "ready": "No findings",
       "needs_fixes": "Needs fixes",
-      "review": "Manual check",
-      "unchecked": "Not checked yet"
+      "review": "Manual check"
     },
     "results": "Check results",
     "emptyResults": "No check results yet.",
@@ -4415,80 +4368,7 @@
     },
     "videos": "My saved videos",
     "emptyVideos": "No saved videos.",
-    "seconds": "s",
-    "home": {
-      "hero": {
-        "eyebrow": "Compliance check before publishing",
-        "title": "Check your ad against Saudi rules and regulations",
-        "body": "Upload your ad and let SALEEM analyse its content and compare it automatically with the applicable regulatory rules, showing violations, evidence and suggested corrections.",
-        "cta": "Check your ad now",
-        "rules": "Browse the rulebook",
-        "point": {
-          "content": "Analyses speech, on-screen text and video frames",
-          "authorities": "Considers every regulatory authority automatically — you never pick them",
-          "evidence": "Shows the evidence, timestamp and official source of each finding"
-        },
-        "visual": {
-          "caption": "What SALEEM checks in every ad",
-          "speech": "Spoken words",
-          "text": "On-screen text and caption",
-          "frames": "Video frames",
-          "rules": "Applicable rules"
-        }
-      },
-      "actions": "What would you like to do?",
-      "action": {
-        "check": "Check your ad against the rules",
-        "checkBody": "Upload a video, image or text and SALEEM compares it automatically with the applicable rules of every regulatory authority.",
-        "fix": "Smart correction",
-        "fixBody": "Correct the findings detected in “{title}” and get a new version that is checked again.",
-        "fixEmpty": "After a check, correct the detected findings and get an edited version.",
-        "ask": "Ask SALEEM",
-        "askBody": "Ask about the supported rules, regulations and advertising requirements.",
-        "create": "Create an ad with AI",
-        "createBody": "Write a new ad from your product, then check it before publishing."
-      },
-      "recent": {
-        "title": "Your recent check results",
-        "all": "View all",
-        "findings": "{v} violations · {w} warnings",
-        "clean": "No violations detected",
-        "notChecked": "Not checked yet",
-        "preview": "Preview of {title}"
-      },
-      "empty": {
-        "title": "Start by checking your first ad",
-        "body": "There are no ads in your space yet. This is how a check works:",
-        "step1": "Upload your ad: a video, image or text with its caption.",
-        "step2": "SALEEM analyses it and finds the applicable rules of every authority automatically.",
-        "step3": "Review the findings and their evidence, then correct your ad and check it again."
-      },
-      "usage": {
-        "title": "Your usage",
-        "checked": "Ads checked",
-        "ready": "No violations detected",
-        "fix": "Need corrections",
-        "review": "Need a manual check"
-      },
-      "next": {
-        "title": "Next step",
-        "first": "Check your first ad to see its findings, evidence and official sources.",
-        "firstCta": "Start a check",
-        "fix": "“{title}” has findings to correct before publishing.",
-        "fixCta": "Start smart correction",
-        "running": "“{title}” is being checked now.",
-        "runningCta": "Follow the check",
-        "unchecked": "“{title}” has not been checked yet.",
-        "uncheckedCta": "Open the ad",
-        "clear": "No ads need corrections. Check your next ad before publishing it.",
-        "clearCta": "Check a new ad"
-      },
-      "corrections": {
-        "title": "Corrections and comparisons",
-        "hint": "Open the ad to compare versions and check it again."
-      },
-      "continue": "Continue where you left off"
-    }
+    "seconds": "s"
   },
   "authority": {
     "title": "Regulatory authorities",

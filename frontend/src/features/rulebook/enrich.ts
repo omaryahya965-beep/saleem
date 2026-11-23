@@ -20,50 +20,19 @@ export interface SourceRow {
   verification: string;
 }
 
-/** Official authority names (D219: full names; the code is shown beside them). */
-export const AUTHORITY_NAMES: Record<string, { ar: string; en: string }> = {
-  GMEDIA: { ar: "الهيئة العامة لتنظيم الإعلام", en: "General Authority for Media Regulation" },
-  MC: { ar: "وزارة التجارة", en: "Ministry of Commerce" },
-  SAMA: { ar: "البنك المركزي السعودي", en: "Saudi Central Bank" },
-  SFDA: { ar: "هيئة الغذاء والدواء", en: "Saudi Food and Drug Authority" },
-  CMA: { ar: "هيئة السوق المالية", en: "Capital Market Authority" },
-  REGA: { ar: "الهيئة العامة للعقار", en: "Real Estate General Authority" },
-  SDAIA: {
-    ar: "الهيئة السعودية للبيانات والذكاء الاصطناعي",
-    en: "Saudi Data and AI Authority",
-  },
-  IA: { ar: "هيئة التأمين", en: "Insurance Authority" },
-  MT: { ar: "وزارة السياحة", en: "Ministry of Tourism" },
-  MOHU: { ar: "وزارة الحج والعمرة", en: "Ministry of Hajj and Umrah" },
-  INTERNAL: { ar: "فحوص سَليم الداخلية", en: "SALEEM system checks" },
+export const AUTHORITY_AR: Record<string, string> = {
+  SAMA: "البنك المركزي السعودي (SAMA)",
+  CMA: "هيئة السوق المالية (CMA)",
+  MC: "وزارة التجارة (MC)",
+  GMEDIA: "هيئة تنظيم الإعلام (GMEDIA)",
+  SFDA: "الغذاء والدواء (SFDA)",
+  REGA: "الهيئة العامة للعقار (REGA)",
+  SDAIA: "سدايا (SDAIA)",
+  IA: "هيئة التأمين (IA)",
+  MT: "وزارة السياحة (MT)",
+  MOHU: "وزارة الحج والعمرة (MOHU)",
+  INTERNAL: "فحوص سَليم الداخلية",
 };
-export const AUTHORITY_AR: Record<string, string> = Object.fromEntries(
-  Object.entries(AUTHORITY_NAMES).map(([k, v]) => [k, v.ar]),
-);
-
-/**
- * D219: the status a reader sees, derived only from real data (never an approval SALEEM did not record):
- * active → «سارية» (applied in automatic analysis); a draft whose official source was opened and is in force →
- * «تحتاج مراجعة» (awaiting legal review); any other draft → «قيد التحقق» (its source is still being verified);
- * pending_review → «تحتاج مراجعة»; superseded and archived as they are. Only «سارية» rules are ever evaluated.
- */
-export type DisplayStatus = "active" | "needs_review" | "verifying" | "superseded" | "archived";
-export function displayStatus(
-  r: Pick<EnrichedRule, "review_state" | "source_verification">,
-): DisplayStatus {
-  switch (r.review_state) {
-    case "active":
-      return "active";
-    case "archived":
-      return "archived";
-    case "superseded":
-      return "superseded";
-    case "pending_review":
-      return "needs_review";
-    default:
-      return r.source_verification === "official_text_opened" ? "needs_review" : "verifying";
-  }
-}
 
 /** Rulebook sector filter code of each pack (the filter's existing codes, plus AI, INS, HAJ and SYS). */
 const PACK_SECTOR: Record<string, string> = {

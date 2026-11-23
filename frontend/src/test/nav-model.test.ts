@@ -125,15 +125,16 @@ describe("navigation model (one table for sidebar and route guard)", () => {
     expect(keys("owner", ALL, true)).toContain("adminMetrics");
   });
 
-  it("the personal workspace has its own navigation and no enterprise page (D211, D219)", () => {
-    // D219: five entries; Studio is reached through «إعلان جديد» (which stays active inside it), settings through
-    // the account menu — both pages stay reachable (not route-guarded).
-    expect(keys(null)).toEqual(["dashboard", "promotions", "new", "rules", "ask"]);
-    const nav = buildNav({ role: null, orgId: null, flags: {}, platformAdmin: false });
-    expect(nav.flatMap((g) => g.items).find((i) => i.key === "new")?.match).toContain("/studio");
-    expect(canSeePage("studio", { role: null, flags: {}, platformAdmin: false })).toBe(true);
-    expect(canSeePage("settings", { role: null, flags: {}, platformAdmin: false })).toBe(true);
-    expect(pageForPath("/studio")).toBeNull();
+  it("the personal workspace has its own navigation and no enterprise page (D211)", () => {
+    expect(keys(null)).toEqual([
+      "dashboard",
+      "promotions",
+      "new",
+      "studio",
+      "rules",
+      "ask",
+      "settings",
+    ]);
     for (const k of [
       "queue",
       "team",

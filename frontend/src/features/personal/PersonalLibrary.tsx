@@ -55,8 +55,7 @@ export function PersonalLibrary() {
       const r = personalResult(p).key;
       if (filter === "needs_fixes") return r === "needs_fixes" || r === "review";
       if (filter === "ready") return r === "ready";
-      if (filter === "pending")
-        return r === "none" || r === "unchecked" || r === "running" || r === "failed";
+      if (filter === "pending") return r === "none" || r === "running" || r === "failed";
       return true;
     });
   }, [list.data, filter, q]);

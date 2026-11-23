@@ -1,22 +1,33 @@
 import {
+  AlertTriangle,
+  ArrowUpRight,
+  BookOpen,
+  CheckCircle2,
   ChevronDown,
-  ChevronsDownUp,
-  ChevronsUpDown,
+  Clock,
   ExternalLink,
+  Eye,
+  FileCheck2,
+  Filter,
   Info,
-  Landmark,
+  Layers,
+  Plus,
+  Scale,
   ScrollText,
   Search,
   SearchX,
+  ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import { Link, useSearch } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ApiErrorState } from "@/components/feedback/ApiErrorState";
 import {
   Badge,
   Button,
   Card,
+  Dialog,
   EmptyState,
   Input,
   Page,
@@ -27,18 +38,11 @@ import {
 } from "@/components/ui";
 import { useI18n, type TKey } from "@/i18n";
 import { useRulebook } from "@/lib/api/hooks";
+import { AuthorityCoveragePanel } from "@/features/personal/RegulatoryCoverage";
 import { useOrgPicker } from "@/features/libraries/orgPicker";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import {
-  AUTHORITY_NAMES,
-  displayStatus,
-  enrichRules,
-  type DisplayStatus,
-  type EnrichedRule,
-  type PackRow,
-  type SourceRow,
-} from "./enrich";
+import { enrichRules, type EnrichedRule, type PackRow, type SourceRow } from "./enrich";
 
 // D216: packs and sources are public (RLS: anon + authenticated); they give each database rule its authority,
 // sector and source verification.
@@ -68,32 +72,32 @@ const useSources = () =>
     staleTime: 10 * 60_000,
   });
 
-/** Authority order in the rulebook (the four most used first). */
-const AUTHORITY_ORDER = [
-  "GMEDIA",
-  "MC",
-  "SAMA",
-  "SFDA",
-  "CMA",
-  "REGA",
-  "SDAIA",
-  "IA",
-  "MT",
-  "MOHU",
-  "INTERNAL",
+const AUTHORITIES = [
+  { id: "all", ar: "كافة الجهات", en: "All Authorities" },
+  { id: "SAMA", ar: "البنك المركزي السعودي (SAMA)", en: "Saudi Central Bank (SAMA)" },
+  { id: "CMA", ar: "هيئة السوق المالية (CMA)", en: "Capital Market Authority (CMA)" },
+  { id: "MC", ar: "وزارة التجارة (MC)", en: "Ministry of Commerce (MC)" },
+  { id: "GMEDIA", ar: "هيئة تنظيم الإعلام (GMEDIA)", en: "General Media Authority (GMEDIA)" },
+  { id: "SFDA", ar: "الغذاء والدواء (SFDA)", en: "Saudi FDA (SFDA)" },
+  { id: "REGA", ar: "الهيئة العامة للعقار (REGA)", en: "Real Estate Authority (REGA)" },
+  { id: "SDAIA", ar: "سدايا (SDAIA)", en: "SDAIA (Data & AI)" },
+  { id: "MT", ar: "وزارة السياحة (MT)", en: "Ministry of Tourism (MT)" },
+  { id: "MOHU", ar: "وزارة الحج والعمرة (MOHU)", en: "Hajj & Umrah (MOHU)" },
+  { id: "IA", ar: "هيئة التأمين (IA)", en: "Insurance Authority (IA)" },
+  { id: "INTERNAL", ar: "فحوص سَليم الداخلية", en: "SALEEM system checks" },
 ] as const;
 
-const STATUSES: (DisplayStatus | "all")[] = [
-  "all",
-  "active",
-  "needs_review",
-  "verifying",
-  "superseded",
-  "archived",
-];
+const STATUSES = [
+  { id: "all", ar: "كافة الحالات", en: "All Statuses" },
+  { id: "active", ar: "سارية ومطبقة", en: "Active & Enforced" },
+  { id: "pending_review", ar: "قيد المراجعة القانونية", en: "Pending Legal Review" },
+  { id: "draft", ar: "مسودة بحثية", en: "Research Draft" },
+  { id: "superseded", ar: "مستبدلة بمرجع رسمي", en: "Superseded" },
+  { id: "archived", ar: "مؤرشفة / معطّلة", en: "Archived" },
+] as const;
 
 const SECTORS = [
-  { id: "all", ar: "كل القطاعات", en: "All sectors" },
+  { id: "all", ar: "كافة القطاعات", en: "All Sectors" },
   { id: "BANK", ar: "الخدمات المالية والمصرفية", en: "Banking & Finance" },
   { id: "CMA", ar: "السوق والأوراق المالية", en: "Capital Market" },
   { id: "GEN", ar: "التجارة الإلكترونية العامة", en: "E-Commerce" },
@@ -114,24 +118,8 @@ const SECTORS = [
   { id: "SYS", ar: "فحوص سَليم الداخلية", en: "System checks" },
 ] as const;
 
-const STATUS_BADGE: Record<DisplayStatus, "green" | "amber" | "neutral" | "outline"> = {
-  active: "green",
-  needs_review: "amber",
-  verifying: "neutral",
-  superseded: "outline",
-  archived: "outline",
-};
-
-/**
- * Regulatory rulebook (D216–D219): every rule of the active rulebook, grouped in one collapsible section per
- * authority (name, total, active and not-yet-active counts), all collapsed at first; search and the authority
- * filter open the matching sections. Each rule expands in place for its article, explanation, applicability,
- * official source and verification. Reference only: browsing never changes which rules an analysis applies
- * (only «سارية» rules, of every authority, automatically).
- */
 export function RulebookPage() {
   const { t, lang } = useI18n();
-  const en = lang === "en";
   const book = useRulebook();
   const searchParams = useSearch({ strict: false }) as { q?: string } | undefined;
 
@@ -140,47 +128,56 @@ export function RulebookPage() {
   const [status, setStatus] = useState<string>("all");
   const [sector, setSector] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
-  // D211: the personal workspace has no company rules.
-  const personal = useOrgPicker().mode === "personal";
+  const [selectedRule, setSelectedRule] = useState<EnrichedRule | null>(null);
+  // D211: the personal workspace has no company rules; it sees what SALEEM can verify per authority first.
+  const picker = useOrgPicker();
+  const personal = picker.mode === "personal";
 
   const packs = usePacks();
   const sources = useSources();
   const loading = book.isPending || packs.isPending || sources.isPending;
   const failed = book.isError || packs.isError || sources.isError;
-  const sectorLabel = (code: string) => {
-    const s = SECTORS.find((x) => x.id === code);
-    return s ? (en ? s.en : s.ar) : "";
-  };
   // D216: database rules mapped to authority, sector and source verification (see enrich.ts).
-  const rules: (EnrichedRule & { display: DisplayStatus })[] = useMemo(() => {
+  const rules: EnrichedRule[] = useMemo(() => {
     if (!book.data || !packs.data || !sources.data) return [];
+    const label = (code: string) => {
+      const s = SECTORS.find((x) => x.id === code);
+      return s ? (lang === "en" ? s.en : s.ar) : "";
+    };
     return enrichRules(
       book.data.rules as unknown as Record<string, unknown>[],
       packs.data,
       sources.data,
-      () => "",
-    ).map((r) => ({ ...r, display: displayStatus(r) }));
-  }, [book.data, packs.data, sources.data]);
-
-  const stats = useMemo(() => {
-    const by = (s: DisplayStatus) => rules.filter((r) => r.display === s).length;
-    const authorities = new Set(
-      rules.map((r) => String(r.authority)).filter((a) => !["INTERNAL", "OTHER"].includes(a)),
+      label,
     );
-    return {
-      total: rules.length,
-      active: by("active"),
-      verifying: by("verifying"),
-      needsReview: by("needs_review"),
-      authorities: authorities.size,
-    };
+  }, [book.data, packs.data, sources.data, lang]);
+
+  // Summary counts
+  const stats = useMemo(() => {
+    const total = rules.length;
+    let active = 0;
+    let draft = 0;
+    let pending = 0;
+    const authorities = new Set<string>();
+
+    for (const r of rules) {
+      if (r.authority && !["INTERNAL", "OTHER"].includes(String(r.authority)))
+        authorities.add(r.authority);
+      if (r.review_state === "active") active++;
+      else if (r.review_state === "pending_review") pending++;
+      else draft++;
+    }
+
+    return { total, active, draft, pending, authorities: authorities.size };
   }, [rules]);
 
+  // Filtered rules
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
+
     return rules.filter((r) => {
+      // Search filter
       if (term) {
-        const names = AUTHORITY_NAMES[String(r.authority)];
         const hay = [
           r.code,
           r.title_ar,
@@ -190,134 +187,245 @@ export function RulebookPage() {
           r.source_name,
           r.article_ref,
           r.authority,
-          names?.ar,
-          names?.en,
-          sectorLabel(r.sector_code),
+          r.authority_ar,
+          r.sector_ar,
         ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
+
         if (!hay.includes(term)) return false;
       }
-      if (authority !== "all" && r.authority !== authority) return false;
-      if (status !== "all" && r.display !== status) return false;
-      if (sector !== "all" && r.sector_code !== sector) return false;
-      if (severity !== "all" && r.default_severity !== severity) return false;
+
+      // Authority filter
+      if (authority !== "all") {
+        if (r.authority !== authority) return false;
+      }
+
+      // Status filter
+      if (status !== "all") {
+        if (status === "active" && !(r.review_state === "active")) return false;
+        if (status === "pending_review" && r.review_state !== "pending_review") return false;
+        if (status === "draft" && r.review_state !== "draft") return false;
+        if (status === "superseded" && r.review_state !== "superseded") return false;
+        if (status === "archived" && r.review_state !== "archived") return false;
+      }
+
+      // Sector filter
+      if (sector !== "all") {
+        if (r.sector_code !== sector) return false;
+      }
+
+      // Severity filter
+      if (severity !== "all") {
+        if (r.default_severity !== severity) return false;
+      }
+
       return true;
     });
-    // sectorLabel only depends on lang.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rules, q, authority, status, sector, severity, lang]);
+  }, [rules, q, authority, status, sector, severity]);
 
-  const groups = useMemo(() => {
-    const by = new Map<string, typeof filtered>();
-    for (const r of filtered)
-      by.set(String(r.authority), [...(by.get(String(r.authority)) ?? []), r]);
-    const rank = (a: string) => {
-      const i = (AUTHORITY_ORDER as readonly string[]).indexOf(a);
-      return i < 0 ? 99 : i;
-    };
-    return [...by.entries()]
-      .sort((a, b) => rank(a[0]) - rank(b[0]))
-      .map(([code, list]) => ({
-        code,
-        name: AUTHORITY_NAMES[code] ? AUTHORITY_NAMES[code][en ? "en" : "ar"] : code,
-        rules: list,
-        active: list.filter((r) => r.display === "active").length,
-        pending: list.filter((r) => r.display === "needs_review" || r.display === "verifying")
-          .length,
-        archived: list.filter((r) => r.display === "archived" || r.display === "superseded").length,
-      }));
-  }, [filtered, en]);
+  const version = book.data?.version?.version_label;
 
-  // Sections start collapsed. While searching (or filtering one authority) the matching sections open; the user can
-  // still close any of them. Clearing the search returns to the user's own choice.
-  const searching = q.trim() !== "" || authority !== "all";
+  // D218: the rule list is grouped by authority in collapsible sections (visual only: no effect on analysis).
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [closedInSearch, setClosedInSearch] = useState<Set<string>>(new Set());
-  const isOpen = (a: string) => (searching ? !closedInSearch.has(a) : expanded.has(a));
-  const toggle = (a: string) => {
-    const flip = (cur: Set<string>) => {
+  const toggleGroup = (a: string) =>
+    setExpanded((cur) => {
       const next = new Set(cur);
       if (next.has(a)) next.delete(a);
       else next.add(a);
       return next;
-    };
-    if (searching) setClosedInSearch(flip);
-    else setExpanded(flip);
-  };
-  const allOpen = groups.length > 0 && groups.every((g) => isOpen(g.code));
-  const setAll = (open: boolean) => {
-    if (searching) setClosedInSearch(open ? new Set() : new Set(groups.map((g) => g.code)));
-    else setExpanded(open ? new Set(groups.map((g) => g.code)) : new Set());
-  };
-  const filtersOn =
-    q || authority !== "all" || status !== "all" || sector !== "all" || severity !== "all";
+    });
+  const groups = useMemo(() => {
+    const order = AUTHORITIES.filter((a) => a.id !== "all").map((a) => a.id as string);
+    const by = new Map<string, EnrichedRule[]>();
+    for (const r of filtered)
+      by.set(String(r.authority), [...(by.get(String(r.authority)) ?? []), r]);
+    return [...by.entries()]
+      .sort((a, b) => (order.indexOf(a[0]) + 1 || 99) - (order.indexOf(b[0]) + 1 || 99))
+      .map(([authority, list]) => {
+        const meta = AUTHORITIES.find((x) => x.id === authority);
+        return {
+          authority,
+          labelAr: meta?.ar ?? authority,
+          labelEn: meta?.en ?? authority,
+          rules: list,
+          active: list.filter((r) => r.review_state === "active").length,
+          archived: list.filter((r) => r.review_state === "archived").length,
+        };
+      });
+  }, [filtered]);
+  const ruleCard = (r: EnrichedRule) => {
+    const isActive = r.review_state === "active";
+    const isPending = r.review_state === "pending_review";
+    const isArchived = r.review_state === "archived";
 
-  const version = book.data?.version?.version_label;
+    return (
+      <Card
+        key={r.code}
+        className="flex flex-col justify-between gap-3 p-4 transition-all hover:border-green/40 hover:shadow-xs sm:flex-row sm:items-center"
+      >
+        <div className="flex flex-1 flex-col gap-2 min-w-0">
+          {/* Header line: Code, Authority, Status, Severity */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Badge mono className="font-semibold">
+              {r.code}
+            </Badge>
+            <Badge variant="outline" className="bg-sunken/50">
+              {r.authority || "جهة تنظيمية"}
+            </Badge>
+            <Badge
+              variant={
+                isActive ? "green" : isPending ? "amber" : isArchived ? "outline" : "neutral"
+              }
+            >
+              {r.review_state === "active"
+                ? "سارية ومطبقة"
+                : r.review_state === "pending_review"
+                  ? "قيد المراجعة"
+                  : r.review_state === "superseded"
+                    ? "مستبدلة"
+                    : r.review_state === "archived"
+                      ? "معطّلة"
+                      : "مسودة بحثية"}
+            </Badge>
+            {r.sector_ar && <span className="text-fg-muted font-medium">· {r.sector_ar}</span>}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-base font-bold text-fg leading-snug" dir="auto">
+            {lang === "en" ? r.title_en : r.title_ar}
+          </h3>
+
+          {/* Legal reference and official source link */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
+            {r.article_ref && (
+              <span className="font-medium text-fg">
+                المادة: <span dir="ltr">{r.article_ref}</span>
+              </span>
+            )}
+            {r.source_url ? (
+              <a
+                href={r.source_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-green hover:underline"
+              >
+                <span>{r.source_name || "المصدر الرسمي"}</span>
+                <ExternalLink aria-hidden="true" className="size-3" />
+              </a>
+            ) : (
+              <span>{r.source_name}</span>
+            )}
+            {r.article_ref && <span>{r.article_ref}</span>}
+            {r.source_verification && (
+              <span data-testid="rule-verification">
+                <Badge variant="outline" className="text-[11px]">
+                  {t(`findingType.verification.${r.source_verification}` as TKey)}
+                </Badge>
+              </span>
+            )}
+            {r.check_mode && (
+              <Badge variant="outline" className="text-[11px]">
+                {r.check_mode === "content"
+                  ? "فحص محتوى"
+                  : r.check_mode === "document"
+                    ? "فحص وثائق"
+                    : r.check_mode === "workflow"
+                      ? "إجرائي"
+                      : "مركب"}
+              </Badge>
+            )}
+          </div>
+
+          {/* Applicability snippet */}
+          {r.applicability_ar && (
+            <p className="line-clamp-1 text-xs text-fg-muted" dir="auto">
+              <strong>نطاق الانطباق:</strong> {r.applicability_ar}
+            </p>
+          )}
+        </div>
+
+        {/* Actions column */}
+        <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t border-border pt-2 sm:border-t-0 sm:pt-0">
+          <StatusChip tone={r.default_severity} size="sm">
+            {t(`severity.${r.default_severity}`)}
+          </StatusChip>
+          <Button size="sm" variant="secondary" onClick={() => setSelectedRule(r)}>
+            {t("rulebook.detailsBtn")}
+          </Button>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <Page className="flex flex-col gap-6">
+      {/* Page Header with Company Rules Action */}
       <PageHeader
         title={t("rulebook.title")}
         description={t("rulebook.subtitle")}
         eyebrow={
-          version ? <Badge variant="green">{t("rulebook.version", { v: version })}</Badge> : null
+          <span className="flex flex-wrap items-center gap-2">
+            {version && <Badge variant="green">{t("rulebook.version", { v: version })}</Badge>}
+            <Badge variant="outline">
+              {stats.total} {t("rulebook.totalRules")}
+            </Badge>
+          </span>
         }
         actions={
           personal ? undefined : (
-            <Button asChild variant="secondary" icon={<ScrollText />}>
-              <Link to="/company-rules">{t("rulebook.addCompanyRules")}</Link>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="secondary" icon={<ScrollText />}>
+                <Link to="/company-rules">{t("rulebook.addCompanyRules")}</Link>
+              </Button>
+            </div>
           )
         }
       />
 
-      {/* Material limitation, said once and plainly */}
-      <p
-        className="flex items-start gap-2.5 rounded-[14px] border border-green/15 bg-green-bg/50 px-4 py-3 text-sm leading-relaxed text-fg"
-        data-testid="rulebook-browse-only"
-      >
-        <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-green" />
-        {t("rulebook.notice")}
+      {/* Info notice about official vs draft status */}
+      <div className="flex items-start gap-3 rounded-lg border border-amber/25 bg-amber-bg p-4 text-sm text-fg shadow-xs">
+        <Info aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-amber-text" />
+        <div className="flex flex-col gap-1">
+          <strong className="font-semibold">شفافية الدليل التنظيمي ومسار الاعتماد</strong>
+          <p className="text-fg-muted">{t("rulebook.illustrativeBody")}</p>
+        </div>
+      </div>
+
+      <AuthorityCoveragePanel picked={authority} onPick={setAuthority} />
+      <p className="-mt-3 text-xs text-fg-muted" data-testid="rulebook-browse-only">
+        {t("rulebook.browseOnly")}
       </p>
 
-      {/* Database-driven counts */}
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5" data-testid="rulebook-stats">
-        <Stat label={t("rulebook.stat.total")} value={stats.total} loading={loading} />
-        <Stat
-          label={t("rulebook.stat.active")}
-          hint={t("rulebook.stat.activeHint")}
-          value={stats.active}
-          tone="text-green"
-          loading={loading}
-          testId="stat-active"
-        />
-        <Stat
-          label={t("rulebook.stat.needsReview")}
-          hint={t("rulebook.stat.needsReviewHint")}
-          value={stats.needsReview}
-          tone="text-amber-text"
-          loading={loading}
-          testId="stat-needs-review"
-        />
-        <Stat
-          label={t("rulebook.stat.verifying")}
-          hint={t("rulebook.stat.verifyingHint")}
-          value={stats.verifying}
-          loading={loading}
-          testId="stat-verifying"
-        />
-        <Stat
-          label={t("rulebook.stat.authorities")}
-          value={stats.authorities}
-          loading={loading}
-          className="col-span-2 lg:col-span-1"
-        />
-      </dl>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card className="flex flex-col gap-1 p-3.5">
+          <span className="text-xs font-medium text-fg-muted">{t("rulebook.totalRules")}</span>
+          <span className="text-2xl font-bold tracking-tight text-fg">{stats.total}</span>
+          <span className="text-[11px] text-fg-muted">شاملة كافة الجهات والقطاعات</span>
+        </Card>
+        <Card className="flex flex-col gap-1 p-3.5 border-l-4 border-l-green">
+          <span className="text-xs font-medium text-fg-muted">{t("rulebook.activeRules")}</span>
+          <span className="text-2xl font-bold tracking-tight text-green">{stats.active}</span>
+          <span className="text-[11px] text-fg-muted">مطبقة في الفحص التلقائي</span>
+        </Card>
+        <Card className="flex flex-col gap-1 p-3.5 border-l-4 border-l-amber">
+          <span className="text-xs font-medium text-fg-muted">{t("rulebook.pendingRules")}</span>
+          <span className="text-2xl font-bold tracking-tight text-amber-text">
+            {stats.pending + stats.draft}
+          </span>
+          <span className="text-[11px] text-fg-muted">مسودات وقواعد بحثية للمعاينة</span>
+        </Card>
+        <Card className="flex flex-col gap-1 p-3.5">
+          <span className="text-xs font-medium text-fg-muted">{t("rulebook.authorities")}</span>
+          <span className="text-2xl font-bold tracking-tight text-fg">{stats.authorities}</span>
+          <span className="text-[11px] text-fg-muted">جهات سعودية معتمدة</span>
+        </Card>
+      </div>
 
-      {/* Search and filters (browsing only) */}
-      <Card className="flex flex-col gap-4 p-4">
+      {/* Search and Advanced Filters */}
+      <Card className="flex flex-col gap-4 p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <label className="relative flex-1">
             <span className="sr-only">{t("rulebook.searchLabel")}</span>
@@ -328,16 +436,16 @@ export function RulebookPage() {
             <Input
               type="search"
               value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setClosedInSearch(new Set());
-              }}
+              onChange={(e) => setQ(e.target.value)}
               placeholder={t("rulebook.searchPlaceholder")}
               className="ps-10"
-              data-testid="rulebook-search"
             />
           </label>
-          {filtersOn && (
+          {(q ||
+            authority !== "all" ||
+            status !== "all" ||
+            sector !== "all" ||
+            severity !== "all") && (
             <Button
               size="sm"
               variant="ghost"
@@ -347,60 +455,72 @@ export function RulebookPage() {
                 setStatus("all");
                 setSector("all");
                 setSeverity("all");
-                setClosedInSearch(new Set());
               }}
             >
-              {t("rulebook.filter.reset")}
+              إعادة ضبط التصفية
             </Button>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <FilterSelect
-            id="rb-authority"
-            label={t("rulebook.filterAuthority")}
-            value={authority}
-            onChange={(v) => {
-              setAuthority(v);
-              setClosedInSearch(new Set());
-            }}
-            options={[
-              ["all", t("rulebook.filter.allAuthorities")],
-              ...AUTHORITY_ORDER.map(
-                (a) => [a, `${AUTHORITY_NAMES[a]![en ? "en" : "ar"]} (${a})`] as [string, string],
-              ),
-            ]}
-          />
-          <FilterSelect
-            id="rb-status"
-            label={t("rulebook.filterStatus")}
-            value={status}
-            onChange={setStatus}
-            options={STATUSES.map((s) => [
-              s,
-              s === "all" ? t("rulebook.filter.allStatuses") : t(`rulebook.display.${s}` as TKey),
-            ])}
-          />
-          <FilterSelect
-            id="rb-sector"
-            label={t("rulebook.filterSector")}
-            value={sector}
-            onChange={setSector}
-            options={SECTORS.map((s) => [s.id, en ? s.en : s.ar])}
-          />
-          <FilterSelect
-            id="rb-severity"
-            label={t("rulebook.filterSeverity")}
-            value={severity}
-            onChange={setSeverity}
-            options={[
-              ["all", t("rulebook.all")],
-              ["violation", t("rulebook.filter.violation")],
-              ["warning", t("rulebook.filter.warning")],
-            ]}
-          />
+
+        {/* Filter Dropdowns Grid */}
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="rb-authority" className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterAuthority")}
+            </label>
+            <Select
+              id="rb-authority"
+              value={authority}
+              onChange={(e) => setAuthority(e.target.value)}
+            >
+              {AUTHORITIES.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {lang === "en" ? a.en : a.ar}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="rb-status" className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterStatus")}
+            </label>
+            <Select id="rb-status" value={status} onChange={(e) => setStatus(e.target.value)}>
+              {STATUSES.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {lang === "en" ? s.en : s.ar}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="rb-sector" className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterSector")}
+            </label>
+            <Select id="rb-sector" value={sector} onChange={(e) => setSector(e.target.value)}>
+              {SECTORS.map((sec) => (
+                <option key={sec.id} value={sec.id}>
+                  {lang === "en" ? sec.en : sec.ar}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="rb-severity" className="text-xs font-medium text-fg-muted">
+              {t("rulebook.filterSeverity")}
+            </label>
+            <Select id="rb-severity" value={severity} onChange={(e) => setSeverity(e.target.value)}>
+              <option value="all">{t("rulebook.all")}</option>
+              <option value="violation">مخالفة نظامية (Violation)</option>
+              <option value="warning">تنبيه / تحذير (Warning)</option>
+            </Select>
+          </div>
         </div>
       </Card>
 
+      {/* Rules Catalog Table / List */}
       {failed ? (
         <ApiErrorState
           title={t("rulebook.loadError")}
@@ -412,352 +532,243 @@ export function RulebookPage() {
           }}
         />
       ) : loading ? (
-        <div className="flex flex-col gap-2.5">
+        <Card className="flex flex-col gap-4 p-4">
           {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-16 rounded-[16px]" />
+            <div key={i} className="flex gap-4 border-b border-border pb-3 last:border-b-0">
+              <Skeleton className="h-6 w-20" />
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+            </div>
           ))}
-        </div>
+        </Card>
       ) : filtered.length === 0 ? (
         <EmptyState icon={<SearchX />} title={t("rulebook.noResults")} />
       ) : (
-        <section className="flex flex-col gap-3" aria-label={t("rulebook.title")}>
-          <div className="flex items-center justify-between gap-2 text-sm text-fg-muted">
-            <span aria-live="polite" data-testid="rulebook-showing">
-              {t("rulebook.showing", { n: filtered.length, total: rules.length })}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between text-xs text-fg-muted">
+            <span>
+              عرض <strong>{filtered.length}</strong> من إجمالي <strong>{rules.length}</strong> قاعدة
+              تنظيمية
             </span>
-            <Button
-              size="sm"
-              variant="ghost"
-              icon={allOpen ? <ChevronsDownUp /> : <ChevronsUpDown />}
-              onClick={() => setAll(!allOpen)}
-              data-testid="rulebook-toggle-all"
-            >
-              {allOpen ? t("rulebook.collapseAll") : t("rulebook.expandAll")}
-            </Button>
+            {authority !== "all" && (
+              <Badge variant="outline">{AUTHORITIES.find((a) => a.id === authority)?.ar}</Badge>
+            )}
           </div>
 
           <div className="flex flex-col gap-2.5" data-testid="rule-results">
             {groups.map((g) => {
-              const open = isOpen(g.code);
+              const open = expanded.has(g.authority) || (q.trim() !== "" && g.rules.length > 0);
               return (
                 <section
-                  key={g.code}
-                  className={cn(
-                    "overflow-hidden rounded-[18px] border bg-card transition-colors",
-                    open
-                      ? "border-green/30 shadow-[0_8px_24px_-18px_rgb(7_33_26/0.5)]"
-                      : "border-border",
-                  )}
-                  data-testid={`rule-group-${g.code}`}
+                  key={g.authority}
+                  className="rounded-[16px] border border-border bg-card"
+                  data-testid={`rule-group-${g.authority}`}
                 >
-                  <h2>
+                  <h3>
                     <button
                       type="button"
-                      id={`rule-group-head-${g.code}`}
                       aria-expanded={open}
-                      aria-controls={`rule-group-panel-${g.code}`}
-                      onClick={() => toggle(g.code)}
-                      data-testid={`rule-group-toggle-${g.code}`}
-                      className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 text-start outline-none hover:bg-sunken/40 focus-visible:bg-sunken/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green sm:px-5"
+                      aria-controls={`rule-group-panel-${g.authority}`}
+                      onClick={() => toggleGroup(g.authority)}
+                      data-testid={`rule-group-toggle-${g.authority}`}
+                      className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3.5 text-start hover:bg-sunken/40 focus-visible:outline-2 focus-visible:outline-green rounded-[16px]"
                     >
-                      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-bg text-green [&_svg]:size-5">
-                        <Landmark aria-hidden="true" />
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="font-bold text-fg">{g.name}</span>
-                        <span className="font-mono text-xs text-fg-muted" dir="ltr">
-                          {g.code === "INTERNAL" ? "SALEEM" : g.code}
-                        </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={cn(
+                          "size-4 shrink-0 text-fg-muted transition-transform",
+                          open && "rotate-180",
+                        )}
+                      />
+                      <span className="min-w-0 flex-1 font-bold">
+                        {lang === "en" ? g.labelEn : g.labelAr}
                       </span>
                       <span className="flex flex-wrap items-center gap-1.5 text-xs">
                         <Badge variant="outline">
                           {t("rulebook.group.total", { n: g.rules.length })}
                         </Badge>
-                        {g.active > 0 ? (
-                          <Badge variant="green">
-                            {t("rulebook.group.active", { n: g.active })}
-                          </Badge>
-                        ) : (
-                          <Badge variant="neutral">{t("rulebook.group.none")}</Badge>
-                        )}
-                        {g.pending > 0 && (
-                          <Badge variant="amber">
-                            {t("rulebook.group.pending", { n: g.pending })}
-                          </Badge>
-                        )}
+                        <Badge variant="green">{t("rulebook.group.active", { n: g.active })}</Badge>
+                        <Badge variant="amber">
+                          {t("rulebook.group.pending", {
+                            n: g.rules.length - g.active - g.archived,
+                          })}
+                        </Badge>
                         {g.archived > 0 && (
                           <Badge variant="outline">
                             {t("rulebook.group.archived", { n: g.archived })}
                           </Badge>
                         )}
                       </span>
-                      <ChevronDown
-                        aria-hidden="true"
-                        className={cn(
-                          "size-5 shrink-0 text-fg-muted transition-transform duration-200",
-                          open && "rotate-180",
-                        )}
-                      />
                     </button>
-                  </h2>
+                  </h3>
                   {open && (
-                    <ul
-                      id={`rule-group-panel-${g.code}`}
-                      role="region"
-                      aria-labelledby={`rule-group-head-${g.code}`}
-                      className="flex flex-col divide-y divide-border border-t border-border"
+                    <div
+                      id={`rule-group-panel-${g.authority}`}
+                      className="flex flex-col gap-2.5 border-t border-border p-3"
                     >
-                      {g.rules.map((r) => (
-                        <RuleRow key={r.code} rule={r} sectorLabel={sectorLabel(r.sector_code)} />
-                      ))}
-                    </ul>
+                      {g.rules.map(ruleCard)}
+                    </div>
                   )}
                 </section>
               );
             })}
           </div>
-        </section>
+        </div>
       )}
-    </Page>
-  );
-}
 
-function Stat({
-  label,
-  hint,
-  value,
-  tone = "text-fg",
-  loading,
-  className,
-  testId,
-}: {
-  label: string;
-  hint?: string;
-  value: number;
-  tone?: string;
-  loading: boolean;
-  className?: string;
-  testId?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-0.5 rounded-[16px] border border-border bg-card p-4",
-        className,
-      )}
-      data-testid={testId}
-    >
-      <dt className="text-xs font-medium text-fg-muted">{label}</dt>
-      <dd className={cn("text-2xl font-bold tabular-nums", tone)}>
-        {loading ? <Skeleton className="h-8 w-12" /> : value}
-      </dd>
-      {hint && <dd className="text-[11px] leading-snug text-fg-muted">{hint}</dd>}
-    </div>
-  );
-}
-
-function FilterSelect({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: [string, string][];
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-fg-muted">
-        {label}
-      </label>
-      <Select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </Select>
-    </div>
-  );
-}
-
-/** One rule: code, status, severity, title, article and source; expands in place for the full record. */
-function RuleRow({
-  rule: r,
-  sectorLabel,
-}: {
-  rule: EnrichedRule & { display: DisplayStatus };
-  sectorLabel: string;
-}) {
-  const { t, lang } = useI18n();
-  const en = lang === "en";
-  const [open, setOpen] = useState(false);
-  const none = <span className="text-fg-muted italic">{t("rulebook.rule.notSpecified")}</span>;
-  const title = (en && r.title_en) || r.title_ar;
-  const explanation = en
-    ? r.description_en || r.summary_en || r.description_ar || r.summary_ar
-    : r.description_ar || r.summary_ar;
-  const panel = `rule-panel-${r.code}`;
-  return (
-    <li className="px-4 py-3.5 sm:px-5" data-testid={`rule-${r.code}`}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <Badge mono className="font-semibold">
-              {r.code}
-            </Badge>
-            <span data-testid="rule-status" className="contents">
-              <Badge variant={STATUS_BADGE[r.display]}>
-                {t(`rulebook.display.${r.display}` as TKey)}
+      {/* Full Rule Detail Dialog */}
+      <Dialog
+        open={Boolean(selectedRule)}
+        onOpenChange={(open) => !open && setSelectedRule(null)}
+        title={`${selectedRule?.code || ""} — ${t("rulebook.detailsTitle")}`}
+        description={selectedRule?.source_name || ""}
+        className="sm:max-w-2xl max-h-[88vh] overflow-y-auto"
+      >
+        {selectedRule && (
+          <div className="flex flex-col gap-4 text-sm" dir="auto">
+            {/* Header info badge strip */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge mono className="text-sm font-bold">
+                {selectedRule.code}
               </Badge>
-            </span>
-            {sectorLabel && <span className="text-fg-muted">· {sectorLabel}</span>}
-          </div>
-          <h3 className="leading-snug font-bold text-fg" dir="auto">
-            {title}
-          </h3>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-fg-muted">
-            {r.article_ref && (
-              <span>
-                {t("rulebook.rule.article")}:{" "}
-                <span className="font-medium text-fg" dir="auto">
-                  {r.article_ref}
-                </span>
-              </span>
-            )}
-            {r.source_url ? (
-              <a
-                href={r.source_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-sm text-green hover:underline focus-visible:outline-2 focus-visible:outline-green"
-              >
-                {(en && r.source_name_en) || r.source_name || t("rulebook.rule.officialSource")}
-                <ExternalLink aria-hidden="true" className="size-3" />
-              </a>
-            ) : (
-              r.source_name && <span>{(en && r.source_name_en) || r.source_name}</span>
-            )}
-            {r.source_verification && (
-              <span data-testid="rule-verification">
-                <Badge variant="outline" className="text-[11px]">
-                  {t(`findingType.verification.${r.source_verification}` as TKey)}
+              <Badge variant="outline">{selectedRule.authority_ar || selectedRule.authority}</Badge>
+              {selectedRule.source_verification && (
+                <Badge variant="outline">
+                  {t(`findingType.verification.${selectedRule.source_verification}` as TKey)}
                 </Badge>
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center justify-between gap-2 sm:flex-col sm:items-end">
-          <StatusChip tone={r.default_severity} size="sm">
-            {t(`severity.${r.default_severity}`)}
-          </StatusChip>
-          <button
-            type="button"
-            aria-expanded={open}
-            aria-controls={panel}
-            onClick={() => setOpen((o) => !o)}
-            className="inline-flex h-9 items-center gap-1 rounded-full px-3 text-sm font-medium text-green hover:bg-green-bg focus-visible:outline-2 focus-visible:outline-green"
-            data-testid="rule-details-toggle"
-          >
-            {open ? t("rulebook.rule.less") : t("rulebook.rule.more")}
-            <ChevronDown
-              aria-hidden="true"
-              className={cn("size-4 transition-transform", open && "rotate-180")}
-            />
-          </button>
-        </div>
-      </div>
-      {open && (
-        <dl
-          id={panel}
-          className="mt-3 grid gap-3 rounded-[14px] bg-sunken/60 p-4 text-sm sm:grid-cols-2"
-          data-testid="rule-details"
-        >
-          <Field label={t("rulebook.explanation")} wide>
-            {explanation ? <span dir="auto">{explanation}</span> : none}
-          </Field>
-          <Field label={t("rulebook.applicability")} wide>
-            {r.applicability_ar ? (
-              <span dir="auto" lang="ar">
-                {r.applicability_ar}
-              </span>
-            ) : (
-              none
-            )}
-          </Field>
-          <Field label={t("rulebook.rule.article")}>
-            {r.article_ref ? <span dir="auto">{r.article_ref}</span> : none}
-          </Field>
-          <Field label={t("rulebook.rule.officialSource")}>
-            {r.source_url ? (
-              <a
-                href={r.source_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-green hover:underline"
+              )}
+              <Badge
+                variant={
+                  selectedRule.review_state === "active"
+                    ? "green"
+                    : selectedRule.review_state === "pending_review"
+                      ? "amber"
+                      : "neutral"
+                }
               >
-                {(en && r.source_name_en) || r.source_name || t("rulebook.rule.openSource")}
-                <ExternalLink aria-hidden="true" className="size-3.5" />
-              </a>
-            ) : (
-              r.source_name || none
-            )}
-          </Field>
-          <Field label={t("rulebook.rule.verification")}>
-            {r.source_verification
-              ? t(`findingType.verification.${r.source_verification}` as TKey)
-              : none}
-          </Field>
-          <Field label={t("rulebook.filterStatus")}>
-            {t(`rulebook.display.${r.display}` as TKey)}
-            {r.display !== "active" && (
-              <span className="block text-xs text-fg-muted">{t("rulebook.rule.notApplied")}</span>
-            )}
-          </Field>
-          <Field label={t("rulebook.rule.severity")}>{t(`severity.${r.default_severity}`)}</Field>
-          {r.check_mode && (
-            <Field label={t("rulebook.howWeCheck")}>
-              {t(`rulebook.checkMode.${r.check_mode}` as TKey)}
-            </Field>
-          )}
-          {r.evidence_policy_ar && (
-            <Field label={t("rulebook.evidencePolicy")} wide>
-              <span dir="auto" lang="ar">
-                {r.evidence_policy_ar}
-              </span>
-            </Field>
-          )}
-          {r.superseded_note && (
-            <Field label={t("rulebook.reconciliationNote")} wide>
-              <span dir="auto">{r.superseded_note}</span>
-            </Field>
-          )}
-          {r.last_verified_at && (
-            <Field label={t("rulebook.rule.lastVerified")}>{r.last_verified_at}</Field>
-          )}
-        </dl>
-      )}
-    </li>
-  );
-}
+                {selectedRule.review_state === "active"
+                  ? "سارية ومطبقة نظامياً"
+                  : selectedRule.review_state === "pending_review"
+                    ? "قيد المراجعة القانونية"
+                    : selectedRule.review_state === "superseded"
+                      ? "مستبدلة"
+                      : "مسودة بحثية"}
+              </Badge>
+              <StatusChip tone={selectedRule.default_severity} size="sm">
+                {t(`severity.${selectedRule.default_severity}`)}
+              </StatusChip>
+            </div>
 
-function Field({
-  label,
-  wide,
-  children,
-}: {
-  label: string;
-  wide?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-0.5", wide && "sm:col-span-2")}>
-      <dt className="text-xs font-semibold text-fg-muted">{label}</dt>
-      <dd className="leading-relaxed text-fg">{children}</dd>
-    </div>
+            {/* Reconciliation Note if superseded */}
+            {selectedRule.superseded_note && (
+              <div className="rounded-lg border border-green/30 bg-green/10 p-3 text-xs text-fg">
+                <strong className="block font-semibold text-green mb-1">
+                  {t("rulebook.reconciliationNote")}
+                </strong>
+                {selectedRule.superseded_note}
+              </div>
+            )}
+
+            {/* 1. Official Regulatory Reference */}
+            <div className="flex flex-col gap-1 rounded-md border border-border p-3">
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.officialRef")}
+              </span>
+              <p className="font-semibold text-fg text-base">
+                {selectedRule.source_name} —{" "}
+                {selectedRule.article_ref || "المادة النظامية المعتمدة"}
+              </p>
+              {selectedRule.source_url && (
+                <a
+                  href={selectedRule.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center gap-1.5 text-xs text-green hover:underline"
+                >
+                  <span>{t("rulebook.officialSource")} (فتح الرابط الرسمي)</span>
+                  <ArrowUpRight className="size-3.5" />
+                </a>
+              )}
+            </div>
+
+            {/* 2. Direct Requirement Text */}
+            <div className="flex flex-col gap-1 rounded-md border border-border p-3 bg-sunken/40">
+              <span className="text-xs font-semibold text-fg-muted">{t("rulebook.legalText")}</span>
+              <p className="font-bold text-fg leading-relaxed">{selectedRule.title_ar}</p>
+            </div>
+
+            {/* 3. Explanation & Practical Description */}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.explanation")}
+              </span>
+              <p className="leading-relaxed text-fg-muted">
+                {selectedRule.description_ar || selectedRule.summary_ar}
+              </p>
+            </div>
+
+            {/* 4. Applicability */}
+            <div className="flex flex-col gap-1 rounded-md border border-border p-3">
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.applicability")}
+              </span>
+              <p className="leading-relaxed text-fg">
+                {selectedRule.applicability_ar ||
+                  "تنطبق على كافة المواد الإعلانية الترويجية في هذا القطاع."}
+              </p>
+            </div>
+
+            {/* 5. Evidence Policy */}
+            <div className="flex flex-col gap-1 rounded-md border border-border p-3">
+              <span className="text-xs font-semibold text-fg-muted">
+                {t("rulebook.evidencePolicy")}
+              </span>
+              <p className="leading-relaxed text-fg-muted">
+                {selectedRule.evidence_policy_ar ||
+                  "نص الإعلان، تفريغ الصوت، والنصوص المكتوبة على الشاشة."}
+              </p>
+            </div>
+
+            {/* 6. How SALEEM Evaluates It */}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-md border border-border p-3">
+                <span className="text-xs font-semibold text-fg-muted">
+                  {t("rulebook.howWeCheck")}
+                </span>
+                <p className="mt-1 text-fg font-medium">
+                  {selectedRule.check_mode === "content"
+                    ? "فحص ذكاء اصطناعي وتحليل محتوى متعدد الوسائط"
+                    : selectedRule.check_mode === "document"
+                      ? "مطابقة التراخيص والمستندات والباركود"
+                      : selectedRule.check_mode === "workflow"
+                        ? "تحقق من مسار الاعتماد الإجرائي المسبق"
+                        : "فحص مركب (تحليل آلي + مطابقة قواعد)"}
+                </p>
+              </div>
+              <div className="rounded-md border border-border p-3">
+                <span className="text-xs font-semibold text-fg-muted">{t("rulebook.package")}</span>
+                <p className="mt-1 font-mono text-xs text-fg">
+                  {selectedRule.pack} ({selectedRule.sector_ar || "عام"})
+                </p>
+              </div>
+            </div>
+
+            {/* Footer metadata */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-fg-muted">
+              <span>
+                {t("rulebook.lastVerified")}: {selectedRule.last_verified_at || "2026-11-18"}
+              </span>
+              <Button size="sm" variant="secondary" onClick={() => setSelectedRule(null)}>
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      {/* Sector Rule Packs section */}
+    </Page>
   );
 }

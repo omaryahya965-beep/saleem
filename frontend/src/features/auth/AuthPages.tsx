@@ -34,7 +34,7 @@ function AuthLayout({
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-10 sm:py-16">
       <Card className="flex flex-col gap-6 sm:p-8">
         <div className="flex flex-col items-start gap-4">
-          <Brand size="lg" />
+          <Brand />
           <div>
             <h1
               className={cn(
@@ -155,7 +155,7 @@ export function LoginPage() {
         <div className="flex flex-col gap-4 lg:sticky lg:top-24">
           <Card className="flex flex-col gap-6 sm:p-8">
             <div className="flex flex-col items-start gap-4">
-              <Brand size="lg" />
+              <Brand />
               <div>
                 <h1
                   className={cn(

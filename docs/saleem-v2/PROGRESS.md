@@ -41,19 +41,6 @@
   - migration 20261122110000 (+ rollback) is on the isolated stack only
   Verified on the isolated stack: pgTAP 27/279, backend 27 files / 306 tests, Playwright 51/51, frontend 166, and the
   browser walkthrough including the cross-session privacy checks.
-- Redesign (2026-11-23, D219):
-  - compliance-first personal home
-  - five-entry personal sidebar
-  - demo banner replaced by a top-bar chip
-  - traced SVG logo and icons
-  - authority accordion rulebook with honest statuses
-  - per-rule review record (0 of 219 non-active rules ready for legal sign-off; nothing activated)
-  Verified on the isolated stack, no AI request:
-  - lint 0 errors, tsc, frontend 169 tests, build, Playwright 51/51
-  - scripts/redesign-walkthrough.mjs: 46 checks, ar/en, desktop/tablet/mobile; screenshots in
-    screenshots/d219/
-  - personal-walkthrough (full check → correction → re-check journey)
-  - check-demo-personas (9 roles)
 - Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
   in RELEASE_PLAN.md §9.
 
