@@ -689,6 +689,18 @@ function RuleRow({
               none
             )}
           </Field>
+          {r.official_text_ar && (
+            <Field label={t("rulebook.rule.officialText")} wide>
+              <blockquote
+                dir="rtl"
+                lang="ar"
+                className="border-s-2 border-green/40 ps-3 leading-loose text-fg"
+                data-testid="rule-official-text"
+              >
+                {r.official_text_ar}
+              </blockquote>
+            </Field>
+          )}
           <Field label={t("rulebook.rule.article")}>
             {r.article_ref ? <span dir="auto">{r.article_ref}</span> : none}
           </Field>
@@ -719,6 +731,16 @@ function RuleRow({
             )}
           </Field>
           <Field label={t("rulebook.rule.severity")}>{t(`severity.${r.default_severity}`)}</Field>
+          {r.legal_reviewed_by && (
+            <Field label={t("rulebook.rule.reviewedBy")}>
+              <span dir="auto">{r.legal_reviewed_by}</span>
+              {r.legal_reviewed_at && (
+                <span className="block text-xs text-fg-muted" dir="ltr">
+                  {r.legal_reviewed_at.slice(0, 10)}
+                </span>
+              )}
+            </Field>
+          )}
           {r.check_mode && (
             <Field label={t("rulebook.howWeCheck")}>
               {t(`rulebook.checkMode.${r.check_mode}` as TKey)}

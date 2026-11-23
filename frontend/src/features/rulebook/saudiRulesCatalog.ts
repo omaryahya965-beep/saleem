@@ -33,6 +33,10 @@ export interface RegulatoryRuleItem {
   superseded_note?: string | null;
   effective_date?: string | null;
   last_verified_at?: string | null;
+  /** D220: verbatim official provision and the reviewer of record (database rules only). */
+  official_text_ar?: string | null;
+  legal_reviewed_by?: string | null;
+  legal_reviewed_at?: string | null;
 }
 
 export interface RegulatorySourceItem {

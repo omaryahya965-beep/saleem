@@ -777,3 +777,27 @@ Format: decision — why — alternatives considered.
     - Result: 219 rules are not active, and none is ready for legal sign-off. All 219 lack the official Arabic text
       and a reviewer, and 183 have an unconfirmed source.
     - No rule was activated or marked verified (hard rule 2.1).
+- **D220. Verified activation, batch 1 (2026-11-23).** The owner chose "verify, then activate" and is the reviewer of
+  record. A rule is activated only with the verbatim provision copied from an official source opened that day.
+  - **Activated (56):**
+    - SAMA: 30 rules + SA-BANK-022, from the advertising controls for financial institutions (circular 44064343,
+      1444/08/13H, «نافذ», SAMA rulebook in Arabic)
+    - CMA: 25 rules, from the Capital Market Institutions Regulations (Arabic PDF, amended by Board resolution
+      1-94-2025), Articles 33–35 and Annex 5-1
+  - **Archived (45):** flagged duplicates that the activated rules cover. They are archived, not deleted.
+  - **COM-01 completed:** official text recorded from E-Commerce Law Art. 11(a), as quoted in the Ministry of
+    Commerce's official advertising-disclosure guide.
+  - **Links corrected:**
+    - CNT-01..06: `gcam.gov.sa` (dead) → GMEDIA's content controls (Sept 2025). They are marked secondary-source
+      until the official text can be opened; applicability is added.
+    - MAW-01..04: `www.mawthooq.sa` is a maintenance company's website, not the licence → GMEDIA's official Mawthooq
+      service page.
+    - AI-01: points to the SDAIA deepfakes guidelines document.
+  - **Not activated:** rules whose official text could not be opened stay drafts. The SFDA, SDAIA, BOE and Mawthooq
+    platform sites reject or do not resolve from the development machine, and GMEDIA pages render empty.
+  - **Database:** migration 20261123100000 (+ rollback). Creator-rule corrections go through
+    `d220_fix_creator_rules()`, which `seed.sql` calls again after `v2_publish_rulebook()` so fresh local installs
+    match production.
+  - **Tests and UI:** pgTAP `p2_rules` and the backend workflow test are updated to the new invariants. Rule details
+    show the official text and the reviewer.
+  - **Result:** 71 active, 118 drafts, 49 archived.

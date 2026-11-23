@@ -66,6 +66,8 @@ on conflict (submission_id) do nothing;
 
 -- 8. v2 rulebook release (copies the v1 rules above into 2026.11-v2 and activates it; idempotent, D89)
 select public.v2_publish_rulebook();
+-- D220: re-apply the verified creator-rule corrections to the rules the publish just created.
+select public.d220_fix_creator_rules();
 select public.v2_rule_scope_fixes(); -- D171: MAW-03/04 scoped to creator advertising
 
 -- 9. Seal demo compliance logs that a fresh database created after the sealing migration ran (v1 input).
