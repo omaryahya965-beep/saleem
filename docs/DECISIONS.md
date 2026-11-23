@@ -819,3 +819,24 @@ Format: decision — why — alternatives considered.
   - **Additive FK indexes:** migration 20261124090000 (+ rollback), on the isolated stack only.
   - **No regressions:** no change to RLS, roles, quotas, the regulatory engine or rule states. Report:
     `docs/SALEEM_DEEP_CLEANUP_REPORT.md`.
+- **D226. Unused SQL functions dropped (2026-11-24, branch `chore/saleem-deep-cleanup`).** Migration 20261124100000
+  (+ rollback that recreates them exactly, grants included) drops six functions nothing uses. Each was checked
+  against:
+  - the frontend, Edge Functions, scripts and backend tests
+  - pgTAP and the docs runbooks
+  - every function body, policy, trigger, view, column default and cron job
+
+  The functions:
+  - `admin_dedupe_stats`, `admin_finding_feedback`, `log_duplicate_reuse`: v1 leftovers
+  - `delete_submission_media`: v1; it was also SECURITY DEFINER and executable by anon
+  - `edit_comment` and `claim_extend_scope`: no UI or caller
+
+  Kept although no UI calls them: `set_ai_limit` (admin runbook), `update_partner_link`, `discard_studio_draft` and
+  `v2_backfill_promotions` (covered by pgTAP). No historical migration was edited, and no table, row or policy
+  changed.
+
+  Proposed, not done, because a table drop deletes data production may hold:
+  - `ai_settings`: one pre-Gemini settings row, unused since D-phase-0
+  - `eval_cases`: empty, unused
+
+  Applied only to the isolated stack.

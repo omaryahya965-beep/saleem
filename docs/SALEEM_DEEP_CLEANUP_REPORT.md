@@ -110,10 +110,18 @@ Read-only checks on the isolated stack:
     scan of `analysis_runs`; `EXPLAIN` now shows `Index Scan using analysis_runs_submission_idx`.
   - Verified on the isolated stack: apply, roll back, re-apply, a fresh `db reset`, and pgTAP 27 files / 279 checks.
   - **Not applied to the development or production database.**
+- **New migration `20261124100000_v2_drop_unused_functions.sql`** (+ rollback recreating them exactly, grants included).
+  - It drops 6 SQL functions nothing uses: `admin_dedupe_stats`, `admin_finding_feedback`, `log_duplicate_reuse`,
+    `delete_submission_media` (also SECURITY DEFINER and executable by anon), `edit_comment`, `claim_extend_scope`.
+  - Verified on the isolated stack: apply 6→0, rollback 0→6 with the original grants, re-apply, a fresh `db reset`,
+    pgTAP 279/279, backend 306, frontend 168, Playwright 51/51. Their entries were removed from
+    `frontend/src/types/supabase.ts`.
 - **Unchanged:** no historical migration was edited or deleted, and no table, row or rule was changed.
 - **Deferred, needs approval:**
   - Revoking `insert/update/delete` from `anon` on public tables. Defence in depth: inert today under RLS, but it
     changes production grants.
+  - Dropping the unused tables `ai_settings` (one pre-Gemini settings row) and `eval_cases` (empty): a table drop
+    deletes data production may hold.
   - About 60 remaining unindexed foreign keys on small or rarely joined tables. Add them only if `pg_stat_statements`
     shows a need.
 

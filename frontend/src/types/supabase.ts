@@ -2837,7 +2837,6 @@ export type Database = {
         };
         Returns: string;
       };
-      claim_extend_scope: { Args: { _claim: string; _pid: string }; Returns: string };
       claim_add_from_finding: {
         Args: {
           _finding: string;
@@ -2874,7 +2873,6 @@ export type Database = {
       };
       delete_comment: { Args: { _id: string }; Returns: undefined };
       resolve_comment: { Args: { _id: string; _resolved: boolean }; Returns: undefined };
-      edit_comment: { Args: { _id: string; _body: string }; Returns: undefined };
       add_comment: {
         Args: {
           _pid: string;
@@ -2975,8 +2973,6 @@ export type Database = {
       archive_product: { Args: { _id: string }; Returns: undefined };
       approve_product: { Args: { _id: string }; Returns: undefined };
       accept_org_invite: { Args: { _token: string }; Returns: string };
-      admin_dedupe_stats: { Args: { _days?: number }; Returns: Json };
-      admin_finding_feedback: { Args: { _limit?: number }; Returns: Json };
       admin_metrics: { Args: { _days?: number }; Returns: Json };
       can_read_submission: { Args: { _sid: string }; Returns: boolean };
       cancel_submission: { Args: { _sid: string }; Returns: undefined };
@@ -2998,7 +2994,6 @@ export type Database = {
         Args: { _days?: number; _sid: string };
         Returns: string;
       };
-      delete_submission_media: { Args: { _sid: string }; Returns: undefined };
       fail_stuck_submissions: { Args: never; Returns: number };
       get_shared_report: { Args: { _token: string }; Returns: Json };
       has_role: {
@@ -3015,7 +3010,6 @@ export type Database = {
         };
         Returns: boolean;
       };
-      log_duplicate_reuse: { Args: { _previous: string }; Returns: undefined };
       my_usage: { Args: never; Returns: Json };
       org_role_of: {
         Args: { _org: string; _uid?: string };

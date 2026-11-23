@@ -41,7 +41,7 @@
   - migration 20261122110000 (+ rollback) is on the isolated stack only
   Verified on the isolated stack: pgTAP 27/279, backend 27 files / 306 tests, Playwright 51/51, frontend 166, and the
   browser walkthrough including the cross-session privacy checks.
-- Deep cleanup (2026-11-24, D225, branch `chore/saleem-deep-cleanup`): dead code and duplicates removed, English lazy-loaded (−19% first-load JS), FK index migration 20261124090000 on the isolated stack only (dev needs approval). Full isolated gate green; report in docs/SALEEM_DEEP_CLEANUP_REPORT.md.
+- Deep cleanup (2026-11-24, D225, branch `chore/saleem-deep-cleanup`): dead code and duplicates removed, English lazy-loaded (−19% first-load JS), FK index migration 20261124090000 and unused-function drop 20261124100000 (D226) on the isolated stack only (dev needs approval). Full isolated gate green; report in docs/SALEEM_DEEP_CLEANUP_REPORT.md.
 - Next step: owner review of the PR and the hotfix; free-tier confirmation for the Gemini journeys; production steps
   in RELEASE_PLAN.md §9.
 
